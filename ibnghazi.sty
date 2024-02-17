@@ -1,0 +1,235 @@
+%%% Jeu de couleurs pour le theme standard
+\usetikzlibrary{shapes.misc, arrows.meta}
+\newif\iffinal
+
+\igset{simple deco={%
+	\tikz[baseline=(T.base)]\node (T) [%
+			top color=tcbcolbacktitle!80,bottom color=tcbcolbacktitle,
+			text=white,
+			minimum width=2.3em,
+			inner sep=2pt, 
+			rounded rectangle, 
+			rounded rectangle left arc=none,
+			%yshift=-4pt, 
+			align=right
+		]{#1\kern2pt};}%
+}
+%\igset{simple deco={\kern-4pt%
+%	\tcbox[boxsep=1pt, sharp corners=west, colupper=white, left=2pt, right=4pt,top=1pt, bottom=0pt, nobeforeafter, tcbox raise base, arc=4pt, colback=tcbcolbacktitle]
+%	{\MakeLowercase{#1}}%
+%}}
+\igset[colors]{    
+    warmcol=Coral!75!black,
+    coldcol=CornflowerBlue!75!black,
+    darkcol=coldcol!50!transparent,    
+    brightcol=warmcol!75!black,
+    bgcol=black!10,
+    fgcol=black,
+    neutralcol=black!10,
+    importantcol=DarkSeaGreen!65!black,
+    linkcol=CornflowerBlue!65!black,
+    pagecol=white
+ }
+
+\ifnocolors
+\igset[colors]{    
+    darkcol=black!85,
+    bgcol=black!5,
+    fgcol=black,
+    brightcol=gray,
+    warmcol=black!80,
+    coldcol=black!80,
+    neutralcol=black!66,
+    importantcol=black,
+    linkcol=black!70
+ }
+\fi
+
+ 
+\igsettheoremstyle{%
+	theorem style=roundedthm,
+	definition style=roundedthm,
+	exercise style=roundedthm,
+	remark style={spartan}
+}
+\igsettheoremstyle{proof style={%
+	blankest,
+	colbacktitle=linkcol,
+	attach title to upper=\par\nobreak,
+	left=8pt, right=3pt, top=0pt, bottom=0pt,
+	before title={\hskip-8pt},
+	code={\igenum{0}{marge*}},
+	after skip=2\bigskipamount
+}}
+\ifserie
+\igsettheoremstyle{exercise style=roundedthm}
+\fi
+
+\igset{math box style={boxrule=0pt, toprule=.4pt, bottomrule=.4pt}}
+
+
+%%% Style des titres 
+\igdeflabel{chapter}{\oldstylenums{|1|}}
+\igset[sections]{%
+chapter label anchor=south east,
+section label anchor=north west,
+chapter style={%
+	colback=darkcol,
+	coltext=white,
+	boxrule=-1pt,
+	lowerbox=ignored,
+	top=3cm, bottom=1cm,
+	left=2pc, right=2pc,
+	enlarge left by=-.2cm,
+	width=\linewidth+.4cm,
+	sharp corners
+   },
+chapter label style={%
+	rounded rectangle,
+    top color=brightcol!80, bottom color=brightcol!80!black,
+    draw=pagecol,
+    line width=3pt,
+    inner xsep=20pt, inner ysep=10pt,
+    align=center,
+    text=white,
+    font=\fontsize{18}{18}\sffamily\bfseries chapitre\ ,
+    xshift=-2pc,
+    anchor=east},
+section style={%
+    boxrule=-1pt,
+    toprule=3pt,
+    arc=10pt,
+    colframe=darkcol,
+    coltext=fgcol,
+    colback=pagecol,
+    halign=center,
+    top=5pt,bottom=0pt,right=1cm,left=1cm,
+    fontupper=\itshape,
+    sharp corners=south,
+    },
+section label style={%
+	anchor=north west,
+	yshift=8pt,xshift=.6cm,
+	rounded rectangle,
+	top color=brightcol!80, 
+	bottom color=brightcol!80!black,
+	draw=pagecol, line width=2pt,
+    inner ysep=3pt,
+    text width=2cm,
+    align=center,
+    text=white,
+    font=\normalsize\bfseries
+    },
+subsection label style={%
+	anchor=north west,
+	rounded rectangle,
+	top color=brightcol!80, 
+	bottom color=brightcol!80!black,
+    inner ysep=2pt,
+    text width=1cm,
+    align=center,
+    text=white,
+    font=\normalsize\bfseries
+  }
+}
+
+\titlespacing*{\chapter}{\z@}{-3cm-\headheight-\headsep}{*1}
+
+\igaddkeyword*{hf}{Page}{%
+	\begin{tikzpicture}[overlay,yshift=-4pt]
+		\node (P) [rectangle, 
+					fill=darkcol, 
+					inner ysep=4pt,
+					text=white, 
+					font=\large\upshape\bfseries, 
+					minimum width=30pt,
+			]{\thepage};
+		\draw [brightcol, line width=.6pt] 
+			(P.south) -- +(0,-1.5cm);
+		\ifodd\c@page
+			\draw [brightcol, line width=.6pt] 
+				(P.west) -- +(-\paperwidth,0);
+		 \else
+			\draw [brightcol, line width=.6pt, yshift=-4pt] 
+				(P.east) -- +(\paperwidth,0);
+		  \fi
+	\end{tikzpicture}
+	}
+
+\AtBeginDocument{%
+%\igdefdeco*{background}{}
+\ifcours
+	\igsethead[|Page|][][\color{darkcol}|chapter|]
+		(\color{darkcol}|section|)()(|Page|)
+	\igsetfoot[\footnotesize|auteur|][][]()()(Cours pour classes MP)
+\fi
+}
+
+\ifcours
+\renewcommand\maketitle{
+	\begin{titlepage}
+	 \newgeometry{vmargin={3cm,1cm},hmargin=1cm}
+	  \pagecolor{coldcol}
+\begin{center}
+\begin{tikzpicture}[overlay,yshift=1cm,warmcol]%
+	\draw [line width=8pt, fill=coldcol!50!transparent]
+		(-.5\textwidth,-8pt) -- 
+		++(.25\textwidth-10pt,0) [bend right] to  
+		++(10pt,16pt)  to [bend left] 
+		++(.5\textwidth,0) [bend right] to 
+		++(10pt,-16pt) -- ++(.25\textwidth-10pt,0) -- 
+		++(0,-\textheight) -| cycle;
+	\node [text=white,inner ysep=4pt, font=\sffamily\scshape\Large\bfseries]
+		{\ig@centre}; 
+	\end{tikzpicture}
+\par\vskip.1\textheight
+\fontsize{64}{64}\selectfont
+\textcolor{warmcol}{\bfseries \ig@document}\par
+\begin{varwidth}{.66\textwidth}
+\scshape
+\fontsize{20}{20}\selectfont\color{white}
+\centering
+\ig@theme
+\end{varwidth}
+\end{center}
+\vfill
+\begin{tcolorbox}[colback=warmcol, sharp corners, frame engine=empty, halign=right, left =2cm, right=1pc, colupper=white]
+\fontsize{32}{32}\sffamily\scshape\bfseries
+\ig@classe
+\end{tcolorbox}
+\vskip.1\textheight\null
+	\end{titlepage}
+\restoregeometry\pagecolor{pagecol}
+}
+\fi
+
+
+\ifserie
+\igaddkeyword*{title}{thcentre}{
+\begin{tikzpicture}[overlay,yshift=.3\headsep, warmcol, line width=8pt]%
+	\draw [fill=coldcol!50!transparent]
+		(-.25\textwidth-10pt,-17pt) [bend right] to  
+		++(10pt,24pt)  to [bend left] 
+		++(.5\textwidth,0) [bend right] to 
+		++(10pt,-24pt);
+	\node [text=white,inner ysep=4pt, font=\sffamily\scshape\LARGE\bfseries]
+		{\csuse{ig@centre}}; 
+	\end{tikzpicture}
+}
+\ignewtitre{
+	|thcentre|
+	\begin{tcolorbox}[
+		sharp corners=south, 
+		title={\lsstyle\large \ig@classe}, 
+		colframe=warmcol, coltext=fgcol, colbacktitle=warmcol,
+		boxrule=-0.2pt, toprule=.4pt,titlerule=10pt, 
+		titlerule style=coldcol!50!transparent,
+		halign=center, halign title=center, 
+		]
+		|document|\par
+		|theme|\par\medskip
+		|periode|
+	\end{tcolorbox}%
+     }
+\fi
+\endinput

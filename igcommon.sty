@@ -1,0 +1,917 @@
+
+%%%% Commande de configuration \igset. Basée sur pgfkeys
+\ifundef{\igset}{
+\pgfkeys{/ig/.is family}
+\DeclareDocumentCommand\igset{o}{%
+	\IfValueT{#1}
+		{\pgfkeysifdefined{/ig/#1/.is family}{}{\pgfkeys{/ig/#1/.is family}}}%
+	\IfValueTF{#1}{\pgfqkeys{/ig/#1}}{\pgfqkeys{/ig}}%
+	}
+}{}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Gestion des metadonnées %%%%%
+
+\def\Document#1{%
+   \gdef\ig@document{#1}%
+   \gdef\ig@document@format{#1}%
+}
+\def\Epreuve#1{%
+   \gdef\ig@epreuve{#1}%
+   \gdef\ig@epreuve@format{#1}%
+}
+\def\Periode#1{%
+   \gdef\ig@periode{#1}%
+   \gdef\ig@periode@format{#1}%   
+}
+\def\Duree#1{%
+   \gdef\ig@duree{#1}%
+   \gdef\ig@duree@format{Dur\'ee~:~#1~heures}
+}
+\def\Theme#1{%
+   \gdef\ig@theme{#1}%
+   \gdef\ig@theme@format{#1}%
+}
+\def\Subtheme#1{%
+   \gdef\ig@subtheme{#1}%
+   \gdef\ig@subtheme@format{#1}%
+}
+
+\def\Centre#1{%
+   \gdef\ig@centre{#1}%
+   \gdef\ig@centre@format{#1}%
+}
+\def\Concours#1{%
+   \gdef\ig@concours{#1}%
+   \gdef\ig@concours@format{#1}%
+}
+\def\Classe#1{%
+   \gdef\ig@classe{#1}%
+   \gdef\ig@classe@format{\MakeLowercase{#1}}%
+}
+\def\Email#1{%
+   \gdef\ig@email{#1}%
+   \gdef\ig@email@format{#1}%
+}
+\def\Website#1{%
+   \gdef\ig@website{#1}%
+   \gdef\ig@website@format{#1}%
+}
+\def\Auteur#1{%
+   \gdef\ig@auteur{#1}%
+   \gdef\ig@auteur@format{\normalsize \ig@preauthor~\scshape #1}%
+}
+\def\Matiere#1{%
+   \gdef\ig@matiere{#1}%
+   \gdef\ig@matiere@format{#1}%
+}
+
+\igset[meta]{%
+	Centre/.code=\Centre{#1},
+	Centre/.default= CPGE Ibn Ghazi,
+	Classe/.code=\Classe{#1},
+	Classe/.default=MP,
+	Auteur/.code=\Auteur{#1},
+	Email/.code=\Email{#1},
+	Website/.code=\Website{#1},
+	Matiere/.code=\Matiere{#1},
+	Matiere/.default=Math\'ematiques,
+	Document/.code=\Document{#1},
+	Theme/.code=\Theme{#1},
+    Subtheme/.code=\Subtheme{#1},
+	Concours/.code=\Concours{#1},
+	Epreuve/.code=\Epreuve{#1},
+	Periode/.code=\Periode{#1},
+	Periode/.default=\the\date,
+	Duree/.code=\Duree{#1},
+    preauteur/.code=\def\ig@preauthor{#1},
+    preauteur={R\'edig\'e par}
+}
+
+%%% Gestions des couleurs
+%%%
+\RequirePackage[svgnames]{xcolor}
+\pgfkeys{/handlers/.colorlet/.code=
+	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
+}
+\pgfkeys{/handlers/.colordef/.code=
+	\pgfkeysalso{\pgfkeyscurrentpath/.code=\preparecolor{#1}{named}{##1}}
+}
+
+\def\igset@color#1#2#3{%
+	\csdef{ig@#1col}{\ifdark #3\else #2\fi}
+}
+\igset[colors]{
+	warm/.code 2 args=\igset@color{warm}{#1}{#2},
+	cold/.code 2 args=\igset@color{cold}{#1}{#2},
+	neutral/.code 2 args=\igset@color{neutral}{#1}{#2},
+	important/.code 2 args=\igset@color{important}{#1}{#2},
+	main/.code 2 args=\igset@color{main}{#1}{#2},
+	link/.code 2 args=\igset@color{link}{#1}{#2},
+	fg/.code 2 args=\igset@color{fg}{#1}{#2},
+	bg/.code 2 args=\igset@color{bg}{#1}{#2},
+	page/.code 2 args=\igset@color{page}{#1}{#2},
+	warmcol/.colorlet=warmcol,
+    coldcol/.colorlet=coldcol,
+    neutralcol/.colorlet=neutralcol,
+    linkcol/.colorlet=linkcol,
+	importantcol/.colorlet=importantcol,
+	maincol/.colorlet=maincol, 
+    fgcol/.colorlet=fgcol,
+    bgcol/.colorlet=bgcol,
+    pagecol/.colorlet=pagecol,
+	default colors/.style={
+    	warmcol=\ig@warmcol,
+    	coldcol=\ig@coldcol,
+    	neutralcol=\ig@neutralcol,
+		importantcol=\ig@importantcol,
+		maincol=\ig@maincol,
+    	linkcol=\ig@linkcol,
+    	fgcol=\ig@fgcol,
+    	bgcol=\ig@bgcol,
+    	pagecol=\ig@pagecol,
+	},
+	tcbtext/.code=\def\ig@coltext{#1},
+	tcbback/.code=\def\ig@colback{#1},
+	tcbframe/.code=\def\ig@colframe{#1},
+	tcbtitle/.code=\def\ig@coltitle{#1},
+	tcbbacktitle/.code=\def\ig@colbacktitle{#1},
+	coltext/.colorlet=tcbcoltext,
+	colback/.colorlet=tcbcolback,
+	colframe/.colorlet=tcbcolframe,
+	coltitle/.colorlet=tcbcoltitle,
+	colbacktitle/.colorlet=tcbcolbacktitle,
+	default tcbcolors/.style={
+		coltext=\ig@coltext,
+		colback=\ig@colback,
+		colframe=\ig@colframe,
+		coltitle=\ig@coltitle,
+		colbacktitle=\ig@colbacktitle
+	}
+   }
+\igset[colors]{    
+    warm={DarkOrange}{DarkOrange},
+    cold={DarkGreen}{DarkGreen},
+	neutral={black!75}{black!25},
+	link={DarkBlue}{DarkBlue},
+	important={DarkRed}{DarkRed},
+	main={black!66}{black!33},
+	bg={white}{black!88},
+	fg={black}{white},
+	page={white}{black!82},
+	tcbtext=fgcol,
+	tcbframe=warmcol,
+	tcbback=bgcol,
+	tcbtitle=white, 
+	tcbbacktitle=warmcol,
+}
+\igset[colors]{default colors, default tcbcolors}
+
+\AtEndPreamble{\ifnocolors\selectcolormodel{gray}\fi}
+\def\reloadcolors{
+	\AtEndPreamble{%
+		\igset[colors]{default colors}%
+		\igset[colors]{default tcbcolors}
+		\pagecolor{pagecol}%
+		\color{fgcol}%
+	}%
+	\AtBeginDocument{\color{fgcol}}%
+}%
+
+
+
+%%%%% Geometry first
+%%%%% Document geometry
+\RequirePackage{geometry}
+\RequirePackage{cuted}
+
+% patch de la commande qui contrôle le format de papier
+\newdimen\Gm@littlemargin
+\Gm@littlemargin\z@
+\dimdef\compactlimit{131mm}
+% \preto\Gm@adjustpaper{%
+% 	\ifdim\linewidth<\compactlimit\relax
+% 		\compacttrue%
+% 	\fi}
+
+% ajout de formats, reconnaissables par la commande \goemetry
+\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(126,224){truemm}}
+\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(126,266){truemm}}
+\@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(150,240){truemm}}
+\@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}
+\@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}
+%\define@key{Gm}{a4paper}[true]{\Gm@setpaper@ifpre{a4paper}}%
+\define@key{Gm}{sc16x9}[true]{\Gm@setpaper@ifpre{sc16x9}}
+\define@key{Gm}{sc19x9}[true]{\Gm@setpaper@ifpre{sc19x9}}
+\define@key{Gm}{sc16x10}[true]{\Gm@setpaper@ifpre{sc16x10}}
+\define@key{Gm}{sc4x3}[true]{\Gm@setpaper@ifpre{sc4x3}}
+\define@key{Gm}{sc4x3b}[true]{\Gm@setpaper@ifpre{sc4x3b}}
+% ajout de la clé Gm@littlemargin
+\define@key{Gm}{littlemargin}{%
+    \ifdefstring\igcurrentclass{igdev}
+        {\Gm@setlength\Gm@littlemargin{#1}
+        \Gm@setlength\marginparwidth{#1}%
+        \Gm@setlength\marginparsep\z@}
+		{}
+}
+\appto\Gm@save{\Gm@savelength{Gm@littlemargin}}
+%\appto\Gm@save{\Gm@saveboolean{compact}}
+
+% interface pgfkeys pour geometry
+\newif\iftitlepage@exception
+\newif\ifforced@geometry
+\newif\ifactivated@geometry
+\def\geom@options{}
+
+\igset[@geometry]{%
+	print/.code=%
+		\printtrue%
+		\darkfalse%
+		\compactfalse%
+		\geometry{%
+			a4paper,
+			inner=3.6cm, outer=2.4cm,
+			vmargin={2.4cm,3.6cm}, 
+			littlemargin=3em
+		}, 
+	qprint/.code=%
+		\printtrue%
+		\darkfalse%
+		\compactfalse%
+		\geometry{%
+			a4paper,
+			inner=1.8cm, outer=1.2cm,
+			vmargin={2cm,3cm}, 
+			littlemargin=3.2em
+		}, 
+	2print/.code=%
+		\printtrue%
+		\darkfalse%
+		\compacttrue%
+		\striptitletrue
+		\geometry{%
+			a4paper,
+			twocolumn, columnsep=20truept,
+			%mag=830,
+			inner=1truecm, outer=1truecm,
+			vmargin={2.4truecm,2.4truecm},
+			littlemargin=2.4em
+		},
+	lsprint/.code=%
+		\printtrue%
+		\darkfalse%
+		\compactfalse%
+		\striptitlefalse%
+		\geometry{%
+			a4paper,
+			landscape,
+			twocolumn, columnsep=24truept,
+			%mag=870,
+			inner=1.8truecm, outer=1.8truecm,
+			vmargin={1.5truecm,1.5truecm},
+			littlemargin=3em
+		},
+	draft/.code=%
+		\printfalse%
+		\compacttrue%
+		\titlepagetrue%
+		\geometry{%
+			a5paper,
+			inner=1.5cm, outer=1.5cm,
+			vmargin={1.8cm,2.4cm},
+			littlemargin=2.4em 
+		}, 
+	screen 16x9/.code=%
+		\printfalse%
+		\darktrue%
+		\compacttrue%
+		\titlepagetrue%
+		\geometry{%
+			sc16x9,
+			mag=1100,
+			hmargin={.5cm,.5cm},
+			vmargin={1.2cm,1.4cm},
+			littlemargin=2.4em,
+		},%
+	screen 19x9/.code=%
+		\printfalse%
+		\darktrue%
+		\compacttrue%
+		\titlepagetrue%
+		\geometry{%
+			sc19x9,
+			hmargin={.5cm,.5cm},
+			vmargin={1.4cm,1.8cm},
+			littlemargin=2.4em
+		},%
+	beamer/.code=%
+		\printfalse%
+		\darkfalse%
+		\compactfalse%
+		\titlepagetrue%
+		\geometry{%
+			sc4x3b,
+			hmargin={.4cm,.4cm},
+			vmargin={.4cm,1.2cm},
+			littlemargin=3em
+		},%
+	screen/.code=%
+		\printfalse%
+		\darkfalse%
+		\compactfalse%
+		\titlepagetrue%
+		\geometry{%
+			sc4x3,
+			hmargin={1.8cm,1.8cm},
+			vmargin={1.5cm,2cm},
+			%mag=1100,
+			littlemargin=3em
+		},%
+	lsscreen/.code=%
+		\printfalse%
+		\compacttrue%
+		\darkfalse%
+		\titlepagetrue%
+		\titlepage@exceptiontrue%
+		\geometry{%
+			sc4x3,
+			landscape,
+			twocolumn, columnsep=24pt,
+			hmargin={.5cm,.5cm},
+			vmargin={1.2cm,1.4cm},
+			%mag=880,
+			littlemargin=2.4em
+		},%
+	altscreen/.code=%
+		\printfalse%
+		\darkfalse%
+		\compactfalse%
+		\titlepagetrue%
+		\geometry{%
+			sc16x10,
+			hmargin={1cm,1cm},
+			vmargin={1.5cm,2cm},
+			%mag=1100,
+			littlemargin=3em
+		},%
+	lsaltscreen/.code=%
+		\printfalse%
+		\compacttrue%
+		\darkfalse%
+		\titlepagetrue%
+		\geometry{%
+			sc16x10,
+			landscape,
+			twocolumn, columnsep=32pt,
+			hmargin={.8cm,.8cm},
+			vmargin={1.2cm,1.4cm},
+			%mag=880,
+			littlemargin=2.4em
+		},%
+	soutien/.code=%
+		\printfalse%
+		\compacttrue%
+		\darkfalse%
+		\titlepagetrue%
+		\geometry{%
+			sc4x3,
+			landscape, 
+			twocolumn, columnsep=24pt,
+			outer=.5cm, inner=1cm,
+			vmargin={1.2cm,1.4cm},
+			%mag=930,
+			littlemargin=2.4em
+		}%	
+}
+\igset[geometry]{%
+	.unknown/.code=\expandafter\appto\expandafter\geom@options\expandafter{%
+		\pgfkeyscurrentname=#1,}, 
+	force compact/.is if=compact,
+	force geometry/.is if=forced@geometry,
+	draft/.is if=draft,
+	dark/.is if=dark
+}
+\NewDocumentCommand\igusegeometry{O{}m}{%
+	\unless\ifdraft%
+		\unless\ifsoutien%
+			\forced@geometrytrue%
+	\fi\fi%
+	%\igset[geometry]{#1}
+	\ifactivated@geometry\else%
+		\activated@geometrytrue%
+		\ifforced@geometry
+			\igset[@geometry]{#2}
+		\else
+			\ifdraft
+				\igset[@geometry]{draft}
+			\else
+				\ifsoutien
+					\igset[@geometry]{soutien} 
+				\fi
+			\fi
+		\fi 
+	\fi
+	\ifdefempty{\geom@options}{}{
+		\expandafter\geometry\expandafter{\geom@options}
+	}%
+}
+\AtEndPreamble{%
+	\unless\ifactivated@geometry
+			\igset[@geometry]{draft}
+	\fi% 
+	\def\multicols#1{\relax}
+	\csdef{multicols*}#1{\relax}
+	\let\endumlticols\relax 
+	\cslet{endmulticols*}{\relax}
+	\unless\if@twocolumn
+		\unless\ifcompact\RequirePackage{multicol}\fi
+	\fi
+}
+
+%%%%% Tcolorbox est utilisé pour la decoration
+%%%%% des boites pour quiz
+
+\RequirePackage{tcolorbox} %% Une usine à gaz qui touche à tout
+\tcbuselibrary{skins,raster,xparse}
+
+%%%% Fonts loading. 
+\RequirePackage{ifxetex}
+\newif\iffontsloaded
+\def\load@thefonts{}
+\igset[font]{%
+	rm/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+			\fi
+			\RequirePackage[tt=false]{libertine}
+			\RequirePackage[%
+				libertine,smallerops,bigdelims,upint,vvarbb
+			]{newtxmath}
+			\RequirePackage[scaled=.85]{FiraMono}
+			\useosf
+			\def\TitlingFont{\sffamily\scshape}
+	}},
+	sf/.code={%
+		\def\load@thefonts{%
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+
+			\fi
+			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
+			\RequirePackage[scaled=.88]{FiraMono}
+			\RequirePackage[smallerops,upint]{newtxsf}
+			\firaoldstyle
+			\def\TitlingFont{\scshape}
+	}},
+	load/.code={%
+		\def\load@thefonts{%
+			\RequirePackage[T1]{fontenc}
+			\RequirePackage[french]{babel}
+			\RequirePackage{#1}
+			\RequirePackage{microtype}
+	}},
+	titling font/.store in=\TitlingFont,
+}
+\DeclareDocumentCommand\igusefont{m}{%
+	\fontsloadedtrue
+	\igset[font]{#1}
+}
+\AtEndPreamble{
+	\ifdefempty{\load@thefonts}{\igusefont{rm}}{} 
+	\load@thefonts
+	\pdfstringdefDisableCommands{%
+		\def\({}%
+		\def\){}%
+	}
+	\let\ToP\texorpdfstring
+	\def\label@itemi{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xdiamond$}
+	\def\label@itemii{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xsquare$}
+	\def\label@itemiii{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xbullet$}
+	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
+	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
+}
+
+%%%% Gestion des themes
+\newdimen\ig@ttlw
+\ig@ttlw=3cm
+
+\igset[theme]{%
+	.search also={/ig/colors,/ig/tcb},
+	dark/.is if=dark,
+	draft/.is if=draft,
+	colors/.code=\pgfkeysalso{/ig/colors/.cd,#1},
+	no colors/.is if=nocolors,
+	font/.code=\igusefont{#1},
+	rm/.style={font=rm},
+	sf/.style={font=sf},
+	title page/.is if=titlepage,
+	title format/.code=\igdeftitleformat{#1},
+	title format*/.code=\igdeftitleformat*{#1},
+	scale title/.code=
+		\AtEndPreamble{\pgfmathsetlength\ig@ttlw{\ig@ttlw/#1}} 
+}
+\igset[title]{%
+	scale/.code=\AtEndPreamble{\pgfmathsetlength\ig@ttlw{\ig@ttlw/#1}}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Titre du document %%%%%
+\ifdim\paperwidth>127mm\relax
+   \def\ig@relsize{\relsize{2}}
+\else
+   \def\ig@relsize{\relsize{1}}%
+\fi%
+\newif\iftitlepage
+%% Ajout des mots cles du titre
+\DeclareDocumentCommand\igaddkeyword@title{D(){}m}{%
+   \igaddkeyword{title}{#2}{%
+      {#1\ig@relsize\csuse{ig@#2@format}%
+      \global\ig@dima\baselineskip}%
+      \baselineskip\ig@dima%
+   }
+}
+\igaddkeyword@title(\normalsize\scshape){centre}
+\igaddkeyword@title(\normalsize\scshape){classe}
+\igaddkeyword@title(\Large\bfseries){document}
+\igaddkeyword@title(\Large\bfseries){devoir}
+\igaddkeyword@title(\Large\bfseries){epreuve}
+\igaddkeyword@title(\Large\bfseries){concours}
+\igaddkeyword@title(\Large\scshape){theme}
+\igaddkeyword@title(\scshape\itshape){subtheme} 
+\igaddkeyword@title(\small\itshape){periode}
+\igaddkeyword@title(\small\itshape){duree}
+\igaddkeyword@title(\small){auteur}
+\igaddkeyword@title(\small\ttfamily){email}
+\igaddkeyword@title(\small\ttfamily){website}
+
+
+%% Commande \title@parser qui traduit les mots cles 
+%% pour le titre. Le resultat
+%% est stocke dans la macro \title@contents
+\long\def\title@change#1{%
+   \StrSubstitute{\title@contents}
+     {|#1|}{\csname title@#1\endcsname}[\title@string]%
+     \global\let\title@contents\title@string
+ }
+\long\def\title@parser#1{\begingroup%
+    \gdef\title@contents{#1}%
+    \exploregroups\expandarg%
+    \forlistloop{\title@change}{\list@title}%
+    \endgroup%
+}
+
+%% Commande qui specifie le format du titre.
+%% Elle utilise \title@contents pour formater
+%% la macro \igtitlecontents (titre normal) 
+%% ou \titlepagecontents, si * (page de garde)
+\DeclareDocumentCommand\igdeftitleformat{s+m}{%
+	\title@parser{#2}%
+	\IfBooleanTF{#1}
+		{%
+			\expandafter\long\expandafter\gdef
+				\expandafter\titlepagecontents\expandafter
+					{\title@contents}
+		}{%
+			\expandafter\long\expandafter\gdef
+				\expandafter\igtitlecontents\expandafter
+					{\title@contents}
+		}%
+}
+\def\ignewtitle{\igdeftitleformat}
+
+%% commande qui prend en charge
+%% une eventuelle description
+%% du format par l'utilisateur
+%% (argument entre () de la commande \titre)
+\DeclareDocumentCommand\ig@localtitle{s+m}{%
+	\title@parser{#2}%
+	\IfBooleanTF{#1}
+		{%
+			\expandafter\long\expandafter\def
+				\expandafter\titlepagecontents\expandafter
+					{\title@contents}
+		}{%
+			\expandafter\long\expandafter\def
+				\expandafter\igtitlecontents\expandafter
+					{\title@contents}
+		}%
+}
+
+%% Formats par defaut
+\igdeftitleformat{|document| \\ |theme| \\ |periode|}
+\igdeftitleformat*{|document| \\ |theme| \\ |periode|}
+
+%% Options du formatage 
+\igset[title]{
+	inner align/.is choice, %alignement interne 
+	inner align/l/.code=\let\fil@inner\raggedright, 
+	inner align/r/.code=\let\fil@inner\raggedleft,
+	inner align/c/.code=\let\fil@inner\centering,
+   inner align*/.is choice, %alignement interne dans titlepage
+	inner align*/c/.code=\let\fil@inner@titlepage\centering,
+	inner align*/l/.code=\let\fil@inner@titlepage\raggedright, 
+	inner align*/r/.code=\let\fil@inner@titlepage\raggedleft,
+   outer align/.is choice, % alignement externe
+	outer align/l/.code=\let\fil@outer\raggedright,
+	outer align/r/.code=\let\fil@outer\raggedleft,
+	outer align/c/.code=\let\fil@outer\centering,
+	before/.code=\def\hook@beforetitle{#1}, % hook avant titre normal 
+	after/.code=\def\hook@aftertitle{#1}, % hook apres titre normal 
+	before*/.code=\def\hook@beforetitlepage{#1}, % hook avant titre, titlepage
+	after*/.code=\def\hook@aftertitlepage{#1}, % hook apres titre, titlepage
+	before title/.code=\title@parser{#1}%
+               \expandafter\def\expandafter 
+		          \hook@titlebeforetitle\expandafter
+                {\title@contents}, % prefix au format
+	after title/.code=\title@parser{#1}%
+               \expandafter\def\expandafter
+		         \hook@titleaftertitle\expandafter
+               {\title@contents}, % postfix au format 
+	before title*/.code=\title@parser{#1}
+               \expandafter\def\expandafter 
+		         \hook@titlebeforetitlepage\expandafter
+               {\title@contents}, % prefix au format
+	after title*/.code=\title@parser{#1}%
+               \expandafter\def\expandafter
+		         \hook@titleaftertitlepage\expandafter
+               {\title@contents}, % postfix au format 
+   early before*/.code=\def\hook@earlybeforetitlepage{#1}, 
+	late after*/.code=\def\hook@lateaftertitlepage{#1},
+	width/.code=\dimdef\title@width{#1}, % largeur du titre 
+	format/.code=\igdeftitleformat{#1}, % specification du format normal 
+	format*/.code=\igdeftitleformat*{#1}, % specification du format titlepage 
+	afterskip/.code=\dimdef\aftertitleskip{\bigskipamount*#1}
+         % saut apres titre
+}
+\igset[title]{
+	inner align/.default=c,
+   inner align*/.default=l,
+	outer align/.default=c,
+	width/.default=\linewidth,
+	afterskip/.default=3,
+	inner align, 
+   inner align*, 
+	outer align, 
+	before=\minipage{\title@width},
+	after=\endminipage,
+	width,
+   afterskip
+	}
+
+%% La commande utilisateur qui produit le titre
+%% titre normal sans *, page de titre avec *
+%% option [] pour \igset[title]{}, sinon option par defaut 
+%% option () pour le format, sinon format par defaut
+\newif\iftitlepage@used
+\NewDocumentCommand\titre{sod()}{%
+   \IfBooleanT{#1}{\titlepagetrue}
+   \begingroup%
+	\IfValueT{#2}{\igset[title]{#2}}%
+	\IfValueT{#3}{%
+		\iftitlepage\ig@localtitle*{#3}\else\ig@localtitle{#3}%
+		}%
+	\iftitlepage%
+      \unless\iftitlepage@used%
+			\csuse{hook@earlybeforetitlepage}%
+			\begin{titlepage}%
+				\ifbackground\def\back@code{}\fi%
+            \fil@inner@titlepage%
+				\csuse{hook@beforetitlepage}%
+				\csuse{hook@title@beforetitlepage}%
+            \csuse{titlepagecontents}%
+				\csuse{hook@titleaftertitlepage}%
+            \csuse{hook@aftertitlepage}%
+			\end{titlepage}%
+			\csuse{hook@lateaftertitlepage}\clearpage%
+      \fi%
+	\else%
+			\thispagestyle{plain}%
+			\begingroup\par%
+				\fil@outer
+            \csuse{hook@beforetitle}%
+				\fil@inner
+				\csuse{hook@titlebeforetitle}
+				\csuse{igtitlecontents}%
+				\csuse{hook@titleaftertitle}%
+				\csuse{hook@aftertitle}%
+			\endgroup%
+			\par\addvspace{\aftertitleskip}%
+	\fi%
+   \endgroup%
+   \iftitlepage\titlepage@usedtrue\fi%
+}
+
+%%% Commandes utilitaires pour switcher vers 
+%%% une geometrie particuliere (en 4x3)
+%%% pour la page de garde
+%%% Par defaut, la page de garde n'est
+%%% generee que pour les versions pour ecran
+%%% mais peut etre activee ou desactivee avec
+%%% l'option "title page" de \igusetheme 
+
+\AtEndPreamble{%
+	\dimdef\paperheight@origin{\paperheight}%
+	\dimdef\paperheight@titlepage{.75\paperwidth}%
+	\savegeometry{ig@origin@geom}%
+}
+\def\titlepage@geometry{%
+		\newgeometry{%
+			hmargin=\z@, vmargin=\z@,
+		} 
+		%\textheight=\textheight@titlepage
+}
+\def\restore@geometry{%
+	\pdfpageheight=\paperheight@origin%
+	\restoregeometry%
+}
+\AfterEndPreamble{%
+	\igset[title]{%
+		early before*={%
+			\unless\iftitlepage@exception%
+				\pdfpageheight=\paperheight@titlepage%
+				\titlepage@geometry%
+			\fi%
+		},
+		late after*={%
+			\pagecolor{bgcol}%
+			\unless\iftitlepage@exception%
+				\restore@geometry%
+			\fi%
+		}%
+	}%
+}
+\NewDocumentCommand\renew@title@format{O{1}D(){}m}{
+	\ifcase #1\relax	
+			\or \csdef{title@#3}{%
+		\resizebox{\hsize}{!}{%
+			\parbox{3\ig@ttlw}{%
+				\fil@inner@titlepage\linespread{.8}%
+				#2\csuse{ig@#3@format}\strut%
+				\global\ig@dima\baselineskip%
+			}%
+		}\baselineskip\ig@dima%
+	}
+			 \or 
+			 \csdef{title@#3}{%
+		\resizebox{\hsize}{!}{%
+			\parbox{2\ig@ttlw}{%
+				\fil@inner@titlepage\linespread{.8}%
+				#2\csuse{ig@#3@format}\strut%
+				\global\ig@dima\baselineskip%
+			}%
+		}\baselineskip\ig@dima%
+	}
+			  \or \csdef{title@#3}{%
+		\resizebox{\hsize}{!}{%
+			\parbox{1.5\ig@ttlw}{%
+				\fil@inner@titlepage\linespread{.8}%
+				#2\csuse{ig@#3@format}\strut%
+				\global\ig@dima\baselineskip%
+			}%
+		}\baselineskip\ig@dima%
+	}
+				 \or \csdef{title@#3}{%
+		\resizebox{\hsize}{!}{%
+			\parbox{\ig@ttlw}{%
+				\fil@inner@titlepage\linespread{.8}%
+				#2\csuse{ig@#3@format}\strut%
+				\global\ig@dima\baselineskip%
+			}%
+		}\baselineskip\ig@dima%
+	}
+	\fi 
+} 
+\AtEndPreamble{%
+	\iftitlepage
+		\renew@title@format[3](\bfseries){matiere}%
+		\renew@title@format[4](\bfseries){document}%
+		\renew@title@format[3](\scshape){theme}%
+		\renew@title@format[2](\scshape\itshape){subtheme}%
+		\renew@title@format(\itshape){periode}%
+		\renew@title@format(\small){auteur}%
+		\renew@title@format(\small\ttfamily){email}%
+		\renew@title@format(\small\ttfamily){website}%
+	\fi%
+}
+
+%%% Ajout 07/08/2021
+%%% interface pgfkeys pour contrôler igtitle.sty %%%
+%%% (titlesec, titleps et titletoc) 
+
+\newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{\csuse{deco@headrule}}
+   \renewcommand\makefootrule{\csuse{deco@footrule}}
+   \sethead{}{}{}
+   \setfoot{}{}{\hf@page}
+  }
+\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{}
+   \renewcommand\makefootrule{}
+   \sethead{}{}{}
+   \setfoot{}{page \thepage{}}{}
+ }
+
+%%%% Entetes et pieds de pages
+
+\csvtolistcsadd{list@hf}{%
+	centre,classe,periode,document,devoir,
+	concours,epreuve,matiere,theme,subtheme,auteur,email,website}
+	
+\def\tmp@do#1{\csdef{hf@#1}{\csuse{ig@#1}}}
+\forcsvlist\tmp@do{%
+	centre,classe,periode,document,devoir,
+	concours,epreuve,matiere,theme,subtheme,auteur,email,website}
+
+\def\hf@change#1#2{%
+   \StrSubstitute{#1}
+     {|#2|}{\csname hf@#2\endcsname}[\tmp@string]%
+     \global\let#1\tmp@string
+ }
+\def\hf@parser#1#2#3{\begingroup
+    \csgdef{#1@\romannumeral#2}{#3}
+    \expandafter\def\expandafter\hf@change@\expandafter%
+         {\expandafter\hf@change\expandafter%
+           {\csname#1@\romannumeral#2\endcsname}}
+    \exploregroups\expandarg
+    \forlistloop{\hf@change@}{\list@hf}%
+    \endgroup
+}
+\NewDocumentCommand\igsethead{o O{} O{} D(){} D(){} D(){}}{%
+	\IfNoValueTF{#1}
+	{\hf@parser{head}{4}{#4}
+      \hf@parser{head}{5}{#5}
+       \hf@parser{head}{6}{#6}
+        \sethead{\head@iv}{\head@v}{\head@vi}
+    }
+	{\hf@parser{head}{1}{#1}
+     \hf@parser{head}{2}{#2}
+      \hf@parser{head}{3}{#3}
+       \hf@parser{head}{4}{#4}
+      	\hf@parser{head}{5}{#5}
+         \hf@parser{head}{6}{#6}
+          \sethead[\head@i][\head@ii][\head@iii]
+                            {\head@iv}{\head@v}{\head@vi}
+     }
+  }
+\NewDocumentCommand\igsetfoot{o O{} O{} D(){} D(){} D(){}}{%
+	\IfNoValueTF{#1}
+	{\hf@parser{foot}{4}{#4}
+      \hf@parser{foot}{5}{#5}
+       \hf@parser{foot}{6}{#6}
+       \setfoot{\foot@iv}{\foot@v}{\foot@vi}
+    }
+	{\hf@parser{foot}{1}{#1}
+     \hf@parser{foot}{2}{#2}
+      \hf@parser{foot}{3}{#3}
+       \hf@parser{foot}{4}{#4}
+      	\hf@parser{foot}{5}{#5}
+         \hf@parser{foot}{6}{#6}
+          \setfoot[\foot@i][\foot@ii][\foot@iii]
+             {\foot@iv}{\foot@v}{\foot@vi}
+     }
+  }
+\RequirePackage{lastpage}
+\igaddkeyword{hf}{auteur}{\scshape\csuse{ig@auteur}}
+\igaddkeyword{hf}{concours}{\scshape\csuse{ig@concours}}
+\igaddkeyword{hf}{chapter}{\chaptertitle}
+\igaddkeyword{hf}{section}{\sectiontitle}
+\igaddkeyword{hf}{C}{\ifnum\value{chapter}>\z@\thechapter\fi}
+\igaddkeyword{hf}{S}{\ifnum\value{section}>\z@\thesection\fi}
+\igaddkeyword{hf}{page}{\thepage}
+\igaddkeyword{hf}{pages}{page\enskip\thepage{} / \pageref*{LastPage}}
+\igaddkeyword{hf}{square}{\ig@square}
+\igaddkeyword{hf}{tpsvp}{\quad\ig@square[1]\ %
+  \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
+  \ig@square[1]\ \ig@square[1]
+  \fi}
+\def\hf@deco{\title@deco}
+\def\fntht{\fontcharht\font`}
+\def\fntdp{\fontchardp\font`}
+\def\fntwd{\fontcharwd\font`}
+
+%%% Entete/pied de page 
+\newpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{\csuse{head@rule}}
+   \renewcommand\makefootrule{\csuse{foot@rule}}
+   \sethead{}{}{}
+   \setfoot{}{}{\hf@page}
+  }
+\AtBeginDocument{\pagestyle{igmain}}

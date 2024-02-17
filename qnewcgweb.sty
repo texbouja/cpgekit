@@ -1,0 +1,97 @@
+%%%%% chargement de package, définition de couleurs, chargement de police,...
+
+\RequirePackage[sfdefault, scaled=.85]{FiraSans}
+\RequirePackage{newtxsf}
+\usetikzlibrary{shapes.misc, arrows.meta, babel}
+
+%%%%%
+
+
+\definecolor{igblue}{HTML}{373A73}
+\definecolor{iggreen}{HTML}{8CBA30}
+\definecolor{stcol}{HTML}{F5891D}
+\colorlet{bgcol}{iggreen!10}
+\tikzset{title style/.style={%
+	font=\fontsize{24pt}{20pt}\bfseries\scshape\boldmath,
+	text = igblue,
+	align=center
+	}
+}
+\tikzset{question number/.style={overlay,
+	font=\fontsize{16pt}{16pt}\bfseries,
+	text=bgcol, draw=none, fill=none, 
+	xshift=.25\imagewidth+1ex,
+	yshift=-1ex-5pt
+	}
+}
+\tikzset{border line/.style={
+		overlay,draw=bgcol, fill=bgcol
+		}
+	}
+
+
+\newif\iffootimage@exists
+\newdimen\logo@width
+\newdimen\head@height
+\logo@width=.2\paperwidth
+\ifdim\logo@width>2cm\relax	
+	\logo@width=2cm
+\fi
+\head@height=\dimexpr\headsep+\headheight\relax
+\def\setfoot@logo#1{%
+	\IfFileExists{../../img/cover/#1_foot.pdf}
+		{\pgfdeclareimage[width=\logo@width]{logofoot}
+			{../../img/cover/#1_foot}%
+		}{%
+			\IfFileExists{#1_foot.pdf}
+				{\pgfdeclareimage[width=\logo@width]{logofoot}
+					{#1_foot}}
+				{\footimage@existsfalse}%
+		}%
+}
+\ifsoutien
+	\setfoot@logo{capge}
+	\iffootimage@exists	
+		\def\newcg@foot{%
+		\node at ([yshift=10, xshift=-2pc]box.south east)
+		[anchor=east, text opacity=.66, fill=bgcol]
+		 			{\pgfuseimage{logofoot}};%
+		}
+	\else
+		\def\newcg@foot{%
+				\node at ([yshift=6.5, xshift=-2pc]box.south east)
+					[anchor=east, baseline, yshift=.5ex,
+						fill=bgcol, font=\sffamily\scshape\bfseries] 
+					{\color{stcol}\small capge\kern1ex\large\color{igblue}Ibn\! Ghazi};%
+		}
+	\fi 
+\else
+	\setfoot@logo{cpge}
+	\iffootimage@exists	
+		\def\newcg@foot{%
+		\node at ([yshift=10, xshift=-2pc]box.south east)
+		[anchor=east, text opacity=.66, fill=bgcol]
+					{\pgfuseimage{logofoot}};%
+		}
+	\else
+		\def\newcg@foot{%
+				\node at ([yshift=6.5, xshift=-2pc]box.south east)
+					[anchor=east, baseline,  yshift=.5ex,
+						fill=bgcol, font=\sffamily\scshape\bfseries]  
+					{\color{iggreen}\small cpge\kern1ex\large\color{igblue}Ibn\! Ghazi};
+		}
+	\fi
+\fi
+
+\def\backdeco{ 
+	\clip (box.south east) rectangle (box.north west);
+	\draw [border line] (box.south east) rectangle (box.north west);
+	\draw [overlay, iggreen, line width=12pt] 
+		(box.north east) -- (box.north west) ;
+	\draw [overlay, bgcol, line width=16pt] 
+		(box.south east) -- (box.south west) ;
+	\draw [overlay, igblue, line width=.4pt] 
+		([yshift=9.8pt]box.south east) -- ([yshift=9.8pt]box.south west) ;
+	\newcg@foot
+	}
+\endinput

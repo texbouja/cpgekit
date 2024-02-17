@@ -1,0 +1,664 @@
+%%% Jeu de couleurs du theme
+
+%%% Colors 
+\definecolor{igblue}{HTML}{373A73}
+\definecolor{igaltblue}{HTML}{007AFF}
+\definecolor{iggreen}{HTML}{8CBA30}
+\definecolor{stcol}{HTML}{D68A36}
+
+
+\igset[colors]{    
+    warm={iggreen!85!black}{iggreen},
+    cold={igblue}{igaltblue},
+	link={CornflowerBlue!66!black}{CornflowerBlue},
+	tcbtext=fgcol,
+	tcbframe=warmcol,
+	tcbback=bgcol,
+	tcbtitle=warmcol, 
+	tcbbacktitle=bgcol,
+}
+\def\TitlingFont{\sffamily\scshape\lsstyle}
+\usetikzlibrary{shapes.misc}
+\igset{simple deco={%
+	\shorthandoff{;}%
+	\tikz [anchor=base,baseline] 
+	\node [
+		draw=maincol, 
+		text=maincol, 
+		inner sep=1.4pt, 
+		minimum width=1.5em, 
+		rounded corners=2pt
+	] {#1};\ignorespaces%
+}}
+\igdefdeco{lrmargin}{\deco@simple{#1}}
+\fadjwidth=6pt 
+\igdefdeco{formula}{%
+	\tikz [baseline, anchor=base]
+		\node [inner xsep=.5\fadjwidth-.8pt, draw=maincol, fill=none, rounded corners=4pt] {#1};%
+}
+\igdefdeco{result}{%
+	\tikz [baseline, anchor=base]
+		\node [inner xsep=.5\fadjwidth-.8pt,draw=maincol, fill=maincol!10!bgcol, rounded corners=4pt] {#1};%
+}
+\igdefdeco*{formule}{\deco@formula}
+\igdefdeco{discuss}{\textcolor{maincol}{$\bullet\;$ \bfseries\boldmath #1}}
+\igdefdeco{enumi}{\TitlingFont\smaller\color{maincol}#1.}
+\igdefdeco{enumii}{\TitlingFont\smaller\color{maincol}#1.}
+\igdefdeco{enumiii}{\TitlingFont\smaller\color{maincol}#1.}
+\igdefdeco{unite}{\TitlingFont\smaller\color{maincol}#1.}
+
+
+
+%%% environnement mini
+\def\funnyarrow#1#2{%
+	\tikz[baseline] 
+		\draw [
+				line width=\dimexpr\fntht x, #2, 
+				-{Round Cap[sep=-1pt] . Fast Round[]}
+			] 
+        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
+}
+\igset[mini]{%
+	left margin=2pc,
+	label font=\fontsize{8}{8}\TitlingFont,
+	font=\fontsize{9}{9}\sffamily,
+	mini deco=\llap{\funnyarrow{1em}{maincol}}%
+		\textcolor{maincol}{#1~:}%
+}
+
+%%%% Styles des theoremes 
+\tcbset{%
+	primary box/.style={%
+		breakable,
+		lines before break=1,
+		height fixed for=first and middle,
+		title style if break,
+		fonttitle=\TitlingFont\footnotesize\vphantom{(},
+		description font=\sffamily\scshape\footnotesize\vphantom{(},
+		colback=bgcol,coltext=fgcol
+	}}
+\newdimen\frm@margin
+\ifcompact
+	\frm@margin4pt
+\else
+	\frm@margin12pt
+\fi
+\tcbset{frame left margin/.code={\frm@margin=#1}}
+\igset{frame left margin/.forward to=/tcb/frame left margin}
+\usetikzlibrary{arrows.meta, positioning}
+\tcbsubskin{thmskin}{empty}{%
+	coltitle=maincol,
+	frame code={%
+		\ifdef\tcboxedtitlewidth
+			{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+				([xshift=4pt]title.south east) |- 
+				([xshift=-2pt,yshift=+10pt]frame.north west) -- 
+				([xshift=-3pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-3pt]frame.south west) ;}
+    },
+    skin first=thmskinfirst,
+	skin middle=thmskinmiddle,
+	skin last=thmskinlast
+}
+\tcbsubskin{thmskinfirst}{empty}{%
+	coltitle=maincol,
+	frame code={%
+		\ifdef{\tcboxedtitlewidth}
+			{\draw [{Circle}-{Diamond}, maincol,rounded corners=4pt, line width=.4pt] 
+				([xshift=4pt]title.south east) |- 
+				([xshift=-2pt,yshift=+10pt]frame.north west) -- 
+				([xshift=-3pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-3pt]frame.south west);}
+    },
+    skin first=thmskinfirst,
+	skin middle=thmskinmiddle,
+	skin last=thmskinmiddle
+}
+\tcbsubskin{thmskinmiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, maincol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-3pt]frame.north west) -- 
+			([xshift=-3pt]frame.south west) ;
+	},
+    skin first=thmskinmiddle,
+	skin middle=thmskinmiddle,
+	skin last=thmskinmiddle
+}
+\tcbsubskin{thmskinlast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-3pt]frame.north west) -- ([xshift=-3pt]frame.south west) ;
+    },
+    skin first=thmskinmiddle,
+	skin middle=thmskinmiddle,
+	skin last=thmskinlast,
+}
+
+
+%%%% Styles des remark
+\newdimen\retraittitre
+\ifdim\frm@margin>15pt\relax
+	\retraittitre\frm@margin
+\else
+	\retraittitre16pt
+\fi
+\tcbsubskin{rmkskin}{empty}{% 
+	coltitle=maincol,
+	frame code={%
+		\ifdim\tcboxedtitlewidth>\z@
+			\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+				([xshift=-2pt]title.west) -| 
+				([xshift=-3pt]frame.south west) ;
+		\else
+        	\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-3pt]frame.south west) ;
+		\fi
+    },
+    skin first=rmkskinfirst,
+	skin middle=rmkskinmiddle,
+	skin last=rmkskinlast
+}
+\tcbsubskin{rmkskinfirst}{empty}{%
+	coltitle=maincol,
+	frame code={%
+		\ifdim\tcboxedtitlewidth>\z@
+			\draw [{Circle}-{Diamond}, maincol,rounded corners=4pt, line width=.4pt] 
+				([xshift=-2pt]title.west) -| 
+				([xshift=-3pt]frame.south west) ;
+		\else
+        	\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-3pt]frame.south west) ;
+		\fi
+    },
+    skin first=rmkskinfirst,
+	skin middle=rmkskinmiddle,
+	skin last=rmkskinmiddle
+}
+\tcbsubskin{rmkskinlast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-3pt]frame.north west) -- ([xshift=-3pt]frame.south west);
+    },
+    skin first=rmkskinmiddle,
+	skin middle=rmkskinmiddle,
+	skin last=rmkskinlast,
+}
+\tcbsubskin{rmkskinmiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, maincol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-3pt]frame.north west) -- 
+			([xshift=-3pt]frame.south west) ;
+    },
+    skin first=rmkskinmiddle,
+	skin middle=rmkskinmiddle,
+	skin last=rmkskinmiddle
+}
+\tikzset{description path style/.style={%
+				fill = none,
+                draw = none,
+                text = maincol, 
+				font = \footnotesize\sffamily\scshape,
+				#1}
+}
+\tcbset{description path/.style={%
+	overlay unbroken and first	= {%
+    	\path  
+		let \p1=(title.east), \p2=(frame.east) in
+			node (description) [%
+				description path style, 
+				text width=\x2-\x1-.5em,
+				right=.5em of title,
+				] 
+			{(#1)};
+  		}
+}}
+
+\tcbset{important/.style={%
+	maincol = importantcol,
+	coltitle = maincol,
+	bottom= 10pt,
+	after skip=6pt, 
+	underlay unbroken and last	= {\node at (frame.south east) 
+		[text=importantcol, 
+		 font=\tiny\sffamily\scshape, 
+		 anchor=south east, 
+		 yshift=-1pt,
+		] 
+		{#1};},
+}}
+\tcbset{title style if break/.style={%%
+ 	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
+	lefttitle=3pt,
+	bottomrule=1pt,
+	extras title after break={
+		halign title=left,
+		font app={title}{%		
+			\fontsize{7}{7}\mdseries\itshape}
+		},
+ }}
+
+\tcbset{%
+	thmdefault/.style={
+		skin=thmskin,
+		attach boxed title to top left,
+		boxed title style={blank, left=4pt, right=2pt},
+		boxsep=0pt,
+		top=6pt, bottom=6pt, right=0pt,
+		before skip=\bigskipamount,
+		after skip=\bigskipamount,
+		left=\frm@margin,
+	}}
+\tcbset{%
+	rmkdefault/.style={
+		skin=rmkskin,
+		attach boxed title to top left={xshift=\retraittitre},
+		boxed title style={blank},
+		boxsep=0pt,
+		top=3pt,bottom=0pt, right=0pt,
+		left=\frm@margin,
+	}}
+
+\igsettheoremstyle{%
+	theorem style=thmdefault,
+	definition style=thmdefault,
+	exercise style=thmdefault,
+	remark style=rmkdefault
+}
+
+
+% \igrenewtheorem[use counter from=rema]{remas}
+% {Remarques}
+% {}
+% {remark}
+% {titled items}
+
+\igrenewtheorem[use counter from=exem]{exemf}
+{Exemples fondamentaux}
+{}
+{theorem}
+{maincol=warmcol, coltitle=maincol, titled items}
+\igrenewtheorem[use counter from=defi]{voca}
+	{Vocabulaire}
+	{}
+	{remark}
+	{theorem name, titled items}
+\igrenewtheorem[use counter from=defi]{nota}
+	{Notations}
+	{}
+	{remark}
+	{theorem name, titled items}
+
+\tikzset{proof title style/.style={
+	rounded corners=6pt,
+	inner xsep=8pt,
+	inner ysep=2pt,
+	fill=none,
+	draw=linkcol, 
+	text=linkcol
+}}
+
+%%% Style des titres 
+
+\igdeflabel{section}{|1|}
+\igdeflabel{subsection}{|S|.|1|}
+\titleformat{\section}[display]
+	{\sffamily\scshape\LARGE\color{coldcol}}
+	{\begin{tikzpicture} [overlay, baseline=(S.base)] 
+		\node (S)  [circle,
+			top color=coldcol!80,
+			bottom color=coldcol!60!black, 
+			text=white,
+			text width=24pt,
+			inner sep=0pt,
+			align=center,
+			font=\normalsize\bfseries\ttfamily,
+		]{\label@section};
+		\draw [warmcol, line width=.6pt, rounded corners=12pt, line cap=round] 
+			([xshift=4pt]S.east) -| (\columnwidth+1.2pt,-24pt) ; 
+	\end{tikzpicture}
+	}
+	{-6pt}
+	{\parbox{\columnwidth-8pt}{\filleft #1}}
+\titleformat{name=\section,numberless}[display]
+	{\sffamily\scshape\LARGE\color{coldcol}}
+	{\color{warmcol}%
+		\TitlingFont\large%
+		\raisebox{-.5ex}{\llap{\textcolor{coldcol}{$\xbullet\mskip2mu$}}}%
+		\titlerule%
+	}
+	{\z@}
+	{\filleft #1}
+\titleformat{\subsection}[hang]
+	{\sffamily\scshape\large\color{coldcol}}
+	{\llap{\textcolor{coldcol}{$\xbullet\mskip2mu$}}\color{warmcol}\TitlingFont\label@subsection}
+	{6pt}
+	{\filright #1}
+\titleformat{name=\subsection,numberless}[hang]
+	{\sffamily\scshape\large\color{coldcol}}
+	{\llap{\textcolor{coldcol}{$\xbullet\mskip2mu$}}}
+	{6pt}
+	{\filright #1}
+\titlespacing{\section}{\z@}{*4}{*2}
+\titlespacing{\subsection}{\z@}{*4}{*2}
+
+\igdeflabel{chapter}{\oldstylenums{|1|}}
+
+\titleformat{\chapter}[display]
+	{\sffamily\fontsize{28}{28}\scshape\color{coldcol}}
+	{%
+		\begin{tikzpicture} [overlay, baseline=(C.base)] 
+			\node (C) at (30pt,0) [circle,
+				top color=coldcol!80,
+				bottom color=coldcol!60!black, 
+				text=white,
+				text width=40pt,
+				align=center,
+				font=\fontsize{36}{36}\bfseries,
+			]{\label@chapter};
+			\node [warmcol] at ([yshift=6pt] C.north) 
+				{\TitlingFont\Large chapitre};
+			\draw [warmcol, line width=12pt, rounded corners=16pt, line cap=round] 
+				([xshift=12pt]C.east) -| (\textwidth,-.2\textheight) ; 
+		\end{tikzpicture}
+	}{1cm}{\null\hskip1cm\parbox{\textwidth-1.5cm}{\filleft #1}}
+\titleformat{name=\chapter, numberless}[display]
+	{\sffamily\fontsize{32}{32}\scshape\color{coldcol}}
+	{%
+		\filleft%
+		\begin{tikzpicture} [overlay] 
+			\draw [warmcol, line width=12pt, rounded corners=16pt, line cap=round] 
+				(-.66\textwidth,16pt) -| +(.66\textwidth,-2cm-40pt);
+		\end{tikzpicture}
+	}{1cm}{\parbox{\textwidth-1.5cm}{\filright #1}}
+\titlespacing\chapter{0pt}{*1}{2cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Page de garde %%%%%%  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\STRIP{}
+\let\endStrip\relax
+\newif\ifcover@exists 
+\cover@existstrue
+\def\setcover@back#1{%
+	\IfFileExists{../../img/cover/#1-\ig@classe.pdf}
+		{\pgfdeclareimage[width=1.05\pdfpagewidth]
+			{cover}
+			{../../img/cover/#1-\ig@classe}%
+		}{%
+			\IfFileExists{#1-\ig@classe.pdf}
+				{\pgfdeclareimage[width=1.05\pdfpagewidth]
+					{cover}
+					{#1-\ig@classe}%
+				}{%
+				\cover@existsfalse%
+				\colorlet{coverfill}{stcol}%
+				}%
+		}
+\ifcover@exists%
+	\iftitlepage@exception%
+		\tikz [overlay,remember picture]%
+			\node at ([xshift=0pt,yshift=0pt]current page.south) 
+			[anchor=south] 
+			{\pgfuseimage{cover}};%
+	\else%
+		\tikz [overlay,remember picture]%
+			\node at ([xshift=0pt, yshift=0pt]current page.south) 
+			[anchor=south,inner sep=0] 
+			{\pgfuseimage{cover}};%
+	\fi%
+\else%
+	\iftitlepage@exception%
+		\tikz [overlay]
+			\draw [coldcol, fill=coverfill,  line width=6pt]
+			(2.25cm,-2cm) rectangle 
+			(\textwidth, -\pdfpageheight+4cm);%
+	\else%
+		\tikz [overlay, remember picture]
+			\draw [coldcol, fill=coverfill,  line width=3pt]
+			(3pt,-1.5pt) rectangle 
+			(\textwidth-6pt,-\pdfpageheight+13.5pt);%
+	\fi% 
+\fi%
+}
+
+\NewDocumentEnvironment{cgnew@title@page}{}{%
+	\color{white}%
+	\ignorespaces%
+	\ifsoutien%
+		\pagecolor{iggreen}% 
+		\setcover@back{capge}%
+	\else%
+		\pagecolor{white}%
+		\setcover@back{cpge}%
+	\fi%
+	\hfill%
+	\iftitlepage@exception%
+		\smash{%
+			\resizebox{.33\paperwidth}{!}{%
+				\bfseries\scshape\color{igblue}%
+				\csuse{ig@matiere}%
+			}%
+		}%
+	\else%
+		\vskip.01\pdfpageheight\leavevmode%
+		\hfill\smash{%
+			\resizebox{.33\paperwidth}{!}{%
+				\bfseries\scshape\color{igblue}%
+				\csuse{ig@matiere}%
+			}%
+		}%
+		\hskip.05\pdfpagewidth\null%
+		\par\vskip-.05\pdfpageheight\vskip-\baselineskip%
+	\fi%
+	\null\vskip.18\pdfpageheight%
+	\hfill%
+	\begin{minipage}{.75\textwidth}
+	\fil@inner@titlepage% 
+}{%
+	\end{minipage}%
+	\hskip\z@ plus.1fill\null\vfill%
+}
+\newif\ifwire@exists
+\wire@existstrue
+\def\setwire@title{%
+	\ifstriptitle%
+		\dimdef\wire@width{\textwidth}%
+	\else%
+		\dimdef\wire@width{\columnwidth}%
+	\fi %
+	\IfFileExists{../../img/cover/twire.pdf}
+		{\pgfdeclareimage[width=\wire@width]{twire}%
+			{../../img/cover/twire}
+		}{%
+			\IfFileExists{twire.pdf}
+				{\pgfdeclareimage[width=\wire@width]{twire}
+					{twire}}
+				{\wire@existsfalse}%
+		}
+	\IfFileExists{../../img/cover/bwire.pdf}
+		{\pgfdeclareimage[width=\wire@width]{bwire}
+			{../../img/cover/bwire}%
+		}{%
+			\IfFileExists{bwire.pdf}
+				{\pgfdeclareimage[width=\wire@width]{bwire}
+					{bwire}}
+				{\wire@existsfalse}%
+		}%
+} 
+\NewDocumentEnvironment{cgnew@title@inline}{}{%
+		\thispagestyle{plain}%
+		\setwire@title%
+		\begin{STRIP}%
+		\ifwire@exists\tikz\node{\pgfuseimage{twire}};\par\fi%
+		\fil@inner%
+}{%
+		\par\medskip
+		\begin{tikzpicture}
+			\ifwire@exists\node {\pgfuseimage{bwire}};\fi
+			\node  
+				[	xshift=.5\linewidth, 
+					anchor=east,
+					white, 
+					font=\sffamily\bfseries\ig@relsize,
+					inner sep=0pt
+				]
+			{\ig@classe\kern6pt};
+		\end{tikzpicture}%
+		\end{STRIP}%
+}
+\igset[title]{%
+	before 	=	\ifstriptitle
+							\let\STRIP\strip%
+							\let\endSTRIP\endstrip%
+						\fi%
+						\let\title@centre\relax%
+						\let\title@classe\relax%
+						\begin{cgnew@title@inline},
+	after 	=	\end{cgnew@title@inline},
+	before* =	\let\title@centre\relax%
+						\let\title@classe\relax%
+						\begin{cgnew@title@page},
+	after*	=	\end{cgnew@title@page},
+	inner align*=l,
+	afterskip=2
+}
+\AtEndPreamble{%
+	\iftitlepage
+		\renew@title@format[4]
+			(\bfseries\color{igblue})
+			{document}%
+		\renew@title@format[3]
+			(\scshape\bfseries)
+			{theme}%
+		\renew@title@format[2]
+			(\scshape)
+			{subtheme}%
+		\renew@title@format
+			(\hfill\tiny)
+			{auteur}%
+		\fi%
+}
+\igdeftitleformat*{
+  |document|\par
+  \bigskip\hrule\bigskip
+  |theme|\\
+  |subtheme|\par
+  \bigskip
+  |auteur|
+}
+\igdeftitleformat{
+  |document|\par
+  \bigskip
+  |theme|\\
+  |subtheme|\par
+  \bigskip
+  |auteur|
+}
+%%%% Tete et pied de page
+\newif\iffootimage@exists
+\newdimen\logo@width
+\newdimen\head@height
+\logo@width=.2\paperwidth
+\ifdim\logo@width>2cm\relax	
+	\logo@width=2cm
+\fi
+\head@height=\dimexpr\headsep+\headheight\relax
+\def\setfoot@logo#1{%
+	\IfFileExists{../../img/cover/#1_foot.pdf}
+		{\pgfdeclareimage[width=\logo@width]{logofoot}
+			{../../img/cover/#1_foot}%
+		}{%
+			\IfFileExists{#1_foot.pdf}
+				{\pgfdeclareimage[width=\logo@width]{logofoot}
+					{#1_foot}}
+				{\footimage@existsfalse}%
+		}%
+}
+%%%% En tete
+\let\newcg@head\relax
+\unless\ifprint
+	\ifsoutien
+		\def\newcg@head{%
+			\tikz[overlay]
+				\draw [stcol, line width=\head@height] 
+					(-.75\paperwidth,.5\head@height-3pt) -- 
+					(\paperwidth+3cm,.5\head@height-3pt);%
+		}%
+	\else 
+		\def\newcg@head{%
+			\tikz[overlay]
+				\draw [iggreen, line width=\head@height] 
+					(-.75\paperwidth,.5\head@height-3pt) -- 
+					(\paperwidth+3cm,.5\head@height-3pt);%
+		}%
+	\fi%
+\fi%
+%%%% Pieds de page
+\def\igcenter{Ibn\! Ghazi}
+\ifsoutien
+	\setfoot@logo{capge}
+	\iffootimage@exists	
+		\def\newcg@foot{%
+			\begin{tikzpicture}[overlay, yshift=8pt] 
+				\draw [stcol] (-3cm,0) -- (\paperwidth,0) ;
+				\node  at (\textwidth,0)
+					[inner ysep=0pt, inner xsep=5pt, 
+						anchor=east, fill=bgcol]
+		 			{\pgfuseimage{logofoot}};%
+			\end{tikzpicture}%
+		}
+	\else
+		\def\newcg@foot{%
+			\begin{tikzpicture}[overlay, yshift=8pt] 
+				\draw [baseline, stcol] (-3cm,0) -- (\paperwidth,0) ;
+				\node at (\textwidth,0)
+					[anchor=east, baseline, yshift=.5ex,
+						fill=bgcol, font=\sffamily\scshape\bfseries] 
+					{\color{stcol}\small capge\kern1ex\large\color{coldcol}\igcenter};%
+			\end{tikzpicture}%
+		}
+	\fi 
+\else
+	\setfoot@logo{cpge}
+	\iffootimage@exists	
+		\def\newcg@foot{%
+			\begin{tikzpicture}[overlay, yshift=8pt] 
+				\draw [warmcol] (-3cm,0) -- (\paperwidth,0) ;
+				\node  at (\textwidth,0)
+					[inner ysep=0pt, inner xsep=5pt, 
+						anchor=east, fill=bgcol]
+					{\pgfuseimage{logofoot}};%
+			\end{tikzpicture}%
+		}
+	\else
+		\def\newcg@foot{%
+			\begin{tikzpicture}[overlay, yshift=8pt] 
+				\draw [baseline, warmcol] (-3cm,0) -- (\paperwidth,0) ;
+				\node at (\textwidth,0)
+					[anchor=east, baseline,  yshift=.5ex,
+						fill=bgcol, font=\sffamily\scshape\bfseries]  
+					{\color{warmcol}\small cpge\kern1ex\large\color{coldcol}\igcenter};
+			\end{tikzpicture}%
+		}
+	\fi
+\fi
+
+\renewpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{ 
+	\renewcommand\makeheadrule{\newcg@head}
+	\renewcommand\makefootrule{\newcg@foot}
+	\igsethead(|theme|)()(|document|)
+	\igsetfoot(|classe|)(|pages|)()
+}
+\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
+	\renewcommand\makefootrule{\newcg@foot}
+	\sethead{}{}{}
+	\setfoot{}{\thepage}{}
+}
+\endinput
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+

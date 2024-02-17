@@ -1,0 +1,118 @@
+\ProvidesPackage{igposter}[]
+
+%%% Quelques packages du projet, ici pour les numérotations et les maths
+\RequirePackage{igbase}
+\RequirePackage{igmath}
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[french]{babel}
+\RequirePackage{graphicx}
+\RequirePackage{amsthm}
+\RequirePackage{libertine}
+\RequirePackage[libertine]{newtxmath}
+\RequirePackage{hyperref}
+\RequirePackage{pifont}
+
+
+%%%%% Reglages des numerotations selon le package igbase
+\igdeflabel{enumi}{|1|}
+\igdeflabel{enumii}{|Q|\itshape|a|}
+\igdefdeco{enumi}{\bfseries #1.}
+\igdefdeco{enumii}{\bfseries #1.}
+\igsetenum{1}{marge*=0pt}
+
+%%% Style des exercices en utilisant le package amsthm
+\newtheoremstyle{exo}
+    {3pt}               %Space above
+    {3pt}               %Space below
+    {\upshape}          %Body font
+    {}                  %Indent amount
+    {\bfseries\scshape} %Theorem head font
+    {:}               %Punctuation after theorem head 
+    {.5em}              %Space after theorem head 
+    {%
+        \thmname{#1}
+        \thmnumber{#2}
+        \ifblank{#3}{}
+            {\,\textbf{(#3)}}
+    }   %Theorem head spec (can be left empty, meaning ‘normal’ )
+\theoremstyle{exo}
+\newtheorem{exercise}{Exercice}
+
+\definecolor{igblue}{HTML}{373A73}
+\definecolor{iggreen}{HTML}{8CBA30}
+\definecolor{stcol}{HTML}{F5891D}
+\definecolor{darkcolor}{HTML}{000000}
+
+%%% Pour ajouter des espaces verticaux. 
+%%% Peut être utilisé au début et à la fin d'une \headerbox
+%%% prend un argument optionnel genre 1.3, 0.5, ...
+%%% si une valeur est donnée au début, elle est enregistrée 
+%%% et appliquée à la fin si une commande \vstretch est réutilisée
+%%% sans  argument.
+%%% ses valeurs sont oubliées une fois sorti de la \headerbox
+\newskip\laststretch
+\laststretch=\z@
+\newcommand\vstretch[1][]{%
+    \ifblank{#1}{}
+        {\laststretch=\glueexpr#1\baselineskip+\laststretch\relax}%
+    \ifdim\laststretch>\z@%
+        \unskip\null\vskip\laststretch\null%
+    \fi%
+}
+
+%%% Reglages des propriétés pour toutes les boites, pas besoin de le faire 
+%%% à chaque fois.
+\setkeys[ba]{poster}{
+    eyecatcher=false,
+    background=plain, %shadeLR,
+    bgColorOne=darkcolor, 
+    %bgColorTwo=blue!50!cyan, 
+    colspacing=10pt, 
+    headerheight=.12\textheight,    
+}
+\setkeys[ba]{posterbox}{
+    headerborder=open,
+    headerfont=\large\scshape\bfseries,
+    headerFontColor=black,
+    headershade=plain,
+    headershape=roundedleft,
+    headerColorOne=stcol, 
+    %headerColorTwo=stcol, 
+    headerFontColor=igblue!50!black, 
+    borderColor=stcol,
+    headerfont=\null\enskip\scshape\large\bfseries,
+    boxshade=plain,
+    boxColorOne=white, 
+    textborder=roundedright, 
+    textfont={\parindent0pt}\normalcolor, 
+    linewidth=1.4pt,
+    %headerborder=none,
+}{}
+
+\def\igheaderbox@opt{}
+\def\vstretch@factor{}
+\igset[poster]{%
+    c/.code 2 args=\ifblank{#1}{}
+                        {\appto\igheaderbox@opt{column=#1,}}
+                    \ifblank{#2}{}
+                        {\appto\igheaderbox@opt{span=#2,}},
+    n/.code=\appto\igheaderbox@opt{name=#1,},
+    p/.code 2 args=\ifblank{#1}{}{\appto\igheaderbox@opt{below=#1,}}
+                    \ifblank{#2}{}{\appto\igheaderbox@opt{bottomaligned=#2,}}
+                    \ifblank{#2}{}{\laststretch=\glueexpr1pt plus1fill\relax},
+    s/.code=\def\vstretch@factor{#1}
+}
+\NewDocumentEnvironment{cadre}{r() O{} +b}{
+    \igset[poster]{#2}
+    %\show\igheaderbox@opt
+    \def\ig@tempa{\headerbox{#1}}
+    \expandafter\ig@tempa\expandafter{\igheaderbox@opt}{
+        \ifdefempty\vstretch@factor
+            {\vstretch}
+            {\vstretch[\vstretch@factor]}
+        #3
+        \vstretch
+    }
+}{}

@@ -1,0 +1,257 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.1.8)  12 JAN 2024 14:21
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**/home/texmf/tex/latex/igdoc/testfd.tex
+(/home/texmf/tex/latex/igdoc/testfd.tex
+LaTeX2e <2023-11-01>
+L3 programming layer <2024-01-04>
+(/usr/local/texlive/2023/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2023/05/17 v1.4n Standard LaTeX document class
+(/usr/local/texlive/2023/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2023/05/17 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count187
+\c@section=\count188
+\c@subsection=\count189
+\c@subsubsection=\count190
+\c@paragraph=\count191
+\c@subparagraph=\count192
+\c@figure=\count193
+\c@table=\count194
+\abovecaptionskip=\skip48
+\belowcaptionskip=\skip49
+\bibindent=\dimen140
+) (/usr/local/texlive/2023/texmf-dist/tex/latex/fonttable/fonttable.sty
+Package: fonttable 2017/06/06 v1.6c displays a font
+\f@tm=\count195
+\f@tn=\count196
+\f@tp=\count197
+\f@tdim=\dimen141
+\ftablewidth=\dimen142
+\fntcolwidth=\dimen143
+) (/usr/local/texlive/2023/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks17
+) (/usr/local/texlive/2023/texmf-dist/tex/generic/iftex/ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+ (/usr/local/texlive/2023/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+))
+\Gm@cnth=\count198
+\Gm@cntv=\count199
+\c@Gm@tempcnt=\count266
+\Gm@bindingoffset=\dimen144
+\Gm@wd@mp=\dimen145
+\Gm@odd@mp=\dimen146
+\Gm@even@mp=\dimen147
+\Gm@layoutwidth=\dimen148
+\Gm@layoutheight=\dimen149
+\Gm@layouthoffset=\dimen150
+\Gm@layoutvoffset=\dimen151
+\Gm@dimlist=\toks18
+)
+\symfdsymbols=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `fdsymbols' in version `bold'
+(Font)                  U/FdSymbolA/m/n --> U/FdSymbolA/m/b on input line 15.
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count267
+\l__pdf_internal_box=\box51
+) (./testfd.aux)
+\openout1 = `testfd.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a5paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(14.22636pt, 392.64806pt, 14.22636pt)
+* v-part:(T,H,B)=(14.22636pt, 569.05515pt, 14.22636pt)
+* \paperwidth=421.10078pt
+* \paperheight=597.50787pt
+* \textwidth=392.64806pt
+* \textheight=569.05515pt
+* \oddsidemargin=-58.04362pt
+* \evensidemargin=-58.04362pt
+* \topmargin=-95.04362pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=10.0pt
+* \footskip=30.0pt
+* \marginparwidth=65.0pt
+* \marginparsep=11.0pt
+* \columnsep=10.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+LaTeX Font Info:    Font shape `U/FdSymbolA/m/n' will be
+(Font)              scaled to size 10.0pt on input line 41.
+Missing character: There is no Ì in font FdSymbolA-Book!
+Missing character: There is no Í in font FdSymbolA-Book!
+Missing character: There is no Î in font FdSymbolA-Book!
+Missing character: There is no Ï in font FdSymbolA-Book!
+Missing character: There is no Ð in font FdSymbolA-Book!
+Missing character: There is no Ñ in font FdSymbolA-Book!
+Missing character: There is no Ò in font FdSymbolA-Book!
+Missing character: There is no Ó in font FdSymbolA-Book!
+Missing character: There is no Ô in font FdSymbolA-Book!
+Missing character: There is no Õ in font FdSymbolA-Book!
+Missing character: There is no Ö in font FdSymbolA-Book!
+Missing character: There is no × in font FdSymbolA-Book!
+Missing character: There is no Ø in font FdSymbolA-Book!
+Missing character: There is no Ù in font FdSymbolA-Book!
+Missing character: There is no Ú in font FdSymbolA-Book!
+Missing character: There is no Û in font FdSymbolA-Book!
+Missing character: There is no Ü in font FdSymbolA-Book!
+Missing character: There is no Ý in font FdSymbolA-Book!
+Missing character: There is no Þ in font FdSymbolA-Book!
+Missing character: There is no ß in font FdSymbolA-Book!
+Missing character: There is no à in font FdSymbolA-Book!
+Missing character: There is no á in font FdSymbolA-Book!
+Missing character: There is no â in font FdSymbolA-Book!
+Missing character: There is no ã in font FdSymbolA-Book!
+Missing character: There is no ä in font FdSymbolA-Book!
+Missing character: There is no å in font FdSymbolA-Book!
+Missing character: There is no æ in font FdSymbolA-Book!
+Missing character: There is no ç in font FdSymbolA-Book!
+Missing character: There is no è in font FdSymbolA-Book!
+Missing character: There is no é in font FdSymbolA-Book!
+Missing character: There is no ê in font FdSymbolA-Book!
+Missing character: There is no ë in font FdSymbolA-Book!
+Missing character: There is no ì in font FdSymbolA-Book!
+Missing character: There is no í in font FdSymbolA-Book!
+Missing character: There is no î in font FdSymbolA-Book!
+Missing character: There is no ï in font FdSymbolA-Book!
+Missing character: There is no ð in font FdSymbolA-Book!
+Missing character: There is no ñ in font FdSymbolA-Book!
+Missing character: There is no ò in font FdSymbolA-Book!
+Missing character: There is no ó in font FdSymbolA-Book!
+Missing character: There is no ô in font FdSymbolA-Book!
+Missing character: There is no õ in font FdSymbolA-Book!
+Missing character: There is no ö in font FdSymbolA-Book!
+Missing character: There is no ÷ in font FdSymbolA-Book!
+Missing character: There is no ø in font FdSymbolA-Book!
+Missing character: There is no ù in font FdSymbolA-Book!
+Missing character: There is no ú in font FdSymbolA-Book!
+Missing character: There is no û in font FdSymbolA-Book!
+Missing character: There is no ü in font FdSymbolA-Book!
+Missing character: There is no ý in font FdSymbolA-Book!
+Missing character: There is no þ in font FdSymbolA-Book!
+Missing character: There is no ÿ in font FdSymbolA-Book!
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 41.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 41.
+LaTeX Font Info:    Font shape `U/FdSymbolA/m/n' will be
+(Font)              scaled to size 7.0pt on input line 41.
+LaTeX Font Info:    Font shape `U/FdSymbolA/m/n' will be
+(Font)              scaled to size 5.0pt on input line 41.
+Missing character: There is no Ì in font FdSymbolA-Book!
+Missing character: There is no Í in font FdSymbolA-Book!
+Missing character: There is no Î in font FdSymbolA-Book!
+Missing character: There is no Ï in font FdSymbolA-Book!
+Missing character: There is no Ì in font FdSymbolA-Book!
+Missing character: There is no Í in font FdSymbolA-Book!
+Missing character: There is no Î in font FdSymbolA-Book!
+Missing character: There is no Ï in font FdSymbolA-Book!
+Missing character: There is no Ð in font FdSymbolA-Book!
+Missing character: There is no Ñ in font FdSymbolA-Book!
+Missing character: There is no Ò in font FdSymbolA-Book!
+Missing character: There is no Ó in font FdSymbolA-Book!
+Missing character: There is no Ô in font FdSymbolA-Book!
+Missing character: There is no Õ in font FdSymbolA-Book!
+Missing character: There is no Ö in font FdSymbolA-Book!
+Missing character: There is no × in font FdSymbolA-Book!
+Missing character: There is no Ø in font FdSymbolA-Book!
+Missing character: There is no Ù in font FdSymbolA-Book!
+Missing character: There is no Ú in font FdSymbolA-Book!
+Missing character: There is no Û in font FdSymbolA-Book!
+Missing character: There is no Ü in font FdSymbolA-Book!
+Missing character: There is no Ý in font FdSymbolA-Book!
+Missing character: There is no Þ in font FdSymbolA-Book!
+Missing character: There is no ß in font FdSymbolA-Book!
+Missing character: There is no à in font FdSymbolA-Book!
+Missing character: There is no á in font FdSymbolA-Book!
+Missing character: There is no â in font FdSymbolA-Book!
+Missing character: There is no ã in font FdSymbolA-Book!
+Missing character: There is no ä in font FdSymbolA-Book!
+Missing character: There is no å in font FdSymbolA-Book!
+Missing character: There is no æ in font FdSymbolA-Book!
+Missing character: There is no ç in font FdSymbolA-Book!
+Missing character: There is no è in font FdSymbolA-Book!
+Missing character: There is no é in font FdSymbolA-Book!
+Missing character: There is no ê in font FdSymbolA-Book!
+Missing character: There is no ë in font FdSymbolA-Book!
+Missing character: There is no ì in font FdSymbolA-Book!
+Missing character: There is no í in font FdSymbolA-Book!
+Missing character: There is no î in font FdSymbolA-Book!
+Missing character: There is no ï in font FdSymbolA-Book!
+Missing character: There is no ð in font FdSymbolA-Book!
+Missing character: There is no ñ in font FdSymbolA-Book!
+Missing character: There is no ò in font FdSymbolA-Book!
+Missing character: There is no ó in font FdSymbolA-Book!
+Missing character: There is no ô in font FdSymbolA-Book!
+Missing character: There is no õ in font FdSymbolA-Book!
+Missing character: There is no ö in font FdSymbolA-Book!
+Missing character: There is no ÷ in font FdSymbolA-Book!
+Missing character: There is no ø in font FdSymbolA-Book!
+Missing character: There is no ù in font FdSymbolA-Book!
+Missing character: There is no ú in font FdSymbolA-Book!
+Missing character: There is no û in font FdSymbolA-Book!
+Missing character: There is no ü in font FdSymbolA-Book!
+Missing character: There is no ý in font FdSymbolA-Book!
+Missing character: There is no þ in font FdSymbolA-Book!
+Missing character: There is no ÿ in font FdSymbolA-Book!
+[1
+
+{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./testfd.aux)
+ ***********
+LaTeX2e <2023-11-01>
+L3 programming layer <2024-01-04>
+ ***********
+ ) 
+Here is how much of TeX's memory you used:
+ 1204 strings out of 474172
+ 19800 string characters out of 5745774
+ 1964525 words of memory out of 5000000
+ 23570 multiletter control sequences out of 15000+600000
+ 559787 words of font info for 42 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 57i,7n,65p,175b,165s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/fdsymbol/FdSymbolA-Book.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on testfd.pdf (1 page, 73289 bytes).
+PDF statistics:
+ 33 PDF objects out of 1000 (max. 8388607)
+ 19 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

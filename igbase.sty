@@ -1,0 +1,1619 @@
+\def\filedate{2020/10/01}
+\def\fileversion{v0.2alpha}
+\def\fileauthor{Sadik Boujaida}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{igbase}[\filedate\space\fileversion]
+
+\newif\ifcustomtitles
+\DeclareOption{customtitles}{\customtitlestrue}
+%\DeclareOption*{\PassOptionsToPackage{\CurrentOption}{igtitle}}
+\ProcessOptions\relax
+
+\RequirePackage{calc}
+\RequirePackage{pgfkeys,pgfmath,pgffor}
+\RequirePackage{etoolbox}
+\RequirePackage{xstring}
+\RequirePackage{relsize} 
+\@ifundefined{NewDocumentCommand}
+	{\RequirePackage{xparse}}
+	{}
+\ifcustomtitles
+	\RequirePackage[explicit,nobottomtitles*]{igtitle}
+	\def\newpagestyle{\igtnewpagestyle}
+	\def\renewpagestyle{\igtrenewpagestyle}
+	\def\sethead{\igtsethead}
+	\def\setfoot{\igtsetfoot}
+\else
+	\RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
+\fi
+
+%%%%% Déclarations
+\newbox\ig@boxa
+\newbox\ig@boxb
+\newdimen\ig@dima
+%% permanents, pour pointillé
+\newskip\ligneskip
+
+\newcount\ig@count
+\newcount\ig@lrcount
+
+
+\newif\ifbackground
+\newif\ifig@global
+\newif\ifig@thetolabel
+\newif\ifig@itemtitle
+\newif\ifigin@
+
+%%%%% Sauvegarde de certaines dimensions de la classe d'origine.
+\edef\topsep@origin{\the\topsep}
+\edef\partopsep@origin{\the\partopsep}
+\edef\itemsep@origin{\the\itemsep}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% localisation des commandes pgfkeys %%%%%
+
+\ifundef{\igset}{
+\pgfkeys{/ig/.is family}
+\DeclareDocumentCommand\igset{o}{%
+	\IfValueT{#1}
+		{\pgfkeysifdefined{/ig/#1/.is family}{}{\pgfkeys{/ig/#1/.is family}}}%
+	\IfValueTF{#1}{\pgfqkeys{/ig/#1}}{\pgfqkeys{/ig}}%
+	}
+}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% gestion des erreurs %%%%%
+\DeclareRobustCommand\igb@error[2]{%
+	\PackageError{igbase}{#1}{#2}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Décoration de l'arrière-plan %%%%%
+
+%%%% première application de la  commande \igset ci-dessus
+\igset[background]{
+	position/.is choice,
+	position/pb/.code=\def\back@pos{\AtPageLowerleft},
+	position/pt/.code=\def\back@pos{\AtPageupperleft},
+	position/pc/.code=\def\back@pos{\AtPageCenter},
+	position/tb/.code=\def\back@pos{\AtTextLowerleft},
+	position/tt/.code=\def\back@pos{\AtTextupperleft},
+	position/tc/.code=\def\back@pos{\AtTextCenter},
+	code/.code=\def\back@code{#1},
+}
+\igset[background]{position=pb, code=\relax}
+\AtEndPreamble{%
+	\ifbackground
+	  \RequirePackage{eso-pic}
+	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
+  \fi}
+
+% \AtBeginDocument{%
+%  \igset{background}
+%  \ifbackground%
+%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
+%   \fi%
+% }
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Commandes utilitaires multi-usage %%%%%
+
+\def\ig@expandtwoargs#1#2#3{\begingroup%
+	\edef\ig@tempa{\endgroup\noexpand#1{#2}{#3}}\ig@tempa}
+\def\ig@expandfirstarg#1#2#3{\begingroup%
+	\edef\ig@tempa{\endgroup\noexpand#1{#2}\unexpanded{#3}}\ig@tempa}
+\def\ig@expandsecondarg#1#2#3{\begingroup%
+	\edef\ig@tempa{\endgroup\noexpand#1\unexpanded{#2}{#3}}\ig@tempa}
+
+\def\cslocal{%
+	\let\lorg@cslet=\cslet%
+	\let\lorg@csletcs=\csletcs%
+	\let\lorg@def=\def%
+	\let\lorg@edef=\edef%
+	\let\lorg@csdef=\csdef%
+	\let\lorg@csedef=\csedef%
+	\let\lorg@listadd=\listadd%
+	\let\lorg@listeadd=\listeadd%
+	\let\lorg@listcsadd=\listcsadd%
+	\let\lorg@listcseadd=\listcseadd%
+	\let\lorg@csappto=\csappto%
+	\let\lorg@cseappto=\cseappto%
+	\let\lorg@appto=\appto%
+	\let\lorg@eappto=\eappto%
+}
+\def\csglobal{%
+	\begingroup\ig@globaltrue%
+	\def\lorg@cslet{\global\cslet}%
+	\def\lorg@csletcs{\golbal\csletcs}%
+	\let\lorg@def=\gdef%
+	\let\lorg@edef=\xdef%
+	\let\lorg@csdef=\csgdef%
+	\let\lorg@csedef=\csxdef%
+	\let\lorg@listadd=\listgadd%
+	\let\lorg@listeadd=\listxadd%
+	\let\lorg@listcsadd=\listcsgadd%
+	\let\lorg@listcseadd=\listcsxadd%
+	\let\lorg@csappto=\csgappto%
+	\let\lorg@cseappto=\csxappto%
+	\let\lorg@appto=\gappto%
+	\let\lorg@eappto=\xappto%
+}
+\def\endcslorg{\ifig@global\endgroup\fi}
+\cslocal
+
+\def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
+\def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
+
+\def\ig@removestar#1*{#1}
+\def\ig@erasesymbol#1#2+{#2}
+\def\ig@erasestar*#1+{#1}
+
+\newcommand\igdefdeco{\@ifstar\ig@deco@\ig@deco}
+
+\long\def\@ig@deco#1#2{
+  \csdef{deco@#2}##1{\begingroup#1\endgroup}}
+\long\def\@ig@deco@#1#2{
+  \csdef{deco@#2}{#1}}
+\long\def\ig@deco#1#2{\forcsvlist{\@ig@deco{#2}}{#1}}
+\long\def\ig@deco@#1#2{\forcsvlist{\@ig@deco@{#2}}{#1}}
+\igdefdeco*{simple}{\fbox}
+
+\DeclareDocumentCommand\igname{smm}{%
+	\IfBooleanT{#1}{\csglobal}%
+	\lorg@csdef{name@#2}{#3}%
+	\endcslorg
+}
+\DeclareDocumentCommand\igxname{smm}{%
+	\IfBooleanT{#1}{\csglobal}%
+	\lorg@csedef{name@#2}{#3}%
+	\endcslorg%
+}
+\igset[decorations]{
+   .unknown/.code=\igdefdeco{\pgfkeyscurrentname}{#1}
+}
+\def\igthe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% base de la gestion des mots clés entre ||  %%%%%
+
+%%%%% Commandes pour le parsing des elements
+\DeclareListParser*{\OutParser}{|}
+%% \OutParser{\cmd}{item1|item2|...} retourne la séquence
+%% \cmd{item1}\cmd{item2}...
+\DeclareListParser*{\in@parser}{+}
+%% \in@parser{\cmd}{item1+item2+...} retourne la séquence
+%% \cmd{item1}\cmd{item2}...
+\def\DoubleParser#1#2#3{%
+	\def\tmp@parser##1{#1{\in@parser{#2}{##1}}}%
+	\OutParser{\tmp@parser}{#3}%
+}
+%% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
+%% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
+
+\DeclareDocumentCommand\csvtolistcsadd{smm}{%
+   \IfBooleanT{#1}{\csglobal}%
+   \def\do{\forcsvlist{\lorg@listcsadd{#2}}}
+   \expandafter\docsvlist\expandafter{#3}
+   \endcslorg%
+}
+\DeclareDocumentCommand\csvtolistcseadd{smm}{%
+   \IfBooleanT{#1}{\csglobal}%
+   \def\do{\forcsvlist{\lorg@listcseadd{#2}}}
+   \expandafter\docsvlist\expandafter{#3}
+   \endcslorg%
+}
+\DeclareDocumentCommand\csvtolistadd{smm}{%
+   \IfBooleanT{#1}{\csglobal}%
+   \def\do{\forcsvlist{\lorg@listadd{#2}}}
+   \expandafter\docsvlist\expandafter{#3}%
+   \endcslorg%
+}
+\DeclareDocumentCommand\csvtolisteadd{smm}{%
+   \IfBooleanT{#1}{\csglobal}%
+   \def\do{\forcsvlist{\lorg@listeadd{#2}}}
+   \expandafter\docsvlist\expandafter{#3}%
+   \endcslorg%
+}
+
+%%% Gestion de listes CSV
+\newrobustcmd{\csvadd}[2]{%
+  \ifblank{#2}{}{\appto#1{#2,}}}
+\newrobustcmd{\csveadd}[2]{%
+  \begingroup
+  \edef\igb@tempa{\endgroup\noexpand\ifblank{#2}}%
+  \igb@tempa{}{\eappto#1{#2,}}}
+\newrobustcmd{\csvgadd}[2]{%
+  \ifblank{#2}{}{\gappto#1{#2,}}}
+\newrobustcmd{\csvxadd}[2]{%
+  \begingroup
+  \edef\igb@tempa{\endgroup\noexpand\ifblank{#2}}%
+  \igb@tempa{}{\xappto#1{#2,}}}
+
+\newrobustcmd{\csvcsadd}[1]{%
+  \expandafter\csvadd\csname#1\endcsname}
+\newrobustcmd{\csvcseadd}[1]{%
+  \expandafter\csveadd\csname#1\endcsname}
+\newrobustcmd{\csvcsgadd}[1]{%
+  \expandafter\csvgadd\csname#1\endcsname}
+\newrobustcmd{\csvcsxadd}[1]{%
+  \expandafter\csvxadd\csname#1\endcsname}
+ 
+\newrobustcmd{\csvremove}[2]{%
+  \igb@csvremove{#1}{#2}\def}
+\newrobustcmd{\csvgremove}[2]{%
+  \igb@csvremove{#1}{#2}\gdef}
+
+\long\def\igb@csvremove#1#2#3{%
+  \ifblank{#2}
+    {}
+    {\ifincsv{#2}{#1}{%
+     \begingroup
+     \def\igb@tempa##1,#2,##2&{\endgroup
+       \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
+    \expandafter\igb@tempa\expandafter,#1&}{}}%
+}
+
+\newrobustcmd{\csvcsremove}[1]{%
+  \expandafter\csvremove\csname#1\endcsname}
+\newrobustcmd{\csvcsgremove}[1]{%
+  \expandafter\csvgremove\csname#1\endcsname}
+
+\newrobustcmd{\ifincsv}[2]{%
+  \begingroup
+  \def\igb@tempa##1,#1,##2&{\endgroup
+    \ifblank{##2}\@secondoftwo\@firstoftwo}%
+  \expandafter\expandafter\expandafter\igb@tempa
+  \expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
+
+\newrobustcmd{\xifincsv}[1]{%
+  \begingroup
+  \edef\igb@tempa{\endgroup\ifincsv{#1}}%
+  \igb@tempa}
+
+\newrobustcmd{\ifincsvcs}[2]{%
+  \expandafter\igb@ifincsvcs@i\csname #2\endcsname{#1}}
+\long\def\igb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
+
+\newrobustcmd{\xifincsvcs}[1]{%
+  \begingroup
+  \edef\igb@tempa{\endgroup\ifincsvcs{#1}}%
+  \igb@tempa}
+
+
+  	
+%% ajoute les éléments de #2 (separe par des virgules)
+%% a la liste interne \list@#1
+
+\DeclareDocumentCommand\igaddkeyword{st+m+m+m}{%
+	\csvtolistcsadd{list@#3}{#4}%
+	\IfBooleanT{#1}{\csglobal}%
+	\IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
+	\endcslorg%
+}
+
+%% \igaddkeyword{<name>}{<elt>}{<texte>}
+%% ajoute <elt> a la liste \list@name et affecte 
+%% le code <texte> a la commande sans 
+%% parametre \name@elt
+%% \igaddkeyword+{<name>}{<elt>}{<texte>}
+%% ajoute <elt> a la liste \list@name et affecte 
+%% le code <texte> a la commande \name@elt  
+%% avec un seul parametre 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% utilitaires de gestion des compteurs façon igbase %%%%%
+
+
+\def\MO@rdinal#1{%
+   \ifcase#1%
+   \or Premier \or Deuxi\`eme \or Troisi\`eme \or Quatri\`eme
+    \or Cinqui\`eme \or Sixi\`eme \or Septi\`eme \or Huiti\`eme
+     \or  Neuvi\`eme \else\@ctrerr\fi}
+\def\MOrdinal#1{\expandafter\MO@rdinal\csname c@#1\endcsname}
+\def\FO@rdinal#1{%
+   \ifcase#1%
+   \or Premi\`ere \or Deuxi\`eme \or Troisi\`eme \or Quatri\`eme
+    \or Cinqui\`eme \or Sixi\`eme \or Septi\`eme \or Huiti\`eme
+     \or  Neuvi\`eme \else\@ctrerr\fi}
+\def\FOrdinal#1{\expandafter\FO@rdinal\csname c@#1\endcsname}
+\def\mo@rdinal#1{%
+   \ifcase#1%
+   \or premier \or deuxi\`eme \or troisi\`eme \or quatri\`eme
+    \or cinqui\`eme \or sixi\`eme \or septi\`eme \or huiti\`eme
+     \or  neuvi\`eme \else\@ctrerr\fi}
+\def\mordinal#1{\expandafter\mo@rdinal\csname c@#1\endcsname}
+\def\fo@rdinal#1{%
+   \ifcase#1%
+   \or premi\`ere \or deuxi\`eme \or troisi\`eme \or quatri\`eme
+    \or cinqui\`eme \or sixi\`eme \or septi\`eme \or huiti\`eme
+     \or  neuvi\`eme \else\@ctrerr\fi}
+\def\fordinal#1{\expandafter\fo@rdinal\csname c@#1\endcsname}
+
+%%% cree les listes 
+% \list@count=tous les raccourcis, 
+% \list@readonly = non modifiables 
+% \list@active=raccourcis "actifs"
+\csvtolistcsadd{list@count}{1,a,A,i,I,M,F,m,f,s,S,C,q,Q,p,P,e,R,X}
+\csvtolistcsadd{list@active}{M,F,m,f,1,a,A,i,I}
+\csvtolistcsadd{list@readonly}{M,F,m,f,1,a,A,i,I,q,Q,e,C}
+
+%%% Définition des commandes qui se substituent aux raccourcis dans \list@readonly
+
+%%%%% Hack en attendant de trouver la source de l'erreur \@ctrerr
+\def\igalph#1{\expandafter\ig@alph\csname c@#1\endcsname}
+\def\igAlph#1{\expandafter\ig@Alph\csname c@#1\endcsname}
+\def\ig@alph#1{%
+  \ifcase#1\or a\or b\or c\or d\or e\or f\or g\or h\or i\or j\or
+   k\or l\or m\or n\or o\or p\or q\or r\or s\or t\or u\or v\or w\or x\or
+    y\or z\fi}
+\def\ig@Alph#1{%
+  \ifcase#1\or A\or B\or C\or D\or E\or F\or G\or H\or I\or J\or
+   K\or L\or M\or N\or O\or P\or Q\or R\or S\or T\or U\or V\or W\or X\or
+    Y\or Z\fi}
+%%%%%
+
+\begingroup
+\def\tmp@do#1#2{\csgdef{count@#1}{#2}}
+\def\do@do#1{\tmp@do#1}
+\forcsvlist{\do@do}{{1}{\arabic},
+                     {a}{\igalph},
+                     {A}{\igAlph},
+                     {i}{\roman},
+                     {I}{\Roman},
+                     {F}{\FOrdinal},
+                     {M}{\MOrdinal},
+                     {m}{\mordinal},
+                     {f}{\fordinal}
+                  }
+\def\tmp@do#1#2{\csgdef{count@#1}##1{#2}}
+\forcsvlist{\do@do}{%
+					{q}{\theenumii},
+					{Q}{\theenumi},
+					{s}{\thesubsection},
+					{S}{\thesection},
+					{C}{\thechapter},
+					{e}{\theequation},
+				}
+\endgroup
+
+\ifundef{\c@chapter}{\let\thechapter\relax}{}
+
+%\def\nocountertoolargemessage{\let\@ctrerr\relax}
+
+%%%%% Command utilisateur \igdefcounter
+
+\DeclareDocumentCommand\ig@cnt@shortcut{smm}{%
+ \in@{!*}{!#2}%
+  \ifin@\edef\cshr@{\expandafter\ig@erasestar#2+}\else\edef\cshr@{#2}\fi
+ \xifinlist{\cshr@}{\list@readonly}{\igin@true}{}%
+ \IfBooleanT{#1}{\igin@false}%
+ \ifigin@%
+	\igb@error{impossible de créer le raccourci \cshr@. 
+			  \MessageBreak Il est affecté à un compteur système}
+			  {le raccourci #2 sera ignoré, 
+			  \messageBreak il n'est pas sûr que tout fonctionne ensuite}%
+ \else%
+      \ifin@\csundef{count@\cshr@}\fi
+       \ifcsundef{count@\cshr@}
+             {\xifinlist{\cshr@}{\list@count}{}{\listxadd{\list@count}{\cshr@}}%
+               \csgdef{count@\cshr@}##1{\csuse{the#3}}}
+	         {\igb@error{Le raccourci #2 est pris.}
+				        {Vous pouvez l'écraser avec (*#2)}}%
+\fi}
+ 
+% {} = name, [] = within list, () = shortcut, <> = numbering format
+\DeclareDocumentCommand\igdefcounter{mm o d() d<>}{%
+\@bsphack\begingroup
+	\IfValueT{#4}{\ig@cnt@shortcut{#4}{#1}}
+	\ifigin@\else
+	   \ifltxcounter{#1}{}{\newcounter{#1}}
+      \ifblank{#2}{\igdeflabel*{#1}{|1|}}{\igdeflabel*{#1}{#2}}
+	   \IfValueT{#3}
+		   {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
+      \IfValueT{#5}{\csdef{p@#1}{#5}}
+	\fi
+\endgroup\@esphack}
+
+%%%%% commande utilisateur \igdeflabel
+
+\def\single@count@change#1#2{\begingroup%
+ \exploregroups\expandarg%
+% \expandafter\StrSubstitute\expandafter%
+%   {\csname label@#1\endcsname}
+%   {|#2|}
+	\def\StrSubstitute@expansion{%
+	\expandafter\StrSubstitute\expandafter%
+	 {\csname label@#1\endcsname}%
+	 {|#2|}%
+	}
+	\expandafter\StrSubstitute@expansion\expandafter%
+   		{\csname count@#2\endcsname{#1}}
+   		[\tmp@string]%
+   \global\let\tmp@string@\tmp@string%
+   \endgroup
+  \expandafter\ifx\csname label@#1\endcsname\tmp@string@\else%
+     \ifinlist{#2}{\list@active}
+       {\lorg@csedef{the#1}{%
+         \expandafter\expandafter\expandafter\noexpand%
+         	\csname count@#2\endcsname{#1}}%
+       }{}%
+       \lorg@cslet{label@#1}\tmp@string@%
+       %\lorg@cslet{theH#1}\tmp@string@%
+  \fi%
+ } 
+\def\count@parser#1#2{%
+   \csdef{label@#1}{#2}%
+   \def\tmp@for{\single@count@change{#1}}%
+   \forlistloop{\tmp@for}{\list@count}%
+   \ifig@thetolabel\makethetolabel{#1}\fi%
+   \endcslorg%
+   }
+\newcommand\igdeflabel{\@ifstar{\csglobal\count@parser}{\count@parser}}
+\let\allthetolabel\ig@thetolabeltrue
+\DeclareDocumentCommand\makethetolabel{sm}{%
+	\IfBooleanT{#1}{\csglobal}
+	\lorg@csedef{the#2}{\expandafter\expandonce\csname label@#2\endcsname}%
+	\endcslorg%
+}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% Environnements de type list %%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% Options de gestion des espaces pour les questions
+%%% clés pour marge et separation
+%%% ne doivent pas être utilisées directement
+\igset[@lists]{%
+   marge/.code=\list@setmarge{#1},
+   marge/.default=\z@,
+   marge*/.code=\list@setmarge@star{#1},
+   marge*/.default=\z@,
+   separation/.code=\list@setsep{#1},
+   separation/.default=\itemsep@origin,
+   separation*/.code=\list@setsep@star{#1},
+   separation*/.default=\z@,
+}
+
+%%% les commandes suivantes 
+%%% ne devraient être utilisées qu'une fois la boite
+%%% \ig@boxa préparée avec un échantillon de numéro.
+%%% c'est la commande \list@setprop qui veille à l'exécution
+%%% de toute la séquence dans le bon ordre.
+%%% Elle même n'est exécutée que lorsqu'une liste
+%%% est sur le point d'être initiée.
+
+\def\list@setmarge#1{%
+   \expandafter\global\csname leftmargin\ig@listlevel\endcsname=%
+        \dimexpr\wd\ig@boxa+#1\relax%
+   \ifdim\csname leftmargin\ig@listlevel\endcsname>4em%
+       \expandafter\global\csname leftmargin\ig@listlevel\endcsname=4em%
+    \fi%
+    \csgdef{marge@\ig@listctr}{%
+        \labelwidth%
+            \dimexpr\csname leftmargin\ig@listlevel\endcsname-\labelsep\relax%
+         \itemindent\z@}%
+   }
+\def\list@setmarge@star#1{%
+   \expandafter\global\csname leftmargin\ig@listlevel\endcsname\dimexpr#1\relax%
+   \csgdef{marge@\ig@listctr}{%
+         \labelwidth\z@\itemindent\labelsep}%
+  }
+\def\list@setsep#1{%
+   \csgdef{separation@\ig@listctr}{%
+     \topsep\glueexpr#1\relax%
+     \partopsep\z@%
+     \itemsep\glueexpr#1\relax}%
+ }
+\def\list@setsep@star#1{%
+   \csgdef{separation@\ig@listctr}{%
+     \topsep\glueexpr#1\relax%
+     \partopsep\z@%
+     \itemsep\z@}%
+ } 
+
+%%% Commandes utilisateur pour configurer marge et separation
+%%% Ne font que stocker tels quels les couples key=val dans des macros
+%%% et celles-ci ne seront utilisées que lors de l'initialisation  
+%%% d'une liste (par \list@setprop)
+
+\NewDocumentCommand\igset@list{ s mm }{
+   \IfBooleanT{#1}{\csdef{prop@\ig@listenv\romannumeral#2}{}}
+   \ifnum\numexpr#2>\z@%
+      \csappto{prop@\ig@listenv\romannumeral#2}{#3,}%
+   \else%
+      \def\tmp@for##1{\csapto{prop@\ig@listenv\romannumeral##1}{#3}}%
+      \forcsvlist{\tmp@for}{1,2,3}%
+   \fi%
+}
+\NewDocumentCommand\igset@list@name{ s mm }{
+   \IfBooleanT{#1}{\csdef{prop@#2}{}}
+      \csappto{prop@#2}{#3,}%
+}
+\NewDocumentCommand\igsetenum{ s mm }{
+   \IfBooleanT{#1}{\csdef{prop@enum\romannumeral#2}{}}
+   \ifnum\numexpr#2>\z@%
+       \csappto{prop@enum\romannumeral#2}{#3,}%
+   \else%
+      \def\tmp@for##1{\csappto{prop@enum\romannumeral##1}{#3,}}%
+      \forcsvlist{\tmp@for}{1,2,3}%
+   \fi%
+   %\expandafter\show\csname prop@enum\romannumeral#2\endcsname
+}
+\NewDocumentCommand\igsetitem{ s mm }{
+   \IfBooleanT{#1}{\csdef{prop@item\romannumeral#2}{}}
+   \ifnum\numexpr#2>\z@%
+       \csappto{prop@item\romannumeral#2}{#3,}%
+   \else%
+      \def\tmp@for##1{\csappto{prop@item\romannumeral##1}{#3,}}%
+      \forcsvlist{\tmp@for}{1,2,3}%
+   \fi%
+}                                                
+\def\list@setprop{\begingroup%
+   \ifcsdef{c@\ig@listctr}
+      {\csname c@\ig@listctr\endcsname11\relax}%
+      {}
+    \setbox\ig@boxa\hbox{\color@begingroup%
+         \csuse{label@\ig@listctr}\hskip\labelsep\null%
+      \color@endgroup}%
+      \dimgdef\item@maxwidth{\wd\ig@boxa}
+      \setbox\ig@boxa\hbox{\color@begingroup%
+         \csuse{deco@\ig@listctr}{\csuse{label@\ig@listctr}}\hskip\labelsep\null%
+      \color@endgroup}
+   \edef\ig@tempa{%
+      \noexpand\igset[@lists]{\csuse{prop@\ig@listctr}}
+      }%
+   \ig@tempa% 
+   \endgroup%
+}   
+
+\igsetenum{0}{marge}
+\igsetitem{0}{marge=1pc}
+\igdeflabel{enumi}{|1|}
+\igdeflabel{enumii}{|a|}
+\igdeflabel{enumiii}{|i|}
+
+\igdefdeco{enumi}{\bfseries #1.}
+\igdefdeco{enumii}{\bfseries #1.}
+\igdefdeco{enumii}{(#1)}
+
+%%%% Chargement de font pour des symboles à utiliser avec {xitem}
+\DeclareFontFamily{U}{FdSymbolA}{}
+\DeclareFontShape{U}{FdSymbolA}{m}{n}{
+    <-> s * [1] FdSymbolA-Book
+}{}
+\DeclareFontShape{U}{FdSymbolA}{m}{b}{
+    <-> s * [1] FdSymbolA-Medium
+}{}
+\DeclareSymbolFont{fdsymbols}{U}{FdSymbolA}{m}{n}
+\SetSymbolFont{fdsymbols}{bold}{U}{FdSymbolA}{m}{b}
+
+\DeclareMathSymbol{\xdottriangleright}{\mathord}{fdsymbols}{9}
+\DeclareMathSymbol{\xdottriangleup}{\mathord}{fdsymbols}{10}
+\DeclareMathSymbol{\xdottriangleleft}{\mathord}{fdsymbols}{11}
+\DeclareMathSymbol{\xdottriangledown}{\mathord}{fdsymbols}{12}
+\DeclareMathSymbol{\xdotsquare}{\mathord}{fdsymbols}{13}
+\DeclareMathSymbol{\xtrianglerightL}{\mathord}{fdsymbols}{86}
+\DeclareMathSymbol{\xtriangleupL}{\mathord}{fdsymbols}{87}
+\DeclareMathSymbol{\xtriangleleftL}{\mathord}{fdsymbols}{88}
+\DeclareMathSymbol{\xtriangledownL}{\mathord}{fdsymbols}{89}
+\DeclareMathSymbol{\xtriangleright}{\mathord}{fdsymbols}{90}
+\DeclareMathSymbol{\xtriangleup}{\mathord}{fdsymbols}{91}
+\DeclareMathSymbol{\xtriangleleft}{\mathord}{fdsymbols}{92}
+\DeclareMathSymbol{\xtriangledown}{\mathord}{fdsymbols}{93}
+\DeclareMathSymbol{\xcircle}{\mathord}{fdsymbols}{98}
+\DeclareMathSymbol{\xbullet}{\mathord}{fdsymbols}{99}
+\DeclareMathSymbol{\xsquareL}{\mathord}{fdsymbols}{117}
+\DeclareMathSymbol{\xsquare}{\mathord}{fdsymbols}{118}
+\DeclareMathSymbol{\xdiamondL}{\mathord}{fdsymbols}{131}
+\DeclareMathSymbol{\xdiamond}{\mathord}{fdsymbols}{132}
+\DeclareMathSymbol{\xstarL}{\mathord}{fdsymbols}{148}
+\DeclareMathSymbol{\xstar}{\mathord}{fdsymbols}{149}
+\DeclareMathSymbol{\xheart}{\mathord}{fdsymbols}{118}
+\DeclareMathSymbol{\xspad}{\mathord}{fdsymbols}{185}
+\DeclareMathSymbol{\xsuit}{\mathord}{fdsymbols}{186}
+
+\RequirePackage{adforn}
+\newcommand*\xheadarrowright{\adforn{43}}
+\newcommand*\xheadarrowleft{\adforn{42}}
+
+\def\label@itemi{\relsize{-2}$\xdiamond$}
+\def\label@itemii{\relsize{-2}$\xsquare$}
+\def\label@itemiii{\relsize{-2}$\xcircle$}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Ajouts 9/12/23 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% interface utilisateur plus conforme à l'orientation globale 
+
+\def\fake@deco#1{#1}
+\def\lists@outerr#1{
+   \ifundef\ig@listenv{
+   \igb@error{
+         l'option #1 ne peut être utilisée \MessageBreak
+         en dehors d'un environnement de liste
+      }{L'option #1 n'aura aucun effet}
+   }{}
+}
+\newif\iflocal@prop
+\def\set@local@prop#1{
+   \iflocal@prop%
+      \igset@list@name{\ig@listctr}{#1}
+   \else
+      \local@proptrue%
+      \igset@list@name*{\ig@listctr}{#1}
+   \fi
+}
+\newif\ifresume@xenum
+\igset[lists]{%
+   custom counter/.code={%
+      \lists@outerr{cc}%
+      \ifltxcounter{#1}{}{\igdefcounter{#1}{}}%
+      \def\ig@listctr{#1}%
+   },
+   cc/.style={custom counter=#1},
+   resume/.is if=resume@xenum,%
+   r/.style={resume=#1},
+   label prefix/.code=\def\ig@enumlabelprefix{#1},
+   l/.style={label prefix=#1},
+   n/.code=\lists@outerr{n}\igdeflabel{\ig@listctr}{#1},
+   n*/.code=\lists@outerr{n*}\cslet{deco@\ig@listctr}\fake@deco%
+             \igdeflabel{\ig@listctr}{#1},
+   d/.code=\lists@outerr{d}\igdefdeco*{\ig@listctr}{#1},
+   d*/.code=\lists@outerr{d*}\igdefdeco{\ig@listctr}{#1},
+   m/.code=\lists@outerr{m}\set@local@prop{marge=#1},
+   m*/.code=\lists@outerr{m*}\set@local@prop{marge*=#1},
+   s/.code=\lists@outerr{s}\set@local@prop{separation=#1},
+   s*/.code=\lists@outerr{s*}\set@local@prop{separation*=#1},
+   m/.default=\z@,
+   m*/.default=\z@,
+   enum@i/.is family,
+   enum@i/n/.code=\igdeflabel{enumi}{#1},
+   enum@i/n*/.code=\let\deco@enumi\fake@deco
+                    \igdeflabel{enumi}{#1},
+   enum@i/d*/.code=\igdefdeco{enumi}{#1},
+   enum@i/d/.code=\igdefdeco*{enumi}{#1},
+   enum@i/m/.code=\igsetenum{1}{marge=#1},
+   enum@i/m*/.code=\igsetenum{1}{marge*=#1},
+   enum@i/s/.code=\igsetenum{1}{separation=#1},
+   enum@i/s*/.code=\igsetenum{1}{separation*=#1},
+   enum@i/m/.default=\z@,
+   enum@i/m*/.default=\z@,
+   enumi/.code=\pgfqkeys{/ig/lists/enum@i}{#1},
+   enum@ii/.is family,
+   enum@ii/n/.code=\igdeflabel{enumii}{#1},
+   enum@ii/n*/.code=\let\deco@enumii\fake@deco%
+                     \igdeflabel{enumii}{#1},
+   enum@ii/d*/.code=\igdefdeco{enumii}{#1},
+   enum@ii/d/.code=\igdefdeco*{enumii}{#1},
+   enum@ii/m/.code=\igsetenum{2}{marge=#1},
+   enum@ii/m*/.code=\igsetenum{2}{marge*=#1},
+   enum@ii/s/.code=\igsetenum{2}{separation=#1},
+   enum@ii/s*/.code=\igsetenum{2}{separation*=#1},
+   enum@ii/m/.default=\z@,
+   enum@ii/m*/.default=\z@,
+   enumii/.code=\pgfqkeys{/ig/lists/enum@ii}{#1},
+   enum@iii/.is family,
+   enum@iii/n/.code=\igdeflabel{enumiii}{#1},
+   enum@iii/n*/.code=\let\deco@enumiii\fake@deco%
+                      \igdeflabel{enumiii}{#1},
+   enum@iii/d*/.code=\igdefdeco{enumiii}{#1},
+   enum@iii/d/.code=\igdefdeco*{enumiii}{#1},
+   enum@iii/m/.code=\igsetenum{3}{marge=#1},
+   enum@iii/m*/.code=\igsetenum{3}{marge*=#1},
+   enum@iii/s/.code=\igsetenum{3}{separation=#1},
+   enum@iii/s*/.code=\igsetenum{3}{separation*=#1},
+   enum@iii/m/.default=\z@,
+   enum@iii/m*/.default=\z@,
+   enumiii/.code=\pgfqkeys{/ig/lists/enum@iii}{#1},
+   item@i/.is family,
+   item@i/n/.store in=\label@itemi,
+   item@i/n*/.code=\let\deco@itemi\fake@deco%
+                    \igdeflabel{itemi}{#1},
+   item@i/d/.code=\igdefdeco{itemi}{#1},
+   item@i/d*/.code=\igdefdeco*{itemi}{#1},
+   item@i/m/.code=\igsetitem{1}{marge=#1},
+   item@i/m*/.code=\igsetitem{1}{marge*=#1},
+   item@i/s/.code=\igsetitem{1}{separation=#1},
+   item@i/s*/.code=\igsetitem{1}{separation*=#1},
+   item@i/m/.default=\z@,
+   item@i/m*/.default=\z@,
+   itemi/.code=\pgfqkeys{/ig/lists/item@i}{#1},
+   item@ii/.is family,
+   item@ii/n/.store in=\label@itemii,
+   item@ii/n*/.code=\let\deco@itemii\fake@deco%
+                         \igdeflabel{itemii}{#1},
+   item@ii/d/.code=\igdefdeco{itemii}{#1},
+   item@ii/d*/.code=\igdefdeco*{itemii}{#1},
+   item@ii/m/.code=\igsetitem{2}{marge=#1},
+   item@ii/m*/.code=\igsetitem{2}{marge*=#1},
+   item@ii/s/.code=\igsetitem{2}{separation=#1},
+   item@ii/s*/.code=\igsetitem{2}{separation*=#1},
+   item@ii/m/.default=\z@,
+   item@ii/m*/.default=\z@,
+   itemii/.code=\pgfqkeys{/ig/lists/item@ii}{#1},
+   item@iii/.is family,
+   item@iii/n/.store in=\label@itemiii,
+   item@iii/n*/.code=\let\deco@itemiii\fake@deco%
+                      \igdeflabel{itemiii}{#1},
+   item@iii/d/.code=\igdefdeco{itemiii}{#1},
+   item@iii/d*/.code=\igdefdeco*{itemiii}{#1},
+   item@iii/m/.code=\igsetitem{3}{marge=#1},
+   item@iii/m*/.code=\igsetitem{3}{marge*=#1},
+   item@iii/s/.code=\igsetitem{3}{separation=#1},
+   item@iii/s*/.code=\igsetitem{3}{separation*=#1},
+   item@iii/m/.default=\z@,
+   item@iii/m*/.default=\z@,
+   itemiii/.code=\pgfqkeys{/ig/lists/item@iii}{#1},
+}
+\igset[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
+
+\def\igsetlists{\igset[lists]}
+\def\@ques@{%
+   \list@setprop%
+   \expandafter
+   \list
+   \csname label@\ig@listctr\endcsname%
+        {\usecounter{\ig@listctr}%
+        \csuse{marge@\ig@listctr}%
+         \csuse{separation@\ig@listctr}%
+         \listparindent\parindent%
+          \let\makelabel\ig@makelabel%
+        }
+   }
+\def\@ques@star{%
+   \list@setprop%
+   \expandafter
+   \list
+   \csname label@\ig@listctr\endcsname%
+        {\csuse{marge@\ig@listctr}%
+         \csuse{separation@\ig@listctr}%
+         \listparindent\parindent%
+          \let\makelabel\ig@makelabel%
+        }
+   }
+\def\ig@makelabel#1{\hfill\ifblank{#1}{}{\csuse{deco@\ig@listctr}{#1}}}
+\NewDocumentCommand\xenum{o}{%
+   \def\ig@listenv{enum}
+   \def\ig@xlistenv{xenum}
+   \ifnum \@enumdepth >2 \@toodeep\else%
+      \advance\@enumdepth\@ne%
+      \edef\ig@listdepth{\the\@enumdepth}
+      \edef\ig@listlevel{\romannumeral\@enumdepth}%
+      \edef\ig@listctr{enum\ig@listlevel}%
+   \fi%
+   \IfValueT{#1}{\igset[lists]{#1}}%
+   \@ques@%
+   \ifresume@xenum%
+      \csname c@\ig@listctr\expandafter\endcsname
+       \csname last@\ig@listctr\endcsname\relax%
+        \resume@xenumfalse%
+   \fi%
+ }
+ \def\endxenum{\save@enumctr\endlist}
+ \NewDocumentCommand\xitem{o}{%
+  \def\ig@listenv{item}
+  \def\ig@xlistenv{xitem}
+  \ifnum \@itemdepth >2 \@toodeep\else%
+      \advance\@itemdepth\@ne%
+      \edef\ig@listdepth{\the\@itemdepth}
+      \edef\ig@listlevel{\romannumeral\@itemdepth}%
+      \edef\ig@listctr{item\ig@listlevel}%
+  \fi%
+  \IfValueT{#1}{\igset[lists]{#1}}%
+  \@ques@star%
+ }
+\let\endxitem\endlist
+\NewDocumentCommand\init@xlist{mm t- t- t- t\r t+  E{\op}{{}} }{
+	\IfBooleanTF{#6}%
+        {\begin{#1}[r,#8]}
+        {\IfBooleanT{#7}{\begin{#1}[#8]}}%
+	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
+	\igset[lists]{local,#8}
+	#2%
+}
+\NewDocumentCommand\xit@enum{o E{\zap}{{@}} d() d<>}{%
+      \ifstrequal{#2}{@}{}
+            {\addtocounter{\ig@listctr}{#2}}%
+      \IfValueTF{#1}
+         {\item[#1]}
+         {\item}%
+      \IfValueT{#3}
+         {\deco@itemtitle{#3}}%
+      \IfValueT{#4}
+         {\label{\ig@enumlabelprefix#4}}%
+ }
+ \def\xitenum{\init@xlist{xenum}\xit@enum}
+\NewDocumentCommand\xit@item{E{\lab\zap}{{}{@}} d() d<>}{%
+   \ifblank{#1}
+         {\item}
+         {\item[\csuse{deco@\ig@listctr}{#1}]}%
+   \IfValueT{#3}{\deco@itemtitle{#3}}%
+}
+\def\xititem{\init@xlist{xitem}\xit@item}
+\def\xit{\@ifstar\xititem\xitenum}
+\def\ig@enumlabelprefix{}
+\def\end@xlist{%
+	\ifundef\ig@listenv{}{\expandafter\end\expandafter{\ig@xlistenv}}
+}
+\def\end@xlist@rec{%
+   \ifundef\ig@listenv{}{%
+      \expandafter\end\expandafter{\ig@xlistenv}%
+		 \end@xlist@rec%
+  }%
+}%
+\NewDocumentCommand\exit{t- t- t- t-}{
+   \IfBooleanTF{#1}
+      {%
+         \end@xlist%
+         \IfBooleanT{#2}
+            {\end@xlist%
+               \IfBooleanT{#3}{%
+                     \end@xlist%
+                      \IfBooleanT{#3}{%
+                         \end@xlist}%
+               }%
+            }%
+      }%
+      {\end@xlist@rec}%
+}
+\NewDocumentCommand\ignewlist{ smmm }{
+   \IfBooleanF{#1}{
+      \expandafter\newcommand\csname#2\endcsname[1][]
+         {\xenum[#4,##1]\def\ig@xlistenv{#2}}
+      \csdef{end#2}{\save@enumctr\endlist}
+      \def#3{\init@xlist{#2}\xit@enum}
+   }
+   \IfBooleanT{#1}{
+      \expandafter\newcommand\csname#2\endcsname[1][]
+         {\xitem[#4]\def\ig@xlistenv{#2}}
+      \cslet{end#2}\endlist
+      \def#3{\init@xlist{#2}\xit@item}
+   }
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Commandes pour les questions %%%%
+%%%% remplacé par {xenum} et \xit %%%%
+	
+\def\question{%
+     \@ifnextchar+%
+     {\expandafter\ques@plus\@gobble}%
+     \ques@interim
+  }%
+\def\ques@interim{\@ifnextchar-\ques@minus\ques@normal}
+\def\ques@plus{\@ifnextchar({\ques@plus@}{\ques@plus@@}}
+\def\ques@plus@(#1){\begin{questions}(#1)\ques@normal}
+\def\ques@plus@@{\begin{questions}\ques@normal}
+\def\ques@minus{%
+   \ifnum\@enumdepth>\@ne\end{questions}\fi%
+   \expandafter\ques@normal\@gobble}
+\def\ques@normal{%
+	\@ifnextchar[
+		\ques@normal@%
+		{\item\ques@titre}}
+\def\ques@normal@[#1]{%
+   \saveexpandmode\exploregroup\csname c@\ig@listctr\expandafter\endcsname
+   \csname last@\ig@listctr\endcsname\relax%s\noexpandarg%
+   \IfSubStr{#1}{|*|}{\stepcounter{\ig@listctr}}{}%
+   \StrSubstitute{#1}{|*|}{\csname label@\ig@listctr\endcsname}[\tmp@string]%
+   \restoreexpandmode%
+   \item[\tmp@string]%
+   \ques@titre%
+ }
+\def\ques@titre{%
+	\ifig@itemtitle\global\ig@itemtitlefalse\expandafter\deco@itemtitle\fi%
+}
+\def\save@enumctr{%
+	\csnumgdef{last@\ig@listctr}{\value{\ig@listctr}}%
+}
+\def\end@question{%
+	\@ifstar
+		{%
+			\ifnum\@enumdepth>\z@%
+				 \end{questions}%
+			\fi
+		}%
+		{\end@question@}%
+	}
+\def\end@question@{%
+	\ifnum\@enumdepth=\z@%
+	\else
+		 \end{questions}%
+		  \expandafter\end@question
+	\fi%
+  }
+\def\resumequestion{%
+   \begin{questions}%
+   	\csname c@\ig@listctr\expandafter\endcsname
+   	 \csname last@\ig@listctr\endcsname\relax%
+   	  \question%
+   }
+\igdefdeco{itemtitle}{\textbf{\boldmath #1}}
+\def\questiontitre{\ig@itemtitletrue\question}
+\def\qq{\question}
+\def\endqq{\end@question}
+\def\rqq{\resumequestion}
+\def\qqt{\questiontitre}
+\def\rqqt{\ig@itemtitletrue\resumequestion}
+\def\bqq{\begin{questions}}
+\def\brqq{%
+	\begin{questions}
+	 \setcounter{\ig@listctr}{\csname last@\ig@listctr\endcsname}%
+	}
+
+\def\questions{%
+   \def\ig@listenv{enum}%
+   \def\ig@xlistenv{xenum}%
+   \ifnum \@enumdepth >2 \@toodeep\else%
+      \advance\@enumdepth\@ne%
+      \edef\ig@listdepth{\the\@enumdepth}
+      \edef\ig@listlevel{\romannumeral\the\@enumdepth}%
+      \edef\ig@listctr{enum\ig@listlevel}%
+    \fi%
+    \@ifnextchar({\@@ques@}{\@ques@}%
+ }
+\def\endquestions{\save@enumctr\endlist}
+\def\@@ques@(#1){%
+  \igdeflabel{\ig@listctr}{#1}%
+  \@ques@}
+
+%%%% 
+\DeclareDocumentCommand\disc@unite{mmd()}{
+   \IfValueTF{#3}{\item[#1#3#2]}{\item}
+}
+\def\item@imp#1#2{\item[$#1\Rightarrow#2\,)$]} 
+\newenvironment*{discussion}[1][]{%
+	\def\unite{\disc@unite{}{~:~}}%
+	\def\si{\disc@unite{Si\ }{~:~}}%
+	\def\cas{\disc@unite{Cas où\ }{~:~}}
+	\let\imp\item@imp
+	\def\cn{\item[$\Leftarrow\,)$]}
+	\def\cs{\item[$\Rightarrow\,)$]}
+	\list{}{%
+		\ifblank{#1}
+			{\labelwidth=\z@ \leftmargin=1pc \itemindent=-\leftmargin}
+			{%
+				\settowidth\leftmargin{#1}%
+				\advance\leftmargin\labelsep%
+				\labelwidth=\leftmargin%
+				\itemindent\z@%
+			}
+    	\let\makelabel\discuss@label%
+	}%
+}{%
+  \endlist
+}
+\def\discuss@label#1{%
+	\hskip\labelsep%
+	\ifblank{#1}
+		{\makebox[\leftmargin-\labelsep][l]{\deco@discuss{}}}
+		{\deco@discuss{#1}\hfil}%
+	}
+\igdefdeco{discuss}{$\bullet\;$ \bfseries\boldmath #1}
+%% Pour compatibilite
+\let\discuss\discussion
+\let\enddiscuss\enddiscussion
+
+%% Ajout 07/01/2024
+%% Commande \unite pour utilisation dans theoremes et similaire
+%% sans que l'utilisateur ait besoin d'initier une liste. 
+%% C'est l'environnement qui s'en charge.
+%% Il doit initier la commande \unite avec \def\unite{\first@unite}
+%% dans le bloc d'ouverture.
+%% et avoir \endlist dans le bloc de fermeture ou d'utilise \closeunite. 
+\let\thegobbler\@gobble
+\ig@cnt@shortcut{X}{gobbler}
+\igdefcounter{unite}{|X|.|1|}(T)
+\igdefdeco{unite}{\bfseries#1.}
+\makethetolabel{unite}
+\newif\ifinsideuniteenv
+\def\unite@env{%
+   \@enumdepth\@ne%
+   \list\label@unite%
+        {\usecounter{unite}%
+         \listparindent\z@%
+		   \labelwidth\z@%
+		    \itemindent\labelsep%
+		     \leftmargin\z@%
+			  \let\makelabel\lab@unite%
+        }%
+ }
+ \def\lab@unite#1{\ifblank{#1}{}{\deco@unite{#1}}}
+ \def\closeunite{
+   \ifinsideuniteenv%
+      \endlist%
+      \let\unite\relax%
+      \insideuniteenvfalse%
+   \fi%
+}
+ \def\first@unite{%   
+   \insideuniteenvtrue
+   \igdeflabel{enumii}{|T|.|1|}%
+ 	\igdeflabel{enumiii}{|q|.|a|}%
+	\def\unite{\unite@}%
+	\unite@env\unite%
+ }
+ \DeclareDocumentCommand\unite@{od()d<>}{%
+	\IfValueTF{#1}{\item[#1]}{\item}%
+	\IfValueT{#2}{\deco@unitetitle{#2}}%
+	\IfValueT{#3}{\IfValueF{#1}{\label{#3}}}%
+}
+\igdefdeco{unitetitle}{\textbf{#1~:~}}
+
+%%% Ajout 2020 
+%%% environnement simple pour formater conditions et conséquences (obsolete)
+\def\ccsi{\relsize{-3}$\xbullet\;$}
+\def\blneutre{\relsize{-3}$\xsquare\;$}
+\def\ccalors{\relsize{-3}$\xdiamond\;$}
+\newdimen\ccleftmargin
+\newdimen\ccrightmargin
+\newdimen\ccsymbolwidth
+\settowidth\ccsymbolwidth{\enskip\ccsi\;}
+\def\ccjot{3pt}
+\newif\ifccinsidetab
+\newif\ifccvline
+\settowidth\ccleftmargin{Si} 
+\DeclareDocumentEnvironment{cond}{O{\ccleftmargin} O{l}}{%
+	\ifhmode\par\else\leavevmode\fi%
+	\extrarowheight3pt%
+	\tabular[t]{@{}p{#1}@{\ccsi}#2@{}}%
+	}
+	{\endtabular\par\smallskip}
+\DeclareDocumentEnvironment{cons}{O{\ccleftmargin} O{l}}{%
+	\ifhmode\par\else\leavevmode\fi%
+	\extrarowheight3pt%
+	\tabular[t]{@{}p{#1}@{\ccalors}#2@{}}%
+	}
+	{\endtabular\par\smallskip}
+\DeclareDocumentEnvironment{stab}{O{2cm} O{l}}{%
+	\extrarowheight3pt%
+	\tabular[t][t]{@{}p{#1}#2@{}}%
+	}
+	{\endtabular\par\smallskip}
+
+%%% Ajout le 21/12/2023
+%%% Environnement {condcons} plus évolué
+%%% capable de mesurer les parties latérales du tableau. 
+\NewDocumentCommand\line@tab{ D(){\ccneutre} somo }{%
+   \tab@init%
+   \IfValueT{#3}{#3}&#1\enskip\null&#4&\IfValueT{#5}{#5}%
+   \IfBooleanF{#2}{\cr}%
+}
+\def\tab@init{%
+   \ifccinsidetab\else%
+      \ifccvline%
+         \init@tab%
+      \else%
+         \init@tab@novline%
+      \fi%
+   \fi%
+}
+\def\init@tab{%
+   \ifhmode\hfill\par\fi\addvspace{\smallskipamount}%
+   \ccinsidetabtrue%
+   \csuse{tabular*}{\linewidth-\@totalleftmargin}[t]
+      {@{}p{\ccleftmargin}|r@{}
+         p{\linewidth-\ccleftmargin-\ccrightmargin-\ccsymbolwidth
+            -2\tabcolsep-\fboxrule}@{}%
+         p{\ccrightmargin}@{}}%
+}
+\def\init@tab@novline{%
+   \ifhmode\hfill\par\fi\addvspace{\smallskipamount}%
+   \ccinsidetabtrue%
+   \csuse{tabular*}{\linewidth-\@totalleftmargin}[t]
+      {@{}p{\ccleftmargin}@{\enskip}@{}r@{}
+         p{\linewidth-\ccleftmargin-\ccrightmargin-\ccsymbolwidth-1em}@{}
+         p{\ccrightmargin}@{}}%
+}
+
+\def\close@tab{%
+   \ifccinsidetab%
+      \csuse{endtabular*}\par\addvspace{\medskipamount}%
+      \ccinsidetabfalse%
+   \fi}
+\long\def\no@tab#1{\close@tab#1}
+\def\first@linetab{%
+   \close@tab%
+   \def\linetab{\line@tab}%
+   \linetab%
+}
+\def\first@cond{%
+   \close@tab%
+   \def\cond{\line@tab(\ccsi)}%
+   \cond%
+}
+\def\first@cons{%
+   \close@tab%
+   \def\cons{\line@tab(\ccalors)}%
+   \cons%
+}
+\def\break@tab{%
+   \close@tab\ifccvline\init@tab\else\init@tab@novline\fi%
+}
+\def\symbol@measuring#1{%
+   \setbox0\hbox{#1\enskip}%
+   \ifdim\wd0>\ccsymbolwidth\relax\global\ccsymbolwidth\wd0\fi
+}
+\DeclareDocumentCommand\cc@measuring{ d()somo }{%
+   \IfValueT{#3}{%}
+      \setbox0\hbox{#3}%
+      \ifdim\wd0>\ccleftmargin\relax\global\ccleftmargin\wd0\fi%
+   }
+   \IfValueT{#5}{%
+      \setbox0\hbox{#5}%
+       \ifdim\wd0>\ccrightmargin\relax\global\ccrightmargin\wd0\fi%
+      }%
+   \IfValueT{#1}{\symbol@measuring{#1}}
+}
+\long\def\condcons@measuring#1{%
+   \@bsphack%
+      \settowidth\ccsymbolwidth{\ccsi\enskip\null}
+      \ccleftmargin\z@\relax\ccrightmargin\z@\relax%
+      \def\cond{\cc@measuring}%
+      \def\cons{\cc@measuring}%
+      \def\linetab{\@ifnextchar(\cc@measuring{\cc@measuring(\ccneutre)}}%
+      \let\breaktab\relax%
+      \def\notab##1{}%
+      \setbox0\vbox{\everypar{}#1}%
+   \@esphack%
+}
+\NewDocumentEnvironment{condcons}{O{}+b}{%
+   \dimdef\ccleftmargin@limit{.28\linewidth}%
+   \dimdef\ccrightmargin@limit{.17\linewidth}%
+   \symbol@measuring{\ccsi}%
+   \symbol@measuring{\ccalors}%
+   \igset[condcons]{#1}%
+   \condcons@measuring{#2}%
+   \ifdim\ccleftmargin>\ccleftmargin@limit\relax%
+      \ccleftmargin=\ccleftmargin@limit%
+   \fi%
+   \ifdim\ccrightmargin>\ccrightmargin@limit\relax%
+      \ccrightmargin=\ccrightmargin@limit%
+   \fi%
+	\extrarowheight=\ccjot\relax%
+   \everymath{\displaystyle}%
+   \let\breaktab\break@tab%
+   \let\notab\no@tab%
+   \def\linetab{\first@linetab}%
+   \def\cond{\first@cond}%
+   \def\cons{\first@cons}%
+      #2 
+   \close@tab%
+}{}
+\igset[condcons]{%
+   l/.code=\dimdef\ccleftmargin@limit{#1},
+   r/.code=\dimdef\ccrightmargin@limit{#1},
+   s/.code=\dimdef\ccjot{#1},
+   s/.default=3pt,
+   f/.is if=ccvline
+}
+
+%%%%%% lrmargin and mini environments %%%%
+%%%%%% Borrowed from adjustwidth.sty
+
+\newenvironment{lrmargin}[3][]{%
+  \advance\ig@lrcount\@ne%
+  \list\relax{%
+    \topsep\smallskipamount%
+    \listparindent\parindent%
+    \parsep\parskip%
+		\itemindent\z@\relax%
+      \labelwidth\z@\relax%
+		\itemindent\labelsep%
+	 \ifnum\ig@lrcount>\tw@%
+		\leftmargin\z@\relax%
+		\rightmargin\z@\relax%
+	\else%
+    	\ifblank{#2}{\leftmargin\z@}{\leftmargin=#2\relax}%
+    	\ifblank{#3}{\rightmargin\z@}{\rightmargin=#3\relax}%
+	\fi%
+   \let\makelabel\lrmargin@label%
+    }%
+    \item[#1]\ignorespaces}
+ {\endlist}
+\def\lrmargin@label#1{%
+	\ifblank{#1}{\relax}
+				 {\csuse{deco@lrmargin}{#1}}%
+	}
+\igdefdeco{lrmargin}{\fbox{#1}} 
+
+\dimdef\lrmarginleft{\z@}
+\dimdef\lrmarginright{\z@}
+\igset[mini]{%
+	left margin/.code=\dimdef{\lrmarginleft}{#1},
+	right margin/.code=\dimdef{\lrmarginright}{#1},
+   lm/.style={left margin=#1},
+   rm/.style={right margin=#1},
+	font/.code=\def\mini@font{#1},
+	label font/.code=\def\mini@label@font{#1\vphantom{(}},
+	mini deco/.code=\igdefdeco{lrmargin}{\mini@label@font#1},
+}
+\igset[mini]{%
+	font=\sffamily\small,
+	label font=\sffamily\small\scshape\bfseries,
+	mini deco/.initial={#1.}
+	}
+\DeclareDocumentEnvironment{MINI}{O{} D(){}}{%
+		\igset[mini]{#1}%
+      \ifdim\leftmargin>3.4em\relax
+         \let\lrmarginleft\z@
+      \fi
+		\begin{lrmargin}[\MakeLowercase{#2}]
+			{\lrmarginleft}
+			{}%
+		\mini@font%
+	}{\end{lrmargin}}
+
+\def\mini{\begin{MINI}}
+\def\endmini{\end{MINI}}
+\def\nb{\mini(n.b)}
+\let\endnb\endmini
+\def\dem{\mini(dem)}
+\let\enddem\endmini
+\def\ind{\mini(ind)}
+\let\endind\endmini
+\def\snt{\mini(synthèse)}
+\let\endsnt\endmini 
+\def\newmini#1#2{\csdef{#1}{\mini(#2)}\cslet{end#1}\endmini}
+
+%%%%%% Ajout 17/07/2021 %%%%%%%%
+%%%%% Pointillé 
+\setlength{\ligneskip}{\baselineskip*\real{.33}}
+\def\set@point@box{\setbox\ig@boxb=\hbox{\deco@pointille\hss}}
+\igdefdeco{pointille}{\textcolor{black!75}{\rule{.8pt}{.4pt}\hskip1.2pt}}
+\def\lignes{\@ifstar\ig@lign\ig@lign@}
+\def\ig@lign@{\set@point@box%
+	\hbox{}\vrule height \ligneskip width\z@\relax%
+	 \xleaders\copy\ig@boxb\hskip 0pt plus 1fill%
+	  \vadjust{\vskip\ligneskip}%
+	   \hbox{}\ig@lign%
+}
+\def\ig@lign#1{\set@point@box%
+ 	\par\addvspace{\ligneskip}
+	\begingroup%
+	 \foreach \x in{1,2,...,#1}
+		{\hbox to \hsize {%
+		  \mbox{}\xleaders\copy\ig@boxb\hskip 0pt plus 1fill\relax
+		  \vadjust{\vskip\ligneskip}\hbox{}}
+		}
+	\endgroup
+	 \addvspace{\ligneskip*\real{2.0}}
+}
+\def\points{\@ifstar\ig@point@@\ig@point@}
+\def\ig@point@#1{\set@point@box%
+		\hbox to #1{\xleaders\copy\ig@boxb\hskip 0pt plus 1fill\hbox{}}}
+\def\ig@point@@#1{\set@point@box%
+		\xleaders\copy\ig@boxb\hskip 0pt plus 1fill\hbox{}\linebreak
+		\hbox to #1{\xleaders\copy\ig@boxb\hskip 0pt plus 1fill\hbox{}}%
+}
+
+%%% Ajout 05/08/2021
+%%% gestion des références croisées VANILLA du noyaux LaTeX
+%%% les commandes ne sont pas utilisables dans les documents finaux.
+
+\def\igG@refundefinedtrue{%
+  \gdef\ig@refundefined{%
+    \@latex@warning@no@line{There were undefined references}}}
+    
+\let\ig@refundefined\relax
+
+\def\ig@setref#1#2#3{%
+  \ifx#1\relax
+   \protect\igG@refundefinedtrue
+   \nfss@text{\reset@font\bfseries ??}%
+   \@latex@warning{Reference `#3' on page \thepage \space
+             undefined}%
+  \else
+   \expandafter#2#1\null
+  \fi}
+  
+\def\ig@ref#1{\expandafter\ig@setref\csname r@#1\endcsname\@firstoftwo{#1}}
+
+\def\ig@pageref#1{\expandafter\ig@setref\csname r@#1\endcsname
+                                   \@secondoftwo{#1}}
+\def\ig@newl@bel#1#2#3{{%
+%  \@ifundefined{#1@#2}%
+%    \relax
+%    {\gdef \ig@multiplelabels {%
+%       \@latex@warning@no@line{There were multiply-defined labels}}%
+%     \@latex@warning@no@line{Label `#2' multiply defined}}%
+  \global\@namedef{#1@#2}{#3}}}
+\def\ig@newlabel{\ig@newl@bel r}
+
+%\@onlypreamble\ig@newl@bel
+\let \ig@multiplelabels \relax
+
+\def\ig@label#1{\@bsphack
+  \write\@auxout{}%
+         {\string\ig@newlabel{#1}{{\ig@currentlabel}{\thepage}}}%
+  \@esphack}
+
+\def\ig@currentcounter{}
+
+\def\ig@refstepcounter#1{\stepcounter{#1}%
+    \edef\ig@currentcounter{#1}%
+    \edef\ig@currentlabel
+       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
+}
+% commande ajoutée pour référencer un compteur en utilisant \addtocounter
+\def\ig@refaddtocounter#1#2{%
+    \addtocounter{#1}{#2}%
+    \edef\ig@currentcounter{#1}%
+    \edef\ig@currentlabel
+    {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}% 
+ }
+\def\ig@labelformat#1{\expandafter\def\csname p@#1\endcsname##1}
+\DeclareRobustCommand\igRef[1]{\edef\@tempa{\igref{#1}}%
+   \expandafter\Makeuppercase\@tempa}
+
+\def\ig@currentlabel{}
+
+%%% code from glocalvals.sty
+
+\newcommand{\usevalue}[1]{%
+  \ifcsname igval@#1\endcsname\csname igval@#1\endcsname\fi}
+
+% igval@#1 is defined in the .aux file to be used on the next run.
+% igval@#1@defined is defined immediately to mark that igval@#1 has already
+% been used and cannot be used again
+\newcommand{\defvalue}[2]{%
+\ifcsname igval@#1@defined\endcsname
+  \PackageError{igbase}{Value "#1" already defined}{}%
+\else%
+  \write\@auxout{%
+    \unexpanded{\csgdef{igval@#1}{#2}}%
+  }%
+  \csgdef{igval@#1@defined}{}%
+  \csgdef{igval@#1}{#2}%
+  \PackageInfo{igbase}{Defining new variable "#1" with value "#2"}%
+\fi%
+}
+
+
+\newcommand\ig@square[1][x]{\rule{\fntht#1}{\fntht#1}}
+  
+%%%% Ajout 09/10/2023
+%%%% emprunté à answers.sty et tcolorbox.sty avec adaptation 
+%%%% Pemet d'écrire les solutions dans un fichier séparé.
+%%%% L'écriture ne se produit que si \ifsolution est initialisé en true.  
+%%%% \ifsolution doit être déclaré par la classe avant le chargement de igbase.sty.
+%%%% Sa création ici provoquera sa réinitialisation en false. 
+\ifundef{\ifsolution}{\newif\ifsolution}{}
+
+
+%%% tcolorbox.sty : 
+%%% environnement : {igwriteonce}, #1 est le nom d'un fichier physique
+%%% crée le fichier #1, l'associe au stream igoutonce, y écrit et le ferme.
+%%% si \igwriteonce est utilisé dans un environnement avec un/des arguments
+%%% optionnels, veiller à ce que les arguments suivent le nom de l'environnement
+%%% sur la même ligne et sans espaces entre eux pour empêcher TeX d'aller chercher 
+%%% trop loin des arguments, avalant des espaces et empêchant une lecture
+%%% verbatim correcte.  (prefixer les spec des arguments xparse par !)
+\RequirePackage{verbatim}
+\def\ig@allocate@ig@out{%
+  \newwrite\ig@out%
+  \xdef\ig@allocate@ig@out{}%
+}
+\let\ig@verbatim@begin@hook\@empty
+\let\ig@verbatim@end@hook\@empty
+\let\ig@verbatim@change@percent\@empty
+\let\ig@set@verbatim@finish\@empty
+\def\igwriteonce#1{%
+  \@bsphack
+  \ig@set@verbatim@finish%
+  %\ig@allocate@ig@out%
+  \igopenfile{solhandle}
+  \immediate\openout\solhandle@file #1.tex
+  \ig@verbatim@begin@hook%
+  \let\do\@makeother\dospecials
+  \ig@verbatim@change@percent\catcode`\^^M\active \catcode`\^^I=12
+  \def\verbatim@processline{%
+    \immediate\write\solhandle@file
+      {\the\verbatim@line}}%
+  \verbatim@start}%'
+\def\endigwriteonce{%
+  \ig@verbatim@end@hook%
+  \immediate\closeout\solhandle@file
+  \@esphack%
+}
+
+%%% answers.sty : 
+%%% environnement : {igfilesave}, #1 est le nom d'un stream. 
+%%% \igopenfile{#1}[#2] crée le stream #1 et l'associe à au fichier physique #2, 
+%%% sans #2 un fichier physique de nom #1 est crée.
+%%% \igclosefile{#1} ferme le stream #1, 
+%%% \igreadfile{#1} ouvre le fichier associé au stream #1 s'il existe, 
+%%% \igreadfile est remplaçable par un \input direct sur le fichier physique.
+%%% plusieurs écritures possibles entre fermeture et ouverture du stream.
+%%% possible de changer de fichier physique associé au stream, 
+%%% aucune écriture si \solutionfalse : 
+%%% fichier physique créé par \igopenfile mais reste vide.
+
+\long\def\igprotected@iwrite#1#2#3{%
+  \begingroup
+    \let\thepage\relax
+    #2%
+    \let\protect\@unexpandable@protect
+    \edef\reserved@a{\immediate\write#1{#3}}%
+    \reserved@a
+  \endgroup
+  \if@nobreak
+    \ifvmode
+      \nobreak
+    \fi
+  \fi
+}
+
+\newenvironment{igfilesave}[1]{%
+   \@bsphack
+   \def\verbatim@processline{}%
+   \ifig@fileundefined{#1}{}{%
+      \ifig@open{#1}{%
+         \def\verbatim@processline{%
+            \ifig@solution{%
+               \immediate\write\@nameuse{#1@file}%
+                  {\the\verbatim@line}%
+            }{}%
+         }%
+      }{}%
+   }%
+   \let\do\@makeother\dospecials
+   \catcode`\^^M\active \catcode`\^^I=12\relax
+   \verbatim@start
+}{\@esphack}
+
+\newcommand{\igwritetofile}[2]{%
+   \@bsphack
+   \ifig@fileundefined{#1}{}{%
+      \ifig@open{#1}{%
+         {%
+            \let\protect\string
+            \ifig@solution{%
+               \igprotected@iwrite{\@nameuse{#1@file}}{}{#2}%
+            }{}%
+         }%
+      }{}%
+   }%
+   \@esphack%
+}
+
+\newcommand{\ifig@open}[3]{%
+   \csname if#1open\endcsname#2\else#3\fi}%
+   
+\newcommand{\ifig@fileundefined}[3]{%
+   \csname ifx\expandafter\endcsname
+      \csname #1@file\endcsname\relax
+      #2\else#3\fi}
+      
+\newcommand{\ifig@solution}[2]{%
+   \ifsolution #1\else #2\fi}
+   
+\def\igopenfile#1{%
+	\expandafter\ifx\csname #1opentrue\endcsname\relax
+      \expandafter\newif\csname if#1open\endcsname
+   \fi
+   \@ifnextchar[{\igdefine@filename{#1}}%
+      {\igdefine@filename{#1}[#1]}}%
+      
+\def\igdefine@filename#1[#2]{%
+   \global\@namedef{#1@filename}{#2.tex}%
+   \ifig@solution{%
+      \typeout{Output from handle #1 going
+         to #2.tex}%
+   }{}%
+   \ifig@fileundefined{#1}{%
+      \expandafter\newwrite\csname #1@file\endcsname
+      \csname newif\expandafter\endcsname
+         \csname if#1open\endcsname
+      \global\csname #1openfalse\endcsname
+      \expandafter\ifx\csname Open#1hook\endcsname\relax
+         \global\@namedef{Open#1hook}##1{}%
+      \fi
+      \expandafter\ifx\csname Close#1hook\endcsname\relax
+         \global\@namedef{Close#1hook}##1{}%
+      \fi
+   }{}%
+   \let\Tmp\relax
+   \ifig@open{#1}{\typeout{File #1 already open}}{%
+      \ifig@solution{%
+         \immediate\openout\@nameuse{#1@file}=%
+         \@nameuse{#1@filename}%
+      }{}%
+      \global\csname#1opentrue\endcsname
+      \def\Tmp{\@nameuse{Open#1hook}{#1}}%
+   }%
+   \Tmp
+}
+
+\def\igclosefile#1{%
+   \let\Tmp\relax
+   \ifig@fileundefined{#1}{}{%
+      \ifig@open{#1}{%
+         \ifig@solution{%
+            \immediate\closeout\@nameuse{#1@file}%
+         }{}%
+         \global\csname #1openfalse\endcsname
+         \def\Tmp{\@nameuse{Close#1hook}{#1}}%
+      }{}%
+   }%
+   \Tmp
+}
+
+\def\igreadfile#1{%
+   \ifig@solution{%
+      \ifig@fileundefined{#1}{}{%
+         \ifig@open{#1}{%
+            \typeout{WARNING: attempt to read open file #1}%
+         }{%
+            \edef\Tmp{%
+               \noexpand\InputIfFileExists
+                  {\@nameuse{#1@filename}}{}%
+               {\noexpand\message{File
+                  \@nameuse{#1@filename}%
+                     \space not found}}%
+            }%
+            \Tmp
+         }%
+      }%
+   }{}%
+}
+
+%%%%%%%
+%%%%%%%%%
+\endinput
+
+\let\action@parser\@firstofone
+\def\generic@parser#1#2{%
+   \IfSubStr{#2}{(}
+      {\gen@parser{#1}#2}
+      {\gen@parser@{#1}{#2}}%
+ }
+\def\gen@parser#1#2(#3){%
+   \ifcsdef{#1@#2}
+      {\expandafter\action@parser\expandafter{\csname#1@#2\endcsname{#3}}}
+      {\ifcsdef{#2}
+         {\ifcsdef{#1@#3}
+            {\expandafter\action@parser\expandafter%
+               {\csname#2\endcsname{\csname#1@#3\endcsname}}}
+            {\expandafter\action@parser\expandafter%
+               {\csname#2\endcsname}{#3}}%
+         }
+         {#2(#3)}%
+       }%
+    }
+
+\def\gen@parser@#1#2{%
+   \ifcsdef{#1@#2}
+     {\expandafter\action@parser
+       \expandafter{\csname#1@#2\endcsname{}}}
+     {\ifcsdef{#2}
+       {\action@parser{\csname#2\endcsname}}
+         {\action@parser{#2}}%
+     }%
+  }
+
+\long\def\Ifiscs#1{%
+    \if\noexpand#1\relax
+        \expandafter\@firstoftwo
+    \else
+        \ifcat\noexpand~\noexpand#1%
+            \expandafter\expandafter
+            \expandafter\@firstoftwo
+        \else
+            \expandafter\expandafter
+            \expandafter\@secondoftwo
+        \fi
+    \fi
+}
+\def\mapcs#1{\Ifiscs#1{\forcsvlist{#1}}{}}
+\def\mapscss#1#2{\Ifiscs#1{\forcsvlist}}
+

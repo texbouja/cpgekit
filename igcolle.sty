@@ -1,0 +1,535 @@
+\def\filedate{2023/11/12}
+\def\fileversion{v0.1alpha}
+\def\fileauthor{Sadik Boujaida}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{igcolle}[\filedate\space\fileversion]
+\RequirePackage{etoolbox}
+\RequirePackage{pgfkeys}
+\RequirePackage{igbase}
+\RequirePackage{igmath}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\define@key[IG]{division}{name}{\csdef{\@division @name}{#1}}
+
+\define@choicekey[IG]{division}{align}{l,c,r}[l]{%
+  \csletcs{titre \@division}{titre #1}
+  \csletcs{endtitre \@division}{endtitre #1}
+ }
+\newenvironment{titre c}[1]
+   {\centering\varwidth{.75\linewidth}
+     \def\@alignement{c}
+     \centering\csname labelfont@\@division\endcsname
+       \ifblank{#1}{}{\csuse{deco@\@division}{#1}\strut\\}}
+   {\endvarwidth\par}
+\newenvironment{titre l}[1]%
+   {\def\@alignement{l}%
+    \csname labelfont@\@division\endcsname%
+   \setbox\b@ig@z\hbox{\csuse{deco@\@division}{#1}}%
+   \leavevmode%
+    \ifdim\wd\b@ig@z=\z@\else
+      \unhcopy\b@ig@z\nobreak\fi%
+        \minipage[t]{\linewidth-\wd\b@ig@z}\raggedright}
+   {\endminipage\par}
+\newenvironment{titre r}[1]
+    {\def\@alignement{r}%
+     \raggedleft\csname labelfont@\@division\endcsname%
+      \ifblank{#1}{}{\csuse{deco@\@division}{#1}}}
+    {\par}
+\define@key[IG]{division}{labelfont}{\csdef{labelfont@\@division}{#1}}
+\define@key[IG]{division}{textfont}{\csdef{textfont@\@division}{#1}}
+\define@key[IG]{division}{parents}[]{%
+     \defcounter{\@division}
+     \forcsvlist{\expandafter\@addtoreset\expandafter{\@division}}{#1}
+   }
+\def\defcounter#1{\ifltxcounter{#1}{}{\newcounter{#1}}}
+
+\define@key[IG]{division}{childs}{%
+  \forcsvlist{\expandafter\@pretoreset\expandafter{\@division}}{#1}
+ }
+\def\@pretoreset#1#2{\@addtoreset{#2}{#1}}
+
+\define@key[IG]{division}{beforeskip}[4]{%
+   \csgluedef{pre\@division skip}{\medskipamount*#1}}
+\define@key[IG]{division}{afterskip}[4]{%
+   \csgluedef{post\@division skip}{\smallskipamount*#1}}
+\define@key[IG]{division}{prehook}[\relax]{%
+   \csdef{prehook@\@division}{#1}}
+\define@key[IG]{division}{posthook}[\relax]{%
+   \csgdef{posthook@\@division}{#1}}
+\define@choicekey[IG]{division}{toc}{chapter,section,subsection}[section]{%
+	\csgdef{\@division @tocname}{#1}
+	}
+
+\presetkeys[IG]{division}
+       {align,parents,beforeskip,afterskip,prehook,posthook}{}
+
+
+%%%%%%% 
+
+\long\def\division@change#1{%
+   \expandafter\StrSubstitute\expandafter%
+       {\csname \@division @contents\endcsname}
+     {|#1|}{\csname \@division @#1\endcsname}[\tmp@string]%
+     \global\cslet{\@division @contents}\tmp@string
+ }
+\long\def\division@parser#1{\begingroup
+    \csgdef{\@division @contents}{#1}
+    \exploregroups\expandarg
+    \forlistloop{\division@change}{\list@division}%
+    \endgroup
+}
+
+
+\igaddkeyword*{division}{c}{\centering}
+\igaddkeyword*{division}{l}{\raggedright}
+\igaddkeyword*{division}{r}{\raggedleft}
+
+
+\list@maker{division}{rule,rule*,boite,title,label}
+\def\division@rule{\rulefill}
+\csdef{division@rule*}{\rulefill*}
+\def\division@boite{\igbox}
+
+
+%%%%% Commandes pour les  titres %%%%%
+\def\division@to@toc#1{%
+	\ifcsdef{\@division @tocname}%
+	{\addcontentsline{toc}{\csuse{\@division @tocname}}{%
+        \protect\numberline{\csuse{the\@division}} #1}}
+        {}
+        }
+\def\set@sec@level#1{%
+ \edef\tmp@level{#1}
+ \ifdefstring{\tmp@level}{chapter}{\def\sec@level{0}}
+ 	{\ifdefstring{\tmp@level}{section}{\def\sec@level{1}}
+		{\ifdefstring{\tmp@level}{subsection}{\def\sec@level{2}}{}
+}}}
+\newif\ifigtoc    
+\long\def\ig@division#1{%
+   \def\@division{#1}%%
+   \par\addpenalty\@secpenalty%
+   \addvspace{\csname pre\@division skip\endcsname}%
+   \csuse{prehook@\@division}%
+   \m@ig@noindent\begingroup%
+   \let\@elt\@stpelt%
+    \csname cl@#1\endcsname%
+   \@ifstar
+      {\@division@}
+      {\def\@labelcode{%
+             \refstepcounter{\@division}%
+           \csuse{label@\@division}}% 
+       \global\igtoctrue%    
+      \@division@}%
+  }
+\long\def\@division@{\@ifnextchar(\@division@@\@@division@@}%
+\long\def\@division@@(#1){\iglabel{\@division}{#1}\@@division@@}
+\long\def\@@division@@#1{%
+   \begin{titre \@division}{\csname @labelcode\endcsname}%
+   \normalfont\csname textfont@\@division\endcsname #1%
+   \end{titre \@division}\endgroup%
+   \csuse{posthook@\@division}
+   \addpenalty\@M%
+   \m@ig@noindent%
+   \ifigtoc\division@to@toc{#1}\igtocfalse\fi%
+   \addvspace{\csname post\@division skip\endcsname}%
+	\@afterheading}
+
+\def\division@setkeys{\setkeys[IG]{division}}
+
+\long\def\igdivision#1#2{
+    \def\@division{#1}
+    \division@setkeys{#2}}
+
+\long\def\ignewdivision#1#2#3{%
+   \def\@division{#2}\division@setkeys{#3}
+   \def#1{\ig@division{#2}}
+ }
+
+
+
+%%%% Exos et problemes
+
+\define@cmdkey[IG]{exoprob}[exo@]{title}[]{}
+\define@cmdkey[IG]{exoprob}[exo@]{origin}[]{} 
+\define@cmdkey[IG]{division}{titlefont}
+   {\csdef{titlefont@\@division}{#1}}
+\define@cmdkey[IG]{division}{originfont}
+   {\csdef{originfont@\@division}{#1}}
+\define@choicekey[IG]{exoprob}{toc}{chapter,section,subsection,paragraph}[]{%
+	\csgdef{\@division @tocname}{#1}
+	}
+
+\def\IfRemainingSpace#1{%
+   \ifdim\dimexpr\textheight-\pagetotal>#1\relax%
+   \expandafter\@firstoftwo
+   \else
+   \expandafter\@secondoftwo
+   \fi
+}
+
+\long\def\ig@exoprob#1{%
+   \def\@division{#1}%
+   \par\addpenalty\@secpenalty%
+   \addvspace{\csname pre\@division skip\endcsname}%
+   \csuse{prehook@\@division}%    
+   \m@ig@noindent\begingroup%
+   \let\@elt\@stpelt%
+    \csname cl@#1\endcsname%
+   \@ifstar
+       {\@exoprob@}
+       {\def\@labelcode{%
+          \refstepcounter{\@division}%
+           \refstepcounter{\csuse{\@division @tocname}}
+            \space\csuse{label@\@division}}%
+             \@exoprob@%
+        }%
+  }
+\def\@exoprob@{\@ifnextchar(\@exoprob@@\@@exoprob@@}
+\def\@exoprob@@(#1){\iglabel{\@division}{#1}\@@exoprob@@}  
+\newcommand\@@exoprob@@[2][]{%
+   \begin{titre \@division}%
+     {\csuse{\@division @name}\csuse{@labelcode}}%
+   \setkeys[IG]{exoprob}{#1}%
+   \normalfont\normalsize%
+    {\csuse{titlefont@\@division}%
+      #2%
+      \ifcsdef{exo@title}%
+     {(\csuse{exo@title})}{}}%
+   \ifcsdef{exo@origin}%
+     {\exo@space\normalfont\normalsize%
+       \csuse{originfont@\@division}%
+        \mbox{\csuse{exo@origin}}}{}%
+   \end{titre \@division}\endgroup%
+   \addpenalty\@M%
+   \addvspace{\csname post\@division skip\endcsname}%
+   \csuse{posthook@division}%
+   \m@ig@noindent%
+   \division@to@toc{#2}
+  }
+\def\exo@space{\mbox{}%
+  \if c\@alignement%
+    \\
+  \else
+    \if l\@alignement
+      \kern1em\hfill
+       \else\kern1em
+ \fi\fi}
+
+\long\def\ignewexoprob#1#2#3{%
+   \def\@division{#2}\division@setkeys{#3}
+   \def#1{\ig@exoprob{#2}}
+ }
+
+
+\ifcours\else
+\ignewdivision\chapitre{chapi}{%
+   align=r,
+   labelfont=\Large\bfseries,
+   textfont=\LARGE\scshape,
+   toc=chapter,
+   afterskip=10,
+   prehook={\if@openright\cleardoublepage\else\clearpage\fi
+             \thispagestyle{plain}}
+ }
+\ignewdivision\partie{parti}{%
+   align=c,
+   parents=chapi,
+   labelfont=\large\bfseries,
+   textfont=\Large\scshape,
+   toc=section
+ }
+\ignewdivision\souspartie{partii}{
+   parents=parti,
+   align=l,
+   labelfont=\large\bfseries,
+   textfont=\large\scshape,
+   toc=subsection
+ }
+
+\iglabel{parti}{|I|}
+\iglabel{partii}{|A|}
+
+\ignewexoprob\probleme{probleme}{%
+   name=Probl\`eme, 
+   align=c,
+   childs={parti,partii},
+   labelfont=\LARGE\bfseries,
+   originfont=\sffamily\scshape,
+   titlefont=\large\scshape,
+   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+   toc=chapter
+ }
+\ignewexoprob\exercice{exercice}{%
+   name=Exercice,
+   align=c,
+   childs={parti,partii},
+   labelfont=\LARGE\bfseries,
+   originfont=\sffamily\scshape,
+   titlefont=\large\scshape,
+   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+   toc=chapter
+ }
+%\ignewexoprob\exercice{exercice}{%
+%   name=Exercice,
+%   align=c,
+%   childs={parti,partii},
+%   labelfont=\LARGE\bfseries,
+%   originfont=\sffamily\scshape,
+%   titlefont=\large\scshape,
+%   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+%   %toc=chapter
+% }
+%%\newcommand\exercice[1][]{\@exercice[#1]{}}
+
+\iglabel{probleme}{|1|}
+\iglabel{exercice}{|1|}
+\iglabel{enumi}{|1|.}
+\iglabel{enumii}{|a|.}
+\iglabel{enumiii}{|i|)}    
+\igenum{0}{marge,separation}
+
+
+\ifx\tikz\@undefined\else
+\igdefdeco{background}{%
+   \begin{tikzpicture}%[overlay]
+   \draw [rounded corners=1cm]
+      (\paperwidth-\oddsidemargin,.5) -|  (.5,\paperheight-.5cm) --
+      ++(\paperwidth-\oddsidemargin-.5cm,0)
+      (\oddsidemargin,.35) -|  (\paperwidth-.5cm,\paperheight-.65cm)
+       -- ++(-\paperwidth+\oddsidemargin+.5cm,0);
+   \draw [line width=1mm, rounded corners=1cm, cap=round] 
+       (1.5,.5) -| ++(-1,1)
+       (\paperwidth-1.5cm,\paperheight-.65cm) -| 
+         ++(1,-1);
+   \draw [line width=1mm,cap=round] 
+      (\paperwidth-\oddsidemargin,.5) -- ++(-1,0)
+      (\oddsidemargin,\paperheight-.65cm) -- ++ (1,0);
+      %(\oddsidemargin,.35cm) -- ++ (1,0);
+   \node at (.5,2) [fill=white, right,inner xsep=1pc,rotate=90,font=\sffamily\csuse{lsstyle}\scshape] {#1};
+   \end{tikzpicture}}
+\fi
+
+\ifdark
+    \colorlet{pagecol}{black!85}
+    \colorlet{fgcol}{white}
+    \colorlet{linkcol}{LightSkyBlue}
+    \pagecolor{pagecol}
+\else
+    \colorlet{pagecol}{white}
+    \colorlet{fgcol}{black}
+    \colorlet{linkcol}{DarkBlue}
+\fi
+
+\let\@ctrerr\relax
+
+\def\iginclude#1{\begingroup\include{#1}\endgroup}
+
+\newlength\hma \newlength\tma \newlength\bma
+\newlength\mps \newlength\mpw
+\ifcolle
+\hma2cm \tma1.5cm \bma1.5cm \mps0pc \mpw0cm
+\geometry{a5paper,
+		hmargin=\hma,
+		vmargin={\tma,\bma},
+		headsep=.5\tma,
+		marginparsep=\mps,
+		marginparwidth=\mpw}
+\ifprint
+    \pgfpagesuselayout{print on a4}[
+    	a4paper,
+    	landscape,
+    	]
+    \nofiles
+\fi
+\backgroundtrue
+\igdefdeco{background}{%
+   \begin{tikzpicture}[overlay]
+   \draw [rounded corners=1cm]
+      (\paperwidth-\hma,1)  -|  (1,\paperheight-1cm) --
+      ++(\paperwidth-\hma-1cm,0)
+      (\hma,.85) -|  (\paperwidth-1cm,\paperheight-1.15cm)
+       -- ++(-\paperwidth+\hma+1cm,0);
+   \draw [line width=1mm, rounded corners=1cm, cap=round] 
+       (2,1) -| ++(-1,1)
+       (\paperwidth-2cm,\paperheight-1.15cm) -| 
+         ++(1,-1);
+   \draw [line width=1mm,cap=round] 
+      (\paperwidth-\hma,1) -- ++(-1,0)
+      (\hma,\paperheight-1.15cm) -- ++ (1,0);
+      %(\hma,.35cm) -- ++ (1,0);
+   \node at (1,3) [fill=white, right,inner xsep=1pc,rotate=90,font=\sffamily\csuse{lsstyle}\scshape] {\igmargininfo};
+   \end{tikzpicture} 
+   }
+\ignewexoprob\planche{planche}{%
+   name=Planche,
+   align=c,
+   labelfont=\LARGE\bfseries,
+   originfont=\sffamily\scshape,
+   titlefont=\large\scshape,
+   toc=chapter
+ }
+\ignewexoprob\exercice{exercice}{%
+   name=Exercice,
+   align=l,
+   parents=planche,
+   labelfont=\bfseries\large\scshape,
+   originfont=\sffamily\scshape,
+   titlefont=\large,
+   beforeskip=1,
+   afterskip=1,
+   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+   toc=section
+ }
+\ignewexoprob\qcours{qcours}{%
+   name=Question de cours,
+   align=l,
+   parents=planche,
+   labelfont=\bfseries\large\scshape,
+   originfont=\sffamily\scshape,
+   titlefont=\large,
+   beforeskip=1,
+   afterskip=1,
+   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+   toc=section
+ }
+\ignewtitre{%
+	\thispagestyle{empty}%
+	\Large
+    	{\sffamily |classe| \enskip---\enskip |centre|}
+    
+    	{\bfseries |document|}
+        
+    	{\large\sffamily |periode|}
+}
+\newenvironment{fiche}[2]{%
+	\def\igmargininfo{#1}%
+	\csuse{titre*}%
+    \planche{#2}%
+}{\clearpage}
+\fi
+
+\ifprobleme
+\ifdark
+    \colorlet{pagecol}{black!85}
+    \colorlet{fgcol}{white}
+    \colorlet{linkcol}{LightSkyBlue}
+    \AtBeginDocument{\pagecolor{pagecol}\color{fgcol}}
+\else
+    \colorlet{pagecol}{white}
+    \colorlet{fgcol}{black}
+    \colorlet{linkcol}{DarkBlue}
+\fi
+\ifig@speciallayout
+	\geometry{hmargin=.7cm,vmargin={1.8cm,1.2cm}}
+\else
+	\geometry{hmargin=2.4cm,vmargin={3cm,2.4cm}}
+\fi
+\igdivision{parti}{align=c,afterskip=6}
+\igdefdeco{parti}
+   {\rulefill[d=.5\fntht x]\enskip #1 \enskip \rulefill[d=.5\fntht x]}
+\igdefdeco{lrmargin}{\bfseries #1}
+
+\RequirePackage{tikz}
+\usetikzlibrary{shapes.misc}
+\newcommand\tikzdeco[2][]{%
+\tikz[baseline=(T.base)]\node (T) [%
+			text=pagecol,
+			minimum width=2em,
+			inner sep=2pt, 
+			rounded rectangle, 
+			rounded rectangle left arc=none,
+			%yshift=-4pt, 
+			align=right,#1
+		]{#2\kern2pt};
+	}
+
+\fadjwidth=12pt
+\igdefdeco{formule}{\tikzdeco[rectangle,%
+					top color=pagecol!90,
+					bottom color=pagecol!90!black,
+					text=fgcol,
+					rounded corners=2pt,
+					draw=fgcol!50,
+					inner xsep=5pt,
+				]{#1}}
+
+\igdefdeco{background}{%
+	\tikz[overlay] \draw[line width=.4pt,
+						 rounded corners=5mm
+						 ] (.4cm,\footskip) |- 
+						 +(\paperwidth-.8cm,\paperheight-\headheight-\footskip-4pt)
+						  |- cycle;%
+			}
+\backgroundtrue
+\ignewexoprob\PART{part}{%
+   name=,
+   align=c,
+   childs={parti,partii},
+   afterskip=8,
+   beforeskip=1,
+   labelfont=\LARGE\bfseries,
+   originfont=\sffamily\scshape,
+   titlefont=\LARGE\bfseries\scshape,
+   prehook=\IfRemainingSpace{.2\textwidth}{}{\addpenalty{-9999}},
+   toc=chapter
+ }
+% iginclude
+\newif\ifig@eno\newif\ifig@cor
+\igdefdeco{enumi}{\tikzdeco[fill=linkcol]{#1}}
+\def\ig@enocor{
+\igdefdeco{enumi}{%
+	\hypersetup{pdfborder=0 0 0}%
+	\hypertarget{\enocor:\theenumi}%
+		{\hyperlink{\coreno:\theenumi}%
+			{\tikzdeco[fill=linkcol]{##1}}}%
+	}}
+\def\defenocor#1#2{\def\enocor{#1}\def\coreno{#2}}
+\def\iginclude{\include} % signification par defaut de \iginclude
+\ifprobleme % si c'est un probleme 
+	\def\iginclude{\@ifstar{\ig@include@}{\ig@include}}
+    \def\ig@include#1{%
+    \begingroup%
+    	\IfFileExists{#1-cor.tex}{\ig@cortrue\edef\cor@file{#1-cor}}{}%
+    	\IfFileExists{#1-eno.tex}{\ig@enotrue\edef\eno@file{#1-eno}}{}%
+    	\ifig@eno%
+    		\csuse{titre*}
+    		 \ifig@cor%
+		 	  \ig@enocor
+    		   \PART{\'Enonc\'e}\defenocor{eno}{cor}%
+    		    \input\eno@file%
+    		     \ifodd\c@page\clearpage\fi
+    		      \PART{Corrig\'e}\defenocor{cor}{eno}%
+    		       \input\cor@file%
+    		 \else%
+    		    \include{\eno@file}%
+    	\else%
+    	 	\csuse{titre*}\include{#1}%
+    	\fi%
+    \endgroup%
+    }
+    \def\ig@include@#1{%
+    	\begingroup%
+		\csuse{titre*}
+    	\IfFileExists{#1-eno.tex}{\include{#1-eno}}{\include{#1}}%
+		\endgroup%
+    }
+\fi
+\ignewtitre{
+\begin{titlepage}
+\null\vfill
+\LARGE
+{\sffamily |concours|}
+
+\medskip
+{\bfseries |epreuve|}
+
+{\Large |periode| -- |classe|} 
+
+\bigskip
+\Large |theme|
+\vfill
+\end{titlepage}}
+\fi
+
+\endinput
