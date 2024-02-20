@@ -1048,12 +1048,20 @@
 	\IfValueT{#3}{\IfValueF{#1}{\label{#3}}}%
 }
 \igdefdeco{unitetitle}{\textbf{#1~:~}}
+\def\set@defaultforlistsinsideunite{
+	\def\unite{\first@unite}%
+	\igsetenum{1}{marge*}%
+	\igsetenum{2}{marge}%
+	\igsetenum{3}{marge*}%
+	\igdefdeco{enumii}{\bfseries ##1.}%
+	\igdefdeco{enumiii}{\bfseries ##1.}
+}
 
 %%% Ajout 2020 
 %%% environnement simple pour formater conditions et conséquences (obsolete)
-\def\ccsi{\relsize{-3}$\xbullet\;$}
-\def\blneutre{\relsize{-3}$\xsquare\;$}
-\def\ccalors{\relsize{-3}$\xdiamond\;$}
+\def\ccsi{\relsize{-2}$\xbullet\;$}
+\def\blneutre{\relsize{-2}$\xsquare\;$}
+\def\ccalors{\relsize{-2}$\xdiamond\;$}
 \newdimen\ccleftmargin
 \newdimen\ccrightmargin
 \newdimen\ccsymbolwidth

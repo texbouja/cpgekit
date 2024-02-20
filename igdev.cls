@@ -26,7 +26,8 @@
 }{}
 
 \newif\ifconvert
-\newif\ifweb
+\newif\ifigweb
+\newif\ifsingleimage
 
 \let\startcsvrecording\relax
 \let\stopcsvrecording\relax
@@ -37,9 +38,12 @@
 	outpath/.code = \igoutpathtoquiz{#1},
 	inpath/.default = {../quizes},
 	outpath/.default = {\jobname-quizes},
-	web/.code={\compacttrue\webtrue\def\convert@options{}},
-	convert/.code={\pgfkeysalso{web}\appto\convert@options{,convert={#1}}},
-	convert/.default={true},
+	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+		\def\xcomment@list{quiz,notations,#1},
+	web/.default={},
+	convert/.code=\ifundef\xcomment@list{\pgfkeysalso{web}}{}\appto\convert@options{,convert={#1}},
+	convert/.default=true,
+	single image/.is if=singleimage,
 	draft/.style={},
 	straight/.style={},	
 	soutien/.style={},
@@ -48,7 +52,6 @@
 	nocolors/.style={},
 	solution/.style={},
 	solution*/.style={},
-	wsf/.style={},
 	nojustification/.style={},
 	hint/.style={},
 }
@@ -131,113 +134,13 @@
 \newif\ifig@tmpb
 \newbox\trash@box
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% Basculement vers la conversion en images %%%%%%	
-\@ifundefined{convert@options}
-	{}
-	{\RequirePackage{igweb}\endinput}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%% Packages du projet 
 \RequirePackage[customtitles]{igbase}
-\RequirePackage{igcommon}
 \RequirePackage{igsubdoc}
 \RequirePackage{igmath}
-
-\AtBeginDocument{
-	\ifsolutiondelayed\tcbstartrecording[\jobname.rec]\fi
-}
-
-%%%% Strategie d'inclusion de fichier
-%%%% utilise sur une version modifiée de subfile.sty renommé en igsubdoc.sty
-%%%  
-
-\igset[include]{
-	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,
-	solution*/.is if=solutiondelayed,
-	straight/.is if=straight,
-	hint/.is if=hint,
-	before solutions/.code=\gdef\before@solutions@hook{#1},
-	solution file/.code=\def\solfilename{#1},
-	corrige/.store in=\corr@common@opt,
-	only/.code=\csvtolistadd\eno@list{#1}%
-}
-\def\corr@common@opt{}
-\def\straightmode@include{%
-	\def\corrige{\Corrige}%
-	\let\endcorrige\endCorrige%
-}
-\AtBeginDocument{%
-	\ifdraft\straighttrue\fi
-	\ifstraight\straightmode@include\fi
-}
-\def\writeinsteadoftypout{%
-	\ifdef\eno@list{
-		\def\probleme{\igwrite{eno}}
-		\let\endprobleme\endigwrite
-		\def\exercice{\igwrite{eno}}
-		\let\endexercice\endigwrite
-		\def\enonce{\igwrite{eno}}
-		\let\endenonce\endigwrite
-		\def\epreuve{\igwrite{eno}}
-		\let\endepreuve\endigwrite
-	}
-}
-\def\realytypout{%
-	\def\probleme{\Probleme}
-	\let\endprobleme\endProbleme
-	\def\exercice{\Exercice}
-	\let\endexercice\endExercice
-}
-\NewDocumentCommand\iginclude{ om }{
-	\RenewDocumentCommand\titre{sod()}{}%
-	\begingroup
-		\IfFileExists{#2-cor.tex}{\def\solfilename{#2-cor}}{}
-		\IfValueT{#1}{\igset[include]{#1}}%
-		\unless\ifstraight\ifsolution
-			\ifundef\solfilename{}{\subdoc{\solfilename}}%
-		\fi\fi%
-		\IfFileExists{#2-eno.tex}
-			{\subdoc{#2-eno}}
-			{\subdoc{#2}}
-		\ifstraight\ifundef\solfilename{}{\subdoc{\solfilename}}\fi%
-	\endgroup%
-	\undef\eno@list%
-}
-
-\DeclareDocumentCommand\igusetheme{O{} m}{%
-	\igset[theme]{#1}
-	\unless\ifdraft
-		\IfFileExists{q#2.sty}
-			{\AtEndPreamble{\RequirePackage{q#2}}}{}%
-	\fi%
-	\reloadcolors%
-}
-
-\pgfkeys{/ig/@title/.is family}
-\def\igtset{\pgfqkeys{/ig/@title}}
-\igtset{
- align/.is choice,
- align/c/.code=\def\@lign{center},
- align/l/.code=\def\@lign{left},
- align/r/.code=\def\@lign{right}
-}
-
-\def\igt@align#1#2#3{\csletcs{#1@align}{fil#2}\csletcs{#1label@align}{fil#3}}
-\let\fildefault\relax
-
-\DeclareDocumentCommand\igt@shape{mmoo}{%
- \csdef{#2@shape}{#1}
- \IfValueTF{#4}
-  {\igt@align{#2}{#3}{#4}}
-  {\IfValueT{#3}{\igt@align{#2}{#3}{#3}}}
-}
-\def\ig@format#1{%
- \begingroup\def\ig@tmpa{\endgroup\igtformat{#1}}%
- \expandafter\ig@tmpa\expandafter%
-}
-
+\RequirePackage{igcommon}
 
 %%%%%%%%%%%%%%%%%%
 
@@ -365,10 +268,6 @@
 	\fi%
 \endgroup}	
 
-
-
-
-
 %%%% Commande qui récupère les différentes parties de la question 
 %%%% l'énoncé dans une macros, l'indication et la solution dans des token lists 
 \long\def\preprocess@genbody#1{\begingroup%
@@ -394,6 +293,91 @@
 			\global\expandafter\toks@hint\expandafter{\zap@hint#2}}%
 }
 \long\def\zap@hint#1\hint{#1}
+
+\ifbool{igweb}{\endinput}{}
+
+
+
+\AtBeginDocument{
+	\ifsolutiondelayed\tcbstartrecording[\jobname.rec]\fi
+}
+
+%%%% Strategie d'inclusion de fichier
+%%%% utilise sur une version modifiée de subfile.sty renommé en igsubdoc.sty
+%%%  
+
+\igset[include]{
+	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,
+	solution*/.is if=solutiondelayed,
+	straight/.is if=straight,
+	hint/.is if=hint,
+	before solutions/.code=\gdef\before@solutions@hook{#1},
+	solution file/.code=\def\solfilename{#1},
+	corrige/.store in=\corr@common@opt,
+	only/.code=\csvtolistadd\eno@list{#1}%
+}
+\def\corr@common@opt{}
+\def\straightmode@include{%
+	\def\corrige{\Corrige}%
+	\let\endcorrige\endCorrige%
+}
+\AtBeginDocument{%
+	\ifdraft\straighttrue\fi
+	\ifstraight\straightmode@include\fi
+}
+
+\NewDocumentCommand\iginclude{ om }{
+	\RenewDocumentCommand\titre{sod()}{}%
+	\begingroup
+		\IfFileExists{#2-cor.tex}{\def\solfilename{#2-cor}}{}
+		\IfValueT{#1}{\igset[include]{#1}}%
+		\unless\ifstraight\ifsolution
+			\ifundef\solfilename{}{\subdoc{\solfilename}}%
+		\fi\fi%
+		\IfFileExists{#2-eno.tex}
+			{\subdoc{#2-eno}}
+			{\subdoc{#2}}
+		\ifstraight\ifundef\solfilename{}{\subdoc{\solfilename}}\fi%
+	\endgroup%
+	\undef\eno@list%
+}
+
+\DeclareDocumentCommand\igusetheme{O{} m}{%
+	\igset[theme]{#1}
+	\unless\ifdraft
+		\IfFileExists{q#2.sty}
+			{\AtEndPreamble{\RequirePackage{q#2}}}{}%
+	\fi%
+	\reloadcolors%
+}
+
+\pgfkeys{/ig/@title/.is family}
+\def\igtset{\pgfqkeys{/ig/@title}}
+\igtset{
+ align/.is choice,
+ align/c/.code=\def\@lign{center},
+ align/l/.code=\def\@lign{left},
+ align/r/.code=\def\@lign{right}
+}
+
+\def\igt@align#1#2#3{\csletcs{#1@align}{fil#2}\csletcs{#1label@align}{fil#3}}
+\let\fildefault\relax
+
+\DeclareDocumentCommand\igt@shape{mmoo}{%
+ \csdef{#2@shape}{#1}
+ \IfValueTF{#4}
+  {\igt@align{#2}{#3}{#4}}
+  {\IfValueT{#3}{\igt@align{#2}{#3}{#3}}}
+}
+\def\ig@format#1{%
+ \begingroup\def\ig@tmpa{\endgroup\igtformat{#1}}%
+ \expandafter\ig@tmpa\expandafter%
+}
+
+
+
+
+
 
 
 
@@ -566,11 +550,11 @@
 			\addtocounter{@devoir}{-1}%
 			\deco@devoirlabelnumberless{}%
 		\else
-			\deco@devoirlabel{\label@@devoir}
+			\deco@devoirlabel{\devoir@name}{\label@@devoir}
 		\fi
 	}
 	{\z@}
-	{\devoir@align\deco@devoir{#1}}
+	{\devoir@align\deco@devoir{\cnt@name}{#1}}
 	[\csundef@afterexec{hook@afterdevtitle}]
 
 \ig@format{name=\@devoir, numberless}[display]
@@ -664,12 +648,15 @@
 \igaddkeyword{title}{devoir}{{\LARGE\scshape\deco@devoir{\csuse{ig@devoir}}%
                   \global\ig@dima\baselineskip}\baselineskip\ig@dima}
 
-\igdefdeco{devoir}{{\huge\cnt@name} \\ #1}
-\igdefdeco{devoirlabel}{#1}
+\def\deco@devoir#1#2{{\huge#1} \\ #2}
+\def\deco@devoirlabel#1#2{#1\ #2}
 \igdefdeco{devoirlabelnumberless}{}
 
 \igset[@devoir]{%
-	alt title/.code=\def\alt@devname{#1},
+	name/.store in=\devoir@name,
+	name=sujet,
+	number/.code=\setcounter{@devoir}{\numexpr#1-1},
+	alt title/.store in=\alt@devname,
 	alt/.style={alt title=#1},
 	after title/.code=\title@parser{\begingroup#1\endgroup}%
 		\expandafter\def\expandafter\hook@afterdevtitle\expandafter{\title@contents},
@@ -677,7 +664,6 @@
 		\expandafter\def\expandafter\hook@beforedevtitle\expandafter{\title@contents},
 	title deco/.code=\igdefdeco{devoir}{#1},
 	label deco/.code=\igdefdeco{devoirlabel}{#1},
-	number/.code=\setcounter{@devoir}{\dimexpr#1-1}
 }
 
 \NewDocumentCommand\devoir{sO{}md()}{%
@@ -774,7 +760,7 @@
 }
 \DeclareDocumentCommand\problemtitle{
 		s % #* numbered or not
-		m % #2 env (and counter) name
+		m % #2 counter name
 		m % #3 printed name
 		d() % #4 optional title
 		d<> % #5 optional label for referencing
@@ -805,15 +791,15 @@
 }
 			{%
 				\def\ig@current@id{#1}%
-				\IfValueT{#4}{\igset[solution]{#2}}%
+				\IfValueT{#2}{\igset[solution]{#2}}%
 				\isasolutiontrue\setup@xsol%
 				\csuse{hook@beforeprobtitle}
-				\problemtitle*{\csuse{#1@@label}}{}}(#3)<#4>%
+				\problemtitle*{\csuse{#1@@label}}{}(#3)<#4>%
 				\csuse{hook@afterprobtitle}
 				\setup@id%
 				\csuse{hook@beforeproblem}%
 			}{%
-				\endquessol%
+				\endxsol%
 				\csuse{hook@afterproblem}%
 			}
 \NewDocumentEnvironment{@writecorrige}{
@@ -836,7 +822,7 @@
 				{\expandonce\corr@common@opt}%
 			\igset[@problem]{current counter=#1,#4}%
 			\ifcsundef{#3@title}{\csdef{#3@title}{#5}}{}%
-			\problem@title{#1}{#2}(#5)<#6>
+			\problemtitle{#1}{#2}(#5)<#6>
 			\setup@id%
 			\setup@sol%
 			\setup@hint%
@@ -860,7 +846,7 @@
 	\csdef{dudela@#2}{#4}%
 	\IfBooleanT{#1}{%
 		\csdef{#2}{%
-			\def\problem@title{\problemtitle}
+			\def\problemtitle{\problemtitle}
 			\ifstraight
 				\cslet{end#2}\end@corrige%
 				\@corrige%
@@ -870,7 +856,7 @@
 			\fi}
 		\cslet{end#2}\end@corrige@
 		\csdef{#2*}{%
-			\def\problem@title{\problemtitle*}
+			\def\problemtitle{\problemtitle*}
 			\ifstraight
 				\@corrige
 			\else
@@ -889,7 +875,7 @@
 				\setup@id%
 				\csuse{hook@beforeproblem}%
 			}{%
-				\endquessol%
+				\endxsol%
 				\csuse{hook@afterproblem}%
 			}%
 	}
@@ -949,12 +935,12 @@
 				\IfValueT{##2}{\igset[solution]{##2}}%
 				\csuse{hook@precor@#2}%
 				\csuse{hook@beforeprobtitle}
-				\problem@title{#2}{#3}(##3)<##4>%
+				\problemtitle{#2}{#3}(##3)<##4>%
 				\csuse{hook@afterprobtitle}
 				\setup@id%
 				\csuse{hook@beforeproblem}%
 			}{%
-				\endquessol%
+				\endxsol%
 				\csuse{hook@afterproblem}%
 			}%
 	}
@@ -970,7 +956,7 @@
 				\setup@id%
 				\csuse{hook@beforeproblem}%
 			}{%
-				\endquessol%
+				\endxsol%
 				\csuse{hook@afterproblem}%
 			}%
 	}
@@ -1761,8 +1747,8 @@
 				\ifcsundef{\ig@current@id @}{
 					\igopenfile{solhandle}[\aux@dir/\ig@current@id-cor]%
 				}{}%
-			\else%
-				\igopenfile{solhandle}[/dev/null]%
+			%\else%
+			%	\igopenfile{solhandle}[/dev/null]%
 			\fi%
 			\let\solution\save@solution%
 		\fi%
@@ -1910,7 +1896,7 @@
 \fi 
 
 %%% \xsol, quand \xques est utilisée, solution écrite séparément   
-\def\quessol@env{%
+\def\xsol@env{%
 	\insolutionstrue
 	\@itemdepth\@ne%
    	\list\relax%
@@ -1923,7 +1909,7 @@
 			  \let\makelabel\outer@sol@deco%
         }%
  }
-\def\endquessol{\ifinsolutions\endlist\fi}
+\def\endxsol{\ifinsolutions\endlist\fi}
 \def\setup@xsol{\let\xsol\first@xsol}
 
 \def\terminate@questlist@pop#1\ig@nil{
@@ -1943,7 +1929,7 @@
 	\ifdefempty\queslist%
 		{\def\xsol{\fake@xsol}}
 		{\def\xsol{\true@xsol}}%
-	\quessol@env\xsol%
+	\xsol@env\xsol%
 }
 \DeclareDocumentCommand\fake@xsol{od()d<>}{%
 	\IfValueTF{#1}

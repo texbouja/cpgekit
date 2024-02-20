@@ -89,9 +89,16 @@
     preauteur={R\'edig\'e par}
 }
 
+%%%%% Tcolorbox est utilisé pour la decoration
+%%%%% des boites pour quiz
+
+\RequirePackage[svgnames]{xcolor}
+\RequirePackage{tcolorbox} %% Une usine à gaz qui touche à tout
+\tcbuselibrary{skins,raster,xparse}
+
+
 %%% Gestions des couleurs
 %%%
-\RequirePackage[svgnames]{xcolor}
 \pgfkeys{/handlers/.colorlet/.code=
 	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
 }
@@ -157,9 +164,9 @@
 	link={DarkBlue}{DarkBlue},
 	important={DarkRed}{DarkRed},
 	main={black!66}{black!33},
-	bg={white}{black!88},
+	bg={white}{black!92},
 	fg={black}{white},
-	page={white}{black!82},
+	page={white}{black!86},
 	tcbtext=fgcol,
 	tcbframe=warmcol,
 	tcbback=bgcol,
@@ -176,10 +183,88 @@
 		\pagecolor{pagecol}%
 		\color{fgcol}%
 	}%
-	\AtBeginDocument{\color{fgcol}}%
+	\AtBeginDocument{\color{fgcol}\pagecolor{pagecol}}%
 }%
 
 
+%%%% Fonts loading. 
+\RequirePackage{ifxetex}
+\newif\iffontsloaded
+\def\load@thefonts{}
+\igset[font]{%
+	rm/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+			\fi
+			\RequirePackage[tt=false]{libertine}
+			\RequirePackage[%
+				libertine,smallerops,bigdelims,upint,vvarbb
+			]{newtxmath}
+			\RequirePackage[scaled=.85]{FiraMono}
+			\useosf
+			\def\TitlingFont{\sffamily\scshape}
+	}},
+	sf/.code={%
+		\def\load@thefonts{%
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+
+			\fi
+			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
+			\RequirePackage[scaled=.88]{FiraMono}
+			\RequirePackage[smallerops,upint]{newtxsf}
+			\firaoldstyle
+			\def\TitlingFont{\scshape}
+	}},
+	load/.code={%
+		\def\load@thefonts{%
+			\RequirePackage[T1]{fontenc}
+			\RequirePackage[french]{babel}
+			\RequirePackage{#1}
+			\RequirePackage{microtype}
+	}},
+	titling font/.store in=\TitlingFont,
+}
+\DeclareDocumentCommand\igusefont{m}{%
+	\fontsloadedtrue
+	\igset[font]{#1}
+}
+\AtEndPreamble{
+	\ifdefempty{\load@thefonts}{\igusefont{rm}}{} 
+	\load@thefonts
+	\ifundef\hypersetup{}{%
+	\pdfstringdefDisableCommands{%
+		\def\({}%
+		\def\){}%
+	}
+	\let\ToP\texorpdfstring}
+	\def\label@itemi{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xdiamond$}
+	\def\label@itemii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xsquare$}
+	\def\label@itemiii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
+	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
+	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Basculement vers la conversion en images %%%%%%	
+\ifbool{igweb}
+	{\RequirePackage{igweb}\endinput}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%% Geometry first
 %%%%% Document geometry
@@ -429,84 +514,9 @@
 	\fi
 }
 
-%%%%% Tcolorbox est utilisé pour la decoration
-%%%%% des boites pour quiz
 
-\RequirePackage{tcolorbox} %% Une usine à gaz qui touche à tout
-\tcbuselibrary{skins,raster,xparse}
 
-%%%% Fonts loading. 
-\RequirePackage{ifxetex}
-\newif\iffontsloaded
-\def\load@thefonts{}
-\igset[font]{%
-	rm/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
-				\RequirePackage{microtype}
-			\fi
-			\RequirePackage[tt=false]{libertine}
-			\RequirePackage[%
-				libertine,smallerops,bigdelims,upint,vvarbb
-			]{newtxmath}
-			\RequirePackage[scaled=.85]{FiraMono}
-			\useosf
-			\def\TitlingFont{\sffamily\scshape}
-	}},
-	sf/.code={%
-		\def\load@thefonts{%
-			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
-				\RequirePackage{microtype}
 
-			\fi
-			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
-			\RequirePackage[scaled=.88]{FiraMono}
-			\RequirePackage[smallerops,upint]{newtxsf}
-			\firaoldstyle
-			\def\TitlingFont{\scshape}
-	}},
-	load/.code={%
-		\def\load@thefonts{%
-			\RequirePackage[T1]{fontenc}
-			\RequirePackage[french]{babel}
-			\RequirePackage{#1}
-			\RequirePackage{microtype}
-	}},
-	titling font/.store in=\TitlingFont,
-}
-\DeclareDocumentCommand\igusefont{m}{%
-	\fontsloadedtrue
-	\igset[font]{#1}
-}
-\AtEndPreamble{
-	\ifdefempty{\load@thefonts}{\igusefont{rm}}{} 
-	\load@thefonts
-	\pdfstringdefDisableCommands{%
-		\def\({}%
-		\def\){}%
-	}
-	\let\ToP\texorpdfstring
-	\def\label@itemi{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xdiamond$}
-	\def\label@itemii{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xsquare$}
-	\def\label@itemiii{\relsize{-3}$\mathcolor{tcbcolbacktitle}\xbullet$}
-	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
-	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
-	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
-}
 
 %%%% Gestion des themes
 \newdimen\ig@ttlw
@@ -625,11 +635,11 @@
 	inner align/l/.code=\let\fil@inner\raggedright, 
 	inner align/r/.code=\let\fil@inner\raggedleft,
 	inner align/c/.code=\let\fil@inner\centering,
-   inner align*/.is choice, %alignement interne dans titlepage
+   	inner align*/.is choice, %alignement interne dans titlepage
 	inner align*/c/.code=\let\fil@inner@titlepage\centering,
 	inner align*/l/.code=\let\fil@inner@titlepage\raggedright, 
 	inner align*/r/.code=\let\fil@inner@titlepage\raggedleft,
-   outer align/.is choice, % alignement externe
+   	outer align/.is choice, % alignement externe
 	outer align/l/.code=\let\fil@outer\raggedright,
 	outer align/r/.code=\let\fil@outer\raggedleft,
 	outer align/c/.code=\let\fil@outer\centering,
@@ -751,7 +761,7 @@
 			\fi%
 		},
 		late after*={%
-			\pagecolor{bgcol}%
+			\pagecolor{pagecol}%
 			\unless\iftitlepage@exception%
 				\restore@geometry%
 			\fi%

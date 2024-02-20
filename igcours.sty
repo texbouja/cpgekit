@@ -658,15 +658,6 @@
 \tcbset{%
 	current counter/.code={\def\thecurrent@counter{#1}}
 	}	
-\def\set@defaultforlistsinsideunite{
-	\def\unite{\first@unite}%
-	\igdeflabel{unite}{|X|.|1|}%
-	\igsetenum{1}{marge*}%
-	\igsetenum{2}{marge}%
-	\igsetenum{3}{marge*}%
-	\igdefdeco{enumii}{\bfseries ##1.}%
-	\igdefdeco{enumiii}{\bfseries ##1.}
-}
 \tcbset{%
 	titled items/.code={%
 		\tcbset{after upper pre=\closeunite}%

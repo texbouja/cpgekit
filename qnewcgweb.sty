@@ -1,27 +1,42 @@
 %%%%% chargement de package, définition de couleurs, chargement de police,...
 
-\RequirePackage[sfdefault, scaled=.85]{FiraSans}
-\RequirePackage{newtxsf}
 \usetikzlibrary{shapes.misc, arrows.meta, babel}
 
 %%%%%
 
 
+%%% Colors 
 \definecolor{igblue}{HTML}{373A73}
+\definecolor{igaltblue}{HTML}{007AFF}
 \definecolor{iggreen}{HTML}{8CBA30}
-\definecolor{stcol}{HTML}{F5891D}
-\colorlet{bgcol}{iggreen!10}
-\tikzset{title style/.style={%
-	font=\fontsize{24pt}{20pt}\bfseries\scshape\boldmath,
-	text = igblue,
-	align=center
-	}
+\definecolor{stcol}{HTML}{D68A36}
+\definecolor{igblack}{HTML}{1F1F1F}
+
+\igset[colors]{    
+    warm={iggreen!85!black}{iggreen},
+    cold={igblue}{igaltblue},
+	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
+	page={white}{igblack},
+	%bg={white}{igblack},
+	tcbtext=fgcol,
+	tcbframe=warmcol,
+	tcbback=bgcol,
+	tcbtitle=white, 
+	tcbbacktitle=warmcol,
 }
-\tikzset{question number/.style={overlay,
+\AtBeginDocument{%
+	\unless\ifsoutien\colorlet{stcol}{warmcol}\fi%
+}
+
+\tikzset{question number/.style={
+	circle,
 	font=\fontsize{16pt}{16pt}\bfseries,
-	text=bgcol, draw=none, fill=none, 
-	xshift=.25\imagewidth+1ex,
-	yshift=-1ex-5pt
+	text=white, draw=bgcol, line width=2pt, 
+	top color=coldcol!90, bottom color=coldcol!60!black,  
+	inner sep=0pt, 
+	text width=28pt,
+	align=center,
+	yshift=6pt
 	}
 }
 \tikzset{border line/.style={
@@ -51,47 +66,39 @@
 }
 \ifsoutien
 	\setfoot@logo{capge}
-	\iffootimage@exists	
-		\def\newcg@foot{%
-		\node at ([yshift=10, xshift=-2pc]box.south east)
-		[anchor=east, text opacity=.66, fill=bgcol]
-		 			{\pgfuseimage{logofoot}};%
-		}
-	\else
-		\def\newcg@foot{%
-				\node at ([yshift=6.5, xshift=-2pc]box.south east)
-					[anchor=east, baseline, yshift=.5ex,
-						fill=bgcol, font=\sffamily\scshape\bfseries] 
-					{\color{stcol}\small capge\kern1ex\large\color{igblue}Ibn\! Ghazi};%
-		}
-	\fi 
 \else
 	\setfoot@logo{cpge}
-	\iffootimage@exists	
-		\def\newcg@foot{%
-		\node at ([yshift=10, xshift=-2pc]box.south east)
-		[anchor=east, text opacity=.66, fill=bgcol]
-					{\pgfuseimage{logofoot}};%
-		}
-	\else
-		\def\newcg@foot{%
-				\node at ([yshift=6.5, xshift=-2pc]box.south east)
-					[anchor=east, baseline,  yshift=.5ex,
-						fill=bgcol, font=\sffamily\scshape\bfseries]  
-					{\color{iggreen}\small cpge\kern1ex\large\color{igblue}Ibn\! Ghazi};
-		}
-	\fi
 \fi
+\iffootimage@exists	
+		\def\newcg@foot{%
+		\node (foot) at ([xshift=-2pc, yshift=\igenv@footskip]page.south east)
+		[anchor=east, fill=bgcol, minimum height=0]
+		 			{\pgfuseimage{logofoot}};%
+		}
+\else
+		\def\newcg@foot{%
+				\node (foot) at ([xshift=-2pc, yshift=\igenv@footskip]page.south east)
+					[anchor=east, baseline, minimum height=0,
+						fill=bgcol, font=\sffamily\scshape\bfseries] 
+					{\color{stcol}\small\ifbool{soutien}{capge}{cpge}\kern1ex\large\color{coldcol}Ibn\! Ghazi};%
+		}
+\fi 
 
-\def\backdeco{ 
-	\clip (box.south east) rectangle (box.north west);
-	\draw [border line] (box.south east) rectangle (box.north west);
-	\draw [overlay, iggreen, line width=12pt] 
-		(box.north east) -- (box.north west) ;
-	\draw [overlay, bgcol, line width=16pt] 
-		(box.south east) -- (box.south west) ;
-	\draw [overlay, igblue, line width=.4pt] 
-		([yshift=9.8pt]box.south east) -- ([yshift=9.8pt]box.south west) ;
+
+
+\def\igenv@backdeco{ 
+	\ifsinglequizimage
+		\draw [overlay, stcol, line width=\igenv@headheight+.4cm, rounded corners=\igenv@headheight] 
+		([xshift=-.5\igenv@headheight+.32cm] page.south west)
+		--([xshift=-.5\igenv@headheight+.32cm] page.north west);
+	\else 
+		\draw [overlay, stcol, line width=30pt] 
+			(page.north east) -- (page.north west) ;
+	\fi
 	\newcg@foot
+	\draw [overlay, coldcol, line width=.4pt] 
+		(foot.west) -- +(-\imagewidth,0)
+		(foot.east) -- +(\imagewidth,0);
 	}
 \endinput
+

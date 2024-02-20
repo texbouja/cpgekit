@@ -27,8 +27,7 @@
 \ProvidesPackage{igweb}[igweb package pour gestion de quiz]
 
 
-\newif\ifigweb
-\igwebtrue
+
 \let\onlyifigweb\@firstofone
 \let\IfStandalone\@firstoftwo
 \def\ig@border@left{0.50001bp}
@@ -884,26 +883,6 @@
 
 \def\mlform#1{\formule{$\begin{multlined}#1\end{multlined}$}}
 
-\igset[colors]{
-    darkcol/.colorlet=darkcol,
-    brightcol/.colorlet=brightcol,
-    warmcol/.colorlet=warmcol,
-    coldcol/.colorlet=coldcol,
-    neutralcol/.colorlet=neutralcol,
-    fgcol/.colorlet=fgcol,
-    bgcol/.colorlet=bgcol,
-    linkcol/.colorlet=linkcol,
-    pagecol/.colorlet=pagecol
-   }
-
-\igset[colors]{
-	coldcol=DodgerBlue,%
-	warmcol=OrangeRed,
-	brightcol=coldcol!15,
-	darkcol=coldcol!85!black,
-	bgcol=coldcol!5,
-	fgcol=black,
-}
 
 \igset{tikz/.unknown/.code=\tikzset{\pgfkeyscurrentname=#1}}
 
@@ -913,49 +892,114 @@
 \igsetnullify{devoir}
 \igsetnullify{problem}
 
-\NewDocumentCommand\igusetheme{om}{%
-	\IfFileExists{q#2web.sty}{\RequirePackage{q#2web}}{}
+\igset[theme]{%
+	dark/.is if=dark,
+	colors/.code=\pgfkeysalso{/ig/colors/.cd,#1},
+	font/.code=\igusefont{#1},
+	rm/.style={font=rm},
+	sf/.style={font=sf},
+    .unknown/.code={}
 }
+
+\DeclareDocumentCommand\igusetheme{O{} m}{%
+    \igset[theme]{sf,#1}
+	\IfFileExists{q#2web.sty}
+			{\AtEndPreamble{\RequirePackage{q#2web}}}{}%
+	\reloadcolors%
+}
+%\NewDocumentCommand\igusetheme{om}{%
+%	\IfFileExists{q#2web.sty}{\RequirePackage{q#2web}}{}
+%}
 \DeclareDocumentCommand\igusegeometry{om}{}
 
 
+%%%% Mécanisme de désactivation des environnements à ignorer
 \RequirePackage{xcomment}
-\xcomment{quiz,quiz@}
-%%% Inhibition des commandes utilisées dans igdev.cls 
-%%% et qui n'ont pas de sens ici
-% \RequirePackage{verbatim}
-% \let\igt@finishall\relax
-% \DeclareDocumentCommand\igusegeometry{om}{}
-% \DeclareDocumentEnvironment{infoseleve}{+b}{}{}
-% \DeclareDocumentCommand\igsethead{oood()d()d()}{}
-% \DeclareDocumentCommand\igsetfoot{oood()d()d()}{}
-% \RenewDocumentCommand\titre{sod()}{}
-% \DeclareDocumentCommand\devoir{smod()}{}
-% \DeclareDocumentCommand\probleme{soD(){}}{\comment}
-% \let\endprobleme\endcomment
-% \DeclareDocumentCommand\exercice{soD(){}}{\comment}
-% \let\endexercice\endcomment
-% \DeclareDocumentCommand\qcours{soD(){}}{\comment}
-% \let\endqcours\endcomment
-% \DeclareDocumentCommand\qcm{soD(){}}{\comment}
-% \let\endqqcm\endcomment
-% \DeclareDocumentCommand\epreuve{soD(){}}{\comment}
-% \let\endepreuve\endcomment
-% \DeclareDocumentCommand\section{sO{}m}{}
-% \DeclareDocumentCommand\parti{sO{}m}{}
-% \DeclareDocumentCommand\partii{sO{}m}{}
-% \DeclareDocumentCommand\justifier{sO{}}{}
-% \DeclareDocumentCommand\justification{s O{}}{}
-% \DeclareDocumentCommand\justifcationspace{s O{} D(){}}{}
-% \DeclareDocumentCommand\setscore{O{0}}{}
-% \DeclareDocumentCommand\setrules{mm}{}
-% \DeclareDocumentCommand\studentinfo{m}{}
+
+\igset[igenv]{
+    image width/.code= \imagewidth#1,
+    image height/.code = \tikzset{minimum height=#1\imagewidth},
+    top skip/.store in=\igenv@topskip,
+    bottom skip/.store in=\igenv@bottomskip,
+    foot skip/.store in=\igenv@footskip,
+    head height/.store in=\igenv@headheight,
+    top skip=1.5cm, bottom skip=1.5cm, foot skip=14pt, head height=30pt,
+    .unknown/.code={}
+}
+\def\tikz@title#1#2{
+    \ifblank{#2}
+        {\ifblank{#1}{}{\hfill\tikz\node (title) [title style] {\TitlingFont#1};\hfill\null}}
+        {\ifblank{#1}
+            {\hfill\tikz\node (title) [title style] {\normalfont\Large\textcolor{warmcol}{(#2)}\hfill};\hfill\null}
+            {\hfill\tikz\node (title) [title style] 
+                {{\TitlingFont#1}
+                {\\\normalfont\Large\textcolor{warmcol}{(#2)}\hfill}};\hfill\null%
+            }%
+        }%
+}
+\NewDocumentEnvironment{igenv}{m O{} D(){} d<> +b}{%
+    \igset[igenv]{image height=.2,#2}%
+    \stepcounter{imgcnt}
+    \set@defaultforlistsinsideunite%
+	\begin{tikzpicture}
+        \begin{pgfonlayer}{foreground}
+            \node (page) 
+                [inner sep=0, outer sep=0, text width=\imagewidth] 
+            {
+                \tikzset{minimum height=0}%
+                \vrule width\z@ height\igenv@headheight depth\z@\par\unskip\unskip%
+                \tikz@title{#1}{#3}\par%
+                \vskip\igenv@topskip plus 1fill%
+                \fontsize{16pt}{20pt}\selectfont\hfill%
+                \minipage{\imagewidth-32pt}%
+                    \flushleft #5
+                \endminipage\hfill\null\par%
+                \vskip\igenv@bottomskip plus 1fill%
+                \vrule width\z@ height\igenv@footskip depth\z@%
+            };
+        \ifdef\numberdeco
+            {\begin{scope}[overlay]\numberdeco\end{scope}}{}
+        \end{pgfonlayer}
+        \begin{pgfonlayer}{background}
+            \begin{scope}[overlay, minimum height=0]
+                \clip (page.north west) rectangle (page.south east);
+                \fill [overlay, bgcol] (page.north west) rectangle (page.south east);
+                \igenv@backdeco%
+            \end{scope}
+	    \end{pgfonlayer}%
+    \end{tikzpicture}%
+}{\closeunite}
+\NewDocumentEnvironment{notations}{}{%
+    \igdefdeco{enumi}{\color{brightcol}\xsquare}
+    \igenv{Notations}
+}{\endigenv}
+
+\newcommand\ignewwebenv[2]{
+    \ifcsdef{#1}{}
+        {\csdef{#1}{\igenv{#2}}\cslet{end#2}\endigenv}
+}
+\newcommand\igrenewwebenv[2]{
+        \csdef{#1}{\igenv{#2}}%
+        \cslet{end#1}\endigenv%
+}
+\ignewwebenv{theo}{Théorème}
+\ignewwebenv{prop}{Proposition}
+\ignewwebenv{coro}{Corollaire}
+\ignewwebenv{lemm}{Lemme}
+\ignewwebenv{ppte}{Propriétés}
+\ignewwebenv{defi}{Définition}
+\def\genwebenv{\igenv}
+\let\endgenwebenv\endigenv 
+
+\expandafter\xcomment\expandafter{\xcomment@list}
+
 
 %%%% écriture du CSV
 
 
 
 \newwrite\ig@record@out
+\newwrite\devnull
 
 \def\ig@null#1{}
 \newcommand{\igcsv@record}[1]{%
@@ -984,8 +1028,8 @@
   \let\igcsvrecord\ig@null%
 }
 
-%\AtBeginDocument{\startcsvrecording}
-%\AtEndDocument{\stopcsvrecording}
+\ifdefstring\igcurrentclass{igdev}{\AtBeginDocument{\startcsvrecording}}{}
+\ifdefstring\igcurrentclass{igdev}{\AtEndDocument{\stopcsvrecording}}{}
 
 
 %%% Traitement des quiz en deux passes
@@ -995,8 +1039,8 @@
 	\setcounter{ch@ice}0%
 	}
 
-\def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
-\def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
+%\def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
+%\def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
 
 \long\def\intro#1\endintro{#1}
 \long\def\collect@intro#1\endintro{%
@@ -1021,72 +1065,34 @@
 	\csxappto{choice@body\thefake@choice}{{\expandonce\gen@upper}}%
 	}
 
-\DeclareDocumentCommand\rawchoice{m+m}{%
+\DeclareDocumentCommand\rawchoice@many{m+m}{%
 	\stepcounter{ch@ice}%
 	\xappto\ig@quizcsventry{, "\two@digits\theimgcnt.png", "#1"}%
-	\ig@rawchoice{#2}%
-	\stepcounter{imgcnt}%
+	\ig@choicemany{#2}%
    }
-   
-%%%% Les instructions de rendu des "pages" 
-\usetikzlibrary{shadows, fadings, positioning}
-\newdimen\imagewidth
+\DeclareDocumentCommand\rawchoice@single{m+m}{%
+   \stepcounter{ch@ice}%
+   \ig@choicesingle{#2}%
+   \xappto\ig@quizcsventry{, "\two@digits\theenumi", "#1"}%
+  }
 
-\igset[tikz]{%
-	image width/.code={\imagewidth=#1},
-	image width=16cm,
-	}
-	
-\tikzset{image deco/.style={%
-	fill=bgcol, 
-	draw=darkcol, 
-	line width=20pt, 
-	rounded corners= 20pt
-	}
+\def\number@deco{
+    \node at ([yshift=-8pt]page.north)
+        [question number, anchor=north, minimum height=0]
+           {\arabic{ch@ice}}; 
 }
-
-\tikzset{question number/.style={%
-	font=\fontsize{32pt}{32pt}\bfseries,
-	text=darkcol, xshift=1cm, text width=1cm,
-	align=left, yshift=-.8cm
-	}
+\NewDocumentCommand\ig@choicemany{+m}{%
+  \begin{igenv}{}
+        [image width=8cm, 
+        image height=1, 
+        top skip=0pt, 
+        bottom skip=12pt, 
+        foot skip=8pt, 
+        head height=34pt]{}
+        #1
+   \end{igenv}%  
 }
-
-\tikzset{title style/.style={%
-	font=\fontsize{24pt}{20pt}\bfseries\scshape\boldmath,
-	text = darkcol,
-	align=center
-	}
-}
-
-\def\backdeco{ 
-	\draw [overlay, fill=bgcol, 
-			draw=darkcol, 
-			line width=20pt, 
-			rounded corners= 20pt]
-	 (box.north west) rectangle (box.south east);
-}
-
-\NewDocumentCommand\ig@rawchoice{+m}{%
-  \begin{tikzpicture}
-      \node (box) 
-      	 [fill=none, draw=none, 
-	 		inner xsep=15pt, inner ysep=1cm, 
-			minimum height=.5\imagewidth,
-			text width=.5\imagewidth, align=flush left
-			]
-      	 {#1};%
-		\begin{pgfonlayer}{background}
-			\fill [bgcol] (box.north west) rectangle (box.south east);
-			\backdeco
-		\end{pgfonlayer}
-		\begin{pgfonlayer}{foreground}
-			\node at (box.north west)
-				[question number]
-       			{\arabic{ch@ice}}; 
-		\end{pgfonlayer}%
-   \end{tikzpicture}%
-}
+\NewDocumentCommand\ig@choicesingle{+m}{\xit #1}
 
 \long\def\firstpass@quiz#1{\begingroup%
 	\def\ques##1\endques{}%
@@ -1103,67 +1109,122 @@
 
 \let\tofs\@firstoftwo
 
-\DeclareDocumentEnvironment{quiz@}{mm O{} d()  d<> E\br{{}} +b}{%
+%%% Une page par question
+\DeclareDocumentEnvironment{quiz@many}{mm O{} d()  d<> E\br{{}} +b}{%
 	\csuse{quiz#1}%
 	\igxname{quiz}{#2}%
 	\stepcounter{quiz}%
 	\def\ig@quizcsventry{"\thequiz"}
-	\def\ig@tempe{}
+	\def\ig@tmpe{}
 	\ifig@rigid{title}
-		{\let\ig@tempe\ig@rigid@title}
-		{\IfValueT{#4}{\def\ig@tempe{#4}}}%
+		{\let\ig@tmpe\ig@rigid@title}
+		{\IfValueT{#4}{\def\ig@tmpe{#4}}}%
 	\eappto\ig@quizcsventry{, "\two@digits\theimgcnt.png",
-		"\expandafter\unexpanded\expandafter{\ig@tempe}"}
+		"\expandafter\unexpanded\expandafter{\ig@tmpe}"}
 	\firstpass@quiz{#7}%
 	\ifig@rigid{choicelist}{\reprocess@choicelist}{}%
-	  {\begin{ig@intro}(\ig@tempe)
+	  {\begin{ig@intro}(\ig@tmpe)
 	  	\csundef@afterexec{intro@body}
 		\end{ig@intro}}%
+    \let\numberdeco\number@deco%
 	\ifdef{\ig@choicelist}
       {\forlistloop{\for@cmd{choice}}\ig@choicelist}{}
 }{%
 	\choice@undef%
 	\igcsvrecord{\ig@quizcsventry}
 }
-
+\NewDocumentEnvironment{ig@intro}{d()}{%
+    \igenv{\deco@thequiz{\thequiz}\IfValueT{#1}{\\ #1}}[.1]
+    \mbox{}
+}{\endigenv}
 \def\for@cmd#1#2{\csundef@afterexec{#1@body#2}}
-\def\quiz{\quiz@{true}{\name@quiz}}
-\let\endquiz\endquiz@
 
-\NewDocumentEnvironment{igenv}{m O{} D(){} d<> +b}{%
-	\igsetenum{1}{marge=5pt}\igdefdeco{enumi}{\color{brightcol}\xsquare}%
-	\begin{tikzpicture}[#2] 
-	\node [inner ysep=24pt, inner xsep=8pt] (box) {%
-		\begin{tikzpicture}
-			\node  (title) [inner ysep=0pt,%
-				title style, 
-				text width=.85\imagewidth
-				]
-			{#1};
-			\node at ([yshift=-16pt]title.south) 
-				[anchor=north, fill=none, draw=none, 
-					inner xsep=8pt, inner ysep=0pt,
-					font=\fontsize{16pt}{16pt}\selectfont,
-					text width=\imagewidth, align=flush left]
-			{#5};
-		\end{tikzpicture}};
-      \begin{pgfonlayer}{background}
-      	\fill [bgcol] (box.north west) rectangle (box.south east);
-         \backdeco
-	  \end{pgfonlayer}%
-   \end{tikzpicture}%
-   \stepcounter{imgcnt}%
+%%% Une page par quiz
+\def\xitball#1{%
+    \tikz[baseline=(N.base)] \node  (N) [circle, inner sep=0, top color=coldcol!90, bottom color=coldcol!60!black, text=white, minimum height=0, text width=1cm, align=center, line width=2pt, draw=bgcol,font=\Large\bfseries]{#1};
+    }
+\newif\ifsinglequizimage
+\DeclareDocumentEnvironment{quiz@single}{mm O{} d()  d<> E\br{{}} +b}{%
+	\csuse{quiz#1}%
+	\igxname{quiz}{#2}%
+	\stepcounter{quiz}%
+	\def\ig@quizcsventry{"\thequiz"}
+	\def\ig@tmpe{}
+	\ifig@rigid{title}
+		{\let\ig@tmpe\ig@rigid@title}
+		{\IfValueT{#4}{\def\ig@tmpe{#4}}}%
+	\eappto\ig@quizcsventry{, "\two@digits\theimgcnt.png",
+		"\expandafter\unexpanded\expandafter{\ig@tmpe}"}
+	\firstpass@quiz{#7}%
+	\ifig@rigid{choicelist}{\reprocess@choicelist}{}%
+    \singlequizimagetrue
+    \igenv
+    {\deco@thequiz{\thequiz}\ifdefempty{\ig@tmpe}{}{\\[\medskipamount] \ig@tmpe}}[image height=1,#3]
+        \begin{xenum}[d=\xitball, m, s=.5\baselineskip]
+	  	   \item[] \csundef@afterexec{intro@body}
+                \ifdef{\ig@choicelist}
+                {\forlistloop{\for@cmd{choice}}\ig@choicelist}{}
+            \end{xenum}
+    \endigenv%
+}{%
+    \choice@undef%
+	\igcsvrecord{\ig@quizcsventry}
+}
+\AtBeginDocument{
+\ifsingleimage
+    \def\quiz{\quiz@single{true}{\name@quiz}}
+    \let\endquiz\endquiz@single
+    \def\rawchoice{\rawchoice@single}
+\else 
+    \def\quiz{\quiz@many{true}{\name@quiz}}
+    \let\endquiz\endquiz@many
+    \def\rawchoice{\rawchoice@many}
+\fi 
+}
+%%%% Les instructions de rendu des "pages" 
+\usetikzlibrary{shadows, fadings, positioning}
+\newdimen\imagewidth
+
+\igset[tikz]{%
+	image width/.code={\imagewidth=#1},
+	image width=16cm,
+	}
+	
+\tikzset{image deco/.style={%
+	fill=bgcol, 
+	draw=warmcol, 
+	line width=20pt, 
+	rounded corners= 20pt
+	}
 }
 
-\NewDocumentEnvironment{notations}{}{%
-    \igdefdeco{enumi}{\color{brightcol}\xsquare}\igenv{Notations}}
-    {\endigenv}
+\tikzset{question number/.style={%
+	font=\fontsize{32pt}{32pt}\bfseries,
+	text=warmcol, xshift=1cm, text width=1cm,
+	align=left, yshift=-.8cm
+	}
+}
 
-\igdefdeco{thequiz}{[\ #1\ ]}
-\NewDocumentEnvironment{ig@intro}{D(){}}{%
-  \igsetenum{1}{marge}\igdefdeco{enumi}{\color{brightcol}\xsquare}%
-  \igenv{\deco@thequiz{\thequiz}\ifblank{#1}{}{\\[\medskipamount] #1}}}
-  {\endigenv}
+\tikzset{title style/.style={%
+	font=\fontsize{24pt}{24pt}\bfseries\scshape\boldmath,
+	text = coldcol,
+    text width=.7\imagewidth,
+	align=flush center,
+	}
+}
+
+\def\igenv@backdeco{ 
+	\draw [overlay, fill=bgcol, 
+			draw=warmcol, 
+			line width=20pt, 
+			rounded corners= 20pt]
+	 (page.north west) rectangle (page.south east);
+}
+
+
+
+\igdefdeco{thequiz}{{\color{warmcol}[\ #1\ ]}}
+
 
 %%%%% Définition du contenu de la commande \titre.
 \igset[rules]{ %

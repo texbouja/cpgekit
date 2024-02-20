@@ -8,16 +8,21 @@
 \definecolor{igaltblue}{HTML}{007AFF}
 \definecolor{iggreen}{HTML}{8CBA30}
 \definecolor{stcol}{HTML}{D68A36}
+\definecolor{igblack}{HTML}{1F1F1F}
 
 \igset[colors]{    
     warm={iggreen!85!black}{iggreen},
     cold={igblue}{igaltblue},
-	link={CornflowerBlue!66!black}{CornflowerBlue},
+	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
+	page={white}{igblack},
 	tcbtext=fgcol,
 	tcbframe=warmcol,
 	tcbback=bgcol,
 	tcbtitle=white, 
 	tcbbacktitle=warmcol,
+}
+\AtBeginDocument{%
+	\unless\ifsoutien\colorlet{stcol}{warmcol}\fi%
 }
 
 %%%% Les boites pour les quiz 
@@ -148,12 +153,12 @@
 
 %% Devoir 
 \igt@shape{display}{devoir}[right][right]
-\igdefdeco{devoir}{%
+\def\deco@devoir#1#2{%
 	\vskip20pt%
 	\begin{minipage}[t]{\textwidth-1.5cm+12pt}%
 			\color{coldcol}\filleft 
-			\textsf{\fontsize{24}{24}\scshape\color{coldcol}\cnt@name}%
-			\\ \LARGE\bfseries #1%
+			\textsf{\fontsize{24}{24}\TitlingFont\color{coldcol}#1}%
+			\\ \LARGE\bfseries #2%
 	\end{minipage}%
 }
 \igdefdeco{devoirlabelnumberless}{%
@@ -165,9 +170,9 @@
 			\draw [warmcol, line width=12pt, rounded corners=30pt, line cap=round] 
 				(.33\textwidth,0) -| (\textwidth,-2.4cm) ;
 		\fi%
-	\end{tikzpicture}
+	\end{tikzpicture}\hfill%
 }
-\igdefdeco{devoirlabel}{%
+\def\deco@devoirlabel#1#2{%
 	\begin{tikzpicture} [overlay, baseline=(C.base)] 
 		\node (C) at (30pt,0) [circle,
 			top color=coldcol!80,
@@ -176,9 +181,9 @@
 			text width=40pt,
 			align=center,
 			font=\fontsize{36}{36}\bfseries,
-		]{#1};
+		]{#2};
 		\node [warmcol] at ([yshift=6pt] C.north) 
-			{\TitlingFont\Large sujet};
+			{\TitlingFont\Large #1};
 		\ifig@tmpswa 
 			\draw [warmcol, line width=12pt, rounded corners=30pt, line cap=round] 
 				([xshift=12pt]C.east) -| (\textwidth,-1.2cm) ; 
@@ -186,7 +191,7 @@
 			\draw [warmcol, line width=12pt, rounded corners=30pt, line cap=round] 
 				([xshift=12pt]C.east) -| (\textwidth,-2.8cm) ;
 		\fi% 
-	\end{tikzpicture}
+	\end{tikzpicture}\hfill%
 }
 \igtspacing*{\@devoir}{\z@}{*1}{*6}
 
@@ -211,26 +216,33 @@
 %%% Probleme
 \igt@shape{display}{problem}[left][right]
 %\ig@format{\@problem}[display]
+\tikzset{
+	collink/.code={%
+		\ifsolution
+			\tikzset{top color=linkcol!90,bottom color=linkcol!60!black}
+		\else
+			\tikzset{top color=neutralcol!90,bottom color=neutralcol!60!black}
+		\fi}
+}
 \igdefdeco{problemlabel}{%
-	\begin{tikzpicture}  [overlay, baseline=(S.base)] 
+	\hskip-5pt\begin{tikzpicture}  [baseline=(S.base)] 
 		\node (S)  [rounded rectangle,
-			top color=coldcol!80,
-			bottom color=coldcol!60!black,
-			xshift=-5pt, 
+			collink,
 			inner sep=1pt, inner xsep=6pt,
 			text=white,
+			minimum width=2.4cm,
 			align=center,
 			anchor=west,
-			font=\TitlingFont\normalsize\vphantom{()},
+			font=\TitlingFont\large\vphantom{()},
 		]{\MakeLowercase{#1}};
 		\ifig@tmpswa%
-			\draw [warmcol, line width=.6pt, rounded corners=6pt] 
-				([xshift=4pt]S.east) -| (\columnwidth+1.2pt,-6pt) ;
+			\draw [overlay, warmcol, line width=.6pt, rounded corners=6pt] 
+				([xshift=4pt]S.east) -| (\columnwidth+6.2pt,-6pt) ;
 		\else%
-			\draw [warmcol, line width=.6pt, rounded corners=12pt] 
-				([xshift=4pt]S.east) -| (\columnwidth+1.2pt,-24pt) ; 
+			\draw [overlay, warmcol, line width=.6pt, rounded corners=12pt] 
+				([xshift=4pt]S.east) -| (\columnwidth+6.2pt,-28pt) ; 
 		\fi
-	\end{tikzpicture}%
+	\end{tikzpicture}\hfill%
 }
 \igdefdeco{problemlabelnumberless}{%
 	\begin{tikzpicture}  [overlay, baseline=(S.base)] 
@@ -241,12 +253,12 @@
 			\draw [warmcol, line width=.6pt, rounded corners=12pt] 
 				(.33\columnwidth) -| (\columnwidth+1.2pt,-24pt) ; 
 		\fi
-	\end{tikzpicture}%
+	\end{tikzpicture}\hfill%
 }
 \igdefdeco{problem}{%
 	\ifblank{#1}
-		{\vskip-1.5\baselineskip}
-		{\color{coldcol}\parbox[t]{\columnwidth-16pt}{\filleft\bfseries #1}\hskip8pt\null}%
+		{\vskip-1.2\baselineskip}
+		{\color{coldcol}\parbox[t]{\columnwidth-16pt}{\filleft #1}\hskip8pt\null}%
 }
 \ig@format{name=\@problem,numberless}[display]
 	{\sffamily\scshape\LARGE\color{coldcol}}
@@ -263,7 +275,7 @@
 		\tikz[overlay]\fill [top color=coldcol!80,
 			bottom color=coldcol!60!black] 
 			(-2.5pt,2.5pt) circle (5pt);%
-		\enskip\TitlingFont\color{warmcol} partie \label@parti~:~
+		\enskip\TitlingFont\color{warmcol} partie \label@parti~:~\hfill
 	}
 	{0pt}
 	{#1}
@@ -578,83 +590,54 @@
 %%%% En tete
 \let\newcg@head\relax
 \unless\ifprint
-	\ifsoutien 
-		\def\newcg@head{
-			\tikz[overlay]
-				\draw [stcol, line width=\head@height] 
-					(-.75\paperwidth,.5\head@height-3pt) -- 
-					(\paperwidth+3cm,.5\head@height-3pt);
-		}
-	\else 
-		\def\newcg@head{
-			\tikz[overlay]
-				\draw [iggreen, line width=\head@height] 
-					(-.75\paperwidth,.5\head@height-3pt) -- 
-					(\paperwidth+3cm,.5\head@height-3pt);
-		}
-	\fi%
+	\def\newcg@head{
+	\tikz[overlay]
+	\draw [stcol, line width=\head@height] 
+	(-.75\paperwidth,.5\head@height-3pt) -- 
+	(\paperwidth+3cm,.5\head@height-3pt);
+	}
 \fi%
 %%%% Pieds de page
 %\def\igcenter{Ibn\! Ghazi}
 \def\igcenter{Moulay Youssef}
 \ifsoutien
 	\setfoot@logo{capge}
-	\iffootimage@exists	
-		\def\newcg@foot{%
-			\begin{tikzpicture}[overlay, yshift=8pt] 
-				\draw [stcol] (-3cm,0) -- (\paperwidth,0) ;
-				\node  at (\textwidth,0)
-					[inner ysep=0pt, inner xsep=5pt, 
-						anchor=east, fill=bgcol]
-		 			{\pgfuseimage{logofoot}};%
-			\end{tikzpicture}%
-		}
-	\else
-		\def\newcg@foot{%
-			\begin{tikzpicture}[overlay, yshift=8pt] 
-				\draw [baseline, stcol] (-3cm,0) -- (\paperwidth,0) ;
-				\node at (\textwidth,0)
-					[anchor=east, baseline, yshift=.5ex,
-						fill=bgcol, font=\sffamily\scshape\bfseries] 
-					{\color{stcol}\small capge\kern1ex\large\color{coldcol}\igcenter};%
-			\end{tikzpicture}%
-		}
-	\fi 
-\else
+\else 
 	\setfoot@logo{cpge}
-	\iffootimage@exists	
-		\def\newcg@foot{%
-			\begin{tikzpicture}[overlay, yshift=8pt] 
-				\draw [warmcol] (-3cm,0) -- (\paperwidth,0) ;
-				\node  at (\textwidth,0)
-					[inner ysep=0pt, inner xsep=5pt, 
-						anchor=east, fill=bgcol]
-					{\pgfuseimage{logofoot}};%
-			\end{tikzpicture}%
-		}
-	\else
-		\def\newcg@foot{%
-			\begin{tikzpicture}[overlay, yshift=8pt] 
-				\draw [baseline, warmcol] (-3cm,0) -- (\paperwidth,0) ;
-				\node at (\textwidth,0)
-					[anchor=east, baseline,  yshift=.5ex,
-						fill=bgcol, font=\sffamily\scshape\bfseries]  
-					{\color{warmcol}\small cpge\kern1ex\large\color{coldcol}\igcenter};
-			\end{tikzpicture}%
-		}
-	\fi
-\fi
-\AtEndPreamble{
-\renewpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{ 
-	\renewcommand\makeheadrule{\newcg@head}
-	\renewcommand\makefootrule{\newcg@foot}
-	\igsethead(|theme|)()(|document|)
-	\igsetfoot(|classe|)(|pages|)()
+\fi 
+\iffootimage@exists	
+	\def\newcg@foot{%
+		\begin{tikzpicture}[overlay, yshift=8pt] 
+			\draw [stcol] (-3cm,0) -- (\paperwidth,0) ;
+			\node  at (\textwidth,0)
+			[inner ysep=0pt, inner xsep=5pt, 
+			anchor=east, fill=pagecol]
+			{\pgfuseimage{logofoot}};%
+		\end{tikzpicture}%
+	}
+\else
+	\def\newcg@foot{%
+		\begin{tikzpicture}[overlay, yshift=8pt] 
+			\draw [baseline, stcol] (-3cm,0) -- (\paperwidth,0) ;
+			\node at (\textwidth,0)
+			[anchor=east, baseline, yshift=.5ex,
+			fill=pagecol, font=\sffamily\scshape\bfseries] 
+			{\color{stcol}\small capge\kern1ex\large\color{coldcol}\igcenter};%
+		\end{tikzpicture}%
+	}
+\fi 
+\AtEndPreamble{%
+	\renewpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
+		\renewcommand\makeheadrule{\newcg@head}%
+		\renewcommand\makefootrule{\newcg@foot}%
+		\igsethead(|theme|)()(|document|)%
+		\igsetfoot(|classe|)(|pages|)()%
+	}
+	\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
+		\renewcommand\makefootrule{\newcg@foot}%
+		\sethead{}{}{}%
+		\setfoot{}{\thepage}{}%
+	}%
 }
-\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
-	\renewcommand\makefootrule{\newcg@foot}
-	\sethead{}{}{}
-	\setfoot{}{\thepage}{}
-}}
 \endinput
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
