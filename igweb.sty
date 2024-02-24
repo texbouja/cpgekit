@@ -948,7 +948,7 @@
         \ifblank{#2}{}
             {\ifblank{#1}
                 {\node (subtitle) at (title.base) [title geometry, subtitle style] {#2};}
-                {\node (subtitle) at ([yshift=-1.4ex]title.south) [title geometry, subtitle style, anchor=north] {#2};}
+                {\node (subtitle) at ([yshift=-1.4ex]title.south) [title geometry, subtitle style, anchor=north] {(#2)};}
             }
     \end{tikzpicture}%
     \hfill\null%
@@ -1052,7 +1052,6 @@
         {\input{#1-eno}}
         {\input{#1}}%
 }
-
 \expandafter\igcomment\expandafter{\igcomment@list}
 
 %%%% Inhibition des commandes d'écriture \solution et \proof

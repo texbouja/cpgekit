@@ -7,17 +7,17 @@
 
 %%% Colors 
 \definecolor{igblue}{HTML}{373A73}
-\definecolor{igaltblue}{HTML}{007AFF}
+\definecolor{igaltblue}{HTML}{4C98FF}
 \definecolor{iggreen}{HTML}{8CBA30}
 \definecolor{stcol}{HTML}{D68A36}
-\definecolor{igblack}{HTML}{1F1F1F}
+\definecolor{igblack}{HTML}{24292E}
 
 \igset[colors]{    
     warm={iggreen!85!black}{iggreen},
     cold={igblue}{igaltblue},
 	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
 	page={white}{igblack},
-	%bg={white}{igblack},
+	bg={white}{igblack},
 	tcbtext=fgcol,
 	tcbframe=warmcol,
 	tcbback=bgcol,
@@ -30,6 +30,18 @@
 
 \def\TitleFont{\fontsize{24}{24}\firaheavy\scshape\lsstyle}
 \def\SubTitleFont{\fontsize{16}{18}\firasemibold}
+\def\NumberFont{\fontsize{14}{14}\firaextrabold}
+
+\igdefdeco{unitetitle}{\color{warmcol}\SubTitleFont#1~:~}
+\def\set@defaultforlistsinsideunite{
+	\igdefdeco{unite}{\textcolor{coldcol}{\NumberFont ##1.}}
+	\def\unite{\first@unite}%
+	\igsetenum{1}{marge}%
+	\igsetenum{2}{marge}%
+	\igsetenum{3}{marge}%
+	\igdefdeco{enumi}{\textcolor{warmcol}{\NumberFont ##1.}}
+	\igdefdeco{enumii}{\textcolor{warmcol}{\NumberFont ##1.}}
+}
 
 \tikzset{question style/.style={
 	circle,

@@ -30,7 +30,7 @@
 \def\end@nofloat{\egroup\nobreak\vfill\nobreak\hrule height\z@\medbreak}
 \def\nofloat#1{\@for\@tempa:=#1\do{\@namedef{#1}{\@nofloat{#1}}%
   \@namedef{end#1}{\end@nofloat}}}
-\def\xc@makeother#1{%
+\def\ig@makeother#1{%
   \ifnum\the\catcode`#1=0\catcode`#112%
   \else \ifnum\the\catcode`#1=1\catcode`#112%
     \else \ifnum\the\catcode`#1=2\catcode`#112%
@@ -51,9 +51,9 @@
   \fi\fi}
 \def\@igcomment#1#2{%
   \ifx\@preamblecmds\@notprerr
-    \def\xc@csname{#1}%
-    \edef\xc@envirlist{#2}%
-    \ifx\xc@envirlist\@empty \@bsphack \else
+    \def\ig@csname{#1}%
+    \edef\ig@envirlist{#2}%
+    \ifx\ig@envirlist\@empty \@bsphack \else
       \begingroup
       \def\@envirsep{}%
       \@ifundefined{normal@begin}{\let\normal@begin\begin}{}%
@@ -61,19 +61,19 @@
       \def\begin##1{\do@begin{##1}\normal@begin{##1}}%
       \def\end##1{\normal@end{##1}\do@end}%
       \def\do@begin##1{\@ifundefined{##1}{}{\def\do@end{}}}%
-      \let\do@end\xc@begin
+      \let\do@end\ig@begin
     \fi
-    \let\next\xc@begin
+    \let\next\ig@begin
   \else
     \expandafter\@temptokena\expandafter{\document\@igcomment{@@@}{#2}}%
     \edef\document{\the\@temptokena}%
     \let\next\relax
   \fi
   \next}
-\def\end@igcomment{\ifx\xc@envirlist\@empty \@esphack \else \endgroup \fi}%
-\def\xc@begin{%
+\def\end@igcomment{\ifx\ig@envirlist\@empty \@esphack \else \endgroup \fi}%
+\def\ig@begin{%
   \begingroup
-    \let\do\xc@makeother
+    \let\do\ig@makeother
     \dospecials
     \ifx\igcommentchar\@empty\else
       \expandafter\catcode\expandafter`\igcommentchar=14
@@ -102,27 +102,27 @@
     \else
       \def\next{\igcomment@@#1\@nil}%
       \@testtrue
-      \xc@checkbegin#1\relax begin[]\relax\relax
+      \ig@checkbegin#1\relax begin[]\relax\relax
       \if@test
-        \xc@checkend#1\relax end[]\relax\relax
+        \ig@checkend#1\relax end[]\relax\relax
         \if@test
-          \xc@checkinput#1\relax input[]\relax\relax
+          \ig@checkinput#1\relax input[]\relax\relax
           \if@test
-            \xc@checkinclude#1\relax include[]\relax\relax
+            \ig@checkinclude#1\relax include[]\relax\relax
             \if@test
-            \xc@checkigincludeweb#1\relax igincludeweb[]\relax\relax
+            \ig@checkigincludeweb#1\relax igincludeweb[]\relax\relax
             \if@test
-              \xc@checkendinput#1\relax endinputss\relax\relax
+              \ig@checkendinput#1\relax endinputss\relax\relax
     \fi\fi\fi\fi\fi\fi
     \next}
-  \gdef\xc@checkbegin#1begin[#2]#3\relax#4\relax{%
+  \gdef\ig@checkbegin#1begin[#2]#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty
       \def\@tempa{#2}%
-      \@for\@tempb:=\xc@envirlist\do{%
-        \ifx\@tempa\@tempb\def\next{\xc@end{#2}#3\@nil}\fi}%
+      \@for\@tempb:=\ig@envirlist\do{%
+        \ifx\@tempa\@tempb\def\next{\ig@end{#2}#3\@nil}\fi}%
     \fi}
-  \gdef\xc@checkend#1end[#2]#3\relax#4\relax{%
+  \gdef\ig@checkend#1end[#2]#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty
       \@testfalse
@@ -130,49 +130,49 @@
       \ifx\@tempa\@tempb
         \def\next{%
           \ifigincluded
-            \def\next@{\global\igincludedfalse\endinput}%
+            \def\next{\global\igincludedfalse\endinput}%
           \else
-            \def\next@{\endgroup\end@igcomment\end{document}}%
+            \def\next{\endgroup\end@igcomment\end{document}}%
           \fi%
-        \next@}%
+        \next}%
       \else
-        \ifx\@tempa\xc@csname
+        \ifx\@tempa\ig@csname
           \def\next{\end@@igcomment{#2}#3\@nil}%
     \fi\fi\fi}
-  \gdef\xc@checkinput#1input[#2]#3\relax#4\relax{%
+  \gdef\ig@checkinput#1input[#2]#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty
       \def\next{\expandafter\igcomment@\@@input #2 \igcomment@@#3\@nil}%
       \@testfalse
     \fi}
-    \gdef\xc@checkigincludeweb#1igincludeweb[#2]#3\relax#4\relax{%
+    \gdef\ig@checkigincludeweb#1igincludeweb[#2]#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty
       \def\next{%
-        \global\let\xc@savedinput\@@input
+        \global\let\ig@savedinput\@@input
         \def\@@input{%
-          \global\let\@@input\xc@savedinput
+          \global\let\@@input\ig@savedinput
           \expandafter\igcomment@\@@input}%
-        \igincludeweb{#2}%
-        \global\let\@@input\xc@savedinput
+        \igincludeweb{#2}%#3\@nil%
+        \global\let\@@input\ig@savedinput
         \igcomment@@#3\@nil}%
       \@testfalse
     \fi}
-  \gdef\xc@checkendinput#1endinput#2#3\relax#4\relax{%
+  \gdef\ig@checkendinput#1endinput#2#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty\ifcat\noexpand#2a\relax\else
       \let\next\endinput
     \fi\fi}
-  \gdef\xc@checkinclude#1include[#2]#3\relax#4\relax{%
+  \gdef\ig@checkinclude#1include[#2]#3\relax#4\relax{%
     \def\@tempa{#1}%
     \ifx\@tempa\@empty
       \def\next{%
-        \global\let\xc@savedinput\@@input
+        \global\let\ig@savedinput\@@input
         \def\@@input{%
-          \global\let\@@input\xc@savedinput
+          \global\let\@@input\ig@savedinput
           \expandafter\igcomment@\@@input}%
         \include{#2}%
-        \global\let\@@input\xc@savedinput
+        \global\let\@@input\ig@savedinput
         \igcomment@@#3\@nil}%
       \@testfalse
     \fi}
@@ -181,11 +181,16 @@
     \toks@{#2 }\rescan{\toks@}%
     \edef\next{\noexpand\end@igcomment\noexpand\end{#1}\the\toks@}%
     \next}%
-  \gdef\xc@end#1#2\@nnil!\@nil{%
+  \gdef\ig@end#1#2\@nnil!\@nil{%
     \endgroup
     \@envirsep \let\@envirsep\envirsep
     \toks@{#2 }\rescan{\toks@}%
     \edef\next{\noexpand\normal@begin{#1}\the\toks@}%
+    \next}%
+  \gdef\ig@igincludeweb#1#2\@nnil!\@nil{%
+    \endgroup
+    \toks@{#2 }\rescan{\toks@}%
+    \edef\next{\noexpand\igincludeweb{#1}\the\toks@}%
     \next}%
   }%  END OF LOWERCASE
 \endgroup
