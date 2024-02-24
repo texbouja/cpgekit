@@ -8,7 +8,7 @@
 	\IfValueTF{#1}{\pgfqkeys{/ig/#1}}{\pgfqkeys{/ig}}%
 	}
 }{}
-
+\def\igincludeweb#1{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Gestion des metadonnées %%%%%
@@ -260,6 +260,8 @@
 	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
 	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
 }
+\let\xdocument\document
+\let\endsxdocument\enddocument
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% Basculement vers la conversion en images %%%%%%	
 \ifbool{igweb}
@@ -913,9 +915,7 @@
   \ig@square[1]\ \ig@square[1]
   \fi}
 \def\hf@deco{\title@deco}
-\def\fntht{\fontcharht\font`}
-\def\fntdp{\fontchardp\font`}
-\def\fntwd{\fontcharwd\font`}
+
 
 %%% Entete/pied de page 
 \newpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{

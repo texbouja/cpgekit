@@ -14,7 +14,8 @@
 \RequirePackage{pgfkeys,pgfmath,pgffor}
 \RequirePackage{etoolbox}
 \RequirePackage{xstring}
-\RequirePackage{relsize} 
+\RequirePackage{relsize}
+\RequirePackage{array}
 \@ifundefined{NewDocumentCommand}
 	{\RequirePackage{xparse}}
 	{}
@@ -1386,7 +1387,9 @@
 \fi%
 }
 
-
+\def\fntht{\fontcharht\font`}
+\def\fntdp{\fontchardp\font`}
+\def\fntwd{\fontcharwd\font`}
 \newcommand\ig@square[1][x]{\rule{\fntht#1}{\fntht#1}}
   
 %%%% Ajout 09/10/2023

@@ -9,7 +9,13 @@
 \RequirePackage{pgfopts}
 \RequirePackage{etoolbox}
 \def\igcurrentclass{igdoc}
+
+\newif\ifconvert
+
 \@ifundefined{ifsubdoc}{
+	\newif\ifigweb
+	\newif\ifsingleimage
+	\newif\ifthisfile
 	\newif\ifcours
 	\newif\ifserie
 	\newif\ifcolle
@@ -37,6 +43,11 @@
 	wsf/.is if=writetosolfile
 	compact/.is if=compact,
 	nocolor/.is if=nocolor, 
+	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+		\def\igcomment@list{quiz,notations,#1},
+	web/.default={},
+	singleimage/.is if=singleimage,
+	thisfile/.is if=thisfile,
 	cours/.code={%
 		\courstrue
 		\ifundef{\ig@class}{\def\ig@class{book}}{}
@@ -58,13 +69,15 @@
 	book/.code={
 		\def\ig@class{book}
 	},
-	.search also=/IGC
+	.search also=/IGC,
 }
 \pgfkeys{IGC/.is family, IGC/.cd,
 	.unknown/.code={%
 		\expandafter\appto\expandafter\class@options\expandafter		
 		{\pgfkeyscurrentname,}
 	},
+	convert/.code=\ifundef\igcomment@list{\pgfkeysalso{web}}{}\appto\convert@options{,convert={#1}},
+	convert/.default=true,
 	draft/.style={},	
 	soutien/.style={},
 	compact/.style={},
@@ -80,6 +93,7 @@
 \@ifundefined{ifsubdoc}
 	{\ProcessPgfOptions{/IGCS}}
 	{\ProcessPgfOptions{/IGC}}
+
 \ifundef\ig@class{\def\ig@class{article}}{}
 \ifdraft\appto\class@options{draft}\fi
 \begingroup
@@ -104,16 +118,13 @@
 \ifundef\NewDocumentCommand
 	{\RequirePackage{xparse}}
 	{}
- 
-\def\fntht{\fontcharht\font`}
-\def\fntdp{\fontchardp\font`}
-\def\fntwd{\fontcharwd\font`}
 
 %%%% Packages du projet 
 \RequirePackage{igbase}
-\RequirePackage{igcommon}
 \RequirePackage{igsubdoc}
 \RequirePackage{igmath}
+\RequirePackage{igcommon}
+\ifbool{igweb}{\endinput}{}
 \RequirePackage{igcours}
 
 \newif\ifrecord@active

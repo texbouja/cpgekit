@@ -28,7 +28,10 @@
 	\unless\ifsoutien\colorlet{stcol}{warmcol}\fi%
 }
 
-\tikzset{question number/.style={
+\def\TitleFont{\fontsize{24}{24}\firaheavy\scshape\lsstyle}
+\def\SubTitleFont{\fontsize{16}{18}\firasemibold}
+
+\tikzset{question style/.style={
 	circle,
 	font=\fontsize{16pt}{16pt}\bfseries,
 	text=white, draw=bgcol, line width=2pt, 
@@ -44,6 +47,20 @@
 		}
 	}
 
+\def\xitball#1{%
+    \tikz[baseline=(N.base)] 
+        \node  (N) 
+            [circle, 
+                inner sep=0, 
+                top color=coldcol!90, bottom color=coldcol!60!black, 
+                text=white, 
+                text width=1cm, 
+                align=center, 
+                line width=2pt, 
+                draw=bgcol,
+                font=\Large\bfseries
+            ]{#1};
+    }
 
 \newif\iffootimage@exists
 \newdimen\logo@width
@@ -71,13 +88,13 @@
 \fi
 \iffootimage@exists	
 		\def\newcg@foot{%
-		\node (foot) at ([xshift=-2pc, yshift=\igenv@footskip]page.south east)
+		\node (foot) at ([xshift=-2pc, yshift=\ig@footskip]page.south east)
 		[anchor=east, fill=bgcol, minimum height=0]
 		 			{\pgfuseimage{logofoot}};%
 		}
 \else
 		\def\newcg@foot{%
-				\node (foot) at ([xshift=-2pc, yshift=\igenv@footskip]page.south east)
+				\node (foot) at ([xshift=-2pc, yshift=\ig@footskip]page.south east)
 					[anchor=east, baseline, minimum height=0,
 						fill=bgcol, font=\sffamily\scshape\bfseries] 
 					{\color{stcol}\small\ifbool{soutien}{capge}{cpge}\kern1ex\large\color{coldcol}Ibn\! Ghazi};%
@@ -86,11 +103,11 @@
 
 
 
-\def\igenv@backdeco{ 
+\igset[web]{page decoration code={ 
 	\ifsinglequizimage
-		\draw [overlay, stcol, line width=\igenv@headheight+.4cm, rounded corners=\igenv@headheight] 
-		([xshift=-.5\igenv@headheight+.32cm] page.south west)
-		--([xshift=-.5\igenv@headheight+.32cm] page.north west);
+		\draw [overlay, stcol, line width=\ig@headheight+.4cm, rounded corners=\ig@headheight] 
+		([xshift=-.5\ig@headheight+.32cm] page.south west)
+		--([xshift=-.5\ig@headheight+.32cm] page.north west);
 	\else 
 		\draw [overlay, stcol, line width=30pt] 
 			(page.north east) -- (page.north west) ;
@@ -99,6 +116,29 @@
 	\draw [overlay, coldcol, line width=.4pt] 
 		(foot.west) -- +(-\imagewidth,0)
 		(foot.east) -- +(\imagewidth,0);
-	}
+	}}
+
+%%% environnement mini
+\def\funnyarrow#1#2{%
+	\tikz[baseline] 
+		\draw [
+				line width=\dimexpr\fntht x, #2, 
+				-{Round Cap[sep=-1pt] . Fast Round[]}
+			] 
+        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
+}
+\igset[mini]{%
+	mini deco=\llap{\funnyarrow{1.2em}{warmcol}}%
+		\textcolor{coldcol}{#1.}\kern1ex%
+}
+
 \endinput
 
+%%% Page de garde 
+\def\title@document{%
+	{\Large\bfseries\color{igblue}\ig@relsize
+		\csuse{ig@document}%
+     \global\ig@dima\baselineskip%
+	}%
+	\baselineskip\ig@dima%
+}

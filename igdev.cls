@@ -9,6 +9,9 @@
 \def\igcurrentclass{igdev}
 
 \@ifundefined{ifsubdoc}{
+	\newif\ifigweb
+	\newif\ifsingleimage
+	\newif\ifthisfile
 	\newif\ifsoutien 
 	\newif\ifdraft
 	\newif\ifstraight
@@ -20,14 +23,14 @@
 	\newif\ifstriptitle
 	\newif\ifsolution
 	\newif\ifsolutiondelayed
+	\newif\ifproof
+	\newif\ifproofdelayed
 	\newif\ifjustification\justificationtrue
 	\newif\ifhint
 	\newif\ifhintocg
 }{}
 
 \newif\ifconvert
-\newif\ifigweb
-\newif\ifsingleimage
 
 \let\startcsvrecording\relax
 \let\stopcsvrecording\relax
@@ -38,12 +41,9 @@
 	outpath/.code = \igoutpathtoquiz{#1},
 	inpath/.default = {../quizes},
 	outpath/.default = {\jobname-quizes},
-	web/.code=\compacttrue\igwebtrue\def\convert@options{}
-		\def\xcomment@list{quiz,notations,#1},
-	web/.default={},
-	convert/.code=\ifundef\xcomment@list{\pgfkeysalso{web}}{}\appto\convert@options{,convert={#1}},
+	convert/.code=\ifundef\igcomment@list{\pgfkeysalso{web}}{}\appto\convert@options{,convert={#1}},
 	convert/.default=true,
-	single image/.is if=singleimage,
+	web/.style={},
 	draft/.style={},
 	straight/.style={},	
 	soutien/.style={},
@@ -63,6 +63,11 @@
 	dark/.is if=dark,
 	nocolors/.is if=nocolors, 
 	nolinks/.is if=nolinks,
+	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+		\def\igcomment@list{quiz,notations,#1},
+	web/.default={},
+	singleimage/.is if=singleimage,
+	thisfile/.is if=thisfile,
 	solution/.code=\solutiontrue\solutiondelayedfalse%
 			\justificationfalse,
 	solution*/.code=\solutiontrue\solutiondelayedtrue%
@@ -295,8 +300,6 @@
 \long\def\zap@hint#1\hint{#1}
 
 \ifbool{igweb}{\endinput}{}
-
-
 
 \AtBeginDocument{
 	\ifsolutiondelayed\tcbstartrecording[\jobname.rec]\fi

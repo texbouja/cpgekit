@@ -883,9 +883,6 @@
 
 \def\mlform#1{\formule{$\begin{multlined}#1\end{multlined}$}}
 
-
-\igset{tikz/.unknown/.code=\tikzset{\pgfkeyscurrentname=#1}}
-
 \def\igsetnullify#1{\igset{#1/.is family, #1/.unknown/.code=\relax}}
 \igsetnullify{geometry}
 \igsetnullify{tcb}
@@ -895,111 +892,176 @@
 \igset[theme]{%
 	dark/.is if=dark,
 	colors/.code=\pgfkeysalso{/ig/colors/.cd,#1},
-	font/.code=\igusefont{#1},
-	rm/.style={font=rm},
-	sf/.style={font=sf},
+	font/.style={},
+	rm/.style={},
+	sf/.style={},
     .unknown/.code={}
 }
 
 \DeclareDocumentCommand\igusetheme{O{} m}{%
-    \igset[theme]{sf,#1}
+    \igset[theme]{#1}
+    \igusefont{sf}
 	\IfFileExists{q#2web.sty}
 			{\AtEndPreamble{\RequirePackage{q#2web}}}{}%
 	\reloadcolors%
 }
-%\NewDocumentCommand\igusetheme{om}{%
-%	\IfFileExists{q#2web.sty}{\RequirePackage{q#2web}}{}
-%}
 \DeclareDocumentCommand\igusegeometry{om}{}
 
 
-%%%% Mécanisme de désactivation des environnements à ignorer
-\RequirePackage{xcomment}
 
-\igset[igenv]{
+%%%% Mécanisme de désactivation des environnements à ignorer
+
+
+\tikzset{page decoration/.style={%
+	fill=bgcol, 
+	draw=warmcol, 
+	line width=20pt, 
+	rounded corners= 20pt
+	}
+}
+\tikzset{question style/.style={%
+	font=\fontsize{32pt}{32pt}\bfseries,
+	text=warmcol, xshift=1cm, text width=1cm,
+	align=left, yshift=-.8cm
+	}
+}
+\tikzset{title geometry/.style={%
+    text width=.7\imagewidth,
+    align=flush center,
+}}
+\def\TitleFont{\fontsize{24pt}{24pt}\firaextrabold\scshape}
+\def\SubTitleFont{\fontsize{16}{18}\firasemibold}
+\tikzset{title style/.style={%
+	font=\TitleFont,
+	text = coldcol,
+	}
+}
+\tikzset{subtitle style/.style={%
+	font=\SubTitleFont,
+	text = warmcol,
+	}
+}
+\long\def\title@format#1#2{%
+    \null\hfill
+    \begin{tikzpicture}
+        \node (title) [title geometry, title style] {#1};
+        \ifblank{#2}{}
+            {\ifblank{#1}
+                {\node (subtitle) at (title.base) [title geometry, subtitle style] {#2};}
+                {\node (subtitle) at ([yshift=-1.4ex]title.south) [title geometry, subtitle style, anchor=north] {#2};}
+            }
+    \end{tikzpicture}%
+    \hfill\null%
+}
+\newcommand\igtitleformat[1]{\long\def\title@format##1##2{#1}}
+\igset[web]{
+    before/.store in=\webenv@prehook,
     image width/.code= \imagewidth#1,
     image height/.code = \tikzset{minimum height=#1\imagewidth},
-    top skip/.store in=\igenv@topskip,
-    bottom skip/.store in=\igenv@bottomskip,
-    foot skip/.store in=\igenv@footskip,
-    head height/.store in=\igenv@headheight,
+    top skip/.store in=\ig@topskip,
+    bottom skip/.store in=\ig@bottomskip,
+    foot skip/.store in=\ig@footskip,
+    head height/.store in=\ig@headheight,
     top skip=1.5cm, bottom skip=1.5cm, foot skip=14pt, head height=30pt,
-    .unknown/.code={}
+    page decoration code/.store in=\page@deco,
+    add decoration code/.store in=\inner@deco,
+    reset decoration style/.store in=\tikz@opts,
+    .unknown/.code=\relax
 }
-\def\tikz@title#1#2{
-    \ifblank{#2}
-        {\ifblank{#1}{}{\hfill\tikz\node (title) [title style] {\TitlingFont#1};\hfill\null}}
-        {\ifblank{#1}
-            {\hfill\tikz\node (title) [title style] {\normalfont\Large\textcolor{warmcol}{(#2)}\hfill};\hfill\null}
-            {\hfill\tikz\node (title) [title style] 
-                {{\TitlingFont#1}
-                {\\\normalfont\Large\textcolor{warmcol}{(#2)}\hfill}};\hfill\null%
-            }%
-        }%
-}
-\NewDocumentEnvironment{igenv}{m O{} D(){} d<> +b}{%
-    \igset[igenv]{image height=.2,#2}%
-    \stepcounter{imgcnt}
+\def\tikz@opts{}
+\NewDocumentEnvironment{webenv}{m O{} D(){} d<> +b}{%
+    \igset[web]{#2}%
+    \csuse{webenv@prehook}%
+    \stepcounter{imgcnt}%
+    \long\def\titlelabel{#1}%
+    \long\def\titletext{#3}%
     \set@defaultforlistsinsideunite%
-	\begin{tikzpicture}
-        \begin{pgfonlayer}{foreground}
-            \node (page) 
-                [inner sep=0, outer sep=0, text width=\imagewidth] 
+    \begin{tikzpicture}
+        \begin{pgfonlayer}{main}
+            \begingroup\edef\ig@tmpa{\endgroup%
+            \noexpand\node (page) 
+                [inner sep=0, outer sep=0, text width=\noexpand\imagewidth, \expandonce\tikz@opts]}
+            \ig@tmpa
             {
                 \tikzset{minimum height=0}%
-                \vrule width\z@ height\igenv@headheight depth\z@\par\unskip\unskip%
-                \tikz@title{#1}{#3}\par%
-                \vskip\igenv@topskip plus 1fill%
+                \vrule width\z@ height\ig@headheight depth\z@\par\vskip-\baselineskip%
+                \begingroup\title@format{#1}{#3}\endgroup\ifhmode\par\fi%
+                \vskip\ig@topskip plus 1fil%
                 \fontsize{16pt}{20pt}\selectfont\hfill%
                 \minipage{\imagewidth-32pt}%
-                    \flushleft #5
-                \endminipage\hfill\null\par%
-                \vskip\igenv@bottomskip plus 1fill%
-                \vrule width\z@ height\igenv@footskip depth\z@%
+                    \flushleft%
+                        #5
+                    \fi@%
+                \endminipage%
+                \hfill\null\par%
+                \vskip\ig@bottomskip plus 1fill%
+                \vrule width\z@ height\ig@footskip depth\z@%
             };
-        \ifdef\numberdeco
-            {\begin{scope}[overlay]\numberdeco\end{scope}}{}
+        \ifdef\inner@deco
+            {\begin{scope}[overlay]\inner@deco\end{scope}}{}
         \end{pgfonlayer}
         \begin{pgfonlayer}{background}
             \begin{scope}[overlay, minimum height=0]
                 \clip (page.north west) rectangle (page.south east);
                 \fill [overlay, bgcol] (page.north west) rectangle (page.south east);
-                \igenv@backdeco%
+                \page@deco%
             \end{scope}
 	    \end{pgfonlayer}%
     \end{tikzpicture}%
 }{\closeunite}
 \NewDocumentEnvironment{notations}{}{%
-    \igdefdeco{enumi}{\color{brightcol}\xsquare}
-    \igenv{Notations}
-}{\endigenv}
+    \igdefdeco{enumi}{\color{warmcol}\xsquare}
+    \webenv{Notations}
+}{\endwebenv}
 
-\newcommand\ignewwebenv[2]{
-    \ifcsdef{#1}{}
-        {\csdef{#1}{\igenv{#2}}\cslet{end#2}\endigenv}
+\newcommand\ignewwebenv[3][]{
+    \ifblank{#1}
+        {\csdef{#2}{\webenv{#3}}}
+        {\csdef{#2}{\igset[web]{#1}\webenv{#3}}}
+    \cslet{end#2}\endwebenv
 }
-\newcommand\igrenewwebenv[2]{
-        \csdef{#1}{\igenv{#2}}%
-        \cslet{end#1}\endigenv%
-}
-\ignewwebenv{theo}{Théorème}
-\ignewwebenv{prop}{Proposition}
-\ignewwebenv{coro}{Corollaire}
-\ignewwebenv{lemm}{Lemme}
-\ignewwebenv{ppte}{Propriétés}
+\ignewwebenv[before=\hideproof, image height=.75]{theo}{Théorème}
+\ignewwebenv[before=\hideproof, image height=.75]{prop}{Proposition}
+\ignewwebenv[before=\hideproof, image height=.75]{coro}{Corollaire}
+\ignewwebenv[before=\hideproof, image height=.75]{lemm}{Lemme}
+\ignewwebenv[before=\hideproof, image height=.75]{ppte}{Propriétés}
+\ignewwebenv[before=\hidesolution, image height=.75]{exer}{Exercice}
+\ignewwebenv{remas}{Remarques}
 \ignewwebenv{defi}{Définition}
-\def\genwebenv{\igenv}
-\let\endgenwebenv\endigenv 
+\newenvironment{genthm}[2][]{
+    \igset[web]{image height=.75,#1}%
+    \webenv{#2}
+}{\endwebenv}
+\newenvironment{image}[1][]{
+    \igset[web]{tikz options=#1}%
+    \webenv{}
+}{\endwebenv}
+\def\hideproof{\def\proof{\let\fi@\fi\iffalse}}
+\def\hidesolution{\def\solution{\let\fi@\fi\iffalse}}
+\let\fi@\relax
+\begingroup 
+\def\do#1{\xtrimspaces{#1},}
+\xdef\igcomment@list{\expandafter\docsvlist\expandafter{\igcomment@list}}
+\endgroup
 
-\expandafter\xcomment\expandafter{\xcomment@list}
+\RequirePackage{igcomment}
+\NewDocumentCommand\iginclude{om}{}
+\RenewDocumentCommand\igincludeweb{m}{
+    \global\igincludedtrue%
+    \IfFileExists{#1-eno.tex}
+        {\input{#1-eno}}
+        {\input{#1}}%
+}
+
+\expandafter\igcomment\expandafter{\igcomment@list}
+
+%%%% Inhibition des commandes d'écriture \solution et \proof
+%%%% dans des fichiers externes
 
 
 %%%% écriture du CSV
 
-
-
 \newwrite\ig@record@out
-\newwrite\devnull
 
 \def\ig@null#1{}
 \newcommand{\igcsv@record}[1]{%
@@ -1078,11 +1140,11 @@
 
 \def\number@deco{
     \node at ([yshift=-8pt]page.north)
-        [question number, anchor=north, minimum height=0]
+        [question style, anchor=north, minimum height=0]
            {\arabic{ch@ice}}; 
 }
 \NewDocumentCommand\ig@choicemany{+m}{%
-  \begin{igenv}{}
+  \begin{webenv}{}
         [image width=8cm, 
         image height=1, 
         top skip=0pt, 
@@ -1090,7 +1152,7 @@
         foot skip=8pt, 
         head height=34pt]{}
         #1
-   \end{igenv}%  
+   \end{webenv}%  
 }
 \NewDocumentCommand\ig@choicesingle{+m}{\xit #1}
 
@@ -1126,7 +1188,7 @@
 	  {\begin{ig@intro}(\ig@tmpe)
 	  	\csundef@afterexec{intro@body}
 		\end{ig@intro}}%
-    \let\numberdeco\number@deco%
+    \let\inner@deco\number@deco%
 	\ifdef{\ig@choicelist}
       {\forlistloop{\for@cmd{choice}}\ig@choicelist}{}
 }{%
@@ -1134,16 +1196,15 @@
 	\igcsvrecord{\ig@quizcsventry}
 }
 \NewDocumentEnvironment{ig@intro}{d()}{%
-    \igenv{\deco@thequiz{\thequiz}\IfValueT{#1}{\\ #1}}[.1]
+    \webenv{\deco@thequiz{\thequiz}\IfValueT{#1}{\\ #1}}[.1]
     \mbox{}
-}{\endigenv}
+}{\endwebenv}
 \def\for@cmd#1#2{\csundef@afterexec{#1@body#2}}
 
 %%% Une page par quiz
-\def\xitball#1{%
-    \tikz[baseline=(N.base)] \node  (N) [circle, inner sep=0, top color=coldcol!90, bottom color=coldcol!60!black, text=white, minimum height=0, text width=1cm, align=center, line width=2pt, draw=bgcol,font=\Large\bfseries]{#1};
-    }
+
 \newif\ifsinglequizimage
+\def\xitball{\fbox}
 \DeclareDocumentEnvironment{quiz@single}{mm O{} d()  d<> E\br{{}} +b}{%
 	\csuse{quiz#1}%
 	\igxname{quiz}{#2}%
@@ -1158,14 +1219,14 @@
 	\firstpass@quiz{#7}%
 	\ifig@rigid{choicelist}{\reprocess@choicelist}{}%
     \singlequizimagetrue
-    \igenv
+    \webenv
     {\deco@thequiz{\thequiz}\ifdefempty{\ig@tmpe}{}{\\[\medskipamount] \ig@tmpe}}[image height=1,#3]
         \begin{xenum}[d=\xitball, m, s=.5\baselineskip]
-	  	   \item[] \csundef@afterexec{intro@body}
+	  	   \item[]\csundef@afterexec{intro@body}
                 \ifdef{\ig@choicelist}
                 {\forlistloop{\for@cmd{choice}}\ig@choicelist}{}
             \end{xenum}
-    \endigenv%
+    \endwebenv%
 }{%
     \choice@undef%
 	\igcsvrecord{\ig@quizcsventry}
@@ -1190,30 +1251,7 @@
 	image width=16cm,
 	}
 	
-\tikzset{image deco/.style={%
-	fill=bgcol, 
-	draw=warmcol, 
-	line width=20pt, 
-	rounded corners= 20pt
-	}
-}
-
-\tikzset{question number/.style={%
-	font=\fontsize{32pt}{32pt}\bfseries,
-	text=warmcol, xshift=1cm, text width=1cm,
-	align=left, yshift=-.8cm
-	}
-}
-
-\tikzset{title style/.style={%
-	font=\fontsize{24pt}{24pt}\bfseries\scshape\boldmath,
-	text = coldcol,
-    text width=.7\imagewidth,
-	align=flush center,
-	}
-}
-
-\def\igenv@backdeco{ 
+\def\page@deco{ 
 	\draw [overlay, fill=bgcol, 
 			draw=warmcol, 
 			line width=20pt, 
@@ -1223,16 +1261,16 @@
 
 
 
-\igdefdeco{thequiz}{{\color{warmcol}[\ #1\ ]}}
+\igdefdeco{thequiz}{{\color{warmcol}\bfseries[\ #1\ ]}}
 
 
 %%%%% Définition du contenu de la commande \titre.
 \igset[rules]{ %
-	question number/.code=\gdef\ig@quesnum{#1},
+	question style/.code=\gdef\ig@quesnum{#1},
 	quiz number/.code=\gdef\ig@quiznum{#1}, 
 	title/.code=\igname*{rules}{#1},
 	quiz score/.code=\gdef\ig@quizscore{#1},
-	question number=4,
+	question style=4,
 	quiz number=6,
 	quiz score=4,
 	title={R\`egles du questionnaire}
@@ -1263,9 +1301,9 @@
 	}{}
 
 % \igaddkeyword{title}{regles}{%
-% 	\begin{igenv}(\csuse{name@rules})
+% 	\begin{webenv}(\csuse{name@rules})
 % 		\rules@body
-% 	\end{igenv}
+% 	\end{webenv}
 % }
 % \RenewDocumentCommand\titre{sod()}{%
 % 	\iglocaltitle{|regles|}
@@ -1280,7 +1318,7 @@
 
 \igset[mini]{%
 	font=\Large,
-	label font=\Large\scshape\bfseries\color{brightcol},
+	label font=\Large\scshape\bfseries\color{warmcol},
 	left margin=1pc
 }
 
