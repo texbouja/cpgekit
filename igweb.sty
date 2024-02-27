@@ -218,7 +218,7 @@
         \setkeys{igweb.sty}{multi=tikzpicture,varwidth=false}%
     \fi
 }
-
+\setkeys{igweb.sty}{tikz}
 
 %\ig@clsoption{class}{%
 %    \def\ig@class{#1}%
@@ -1042,23 +1042,17 @@
 \begingroup 
 \def\do#1{\xtrimspaces{#1},}
 \xdef\igcomment@list{\expandafter\docsvlist\expandafter{\igcomment@list}}
-\edef\ig@tmpa{\endgroup
-    \noexpand\setkeys{igweb.sty}{crop,multi={\igcomment@list}, ignorerest, varwidth=false}
-    }
-%\show\ig@tmpa
-\ig@tmpa
+\endgroup
 
-%\RequirePackage{igcomment}
-%\NewDocumentCommand\iginclude{om}{}
-\NewDocumentCommand\iginclude{m}{
-    %\global\igincludedtrue%
+\RequirePackage{igcomment}
+\NewDocumentCommand\iginclude{om}{}
+\RenewDocumentCommand\igincludeweb{m}{
+    \global\igincludedtrue%
     \IfFileExists{#1-eno.tex}
         {\input{#1-eno}}
         {\input{#1}}%
 }
-\NewDocumentCommand\titre{sod()}
-%\expandafter\igcomment\expandafter{\igcomment@list}
-
+\expandafter\igcomment\expandafter{\igcomment@list}
 
 %%%% Inhibition des commandes d'écriture \solution et \proof
 %%%% dans des fichiers externes

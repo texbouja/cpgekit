@@ -121,12 +121,10 @@
 
 %%%% Packages du projet 
 \RequirePackage{igbase}
-%\RequirePackage{igsubdoc}
+\RequirePackage{igsubdoc}
 \RequirePackage{igmath}
 \RequirePackage{igcommon}
-\ifbool{igweb}
-	{\RequirePackage{standalone}\endinput}
-	{\RequirePackage{igsubdoc}}
+\ifbool{igweb}{\endinput}{}
 \RequirePackage{igcours}
 
 \newif\ifrecord@active
