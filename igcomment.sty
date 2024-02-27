@@ -56,7 +56,7 @@
     \ifx\ig@envirlist\@empty \@bsphack \else
       \begingroup
       \def\@envirsep{}%
-      \@ifundefined{normal@begin}{\let\normal@begin\begin}{}%
+      \@ifundefined{normal@begin}{\let\normal@begin\begin}{}%iginclude
       \@ifundefined{normal@end}{\let\normal@end\end}{}%
       \def\begin##1{\do@begin{##1}\normal@begin{##1}}%
       \def\end##1{\normal@end{##1}\do@end}%
@@ -84,7 +84,7 @@
 \begingroup
 \catcode`\!=12
 \catcode`\[=12
-\catcode`\]=12
+\catcode`\]=12 
 \catcode`\"=12
 \lccode`\!=`\\
 \lccode`\[=`\{
