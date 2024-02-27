@@ -143,7 +143,6 @@
 
 %%%%% Packages du projet 
 \RequirePackage[customtitles]{igbase}
-\RequirePackage{igsubdoc}
 \RequirePackage{igmath}
 \RequirePackage{igcommon}
 
@@ -299,7 +298,9 @@
 }
 \long\def\zap@hint#1\hint{#1}
 
-\ifbool{igweb}{\endinput}{}
+\ifbool{igweb}
+	{\RequirePackage{standalone}\endinput}
+	{\RequirePackage{igsubdoc}}
 
 \AtBeginDocument{
 	\ifsolutiondelayed\tcbstartrecording[\jobname.rec]\fi
