@@ -132,13 +132,13 @@
 \newif\ifig@ignoreempty
 \newif\ifig@tikz
 \newif\ifig@convert
-\def\ig@clsoption{%
-    \define@key{igweb.sty}%
+\def\ig@pkgoption{%
+    \define@key{IGWEB}%
 }
-\ig@clsoption{border}{%
+\ig@pkgoption{border}{%
     \ig@readborder#1 {} {} {} {} \@nnil
 }
-\ig@clsoption{margin}{%
+\ig@pkgoption{margin}{%
     \ig@readborder#1 {} {} {} {} \@nnil
 }
 \def\ig@boolean#1#2{%
@@ -166,41 +166,41 @@
         \expandafter\@firstofone
     \fi\fi
 }
-\ig@clsoption{inpath}[quizes]{%
+\ig@pkgoption{inpath}[quizes]{%
 	\iginpathtoquiz{#1}%
 }
-\ig@clsoption{outpath}[\jobname-quizes]{%
+\ig@pkgoption{outpath}[\jobname-quizes]{%
 	\igoutpathtoquiz{#1}%
 }
-%\setkeys{igweb.sty}{pathtoquiz}
+%\setkeys{IGWEB}{pathtoquiz}
 
-%\ig@clsoption{scorepattern}[false]{%
+%\ig@pkgoption{scorepattern}[false]{%
 %	\ig@boolean{noscorepattern}{#1}%
 %}
-\ig@clsoption{crop}[true]{%
+\ig@pkgoption{crop}[true]{%
     \ig@boolean{crop}{#1}%
 }
-\setkeys{igweb.sty}{crop}
+\setkeys{IGWEB}{crop}
 
-\ig@clsoption{ignorerest}[true]{%
+\ig@pkgoption{ignorerest}[true]{%
     \ig@boolean{ignorerest}{#1}%
 }
-\ig@clsoption{ignoreempty}[true]{%
+\ig@pkgoption{ignoreempty}[true]{%
     \ig@boolean{ignoreempty}{#1}%
 }
-\ig@clsoption{multi}[true]{%
+\ig@pkgoption{multi}[true]{%
     \ig@boolorvalue{multi}{#1}{\ig@multitrue\AtBeginDocument{\igwebenv{#1}}}%
 }
 
-\ig@clsoption{multido}[true]{%
+\ig@pkgoption{multido}[true]{%
     \ig@boolean{multido}{#1}%
     \ifig@multido
-        \setkeys{igweb.sty}{multi=igmultido}%
+        \setkeys{IGWEB}{multi=igmultido}%
     \fi
 }
-\setkeys{igweb.sty}{multido}
+\setkeys{IGWEB}{multido}
 
-\ig@clsoption{varwidth}[true]{%
+\ig@pkgoption{varwidth}[true]{%
     \ig@boolorvalue{varwidth}{#1}{\ig@varwidthtrue\def\ig@width{#1}}%
     \ifig@varwidth
         \def\ig@varwidth{\varwidth{\ig@width}}%
@@ -212,33 +212,33 @@
 }
 \let\sa@varwidth\@empty
 \let\sa@endvarwidth\@empty
-\ig@clsoption{tikz}[true]{%
+\ig@pkgoption{tikz}[true]{%
     \ig@boolean{tikz}{#1}%
     \ifig@tikz
-        \setkeys{igweb.sty}{multi=tikzpicture,varwidth=false}%
+        \setkeys{IGWEB}{multi=tikzpicture,varwidth=false}%
     \fi
 }
-\setkeys{igweb.sty}{tikz}
+\setkeys{IGWEB}{tikz}
 
-%\ig@clsoption{class}{%
+%\ig@pkgoption{class}{%
 %    \def\ig@class{#1}%
 %}
 %\def\ig@class{article}
 
-\ig@clsoption{convert}[]{%
-    \setkeys{igweb.sty/convert}{true,#1}%
+\ig@pkgoption{convert}[]{%
+    \setkeys{IGWEB/convert}{true,#1}%
 }
 
-\ig@clsoption{disable@convert}[]{%
+\ig@pkgoption{disable@convert}[]{%
     \typeout{Disable conversion}
     \ig@convertfalse
     \let\ig@converttrue\relax
 }
 \def\ig@convertoption{%
-    \define@key{igweb.sty/convert}%
+    \define@key{IGWEB/convert}%
 }
 \def\ig@convertvar#1#2{%
-    \define@key{igweb.sty/convert}{#1}{%
+    \define@key{IGWEB/convert}{#1}{%
         \@namedef{ig@convert@#1}{##1}%
     }%
     \@namedef{ig@convert@#1}{#2}%
@@ -250,10 +250,10 @@
     \ig@convertfalse
 }
 \ig@convertoption{png}[]{%
-    \setkeys{igweb.sty/convert}{true,outext={.png}}%
+    \setkeys{IGWEB/convert}{true,outext={.png}}%
 }
-\ig@clsoption{png}[]{%
-    \setkeys{igweb.sty/convert}{png,#1}%
+\ig@pkgoption{png}[]{%
+    \setkeys{IGWEB/convert}{png,#1}%
 }
 \ig@convertoption{realmainfile}[]{%
     \RequirePackage{currfile-abspath}%
@@ -261,16 +261,16 @@
     \let\ig@convert@mainfile\themainfile
 }
 \ig@convertoption{jpg}[]{%
-    \setkeys{igweb.sty/convert}{true,outext={.jpg}}%
+    \setkeys{IGWEB/convert}{true,outext={.jpg}}%
 }
-\ig@clsoption{jpg}[]{%
-    \setkeys{igweb.sty/convert}{jpg,#1}%
+\ig@pkgoption{jpg}[]{%
+    \setkeys{IGWEB/convert}{jpg,#1}%
 }
 \ig@convertoption{gif}[]{%
-    \setkeys{igweb.sty/convert}{true,outext={.gif}}%
+    \setkeys{IGWEB/convert}{true,outext={.gif}}%
 }
-\ig@clsoption{gif}[]{%
-    \setkeys{igweb.sty/convert}{gif,#1}%
+\ig@pkgoption{gif}[]{%
+    \setkeys{IGWEB/convert}{gif,#1}%
 }
 \ig@convertoption{onfailure}{%
     \begingroup
@@ -352,28 +352,28 @@
     \ig@convertvar{latex}{lualatex}
     \ig@convertvar{inext}{.pdf}
     \ig@convertvar{precommand}{}
-    \setkeys{igweb.sty/convert}{imagemagick}
+    \setkeys{IGWEB/convert}{imagemagick}
 \else
 \ifpdf
     \ig@convertvar{latex}{pdflatex}
     \ig@convertvar{inext}{.pdf}
     \ig@convertvar{precommand}{}
-    \setkeys{igweb.sty/convert}{imagemagick}
+    \setkeys{IGWEB/convert}{imagemagick}
 \else
 \ifxetex
     \ig@convertvar{latex}{xelatex}
     \ig@convertvar{inext}{.pdf}
     \ig@convertvar{precommand}{}
-    \setkeys{igweb.sty/convert}{imagemagick}
+    \setkeys{IGWEB/convert}{imagemagick}
 \else
     \ig@convertvar{latex}{latex}
     \ig@convertvar{inext}{.ps}
     \ig@convertvar{precommand}{dvips \subjobname.dvi}
-    \setkeys{igweb.sty/convert}{ghostscript}
+    \setkeys{IGWEB/convert}{ghostscript}
 \fi\fi\fi
 
 \def\ig@convertvar#1#2{%
-    \define@key{igweb.sty/convert}{#1}{%
+    \define@key{IGWEB/convert}{#1}{%
         \@namedef{ig@convert@#1}{##1}%
     }%
     \@namedef{ig@convert@#1}{#2}%
@@ -403,11 +403,11 @@
     \begingroup
     \edef\@tempa{\endgroup\noexpand\@for\noexpand\@tempa:=\zap@space#1 \@empty}%
     \@tempa\do{\expandafter\@igwebenv\expandafter{\@tempa}}%
-    \setkeys{igweb.sty}{multi}%
+    \setkeys{IGWEB}{multi}%
 }
 \@onlypreamble\igwebenv
-\newcommand*{\igwebconfig}{\setkeys{igweb.sty}}
-\expandafter\igwebconfig\expandafter{\convert@options}
+\newcommand*{\igsetweb}{\setkeys{IGWEB}}
+\expandafter\igsetweb\expandafter{\convert@options}
 \let\@igwebenv\@gobble
 \newcount\ig@internal
 \newcounter{igpage}
@@ -416,13 +416,13 @@
 \def\ig@width{\linewidth}
 \InputIfFileExists{igweb.cfg}{}{}
 \begingroup
-\def\@tempa{\endgroup\setkeys*{igweb.sty}}
+\def\@tempa{\endgroup\setkeys*{IGWEB}}
 \expandafter\expandafter\expandafter\@tempa
 \expandafter\expandafter\expandafter{\csname opt@igweb.sty\endcsname}
 \let\@packageoptionslist\XKV@rm
-\disable@keys{igweb.sty}{crop,ignorerest}
+\disable@keys{IGWEB}{crop,ignorerest}
 \AtBeginDocument{%
-    \disable@keys{igweb.sty}{multi}%
+    \disable@keys{IGWEB}{multi}%
 }
 \ifig@convert\ig@mkdir{\ig@convert@imgdir}\fi%
 
@@ -866,7 +866,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%% Les ajouts propres à igweb.sty %%%%%%%%%%%%%
+%%%%%%%%%%%% Les ajouts propres à IGWEB %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \igdefcounter{quiz}{}
@@ -954,7 +954,7 @@
     \hfill\null%
 }
 \newcommand\igtitleformat[1]{\long\def\title@format##1##2{#1}}
-\igset[web]{
+\igset[webenv]{
     before/.store in=\webenv@prehook,
     image width/.code= \imagewidth#1,
     image height/.code = \tikzset{minimum height=#1\imagewidth},
@@ -970,7 +970,7 @@
 }
 \def\tikz@opts{}
 \NewDocumentEnvironment{webenv}{m O{} D(){} d<> +b}{%
-    \igset[web]{#2}%
+    \igset[webenv]{#2}%
     \csuse{webenv@prehook}%
     \stepcounter{imgcnt}%
     \long\def\titlelabel{#1}%
@@ -1017,7 +1017,7 @@
 \newcommand\ignewwebenv[3][]{
     \ifblank{#1}
         {\csdef{#2}{\webenv{#3}}}
-        {\csdef{#2}{\igset[web]{#1}\webenv{#3}}}
+        {\csdef{#2}{\igset[webenv]{#1}\webenv{#3}}}
     \cslet{end#2}\endwebenv
 }
 \ignewwebenv[before=\hideproof, image height=.75]{theo}{Théorème}
@@ -1029,11 +1029,11 @@
 \ignewwebenv{remas}{Remarques}
 \ignewwebenv{defi}{Définition}
 \newenvironment{genthm}[2][]{
-    \igset[web]{image height=.75,#1}%
+    \igset[webenv]{image height=.75,#1}%
     \webenv{#2}
 }{\endwebenv}
 \newenvironment{image}[1][]{
-    \igset[web]{tikz options=#1}%
+    \igset[webenv]{tikz options=#1}%
     \webenv{}
 }{\endwebenv}
 \def\hideproof{\def\proof{\let\fi@\fi\iffalse}}
@@ -1044,7 +1044,190 @@
 \xdef\igcomment@list{\expandafter\docsvlist\expandafter{\igcomment@list}}
 \endgroup
 
-\RequirePackage{igcomment}
+
+%%%%% Cette partie est une version adaptée du fichier xcomment.sty %%%
+\newif\ifigincluded
+\def\newigcomment{\@ifnextchar [{\@newigcommentwitharg}{\@newigcomment}}
+\def\@newigcomment#1{%
+  \expandafter\def\csname #1\endcsname##1{\@igcomment{#1}{##1}}}%
+\def\@newigcommentwitharg[#1]#2{%
+  \expandafter\def\csname #2\endcsname{\@igcomment{#2}{#1}}}
+\newigcomment{igcomment}
+\def\envirsep{\par}
+\def\rescanfile#1{\def\@rescanfile{#1}}
+\rescanfile{\jobname.tmp}
+\def\norescanfile{\let\@rescanfile\relax}
+\def\@nofloat#1{\hrule height\z@\nobreak\vfill\vbox\bgroup\def\@captype{#1}}
+\def\end@nofloat{\egroup\nobreak\vfill\nobreak\hrule height\z@\medbreak}
+\def\nofloat#1{\@for\@tempa:=#1\do{\@namedef{#1}{\@nofloat{#1}}%
+  \@namedef{end#1}{\end@nofloat}}}
+\def\ig@makeother#1{%
+  \ifnum\the\catcode`#1=0\catcode`#112%
+  \else \ifnum\the\catcode`#1=1\catcode`#112%
+    \else \ifnum\the\catcode`#1=2\catcode`#112%
+      \else \ifnum\the\catcode`#1=6\catcode`#112%
+  \fi\fi\fi\fi\relax}
+\newwrite\tokout
+\newread\tokin
+\def\rescan#1{%
+  \ifx\@rescanfile\relax\else
+    \ifx\@rescanfile\@empty #1{}\else
+      \immediate\openout\tokout=\@rescanfile
+      \immediate\write\tokout{{\the#1}\relax}%
+      \immediate\closeout\tokout
+      \openin\tokin=\@rescanfile
+      \read\tokin to\@tempd
+      \closein\tokin
+      \expandafter#1\@tempd%
+  \fi\fi}
+\def\@igcomment#1#2{%
+  \ifx\@preamblecmds\@notprerr
+    \def\ig@csname{#1}%
+    \edef\ig@envirlist{#2}%
+    \ifx\ig@envirlist\@empty \@bsphack \else
+      \begingroup
+      \def\@envirsep{}%
+      \@ifundefined{normal@begin}{\let\normal@begin\begin}{}%
+      \@ifundefined{normal@end}{\let\normal@end\end}{}%
+      \def\begin##1{\do@begin{##1}\normal@begin{##1}}%
+      \def\end##1{\normal@end{##1}\do@end}%
+      \def\do@begin##1{\@ifundefined{##1}{}{\def\do@end{}}}%
+      \let\do@end\ig@begin
+    \fi
+    \let\next\ig@begin
+  \else
+    \expandafter\@temptokena\expandafter{\document\@igcomment{@@@}{#2}}%
+    \edef\document{\the\@temptokena}%
+    \let\next\relax
+  \fi
+  \next}
+\def\end@igcomment{\ifx\ig@envirlist\@empty \@esphack \else \endgroup \fi}%
+\def\ig@begin{%
+  \begingroup
+    \let\do\ig@makeother
+    \dospecials
+    \ifx\igcommentchar\@empty\else
+      \expandafter\catcode\expandafter`\igcommentchar=14
+    \fi
+    \catcode`\^^M\active
+    \igcomment@}
+\def\igcommentchar{\%}
+\begingroup
+\catcode`\!=12
+\catcode`\[=12
+\catcode`\]=12
+\catcode`\"=12
+\lccode`\!=`\\
+\lccode`\[=`\{
+\lccode`\]=`\}
+\lccode`\"=`\%
+\catcode`\~=\active
+\lccode`\~=`\^^M
+\lowercase{
+  \gdef\igcomment@#1~{\igcomment@@#1\@nnil!\@nil}
+  \gdef\igcomment@@#1!{\igcomment@@@}
+  \gdef\igcomment@@@#1\@nil{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \let\next\igcomment@
+    \else
+      \def\next{\igcomment@@#1\@nil}%
+      \@testtrue
+      \ig@checkbegin#1\relax begin[]\relax\relax
+      \if@test
+        \ig@checkend#1\relax end[]\relax\relax
+        \if@test
+          \ig@checkinput#1\relax input[]\relax\relax
+          \if@test
+            \ig@checkinclude#1\relax include[]\relax\relax
+            \if@test
+            \ig@checkigincludeweb#1\relax igincludeweb[]\relax\relax
+            \if@test
+              \ig@checkendinput#1\relax endinputss\relax\relax
+    \fi\fi\fi\fi\fi\fi
+    \next}
+  \gdef\ig@checkbegin#1begin[#2]#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \def\@tempa{#2}%
+      \@for\@tempb:=\ig@envirlist\do{%
+        \ifx\@tempa\@tempb\def\next{\ig@end{#2}#3\@nil}\fi}%
+    \fi}
+  \gdef\ig@checkend#1end[#2]#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \@testfalse
+      \def\@tempa{#2}\def\@tempb{document}%
+      \ifx\@tempa\@tempb
+        \def\next{%
+          \ifigincluded
+            \def\next{\global\igincludedfalse\endinput}%
+          \else
+            \def\next{\endgroup\end@igcomment\end{document}}%
+          \fi%
+        \next}%
+      \else
+        \ifx\@tempa\ig@csname
+          \def\next{\end@@igcomment{#2}#3\@nil}%
+    \fi\fi\fi}
+  \gdef\ig@checkinput#1input[#2]#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \def\next{\expandafter\igcomment@\@@input #2 \igcomment@@#3\@nil}%
+      \@testfalse
+    \fi}
+    \gdef\ig@checkigincludeweb#1igincludeweb[#2]#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \def\next{%
+        \global\let\ig@savedinput\@@input
+        \def\@@input{%
+          \global\let\@@input\ig@savedinput
+          \expandafter\igcomment@\@@input}%
+        \igincludeweb{#2}%#3\@nil%
+        \global\let\@@input\ig@savedinput
+        \igcomment@@#3\@nil}%
+      \@testfalse
+    \fi}
+  \gdef\ig@checkendinput#1endinput#2#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty\ifcat\noexpand#2a\relax\else
+      \let\next\endinput
+    \fi\fi}
+  \gdef\ig@checkinclude#1include[#2]#3\relax#4\relax{%
+    \def\@tempa{#1}%
+    \ifx\@tempa\@empty
+      \def\next{%
+        \global\let\ig@savedinput\@@input
+        \def\@@input{%
+          \global\let\@@input\ig@savedinput
+          \expandafter\igcomment@\@@input}%
+        \include{#2}%
+        \global\let\@@input\ig@savedinput
+        \igcomment@@#3\@nil}%
+      \@testfalse
+    \fi}
+  \gdef\end@@igcomment#1#2\@nnil!\@nil{%
+    \endgroup
+    \toks@{#2 }\rescan{\toks@}%
+    \edef\next{\noexpand\end@igcomment\noexpand\end{#1}\the\toks@}%
+    \next}%
+  \gdef\ig@end#1#2\@nnil!\@nil{%
+    \endgroup
+    \@envirsep \let\@envirsep\envirsep
+    \toks@{#2 }\rescan{\toks@}%
+    \edef\next{\noexpand\normal@begin{#1}\the\toks@}%
+    \next}%
+  \gdef\ig@igincludeweb#1#2\@nnil!\@nil{%
+    \endgroup
+    \toks@{#2 }\rescan{\toks@}%
+    \edef\next{\noexpand\igincludeweb{#1}\the\toks@}%
+    \next}%
+  }%  END OF LOWERCASE
+\endgroup
+%%%% End of xcomment.sty 
+
+%\RequirePackage{igcomment}
 \NewDocumentCommand\iginclude{om}{}
 \RenewDocumentCommand\igincludeweb{m}{
     \global\igincludedtrue%
