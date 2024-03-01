@@ -13,7 +13,7 @@
 \newif\ifconvert
 
 \@ifundefined{ifsubdoc}{
-	\newif\ifigweb
+	\newif\ifweb
 	\newif\ifsingleimage
 	\newif\ifthisfile
 	\newif\ifcours
@@ -43,7 +43,7 @@
 	wsf/.is if=writetosolfile
 	compact/.is if=compact,
 	nocolor/.is if=nocolor, 
-	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+	web/.code=\compacttrue\webtrue\def\convert@options{}
 		\def\igcomment@list{quiz,notations,#1},
 	web/.default={},
 	singleimage/.is if=singleimage,
@@ -124,7 +124,7 @@
 \RequirePackage{igsubdoc}
 \RequirePackage{igmath}
 \RequirePackage{igcommon}
-\ifbool{igweb}{\endinput}{}
+\ifbool{web}{\endinput}{}
 \RequirePackage{igcours}
 
 \newif\ifrecord@active

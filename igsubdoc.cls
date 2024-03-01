@@ -13,7 +13,7 @@
 \newif\ifcolle
 \newif\ifsoutien
 \newif\ifdraft
-\newif\ifigweb
+\newif\ifweb
 \newif\ifsingleimage
 \newif\ifthisfile \thisfiletrue
 \newif\ifstraight
@@ -81,7 +81,7 @@
   	master/.code={
     	\def\preamble@file{#1}
  	},
-	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+	web/.code=\compacttrue\webtrue\def\convert@options{}
 		\def\igcomment@list{quiz,notations,#1},
  	web/.default={},
 	singleimage/.is if=singleimage,	

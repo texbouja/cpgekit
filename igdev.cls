@@ -9,7 +9,7 @@
 \def\igcurrentclass{igdev}
 
 \@ifundefined{ifsubdoc}{
-	\newif\ifigweb
+	\newif\ifweb
 	\newif\ifsingleimage
 	\newif\ifthisfile
 	\newif\ifsoutien 
@@ -63,7 +63,7 @@
 	dark/.is if=dark,
 	nocolors/.is if=nocolors, 
 	nolinks/.is if=nolinks,
-	web/.code=\compacttrue\igwebtrue\def\convert@options{}
+	web/.code=\compacttrue\webtrue\def\convert@options{}
 		\def\igcomment@list{quiz,notations,#1},
 	web/.default={},
 	singleimage/.is if=singleimage,
@@ -299,7 +299,7 @@
 }
 \long\def\zap@hint#1\hint{#1}
 
-\ifbool{igweb}{\endinput}{}
+\ifbool{web}{\endinput}{}
 
 \AtBeginDocument{
 	\ifsolutiondelayed\tcbstartrecording[\jobname.rec]\fi
