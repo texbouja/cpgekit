@@ -1,0 +1,220 @@
+
+%%%% Commande de configuration \cpgeset. Basée sur pgfkeys
+\ifundef{\cpgeset}{
+\pgfkeys{/cpge/.is family}
+\DeclareDocumentCommand\cpgeset{o}{%
+	\IfValueT{#1}
+		{\pgfkeysifdefined{/cpge/#1/.is family}{}{\pgfkeys{/cpge/#1/.is family}}}%
+	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
+	}
+}{}
+\def\cpgeincludeweb#1{} 
+
+
+
+%%%%% Tcolorbox est utilisé pour la decoration
+%%%%% des boites pour quiz
+
+\RequirePackage[svgnames]{xcolor}
+\RequirePackage{tcolorbox} %% Une usine à gaz qui touche à tout
+\tcbuselibrary{skins,raster,xparse}
+
+
+%%% Gestions des couleurs
+%%%
+\pgfkeys{/handlers/.colorlet/.code=
+	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
+}
+\pgfkeys{/handlers/.colordef/.code=
+	\pgfkeysalso{\pgfkeyscurrentpath/.code=\preparecolor{#1}{named}{##1}}
+}
+
+\def\cpgeset@color#1#2#3{%
+	\csdef{cpge@#1col}{\ifdark #3\else #2\fi}
+}
+\cpgeset[colors]{
+	warm/.code 2 args=\cpgeset@color{warm}{#1}{#2},
+	cold/.code 2 args=\cpgeset@color{cold}{#1}{#2},
+	neutral/.code 2 args=\cpgeset@color{neutral}{#1}{#2},
+	important/.code 2 args=\cpgeset@color{important}{#1}{#2},
+	main/.code 2 args=\cpgeset@color{main}{#1}{#2},
+	link/.code 2 args=\cpgeset@color{link}{#1}{#2},
+	fg/.code 2 args=\cpgeset@color{fg}{#1}{#2},
+	bg/.code 2 args=\cpgeset@color{bg}{#1}{#2},
+	page/.code 2 args=\cpgeset@color{page}{#1}{#2},
+	warmcol/.colorlet=warmcol,
+    coldcol/.colorlet=coldcol,
+    neutralcol/.colorlet=neutralcol,
+    linkcol/.colorlet=linkcol,
+	importantcol/.colorlet=importantcol,
+	maincol/.colorlet=maincol, 
+    fgcol/.colorlet=fgcol,
+    bgcol/.colorlet=bgcol,
+    pagecol/.colorlet=pagecol,
+	default colors/.style={
+    	warmcol=\cpge@warmcol,
+    	coldcol=\cpge@coldcol,
+    	neutralcol=\cpge@neutralcol,
+		importantcol=\cpge@importantcol,
+		maincol=\cpge@maincol,
+    	linkcol=\cpge@linkcol,
+    	fgcol=\cpge@fgcol,
+    	bgcol=\cpge@bgcol,
+    	pagecol=\cpge@pagecol,
+	},
+	tcbtext/.code=\def\cpge@coltext{#1},
+	tcbback/.code=\def\cpge@colback{#1},
+	tcbframe/.code=\def\cpge@colframe{#1},
+	tcbtitle/.code=\def\cpge@coltitle{#1},
+	tcbbacktitle/.code=\def\cpge@colbacktitle{#1},
+	coltext/.colorlet=tcbcoltext,
+	colback/.colorlet=tcbcolback,
+	colframe/.colorlet=tcbcolframe,
+	coltitle/.colorlet=tcbcoltitle,
+	colbacktitle/.colorlet=tcbcolbacktitle,
+	default tcbcolors/.style={
+		coltext=\cpge@coltext,
+		colback=\cpge@colback,
+		colframe=\cpge@colframe,
+		coltitle=\cpge@coltitle,
+		colbacktitle=\cpge@colbacktitle
+	}
+   }
+\cpgeset[colors]{    
+    warm={DarkOrange}{DarkOrange},
+    cold={DarkGreen}{DarkGreen},
+	neutral={black!75}{black!25},
+	link={DarkBlue}{DarkBlue},
+	important={DarkRed}{DarkRed},
+	main={black!66}{black!33},
+	bg={white}{black!92},
+	fg={black}{white},
+	page={white}{black!86},
+	tcbtext=fgcol,
+	tcbframe=warmcol,
+	tcbback=bgcol,
+	tcbtitle=white, 
+	tcbbacktitle=warmcol,
+}
+\cpgeset[colors]{default colors, default tcbcolors}
+
+\AtEndPreamble{\ifnocolors\selectcolormodel{gray}\fi}
+\def\reloadcolors{
+	\AtEndPreamble{%
+		\cpgeset[colors]{default colors}%
+		\cpgeset[colors]{default tcbcolors}
+		\pagecolor{pagecol}%
+		\color{fgcol}%
+	}%
+	\AtBeginDocument{\color{fgcol}\pagecolor{pagecol}}%
+}%
+
+
+%%%% Fonts loading. 
+\RequirePackage{ifxetex}
+\newif\iffontsloaded
+\def\load@thefonts{}
+\cpgeset[font]{%
+	rm/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+			\fi
+			\RequirePackage[tt=false]{libertine}
+			\RequirePackage[%
+				libertine,smallerops,bigdelims,upint,vvarbb
+			]{newtxmath}
+			\RequirePackage[scaled=.85]{FiraMono}
+			\useosf
+			\def\TitlingFont{\sffamily\scshape}
+	}},
+	sf/.code={%
+		\def\load@thefonts{%
+			\ifxetex
+				\RequirePackage{polyglossia}
+				\setdefaultlanguage{french}
+				\def\shorthandoff####1{}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage[french]{babel}
+				\RequirePackage{microtype}
+
+			\fi
+			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
+			\RequirePackage[scaled=.88]{FiraMono}
+			\RequirePackage[smallerops,upint]{newtxsf}
+			\firaoldstyle
+			\def\TitlingFont{\scshape}
+	}},
+	load/.code={%
+		\def\load@thefonts{%
+			\RequirePackage[T1]{fontenc}
+			\RequirePackage[french]{babel}
+			\RequirePackage{#1}
+			\RequirePackage{microtype}
+	}},
+	titling font/.store in=\TitlingFont,
+}
+\DeclareDocumentCommand\cpgeusefont{m}{%
+	\fontsloadedtrue
+	\cpgeset[font]{#1}
+}
+\AtEndPreamble{
+	\ifdefempty{\load@thefonts}{\cpgeusefont{rm}}{} 
+	\load@thefonts
+	\ifundef\hypersetup{}{%
+	\pdfstringdefDisableCommands{%
+		\def\({}%
+		\def\){}%
+	}
+	\let\ToP\texorpdfstring}
+	\def\label@itemi{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xdiamond$}
+	\def\label@itemii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xsquare$}
+	\def\label@itemiii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
+	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
+	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
+}
+\let\xdocument\document
+\let\endsxdocument\enddocument
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Basculement vers la conversion en images %%%%%%	
+\ifbool{web}
+	{\RequirePackage{cpgeweb}\endinput}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%%%% Gestion des themes
+\newdimen\cpge@ttlw
+\cpge@ttlw=3cm
+
+\cpgeset[theme]{%
+	.search also={/cpge/colors,/cpge/tcb},
+	dark/.is if=dark,
+	draft/.is if=draft,
+	colors/.code=\pgfkeysalso{/cpge/colors/.cd,#1},
+	no colors/.is if=nocolors,
+	font/.code=\cpgeusefont{#1},
+	rm/.style={font=rm},
+	sf/.style={font=sf},
+	title page/.is if=titlepage,
+	title format/.code=\cpgedeftitleformat{#1},
+	title format*/.code=\cpgedeftitleformat*{#1},
+	scale title/.code=
+		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}} 
+}
+\cpgeset[title]{%
+	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
+}
+

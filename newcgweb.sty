@@ -6,18 +6,18 @@
 
 
 %%% Colors 
-\definecolor{igblue}{HTML}{373A73}
-\definecolor{igaltblue}{HTML}{4C98FF}
+\definecolor{cpgeblue}{HTML}{373A73}
+\definecolor{cpgealtblue}{HTML}{4C98FF}
 \definecolor{iggreen}{HTML}{8CBA30}
 \definecolor{stcol}{HTML}{D68A36}
-\definecolor{igblack}{HTML}{24292E}
+\definecolor{cpgeblack}{HTML}{202232}
 
-\igset[colors]{    
+\cpgeset[colors]{    
     warm={iggreen!85!black}{iggreen},
-    cold={igblue}{igaltblue},
+    cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
-	page={white}{igblack},
-	bg={white}{igblack},
+	page={white}{cpgeblack},
+	bg={white}{cpgeblack},
 	tcbtext=fgcol,
 	tcbframe=warmcol,
 	tcbback=bgcol,
@@ -32,15 +32,15 @@
 \def\SubTitleFont{\fontsize{16}{18}\firasemibold}
 \def\NumberFont{\fontsize{14}{14}\firaextrabold}
 
-\igdefdeco{unitetitle}{\color{warmcol}\SubTitleFont#1~:~}
+\cpgedefdeco{unitetitle}{\color{warmcol}\SubTitleFont#1~:~}
 \def\set@defaultforlistsinsideunite{
-	\igdefdeco{unite}{\textcolor{coldcol}{\NumberFont ##1.}}
+	\cpgedefdeco{unite}{\textcolor{coldcol}{\NumberFont ##1.}}
 	\def\unite{\first@unite}%
-	\igsetenum{1}{marge}%
-	\igsetenum{2}{marge}%
-	\igsetenum{3}{marge}%
-	\igdefdeco{enumi}{\textcolor{warmcol}{\NumberFont ##1.}}
-	\igdefdeco{enumii}{\textcolor{warmcol}{\NumberFont ##1.}}
+	\cpgesetenum{1}{marge}%
+	\cpgesetenum{2}{marge}%
+	\cpgesetenum{3}{marge}%
+	\cpgedefdeco{enumi}{\textcolor{warmcol}{\NumberFont ##1.}}
+	\cpgedefdeco{enumii}{\textcolor{warmcol}{\NumberFont ##1.}}
 }
 
 \tikzset{question style/.style={
@@ -100,13 +100,13 @@
 \fi
 \iffootimage@exists	
 		\def\newcg@foot{%
-		\node (foot) at ([xshift=-2pc, yshift=\ig@footskip]page.south east)
+		\node (foot) at ([xshift=-2pc, yshift=\cpge@footskip]page.south east)
 		[anchor=east, fill=bgcol, minimum height=0]
 		 			{\pgfuseimage{logofoot}};%
 		}
 \else
 		\def\newcg@foot{%
-				\node (foot) at ([xshift=-2pc, yshift=\ig@footskip]page.south east)
+				\node (foot) at ([xshift=-2pc, yshift=\cpge@footskip]page.south east)
 					[anchor=east, baseline, minimum height=0,
 						fill=bgcol, font=\sffamily\scshape\bfseries] 
 					{\color{stcol}\small\ifbool{soutien}{capge}{cpge}\kern1ex\large\color{coldcol}Ibn\! Ghazi};%
@@ -115,11 +115,11 @@
 
 
 
-\igset[webenv]{page decoration code={ 
-	\ifsinglequizimage
-		\draw [overlay, stcol, line width=\ig@headheight+.4cm, rounded corners=\ig@headheight] 
-		([xshift=-.5\ig@headheight+.32cm] page.south west)
-		--([xshift=-.5\ig@headheight+.32cm] page.north west);
+\cpgeset[webenv]{page decoration code={ 
+	\ifcommonquizimage
+		\draw [overlay, stcol, line width=\cpge@headheight+.4cm, rounded corners=\cpge@headheight] 
+		([xshift=-.5\cpge@headheight+.32cm] page.south west)
+		--([xshift=-.5\cpge@headheight+.32cm] page.north west);
 	\else 
 		\draw [overlay, stcol, line width=30pt] 
 			(page.north east) -- (page.north west) ;
@@ -139,7 +139,7 @@
 			] 
         (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
 }
-\igset[mini]{%
+\cpgeset[mini]{%
 	mini deco=\llap{\funnyarrow{1.2em}{warmcol}}%
 		\textcolor{coldcol}{#1.}\kern1ex%
 }
@@ -148,9 +148,9 @@
 
 %%% Page de garde 
 \def\title@document{%
-	{\Large\bfseries\color{igblue}\ig@relsize
-		\csuse{ig@document}%
-     \global\ig@dima\baselineskip%
+	{\Large\bfseries\color{cpgeblue}\cpge@relsize
+		\csuse{cpge@document}%
+     \global\cpge@dima\baselineskip%
 	}%
-	\baselineskip\ig@dima%
+	\baselineskip\cpge@dima%
 }

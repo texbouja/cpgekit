@@ -1,13 +1,13 @@
-\def\filedate{2022/04/13}
-\def\fileversion{v0.2alpha}
+\def\filedate{2023/10/26}
+\def\fileversion{v0.1alpha}
 \def\fileauthor{Sadik Boujaida}
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{igmath}[\filedate\space\fileversion]
+\ProvidesPackage{cpgemath}[\filedate\space\fileversion]
 
-\RequirePackage{calc}
 \RequirePackage{etoolbox}
 \RequirePackage{pgfkeys,pgffor}
+\RequirePackage{calc}
 \RequirePackage{xparse}
 \RequirePackage{xstring}
 
@@ -15,64 +15,99 @@
 \RequirePackage{amsthm}
 \RequirePackage{varwidth}
 \RequirePackage{mleftright}
-%\RequirePackage{tabularx}
 
-\RequirePackage[footnote]{acronym}
-
-\def\igmath@err#1{\PackageError{igmath}{\MessageBreak#1}}
-\def\igmath@warn#1{\PackageWarning{igmath}{\MessageBreak#1}}
+\def\cpgemath@err#1{\PackageError{cpgemath}{\MessageBreak#1}}
+\def\cpgemath@warn#1{\PackageWarning{cpgemath}{\MessageBreak#1}}
 
 \AtEndPreamble{
 \ifundef{\iftx@sbc}{}
-	{\iftx@sbc\igmath@err
-		{igmath est incompatible avec l'option subscriptcorrection de newtxmath}
-		{igmath offre une alternative à l'option subscriptcorrection, 
+	{\iftx@sbc\cpgemath@err
+		{cpgemath est incompatible avec l'option subscriptcorrection de newtxmath}
+		{cpgemath offre une alternative à l'option subscriptcorrection, 
 		\MessageBreak voir le manuel}
 	\fi}
 \if@fleqn
-	\igmath@err
-		{igmath n'est pas compatible (pour l'instant) avec l'option 
+	\cpgemath@err
+		{cpgemath n'est pas compatible (pour l'instant) avec l'option 
 		\MessageBreak fleqn d'amsmath}
-		{Vous pouvez continuer à utiliser igmath avec l'option 
+		{Vous pouvez continuer à utiliser cpgemath avec l'option 
 		\MessageBreak fleqn d'amsmath si vous n'utilisez pas 
 		\MessageBreak l'environnement xalign}
 \fi	
 }
 
-\AtEndPreamble{%
+%%%% Si certains caracteres ne sont pas encore definis a 
+%%%% la fin du preambule, emprunter a fourier.sty 
+\AtEndPreamble{
+	\@ifundefined{lVERT}{
+		\DeclareFontEncoding{FMS}{}{}
+  		\DeclareFontSubstitution{FMS}{futm}{m}{n}
+		\DeclareFontEncoding{FMX}{}{}
+ 			\DeclareFontSubstitution{FMX}{futm}{m}{n}
+		\DeclareSymbolFont{futsymbols}{FMS}{futm}{m}{n}
+		\DeclareSymbolFont{futlargesymbols}{FMX}{futm}{m}{n}
+		\DeclareSymbolFont{futoperators}{T1}{futs}{m}{n}%
+		\DeclareMathDelimiter{\lBrack}
+				{\mathopen}{futsymbols}{153}{futlargesymbols}{133}
+		\DeclareMathDelimiter{\rBrack}
+				{\mathclose}{futsymbols}{154}{futlargesymbols}{134}
+		\DeclareMathDelimiter{\Vert}
+   			{\mathord}{futsymbols}{107}{futlargesymbols}{176}
+		\DeclareMathDelimiter{\VERT}
+   			{\mathord}{futsymbols}{152}{futlargesymbols}{147}
+		\DeclareMathDelimiter{\vert}
+   			{\mathord}{futsymbols}{106}{futlargesymbols}{175}
+		\DeclareMathDelimiter{\lvert}
+    		{\mathopen}{futsymbols}{106}{futlargesymbols}{175}
+		\DeclareMathDelimiter{\rvert}
+    		{\mathclose}{futsymbols}{106}{futlargesymbols}{175}
+		\DeclareMathDelimiter{\lVert}
+  			{\mathopen}{futsymbols}{107}{futlargesymbols}{176}
+		\DeclareMathDelimiter{\rVert}
+    		{\mathclose}{futsymbols}{107}{futlargesymbols}{176}
+		\DeclareMathDelimiter{\lVERT}
+  			{\mathopen}{futsymbols}{152}{futlargesymbols}{147}
+		\DeclareMathDelimiter{\rVERT}
+    		{\mathclose}{futsymbols}{152}{futlargesymbols}{147}
+		\DeclareMathAccent{\mathring}{\mathalpha}{futoperators}{6}
+		\DeclareMathAccent{\wideparen}{\mathord}{futlargesymbols}{148}
+		\DeclareMathAccent{\widearc}{\mathord}{futlargesymbols}{216}
+		\DeclareMathAccent{\wideOarc}{\mathord}{futlargesymbols}{228}
+		\let\widehat\undefined
+    	\DeclareMathAccent{\widehat}{\mathord}{futlargesymbols}{98}
+    	\let\widetilde\undefined
+    	\DeclareMathAccent{\widetilde}{\mathord}{futlargesymbols}{101}
+	}{}%
 	\@ifundefined{leqslant}{\RequirePackage{amssymb}}{}
 	\let\leq\leqslant
 	\let\geq\geqslant
 	\def\setminus{\!\smallsetminus\!}
-	\@ifundefined{lBrack}
-		{\@ifundefined{lsem}
-			{\RequirePackage[only,llbracket,rrbracket]{stmaryrd}
-				\let\lBrack\llbracket\let\rBrack\rrbracket}
-			{\let\lBrack\lsem\let\rBrack\rsem}
-		}
-		{}
 	\@ifundefined{mathscr}
 		{\RequirePackage[scr=boondoxo,frak=boondox,bb=boondox]{mathalfa}}
 		{}
-	%\InputIfFileExists{maths.def}{}{}
 }
-
+\AtBeginDocument{
+	\ifundef{\widering}{
+			\DeclareDocumentCommand{\widering}{m}{\overset{\smash{\vbox to .2ex{%
+    			\hbox{$\mathring{}$}}}}{\wideparen{#1}}}%
+		}{}%
+}
 %%%%% Commandes utilitaires
-\def\ig@expandtwoargs#1#2#3{\begingroup%
-	\edef\ig@tmpa{\endgroup\noexpand#1{#2}{#3}}\ig@tmpa}
-\def\ig@expandfirstarg#1#2#3{\begingroup%
-	\edef\ig@tmpa{\endgroup\noexpand#1\unexpanded{#2}{#3}}\ig@tmpa}
-\def\ig@expandsecondarg#1#2#3{\begingroup%
-	\edef\ig@tmpa{\endgroup\noexpand#1{#2}\unexpanded{#3}}\ig@tmpa}
+\def\cpge@expandtwoargs#1#2#3{\begingroup%
+	\edef\cpge@tmpa{\endgroup\noexpand#1{#2}{#3}}\cpge@tmpa}
+\def\cpge@expandfirstarg#1#2#3{\begingroup%
+	\edef\cpge@tmpa{\endgroup\noexpand#1{#2}\unexpanded{#3}}\cpge@tmpa}
+\def\cpge@expandsecondarg#1#2#3{\begingroup%
+	\edef\cpge@tmpa{\endgroup\noexpand#1\unexpanded{#2}{#3}}\cpge@tmpa}
 	
-\@ifundefined{igdeco}{
-	\newcommand\igdefdeco{\@ifstar\ig@deco@\ig@deco}
-	\long\def\@ig@deco#1#2{
+\@ifundefined{cpgesetdeco}{
+	\def\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
+	\long\def\@cpge@deco#1#2{
  	 	\csdef{deco@#2}##1{\begingroup#1\endgroup}}
-	\long\def\@ig@deco@#1#2{
+	\long\def\@cpge@deco@#1#2{
  	 \csdef{deco@#2}{#1}}
-	\long\def\ig@deco#1#2{\forcsvlist{\@ig@deco{#2}}{#1}}
-	\long\def\ig@deco@#1#2{\forcsvlist{\@ig@deco@{#2}}{#1}}
+	\long\def\cpge@deco#1#2{\forcsvlist{\@cpge@deco{#2}}{#1}}
+	\long\def\cpge@deco@#1#2{\forcsvlist{\@cpge@deco@{#2}}{#1}}
 }{}
 	
 \long\def\fake@cmd#1{#1}
@@ -117,34 +152,33 @@
 
 
 %%%%% Interface de configuration pgfkeys
-\pgfkeysifdefined{/ig/.is family}{}{\pgfkeys{/ig/.is family}}
-\@ifundefined{igset}
-    {\NewDocumentCommand\igset{o}{%
+\@ifundefined{cpgeset}
+    {
+		\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
+		\NewDocumentCommand\cpgeset{o}{%
     	\IfValueT{#1}
-    		{\pgfkeysifdefined{/ig/#1/.is family}{}
-				{\pgfkeys{/ig/#1/.is family}}}%
-    	\IfValueTF{#1}{\pgfqkeys{/ig/#1}}{\pgfqkeys{/ig}}%
+    		{\pgfkeysifdefined{/cpge/#1/.is family}{}
+				{\pgfkeys{/cpge/#1/.is family}}}%
+    	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
     	}}{}
 
-\igset{math/.is family}
-\NewDocumentCommand\igsetmath{o}{%
+\cpgeset{math/.is family}
+\NewDocumentCommand\cpgesetmath{o}{%
     	\IfValueT{#1}
-    		{\pgfkeysifdefined{/ig/math/#1/.is family}{}
-				{\pgfkeys{/ig/math/#1/.is family}}}%
-    	\IfValueTF{#1}{\pgfqkeys{/ig/math/#1}}{\pgfqkeys{/ig/math}}%
+    		{\pgfkeysifdefined{/cpge/math/#1/.is family}{}
+				{\pgfkeys{/cpge/math/#1/.is family}}}%
+    	\IfValueTF{#1}{\pgfqkeys{/cpge/math/#1}}{\pgfqkeys{/cpge/math}}%
     	}
-\igset{math/symbols/.is family}
-%\igset{math/sparators/.is family}
-%\igset{math/delimiters/.is family}
+\cpgeset{math/symbols/.is family}
 
-\igsetmath{
-	symbol/.code					= \pgfkeys{/ig/math/symbols/.cd,#1},
+\cpgesetmath{
+	symbol/.code					= \pgfkeys{/cpge/math/symbols/.cd,#1},
 	interval separator/.code		= \def\IntSep{#1},
 	inner product separator/.code	= \def\SprodSep{#1},
 	given separator/.code			= \def\GivenSep{#1},
 	given space/.code				= \def\GivSpace{#1},			
 }
-\igsetmath[transpose]{
+\cpgesetmath[transpose]{
 	position/.is choice,
 	position/left/.code		= \def\trans{\ltrans},
 	position/right/.code	= \def\trans{\rtrans},
@@ -152,7 +186,14 @@
 	right kern/.code 		= \def\transpose@rightkern{#1},
 }
 
-\igsetmath[symbols]{%
+\def\cpgedefsymbol#1#2{
+	\cpgesetmath[symbols]{
+		#1/.code=\csdef{#1Symbol}{##1},
+		#1=#2
+	}
+}
+\def\cpgesetsymbol#1#2{\cpgesetmath[symbols]{#1=#2}}
+\cpgesetmath[symbols]{%
 	M/.code	= \def\MSymbol{{#1}},
 	S/.code	= \def\SSymbol{{#1}},
 	L/.code	= \def\LSymbol{{#1}},
@@ -174,19 +215,19 @@
 	R/.code	= \def\RSymbol{{#1}},
 	C/.code	= \def\CSymbol{{#1}},
 	K/.code	= \def\KSymbol{{#1}},
+	corps/.code =\def\corpsSymbol{{#1}},
+	dim/.code = \def\dimSymbol{{#1}},
 }
-
-
-\igsetmath{
+\cpgesetmath{
 	interval separator={;},
 	inner product separator={;},
 	given separator=\vert,
 	given space=9mu,
-	transpose/position=left,
-	transpose/left kern=-1,
-	transpose/right kern=-1,
+%	transpose/position=left,
+	transpose/left kern=0,
+	transpose/right kern=0,
 }
-\igsetmath{symbol={
+\cpgesetmath{symbol={
 	M=\mathcal M,
 	S=\mathcal S,
 	L=\mathcal L,
@@ -208,13 +249,15 @@
 	R=\mathbb{R},
 	C=\mathbb{C},
 	K=\mathbb{K},
+	corps=\K,
+	dim=n
 }}
-
+\def\S#1{\csuse{#1Symbol}}
 %%%% Raccourcis 
 
-\DeclareRobustCommand{\opn}{\@ifstar{\operatorname*}{\operatorname}}
+\DeclareRobustCommand{\opn}{\operatorname}
 
-\DeclareRobustCommand\diff{\opn{\dSymbol}}
+\DeclareRobustCommand\diff{\opn{\dSymbol\mskip-2.4mu}}
 \DeclareRobustCommand\Diff{\opn{\DSymbol}}
 \DeclareRobustCommand\e{\opn{\eSymbol}}
 \def\vnabla{\boldsymbol\nabla}
@@ -226,82 +269,22 @@
 \DeclareRobustCommand{\K}{\KSymbol}
 \DeclareMathSymbol{\vphi}{\mathord}{letters}{"27}
 \DeclareMathSymbol{\veps}{\mathord}{letters}{"22}
+\DeclareRobustCommand{\Chi}{{\mathpalette\c@chi\relax}}
+\newcommand{\c@chi}[2]{\raisebox{\depth}{$#1\chi$}}
+\DeclareRobustCommand\bfone{\opn{\mathbf 1}}
 
-\NewDocumentCommand\ltrans{O{\transpose@leftkern} m}
-	{\vphantom{#2}^{\ltSymbol}\mkern#1mu#2}
-\NewDocumentCommand\rtrans{O{\transpose@rightkern} m}
-	{#2\mkern#1mu^{\rtSymbol}}
-%\NewDocumentCommand\M{E{_}{n} O{\K}}{\MSymbol_{#1}(#2)}
-%\NewDocumentCommand\S{s E{_^}{{n}{}}}{%
-%	\SSymbol_{#2}^{#3}\IfBooleanTF{#1}{}{(\R)}%
-%}		
-%\NewDocumentCommand\L{O{E}}{\LSymbol(#1)}
-
-
-\newacro{vap}{valeur propre}
-\newacroplural{vap}{valeurs propres}
-\newacro{vep}{vecteur propre}
-\newacro{sep}{sous-espace propre}
-\newacro{sev}{sous-espace vectoriel}
-\newacro{pgcd}{plus grand dviseur commun}
-\newacro{ppcm}{plus petit multiple commun}
-\newacro{de}{division euclidienne}
-\newacro{cvs}{converge simplement}
-\newacro{cves}[cvs]{convergence simple}
-\newacro{cva}{converge absolument}
-\newacro{cvea}[cvu]{convergence absolue}
-\newacro{cvu}{converge uniform\'ement}
-\newacro{cveu}[cvu]{convergence uniforme}
-\newacro{cvn}{converge normalement}
-\newacro{cven}[cvn]{convergence normale}
-\newacro{dse}{d\'eveloppable en s\'erie enti\`ere}
-\newacro{rc}{rayon de convergence}
-\newacro{cpm}{continue par morceaux}
-\newacro{cepm}[cpm]{continuit\'e par morceaux}
-\newacro{va}{variable al\'eatoire}
-\newacro{var}{variable al\'eatoire r\'eelle}
-\newacro{vad}{variable al\'eatoire discrète}
-\newacro{vadr}{variable al\'eatoire discr\`ete r\'eelle}
-\newacro{eaf}{\'egalit\'e des accroissements finis}
-\newacro{iaf}{in\'egalit\'e des accroissements finis}
-\newacro{ics}{in\'egalit\'e de Cauchy-Schwarz}
-\newacro{tvi}{théor\`eme des valeurs int\'erm\'ediaires}
-\newacro{ippp}{int\'egration par parties}
-\newacro{itt}{int\'egration terme \`a terme}
-\newacro{dtt}{d\'erivation terme \`a terme}
-\newacro{il}{interversion de limites}
-\newacro{cvd}{convergence domin\'ee}
-
-\newacro{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
-\newacro{tcd}{th\'eor\`eme de la convergence domin\'ee}
-\newacro{til}{th\'eor\`eme d'interversion de limites}
-\newacro{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
-\newacro{titt}{th\'eor\`eme d'int\'egration terme \`a terme} 
-
-\def\vap{\ac{vap}\xspace}
-\def\vep{\ac{vep}\xspace}
-\def\sev{\ac{sev}\xspace}
-\def\sevp{\ac{sep}\xspace}
-\def\cvs{\ac{cvs}\xspace}
-\def\cvu{\ac{cvu}\xspace}
-\def\cvn{\ac{cvn}\xspace}
-\def\cpm{\ac{cpm}\xspace}
-\def\dse{\ac{des}\xspace}
-\def\var{\ac{var}\xspace}
-\def\vad{\ac{vad}\xspace}
-\def\vadr{\ac{vadr}\xspace}
-
-
-
-\renewcommand*{\aclabelfont}[1]{\textsc{\acsfont{#1}}}
-\renewcommand\acsfont{\textsc}
-
+\NewDocumentCommand\ltrans{sO{\transpose@leftkern} m}
+	{\,\vphantom{#3}^{\ltSymbol}\mkern#2mu#3}
+\NewDocumentCommand\rtrans{sO{\transpose@rightkern} m}
+	{#3\mkern#2mu^{\rtSymbol}\,}
+\NewDocumentCommand\trans{som}{%
+	\IfBooleanTF{#1}
+		{\IfValueTF{#2}{\rtrans[#2]{#3}}{\rtrans{#3}}}
+		{\IfValueTF{#2}{\ltrans[#2]{#3}}{\ltrans{#3}}}
+}
 \def\grad{\opn{\vnabla}}
-
 \NewDocumentCommand\B{O{B}}{\mathcal #1}
-\NewDocumentCommand\GL{mO{\K}}{\opn{GL}_{#1}(#2)}
 \NewDocumentCommand\Id{o}{\IfValueTf{#1}{\opn{id}_{#1}}{\opn{id}}}
-\NewDocumentCommand\bfone{m}{\mathbf 1_{#1}}
 \NewDocumentCommand\diag{sm}{%
 	\IfBooleanFT{#1}
 		{\begingroup\let\dots\ldots\opn{diag}{\left(#2\right)}\endgroup}
@@ -309,64 +292,136 @@
 			\begin{pmatrix}\matrix@construct{#2}\end{pmatrix}%
 		\endgroup}
 }
-		
-\let\ds\displaystyle
-\let\ts\textstyle
-\let\ssi\Longleftrightarrow
-\let\lra\longrightarrow
-\let\Lra\Longrightarrow
-\let\lla\lonleftarrow
-\let\Lla\Longleftarrow
-\let\Llra\Longleftrightarrow
-\let\cqfd\qed
+%%% Acronymes
+
+\RequirePackage{acronym}
+%\RequirePackage{acro}
+% \acsetup{
+% 	list/display=used,
+% 	list/template=description,
+% 	pages/display=first,
+% 	format/short=\sffamily\scshape,
+% 	format/long=\sffamily,
+% }
+% \def\listofacronyms{\printacronyms}
 
 
+\renewcommand\acsfont[1]{\textsf{\scshape #1}}
+\renewcommand\acffont[1]{\textsf{#1}}
+\def\acro@@{\newacro}
+\def\acro@@plural{\newacroplural}
+
+\acro@@				{vap}{valeur propre}
+\acro@@plural		{vap}{valeurs propres}
+\acro@@				{vep}{vecteur propre}
+\acro@@plural		{vep}{vecteurs propres}
+\acro@@				{sep}{sous-espace propre}
+\acro@@plural		{sep}{sous-espaces propres}
+\acro@@				{sev}{sous-espace vectoriel}
+\acro@@plural		{sev}{sous-espaces vectoriels}
+\acro@@				{evn}{espace vectoriel norm\'e}
+\acro@@plural		{evn}{espaces vectoriels norm\'es}
+\acro@@				{cpa}{connexe par arcs}
+\acro@@plural		{cpa}{connexes par arcs}
+\acro@@				{uc}{uniform\'ement continue}
+\acro@@				{uce}[uc]{uniform\'ement continue}
+\acro@@plural		{uc}{uniform\'ement continues}
+\acro@@				{bon}{base orthonorm\'ee}
+\acro@@plural		{bon}{bases orthonorm\'ees}
+\acro@@				{pgcd}{plus grand dviseur commun}
+\acro@@				{ppcm}{plus petit multiple commun}
+\acro@@				{de}{division euclidienne}
+\acro@@				{cvs}{converge simplement}
+\acro@@				{cves}[cvs]{convergence simple}
+\acro@@				{cva}{converge absolument}
+\acro@@				{cvea}[cva]{convergence absolue}
+\acro@@				{cvu}{converge uniform\'ement}
+\acro@@				{cveu}[cvu]{convergence uniforme}
+\acro@@				{cvuc}{converge uniformément sur tout compact}
+\acro@@				{cveuc}[cvuc]{convergence uniforme sur tout compact}
+\acro@@				{cvn}{converge normalement}
+\acro@@				{cven}[cvn]{convergence normale}
+\acro@@				{dse}{d\'eveloppable en s\'erie enti\`ere}
+\acro@@				{rc}{rayon de convergence}
+\acro@@plural		{rc}{rayons de convergence}
+\acro@@				{cpm}{continue par morceaux}
+\acro@@plural		{cpm}{continues par morceaux}
+\acro@@				{cepm}{continuit\'e par morceaux}
+\acro@@				{va}{variable al\'eatoire}
+\acro@@				{var}{variable al\'eatoire r\'eelle}
+\acro@@				{vad}{variable al\'eatoire discrète}
+\acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
+\acro@@				{eaf}{\'egalit\'e des accroissements finis}
+\acro@@				{iaf}{in\'egalit\'e des accroissements finis}
+\acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
+\acro@@				{ipp}{int\'egration par parties}
+\acro@@				{itt}{int\'egration terme \`a terme}
+\acro@@				{dtt}{d\'erivation terme \`a terme}
+\acro@@				{il}{interversion de limites}
+\acro@@				{cvd}{convergence domin\'ee}
+\acro@@				{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
+\acro@@				{tch}{th\'eor\`eme de Cayley-Hamilton}
+\acro@@				{tsp}{th\'eor\`eme spectral}
+\acro@@				{tcd}{th\'eor\`eme de la convergence domin\'ee}
+\acro@@				{til}{th\'eor\`eme d'interversion de limites}
+\acro@@				{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
+\acro@@				{titt}{th\'eor\`eme d'int\'egration terme \`a terme}
+\acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
+\acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
+\acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
+
+
+\RequirePackage{xspace}
+\def\vap{\ac{vap}\xspace}
+\def\vep{\ac{vep}\xspace}
+\def\sev{\ac{sev}\xspace}
+\def\sep{\ac{sep}\xspace}
+\def\cvs{\ac{cvs}\xspace}
+\def\cvu{\ac{cvu}\xspace}
+\def\cvuc{\ac{cvuc}\xspace}
+\def\cvn{\ac{cvn}\xspace}
+\def\rc{\ac{rc}\xspace}
+\def\cpm{\ac{cpm}\xspace}
+\def\dse{\ac{dse}\xspace}
+\def\var{\ac{var}\xspace}
+\def\vad{\ac{vad}\xspace}
+\def\vadr{\ac{vadr}\xspace}
+%%%%%%
 
 %%%%% Déclarations
 
-\newbox\ig@boxa
-\newbox\ig@boxb
-\newbox\ig@boxc
+\newbox\cpgem@boxa
+\newbox\cpgem@boxb
+\newbox\cpgem@boxc
 
-\newdimen\ig@dima
-\newdimen\ig@dimb
-\newdimen\ig@dimc
-\newcount\ig@count
-\newcount\ig@loop
+\newdimen\cpge@dima
+\newdimen\cpge@dimb
+\newdimen\cpge@dimc
+\newcount\cpge@count
+\newcount\cpge@loop
 \newcount\eqn@count@
 \newcount\dlm@count@
 
-\newif\ifig@frame
-\newif\ifig@number 
-\newif\ifig@minipage
-\newif\ifig@inmini
-\newif\ifig@indisplay
-\newif\ifig@intext 
-\newif\ifig@inscript 
-\newif\ifig@inscriptscript
+\newif\ifcpge@frame
+\newif\ifcpge@number 
+\newif\ifcpge@minipage
+\newif\ifcpge@inmini
+\newif\ifcpge@indisplay
 \ifundef{\ifcompact}{\newif\ifcompact}{}
-
-%%%%% Sauvegarde de certaines dimensions de la classe d'origine.
-%\AtBeginDocument{%
-%	\edef\topsep@origin{\the\topsep}
-%	\edef\partopsep@origin{\the\partopsep}
-%	\edef\itemsep@origin{\the\itemsep}
-%	\edef\parsep@origin{\the\parsep}
-%}
 
 %%%%%%%%%
 %%% le système \xsave
-\listadd\igsaved@list{@@@}
+\listadd\cpgesaved@list{@@@}
 \NewDocumentCommand\x@save{sm+m}{#3}
 \NewDocumentCommand\xsave{sm+m}{%
 	\begingroup
 	\def\xsave{\x@save}
 	\ifmeasuring@\else
 		\ifcsdef{saved@#2}
-			{\igsave@err{#2}{déjà utilisé}}
+			{\cpgesave@err{#2}{déjà utilisé}}
 			{%
 				\csgdef{saved@#2}{#3}%
-				\listgadd\igsaved@list{#2}%
+				\listgadd\cpgesaved@list{#2}%
 			}
 	\fi
 	\IfBooleanF{#1}{#3}%
@@ -377,7 +432,7 @@
 		\csuse{saved@#1}
 	\else
 		\ifcsundef{saved@#1}
-			{\igsave@err{#1}{non trouvé}}
+			{\cpgesave@err{#1}{non trouvé}}
 			{\csuse{saved@#1}}
 	\fi
 }
@@ -385,126 +440,72 @@
 	\begingroup%
 	\def\do##1{%
 		\csgundef{saved@##1}%
-		\listgremove\igsaved@list{##1}%
+		\listgremove\cpgesaved@list{##1}%
 	}%
 	\IfValueTF{#1}
 		{%
-			\forcsvlist{\listadd\igtmpsaved@list}{#1}
-			\dolistloop\igtmpsaved@list
+			\forcsvlist{\listadd\cpgetmpsaved@list}{#1}
+			\dolistloop\cpgetmpsaved@list
 		}
-		{\dolistloop\igsaved@list}
+		{\dolistloop\cpgesaved@list}
 	\makeatletter
-		\listgadd\igsaved@list{@@@}
+		\listgadd\cpgesaved@list{@@@}
 	\makeatother
 	\endgroup
 }
-\def\igsave@err#1#2{\igmath@err{enregistrement #1\space #2}{}}
+\def\cpgesave@err#1#2{\cpgemath@err{enregistrement #1\space #2}{}}
 
-%%%% discussion
-\newenvironment*{discuss}[1][]{%
-	\def\cas{\@ifnextchar[{\item}{\item[]}}%
-	\let\si\cas%
-	\list{}{%
-		\ifblank{#1}
-			{\labelwidth\z@ \itemindent-\leftmargin}
-			{%
-				\settowidth\leftmargin{#1}%
-				\advance\leftmargin\labelsep%
-				\labelwidth=\leftmargin%
-				\itemindent\z@%
-			}
-    	\let\makelabel\unitlabel%
-	}%
-}{%
-  \endlist
-}
-\def\unitlabel#1{%
-	\hskip\labelsep%
-	\ifblank{#1}
-		{\makebox[\leftmargin-\labelsep][l]{\deco@unit{}}}
-		{\deco@unit{#1}\hfil}%
-	}
-\igdefdeco{unit}{$\bullet\;$ \bfseries\boldmath #1}
-\NewDocumentCommand\generic@unit{ s O{} }{%
-	\ifdim\leftmargin=\z@
-		\leftmargin=\leftmargini
-	\fi
-	\IfBooleanTF{#1}
-		{%
-			\parshape=1 \leftmargin \dimexpr\linewidth-\leftmargin\relax%
-			\ignorespaces
-		}
-		{%
-			\parshape=2	\z@				\linewidth
-						\leftmargin		\dimexpr\linewidth-\leftmargin\relax%
-			\noindent\deco@unit{#2}\enskip\ignorespaces
-		}
-}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%g%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%% Formules mathématiques %%%%%%%%%%%%%%%%%%%%%
 
 % registres permanents pour la famille \formula
 \newbox\midbox % boite qui contient le texte central dans \mlcenterr
 \newdimen\midwidth % largeur de cette boite
-\newskip\bigcenterskip %grand espace vertical avant et après \lcenterr
+\newskip\bcpgecenterskip %grand espace vertical avant et après \lcenterr
 \newskip\medcenterskip % espace vertical moyen avant et après \lcenterr
 \newskip\smallcenterskip %petit espace, si \lcenterr dans \mlcenterr
 \newcount\precenterpenalty 
 \newcount\postcenterpenalty
-\bigcenterskip=8\p@ plus 2pt minus 4\p@
-\medcenterskip=6\p@ plus 2pt minus 3\p@
-\smallcenterskip=\z@  plus 3\p@
 \def\numvskip{\dimexpr\medcenterskip*1/2\relax}
-\abovedisplayskip\bigcenterskip
-\belowdisplayskip\bigcenterskip
-\abovedisplayshortskip\smallcenterskip
-\belowdisplayshortskip\smallcenterskip
+\AtBeginDocument{
+	\bcpgecenterskip=8\p@ plus 2pt minus 4\p@
+	\medcenterskip=6\p@ plus 2pt minus 3\p@
+	\smallcenterskip=\z@  plus 3\p@
+	\abovedisplayskip\bcpgecenterskip\relax%
+	\belowdisplayskip\bcpgecenterskip\relax%
+	\abovedisplayshortskip\medcenterskip\relax%
+	\belowdisplayshortskip\medcenterskip\relax
+}
 \precenterpenalty\@highpenalty \postcenterpenalty\z@
 
 %%%% Quelques commandes utilitaires %%%%
-\def\m@ig@stop{\vrule\@width\z@}
-\def\m@ig@par{\par\nointerlineskip}
-\def\m@ig@narrowpar{\rightskip \z@ plus .5em 
+\def\m@cpge@stop{\vrule\@width\z@}
+\def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ plus .5em 
  	 \@rightskip\rightskip \parfillskip\z@ plus .1\hsize}  
-\def\m@ig@noindent{\everypar{{\setbox\z@\lastbox}}}
-\def\endpar{\ifhmode\unskip\nobreak\hfill\m@ig@stop\fi}
-\let\ig@ifnextchar\new@ifnextchar
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
+\def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
+\let\cpge@ifnextchar\new@ifnextchar
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Formules mathématiques (obsolete) %%%%% 
 %%%%% Maintenu pour compatibilité %%%%%%%%%%%
 
 % registres permanents pour la famille \formule
-%\newbox\midbox % boite qui contient le texte central dans \mlcenterr
-%\newdimen\midwidth % largeur de cette boite+\fadjwidth
-\newskip\bigcenterskip %grand espace vertical avant et après \lcenterr
+\newskip\bcpgecenterskip %grand espace vertical avant et après \lcenterr
 \newskip\midcenterskip % espace vertical moyen avant et après \lcenterr
 \newskip\smallcenterskip %petit espace, si \lcenterr dans \mlcenterr
-%\newskip\numvskip % saut vertical qui sépare une équation et son numéro
-%\newcount\precenterpenalty 
-%\newcount\postcenterpenalty
-%
-%\bigcenterskip=8\p@ plus 2pt minus 4\p@
-%\midcenterskip=6\p@ plus 1.5pt minus 3\p@
-%\smallcenterskip=4\p@  plus 1pt minus 2\p@
-%\numvskip2\p@\@minus2\p@
-%\precenterpenalty\@highpenalty \postcenterpenalty\z@
-%
-
 \newdimen\fadjwidth % excédent de largeur ajouté par le cadre
 
-
-
 %%%% Quelques commandes utilitaires %%%%
-\def\m@ig@stop{\vrule\@width\z@}
-\def\m@ig@par{\par\nointerlineskip}
-\def\m@ig@narrowpar{\rightskip \z@ plus .5em 
+\def\m@cpge@stop{\vrule\@width\z@}
+\def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ plus .5em 
  	 \@rightskip\rightskip \parfillskip\z@ plus .1\hsize}  
-\def\m@ig@noindent{\everypar{{\setbox\z@\lastbox}}}
-\def\endpar{\ifhmode\unskip\nobreak\hfill\m@ig@stop\fi}
-
-\def\m@ig@for{\@for\m@ig@fortok:=}
-
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
+\def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
+\def\m@cpge@for{\@for\m@cpge@fortok:=}
 
 %%%%  Les commandes butineuses %%%%
 
@@ -513,45 +514,44 @@
 \def\let@bracket{\let\[=[\let\]=]}
 \def\obs@center@#1#2#3{%
   \begingroup%
-   %% les espaces verticaux, petit espace si \lcenterr dans \mlcenterr 
-   \partopsep\z@%
-   \ifig@inmini
-      \topsep\smallcenterskip
-   \else
-      \topsep\bigcenterskip
-   \fi%
   %% récupération des paramètres
-  \def\ig@tempa{#3}
-  \ifig@number%
-    \refstepcounter{Equation}%
-    \ifx\@empty\ig@tempa\else%
-      \expandafter\label\expandafter{\ig@tempa}
+  \def\cpge@tempa{#3}
+  \ifcpge@number%
+    \refstepcounter{equation}%
+    \ifx\@empty\cpge@tempa\else%
+      \expandafter\label\expandafter{\cpge@tempa}
     \fi
-    \def\ig@tempa{(\theEquation)}
+    \def\cpge@tempa{(\theequation)}
   \fi%
-  \setbox\ig@boxc\hbox{\color@begingroup\ig@tempa\color@endgroup}%
-  \setbox\ig@boxa\hbox{\color@begingroup\let@bracket#1\color@endgroup}%
+  \setbox\cpgem@boxc\hbox{\color@begingroup\cpge@tempa\color@endgroup}%
+  \setbox\cpgem@boxa\hbox{\color@begingroup\let@bracket#1\color@endgroup}%
   \edef\every@math{\the\everymath}
   \everymath{\every@math\displaystyle}%
-  \setbox\ig@boxb\hbox{\color@begingroup\let@bracket#2\color@endgroup}%
-  \setlength\ig@dima{.5\linewidth-.5\wd\ig@boxb-1em}%
+  \setbox\cpgem@boxb\hbox{\color@begingroup\let@bracket#2\color@endgroup}%
+  \setlength\cpge@dima{.5\linewidth-.5\wd\cpgem@boxb-1em}%
   %% si pas assez d'espace pour #1, l'insérer en dehors de \trivlist
-  \ifdim\wd\ig@boxa>\ig@dima%
+  \ifdim\wd\cpgem@boxa>\cpge@dima%
     \ifhmode\unskip\par\nobreak\noindent\fi%
-    \unhbox\ig@boxa\topsep\midcenterskip%
+    \unhbox\cpgem@boxa\topsep\midcenterskip%
   \fi%
-  %% si \ig@boxb trop haute, #1 en dehors de \trivlist.
-  \ifnum\ig@count>2\relax
-    \ifdim\wd\ig@boxa>\z@
+  %% si \cpgem@boxb trop haute, #1 en dehors de \trivlist.
+  \ifnum\cpge@count>2\relax
+    \ifdim\wd\cpgem@boxa>\z@
       \ifhmode\unskip\par\nobreak\noindent\fi%
-      \unhbox\ig@boxa\topsep\smallcenterskip%
+      \unhbox\cpgem@boxa\topsep\smallcenterskip%
   \fi\fi%
   %% hack pour une meilleure gestion des espaces vert.
-  \if@inlabel\vskip\bigcenterskip\fi%
+  \if@inlabel\vskip\bcpgecenterskip\fi%
+  	\@topsep\bcpgecenterskip%
+	\@topsepadd\bcpgecenterskip%
+	\itemsep\medcenterskip%
+	\parsep\z@skip%
+	\partopsep\z@skip%
+	\parsep\z@skip%
   %% début trivlist
-  \trivlist \parindent\z@%
+  \trivlist %\parindent\z@%
   %% pénalités, pas de rupture de page si #1 vide ou trop long.
-   \ifdim\wd\ig@boxa=\z@%
+   \ifdim\wd\cpgem@boxa=\z@%
        \@beginparpenalty\@M%
    \else%
        \@beginparpenalty\precenterpenalty%
@@ -562,39 +562,39 @@
   %% mieux gérer les espaces verticaux si imbriqué dans une liste
   \item[]\@trivlist\@noparlistfalse\item[]%
   %% insérer #1 si non encore fait
-  \ifdim\wd\ig@boxa>\z@%
-    \leavevmode\hbox to\z@{\unhcopy\ig@boxa\hss}%
+  \ifdim\wd\cpgem@boxa>\z@%
+    \leavevmode\hbox to\z@{\unhcopy\cpgem@boxa\hss}%
   \fi%
   %% recul si #2 trop long
-  \ifdim\wd\ig@boxb>\linewidth%
+  \ifdim\wd\cpgem@boxb>\linewidth%
      \hskip-\@totalleftmargin%
   \fi%
-  %% insérer #2, \m@ig@stop à la fin pour empêcher disparition de \hfill
+  %% insérer #2, \m@cpge@stop à la fin pour empêcher disparition de \hfill
   %% si jamais saut de ligne pour insérer #3
-  \m@ig@stop\hfill\box\ig@boxb\hfill\m@ig@stop%
-  %% inserer #3, si trop long saut de ligne avec \m@ig@par
-  \ifdim\wd\ig@boxc>\z@%
-    \ifig@minipage\else%
-      \ifdim\ig@dima<\wd\ig@boxc\m@ig@par\nobreak\vskip\numvskip\hfill%
+  \m@cpge@stop\hfill\box\cpgem@boxb\hfill\m@cpge@stop%
+  %% inserer #3, si trop long saut de ligne avec \m@cpge@par
+  \ifdim\wd\cpgem@boxc>\z@%
+    \ifcpge@minipage\else%
+      \ifdim\cpge@dima<\wd\cpgem@boxc\m@cpge@par\nobreak\vskip\numvskip\hfill%
      \fi\fi%
-    \hbox to\z@{\hss\unhbox\ig@boxc}%
+    \hbox to\z@{\hss\unhbox\cpgem@boxc}%
   \fi%
 \endtrivlist%
 \endgroup
 %% réinitialisation des variables booléennes
-\ig@framefalse\ig@numberfalse}
+\cpge@framefalse\cpge@numberfalse}
 
 
 
-%% \m@center@, préparation de la boite centrale
-%% appel de \@center@ pour placement
+%% \obs@m@center@, préparation de la boite centrale
+%% appel de \obs@center@ pour placement
 \def\obs@m@center@#1#2#3#4{%
-  \ig@minipagetrue%
+  \cpge@minipagetrue%
   %% traitement de #1
   \in@{*!}{#1!}%
   \ifin@% 
-     \edef\num@pt{\ig@removestar #1}%
-     \let\@render\m@ig@narrowpar \def\@renderer{varwidth}%
+     \edef\num@pt{\cpge@removestar #1}%
+     \let\@render\m@cpge@narrowpar \def\@renderer{varwidth}%
   \else%
      \def\num@pt{#1}%
      \let\@render\relax \def\@renderer{minipage}%
@@ -614,59 +614,62 @@
   \set@mid@box{#3}%
   \setlength\midwidth{\wd\midbox+\fadjwidth}
   %% preparation du cadre
-  \ifig@frame%
-     \let\m@ig@framecmd\deco@formule%
+  \ifcpge@frame%
+     \let\m@cpge@framecmd\deco@formula%
   \else%
-     \let\m@ig@framecmd\relax%
+     \let\m@cpge@framecmd\relax%
   \fi%
   %% appel de \@center@ pour le placement
   %% \vcenter sert a centrer verticalement 
   \obs@center@{#2}{%
         $\m@th\vcenter{\hsize\midwidth\@parboxrestore%
-           \m@ig@framecmd{\box\midbox}}$}{#4}%
-\ig@minipagefalse%
+           \m@cpge@framecmd{\box\midbox}}$}{#4}%
+\cpge@minipagefalse%
 }
 
 \long\def\set@mid@box#1{%
- \setbox\midbox\hbox{\hbadness\@M\ig@count\z@%
+ \setbox\midbox\hbox{\hbadness\@M\cpge@count\z@%
      \csname \@renderer\endcsname\midwidth%
-       \ig@inminitrue%
+       \cpge@inminitrue%
        %\par va compter le nombre de ligne dans la boite
-       \@setpar{{\@@par}\global\advance\ig@count\prevgraf}
+       \@setpar{{\@@par}\global\advance\cpge@count\prevgraf}
       \@render #1\par%
      \csname end\@renderer\endcsname}%
 }
 
 %% petite commande intermédiaire pour \flcenterr
 \def\f@center@#1#2#3{%
-   \ig@frametrue%
+   \cpge@frametrue%
     \obs@center@{#1}{\fbox{#2}}{#3}}
 
 %%%% Les commandes utilisateur %%%%
 \def\lcenterr{%
-   \@ifstar{\ig@numbertrue\obs@center@}{\ig@numberfalse\obs@center@}}
+   \@ifstar{\cpge@numbertrue\obs@center@}{\cpge@numberfalse\obs@center@}}
        
 \def\flcenterr{%
-   \@ifstar{\ig@numbertrue\f@center@}{\ig@numberfalse\f@center@}}
+   \@ifstar{\cpge@numbertrue\f@center@}{\cpge@numberfalse\f@center@}}
    
 \def\mlcenterr{%
-   \@ifstar{\ig@numbertrue\obs@m@center@}{\ig@numberfalse\obs@m@center@}}
+   \@ifstar{\cpge@numbertrue\obs@m@center@}{\cpge@numberfalse\obs@m@center@}}
 
-\def\fmlcenterr{\ig@frametrue%
-   \@ifstar{\ig@numbertrue\obs@m@center@}{\ig@numberfalse\obs@m@center@}}
+\def\fmlcenterr{\cpge@frametrue%
+   \@ifstar{\cpge@numbertrue\obs@m@center@}{\cpge@numberfalse\obs@m@center@}}
    
 %%%% Les commandes \formule et \resultat %%%%
 
 \NewDocumentCommand\formule{sO{}mO{}}{%
-	\IfBooleanTF{#1}{\ig@numbertrue}{\ig@numberfalse}%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
 	\obs@center@{#2}{#3}{#4}%
 }
 \NewDocumentCommand\mformule{sO{}mO{}}{%
-	\IfBooleanTF{#1}{\ig@numbertrue}{\ig@numberfalse}%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
 	\obs@center@{#2}{$#3$}{#4}%
 	}
-
-\igdefdeco{formule}{\fbox{#1}}  
+\newcommand\xtag[1][]{%
+	\tag*{(\theequation)}\refstepcounter{equation}%
+	\ifblank{#1}{}{\label{#1}}%
+	}
+\cpgesetdeco{formule}{\fbox{#1}}  
 \setlength\fadjwidth{2\fboxsep+2\fboxrule}
 
 \NewDocumentEnvironment{Formule}{O{} O{} b}{\formule[#1]{#3}[#2]}{}
@@ -675,8 +678,8 @@
 \NewDocumentEnvironment{mFormule*}{O{} O{} b}{\formule*[#1]{$#3$}[#2]}{}
 
 \NewDocumentCommand\resultat{sD(){100*}O{}mO{}}{%
-	\IfBooleanTF{#1}{\ig@numbertrue}{\ig@numberfalse}%
-	\ig@frametrue\obs@m@center@{#2}{#3}{#4}{#5}%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
+	\cpge@frametrue\obs@m@center@{#2}{#3}{#4}{#5}%
 }
 
 
@@ -706,7 +709,7 @@
 	{}
 
 \newenvironment{develop}{%
-	\let\align@preamble\ig@align@preamble%
+	\let\align@preamble\cpge@align@preamble%
  	\start@align\tw@\st@rredtrue\m@ne%
 	&&&&\\\noalign{\vskip-\baselineskip}
 }{%
@@ -715,7 +718,7 @@
 \def\column@minus{%
     \global\advance\column@\m@ne
 }
-\def\ig@align@preamble{%
+\def\cpge@align@preamble{%
 	&\setboxz@h to \z@{##\hss}%
     \set@field%
     \tabskip\alignsep@%
@@ -788,34 +791,34 @@
 
 \def\eqn@fakecmd#1{#1}
 \let\eqnframecmd\eqn@fakecmd
-\def\igframe@err#1{\igmath@err
+\def\cpgeframe@err#1{\cpgemath@err
 			{Aucune décoration #1 trouvée. 
 			\MessageBreak Appuyez sur entrée pour l'ignorer}
 			{les valeurs possibles sont formula ou result}
 		}
 
 \long\def\prepare@boxes#1#2{%
-	\setbox\ig@boxa\hbox{%
+	\setbox\cpgem@boxa\hbox{%
 		\color@begingroup#1\color@endgroup%
 	}%
-	\setbox\ig@boxb\hbox{%
-			\ig@indisplaytrue%
+	\setbox\cpgem@boxb\hbox{%
+			\cpge@indisplaytrue%
 			#2%
 	}%
-	\setlength\ig@dima{(\linewidth-\wd\ig@boxb)/2-1ex}%
-	\unless\ifdim\ig@dima<\z@%
-		\setlength\ig@dimb{\ig@dima*(\l@qnshift-\r@qnshift)/10}%
-		\setlength\ig@dima{\ig@dima+\ig@dimb}%
-		\setlength\ig@dimc{\ig@dima-\ig@dimb}%
+	\setlength\cpge@dima{(\linewidth-\wd\cpgem@boxb)/2-1ex}%
+	\unless\ifdim\cpge@dima<\z@%
+		\setlength\cpge@dimb{\cpge@dima*(\l@qnshift-\r@qnshift)/10}%
+		\setlength\cpge@dima{\cpge@dima+\cpge@dimb}%
+		\setlength\cpge@dimc{\cpge@dima-\cpge@dimb}%
 	\fi%
 }
 \def\prepare@midbox#1#2{%
-	\ig@minipagetrue%
+	\cpge@minipagetrue%
 	\def\in@@{\in@{*!}}%
 	\@xp\in@@\@xp{#1!}%
 	\ifin@%
-		\edef\num@pt{\ig@removestar #1}%
-		\let\@render\m@ig@narrowpar% 
+		\edef\num@pt{\cpge@removestar #1}%
+		\let\@render\m@cpge@narrowpar% 
 		\def\@renderer{varwidth}%
 	\else%
 		\def\num@pt{#1}%
@@ -831,100 +834,102 @@
 	\else%
 		\setlength\midwidth{\linewidth*\ratio{\num@pt\p@}{100\p@}}%
 	\fi%
+	\advance\midwidth-\fadjwidth%
 	\set@eqnmidbox{#2}%
-	\setlength\midwidth{\wd\midbox}%
+	\setlength\midwidth{\wd\midbox+\fadjwidth}%
 }
 \long\def\set@eqnmidbox#1{%
+	\abovedisplayskip\medcenterskip%
+	\belowdisplayskip\medcenterskip%
 	\setbox\midbox\hbox{%
-		\hbadness\@M\ig@count\z@%
-		\abovedisplayskip\medcenterskip%
-		\belowdisplayskip\medcenterskip%
+		\hbadness\@M\cpge@count\z@%
+		\everymath{\displaystyle}%
 		\csname \@renderer\endcsname\midwidth%
-		\ig@inminitrue%
+		\cpge@inminitrue%
 		 %\par va compter le nombre de ligne dans la boite
-		 \@setpar{\hfill{\@@par}\global\advance\ig@count\prevgraf}%
+		 \@setpar{\hfill{\@@par}\global\advance\cpge@count\prevgraf}%
 		 \@render #1\hfill\null%
 		 \csname end\@renderer\endcsname%
 	}%
-	\ig@minipagefalse%
+	\cpge@minipagefalse%
 }
 \def\x@hackitem{%
 	\item[]\@trivlist\@noparlistfalse\item[]%
 }
 \def\begin@center@{%
-	%\topsep\bigcenterskip%
-	%\itemsep\medcenterskip%
-	%\partopsep\z@%
-	%\parsep\z@%
-	\if@inlabel\vskip\bigcenterskip\fi%
-	\trivlist %\parindent\z@%
-	\@topsep\bigcenterskip%
-	\@topsepadd\bigcenterskip%
+	\if@inlabel
+		\vskip\bcpgecenterskip
+	\fi%
+	\@topsep\bcpgecenterskip%
+	\@topsepadd\bcpgecenterskip%
 	\itemsep\medcenterskip%
-	\parsep\z@%
+	\parsep\z@skip%
+	\partopsep\z@skip%
+	\parsep\z@skip%
 	\@beginparpenalty\precenterpenalty%
 	\@endparpenalty\postcenterpenalty%
+	\trivlist %\parindent\z@%
 }
 \long\def\eqn@item#1#2#3#4{%
 	\x@hackitem%
 	%\begingroup%
 	\prepare@boxes{#1}{#2}%
-	\ifdim\wd\ig@boxa>\ig@dima\relax%
+	\ifdim\wd\cpgem@boxa>\cpge@dima\relax%
 		\ifhmode%
 			\unskip\par\nobreak\vskip-\parskip\noindent%
 		\fi%
-		\unhbox\ig@boxa\par%
+		\unhbox\cpgem@boxa\par%
 		\vskip-\lineskiplimit%
         \vskip\normallineskiplimit%
 		\vskip\largetextbelow%
 	\fi%
-	\ifdim\wd\ig@boxa>\z@%
+	\ifdim\wd\cpgem@boxa>\z@%
 		\leavevmode\hb@xt@\z@{%
-			\unhcopy\ig@boxa\hss%
+			\unhcopy\cpgem@boxa\hss%
 		}%
 	\fi%
-	\ifdim\wd\ig@boxb>\linewidth%
+	\ifdim\wd\cpgem@boxb>\linewidth%
 		\hskip-\@totalleftmargin%
 	\fi%
-	\setbox\ig@boxb\hbox{\kern\ig@dimb\box\ig@boxb}
-	\m@ig@stop\hfill\box\ig@boxb\hfill\m@ig@stop%
-	\edef\ig@tmpl{\xtrimspaces{#4}}%
-	\ifig@number%
+	\setbox\cpgem@boxb\hbox{\kern\cpge@dimb\box\cpgem@boxb}
+	\m@cpge@stop\hfill\box\cpgem@boxb\hfill\m@cpge@stop%
+	\protected@edef\cpge@tmpl{#4}%
+	\ifcpge@number%
 		\refstepcounter{equation}%
-		\setbox\ig@boxc\hbox{%
+		\setbox\cpgem@boxc\hbox{%
 			\tag@kern\deco@tag{\theequation}%
 		}%
-		\unless\ifx\@empty\ig@tmpl%
-			\label{\ig@tmpl}%
+		\unless\ifx\@empty\cpge@tmpl%
+			\expandafter\label\expandafter{\cpge@tmpl}%
 		\fi%
 	\else%
-		\ifx\@empty\ig@tmpl%
-			\setbox\ig@boxc\hbox{}%
+		\ifx\@empty\cpge@tmpl%
+			\setbox\cpgem@boxc\hbox{}%
 		\else%
-			\setbox\ig@boxc\hbox{\tag@kern\deco@tag{\ig@tmpl}}%
+			\setbox\cpgem@boxc\hbox{\tag@kern\deco@tag{\cpge@tmpl}}%
 		\fi%
 	\fi%
-	\ifdim\wd\ig@boxc>\z@\relax%
-		\ifdim\ig@dimc>\wd\ig@boxc\relax%
-			\hb@xt@\z@{\hss\box\ig@boxc}%
-			\setbox\ig@boxc\hbox{\xtrimspaces{#3}}%
-			\ifdim\wd\ig@boxc>\z@%
-				\m@ig@par\nobreak\vskip\numvskip\hfill%
+	\ifdim\wd\cpgem@boxc>\z@\relax%
+		\ifdim\cpge@dimc>\wd\cpgem@boxc\relax%
+			\hb@xt@\z@{\hss\box\cpgem@boxc}%
+			\setbox\cpgem@boxc\hbox{\xtrimspaces{#3}}%
+			\ifdim\wd\cpgem@boxc>\z@%
+				\m@cpge@par\nobreak\vskip\numvskip\hfill%
 			\fi%
 		\else%
-			\setbox\ig@boxc\hbox{%
-				\xtrimspaces{#3}\unhbox\ig@boxc%
+			\setbox\cpgem@boxc\hbox{%
+				\xtrimspaces{#3}\unhbox\cpgem@boxc%
 			}%
-			\m@ig@par\nobreak\vskip\numvskip\hfill%
+			\m@cpge@par\nobreak\vskip\numvskip\hfill%
 		\fi%
 	\else%
-		\setbox\ig@boxc\hbox{\xtrimspaces{#3}}%
-		\ifdim\wd\ig@boxc>\ig@dimc%
-			\m@ig@par\nobreak\vskip\numvskip\hfill%
+		\setbox\cpgem@boxc\hbox{\xtrimspaces{#3}}%
+		\ifdim\wd\cpgem@boxc>\cpge@dimc%
+			\m@cpge@par\nobreak\vskip\numvskip\hfill%
 		\fi%
 	\fi%
-	\ifdim\wd\ig@boxc>\z@%
-		\hb@xt@\z@{\hss\box\ig@boxc}%
+	\ifdim\wd\cpgem@boxc>\z@%
+		\hb@xt@\z@{\hss\box\cpgem@boxc}%
 	\fi%
 	%\endgroup%
 	\par%
@@ -956,7 +961,7 @@
 
 %%%% Parsing d'une ligne dans une suite d'équations dans xdevel ou xalign
 \def\eqline@parser@err#1{%
-	\igmath@err{\string #1\space  n'a pas sa place 
+	\cpgemath@err{\string #1\space  n'a pas sa place 
 	dans l'argument de \@xp\noexpand
 	\csname eqnline@\romannumeral \eqn@count@ @\endcsname
 	}{
@@ -964,7 +969,7 @@
 	\string\<, \string\>\space et \string\eline}
 }
 \def\eqline@oneline@err{%
-	\igmath@err{\@xp\string\@currenvir\space 
+	\cpgemath@err{\@xp\string\@currenvir\space 
 	traite une seule ligne
 	}{utilisez xdevel ou xalign pour traiter plusieurs lignes}
 }
@@ -1000,13 +1005,13 @@
 }
 \def\endin@graber@#1\end#2#3\grab@nil{%
 	\ifdefstring{\@currenvir}{#2}
-		{\igmath@err{\string\eline\space en dehors de #2.
+		{\cpgemath@err{\string\eline\space en dehors de #2.
 		La compilation va probablement échouer}{}}%
 }
 \long\def\eqn@graber@i@#1{%
 	\@bsphack
-	\ifblank{#1}{\let\ig@tmpx\@empty}
-	{\edef\ig@tmpx{%
+	\ifblank{#1}{\let\cpge@tmpx\@empty}
+	{\edef\cpge@tmpx{%
 		\unexpanded{\def\eqn@num@{i}}%
 		\expandonce\eqn@ltextfunc{%
 			\unexpanded{\xtrimspaces{#1}}%
@@ -1015,8 +1020,9 @@
 	\@esphack
 }
 \def\eqn@graber@ii@#1{%
-	\ifblank{#1}{\global\let\ig@tmpy\@empty}
-	{\xdef\ig@tmpy{%
+	\ifblank{#1}{\global\let\cpge@tmpy\@empty}
+	{\fake@eqn@mtextfunc{#1\math@nil}%
+		\xdef\cpge@tmpy{%
 		\unexpanded{\def\eqn@num@{ii}}%
 		\expandonce\eqn@mtextfunc
 			\unexpanded{#1\math@nil}%
@@ -1024,24 +1030,24 @@
 }
 \def\eqn@graber@iii@#1{%
 	\@bsphack
-	\ifblank{#1}{\let\ig@tmpz\@empty}
-	{\edef\ig@tmpz{%
+	\ifblank{#1}{\let\cpge@tmpz\@empty}
+	{\edef\cpge@tmpz{%
 		\unexpanded{\def\eqn@num@{iii}}%
 		\expandonce\eqn@rtextfunc{%
 			\unexpanded{\xtrimspaces{#1}}%
 		}%
 	}}%
 }
-\def\shipout@eqline{%\show\ig@tmpz
-	\edef\ig@tmpe{%
+\def\shipout@eqline{%\show\cpge@tmpz
+	\edef\cpge@tmpe{%
 		\expandonce\eqn@exec
-			{\expandonce\ig@tmpx}
-			{\expandonce\ig@tmpy}
-			{\expandonce\ig@tmpz}%
+			{\expandonce\cpge@tmpx}
+			{\expandonce\cpge@tmpy}
+			{\expandonce\cpge@tmpz}%
 	}%
 	\@esphack%
-	%\show\ig@tmpe
-	\ig@tmpe%
+	%\show\cpge@tmpe
+	\cpge@tmpe%
 	\eqn@finalizer%
 }
 \def\renew@graber#1{%
@@ -1071,43 +1077,45 @@
 	}
 \long\def\eqn@graber@i#1\<{%
 	\@bsphack
-	\edef\ig@tmpx{%
+	\edef\cpge@tmpx{%
 		\unexpanded{\def\eqn@num@{i}}%
 		\expandonce\eqn@ltextfunc{%
 			\unexpanded{\xtrimspaces{#1}}%
 		}%
 	}%
 	\@esphack
-	%\show\ig@tmpx%
+	%\show\cpge@tmpx%
 	\csname eqline@\romannumeral\eqn@count@ @ii\endcsname%
 }
 \def\eqn@graber@ii#1\>{%
-	\xdef\ig@tmpy{%
+	\fake@eqn@mtextfunc#1\math@nil%sets \cpge@tmpx and \cpge@tmpz with the \lt and \rt flags 
+	\xdef\cpge@tmpy{%
 		\unexpanded{\def\eqn@num@{ii}}%
 		\expandonce\eqn@mtextfunc
 			\unexpanded{#1\math@nil}%
 	}%
-	%\show\ig@tmpy
+	%\show\cpge@tmpy
 	\csname eqline@\romannumeral\eqn@count@ @iii\endcsname%
 }
 \def\eqn@graber@iii#1\eline{%
 	\@bsphack
-	\edef\ig@tmpz{%
+	\ifundef{\cpge@tmpz}{
+	\edef\cpge@tmpz{%
 		\unexpanded{\def\eqn@num@{iii}}%
 		\expandonce\eqn@rtextfunc{%
 			\unexpanded{\xtrimspaces{#1}}%
 		}%
-	}%
-	%\show\ig@tmpz
-	\edef\ig@tmpe{%
+	}}{}%
+	%\show\cpge@tmpz
+	\edef\cpge@tmpe{%
 		\expandonce\eqn@exec
-			{\expandonce\ig@tmpx}
-			{\expandonce\ig@tmpy}
-			{\expandonce\ig@tmpz}%
+			{\expandonce\cpge@tmpx}
+			{\expandonce\cpge@tmpy}
+			{\expandonce\cpge@tmpz}%
 	}%
 	\@esphack%
-	%\show\ig@tmpe
-	\ig@tmpe%
+	%\show\cpge@tmpe
+	\cpge@tmpe%
 	\eqn@finalizer%
 }
 \NewDocumentCommand\eqn@finalizer{%
@@ -1130,7 +1138,7 @@
 }
 \let\l@qnshift\z@
 \let\r@qnshift\z@
-\igsetmath{%
+\cpgesetmath{%
 	left shift/.code	= \eqn@shift{l}{#1},
 	right shift/.code	= \eqn@shift{r}{#1},
 	rs/.style			= {right shift=#1},
@@ -1148,10 +1156,10 @@
 			{\csedef{eqn@##1}{\@xp\@nx\csname#1@##1\endcsname}}
 			{}%
 	}%
-	\def\ig@tmpe{#2}%
+	\def\cpge@tmpe{#2}%
 	\ifblank{#2}
 		{%
-			\def\ig@tmpe{
+			\def\cpge@tmpe{
 				exec,
 				ltextfunc,
 				mtextfunc,
@@ -1159,49 +1167,82 @@
 				finalizer,
 				shift} 
 		}{}%
-	\@xp\docsvlist\@xp{\ig@tmpe}%
+	\@xp\docsvlist\@xp{\cpge@tmpe}%
 }
 
 %%% generic commands
 \long\def\eqn@exec#1#2#3{#1$#2$#3}
 \long\def\eqn@ltextfunc{\fake@cmd}
-\def\eqn@rtextfunc{\fake@cmd}
+\long\def\eqn@rtextfunc{\fake@cmd}
 \newif\ifpar@center
-\NewDocumentCommand\eqn@mtextfunc{
+\NewDocumentCommand\fake@eqn@mtextfunc{
 	t\n
-	E{\fr\lb\al\wd}{{@}{}{@}{@}}
+	t\r
+	E{\fr\lb\al\wd\lt\rt}{{@}{}{@}{@}{}{}}
 	u\math@nil
 }{
-	\IfBooleanTF{#1}
-		{\global\ig@numbertrue}
-		{\global\ig@numberfalse}%
-	\ifstrequal{#2}{@}
-		{\let\eqnframecmd\eqn@fakecmd}
+	\undef\cpge@tmpz%
+	\ifblank{#7}{}
 		{%
-			\ifblank{#2}
-				{\let\eqnframecmd\deco@formula}
+			\edef\cpge@tmpx{%
+				\unexpanded{\def\eqn@num@{i}}%
+				\expandonce\eqn@ltextfunc{%
+					\unexpanded{\xtrimspaces{#7}}%
+				}%
+			}%
+		}%
+	\ifblank{#8}{}
+		{%
+			\edef\cpge@tmpz{%
+				\unexpanded{\def\eqn@num@{iii}}%
+				\expandonce\eqn@rtextfunc{%
+					\unexpanded{\xtrimspaces{#8}}%
+				}%
+		}}%
+}
+\NewDocumentCommand\eqn@mtextfunc{
+	t\n
+	t\r
+	E{\fr\lb\al\wd\lt\rt}{{@}{}{@}{@}{}{}}
+	u\math@nil
+}{
+	\let\eqnframecmd\eqn@fakecmd%
+	\def\minipage@wd{100*}%
+	\IfBooleanTF{#1}
+		{\global\cpge@numbertrue}
+		{\global\cpge@numberfalse}%
+	\IfBooleanTF{#2}
+		{\par@centertrue%
+			 \let\eqnframecmd\deco@result}
+		{\par@centerfalse}%
+	\ifstrequal{#3}{@}
+		{}
+		{%
+			\ifblank{#3}
+				{\IfBooleanF{#2}{\let\eqnframecmd\deco@formula}}
 				{%
-					\ifcsundef{deco@#2}
-						{\igframe@err{#2}}
-						{\letcs\eqnframecmd{deco@#2}}%
+					\ifcsundef{deco@#3}
+						{\cpgeframe@err{#3}}
+						{\letcs\eqnframecmd{deco@#3}}%
 				}%
 		}%
-	\gdef\ig@tmpl{#3}%
-	\ifstrequal{#5}{@}{}
+	\gdef\cpge@tmpl{#4}%
+	\ifstrequal{#6}{@}{}
 		{%
 			\par@centertrue%
-			\ifblank{#5}
-				{\def\minipage@wd{100*}}
-				{\def\minipage@wd{#5}}
+			\ifblank{#6}{}{\def\minipage@wd{#6}}
 		}%
 	\ifpar@center%
 		\@xp\prepare@midbox\@xp{\minipage@wd}{%
-			\ifstrequal{#4}{@}{}
-				{\ifblank{#4}{\begin{align*}[t]}{\begin{align*}[#4]}}
-				#6
-			\ifstrequal{#4}{@}{}{\end{align*}}
+			\ifstrequal{#5}{@}
+				{#9}
+				{%
+					\ifblank{#5}
+						{$\aligned[t]#9\endaligned$}
+						{$\aligned[#5]#9\endaligned$}
+				}
 		}%%
-		\def\ig@tmpm{%
+		\def\cpge@tmpm{%
 			\eqnframecmd{$\m@th
 			\vcenter{%
 				\hsize\midwidth\@parboxrestore\box\midbox%
@@ -1209,19 +1250,21 @@
 		}%
 		\par@centerfalse%
 	\else
-		\def\ig@tmpm{%
+		\def\cpge@tmpm{%
 			\eqnframecmd{$\m@th\displaystyle
-				\ifstrequal{#4}{@}{}
-					{\ifblank{#4}{\aligned[t]}{\aligned[#4]}}
-				#6
-				\ifstrequal{#4}{@}{}{\endaligned}
+				\ifstrequal{#5}{@}{}
+					{\ifblank{#5}{\aligned[t]}{\aligned[#5]}}
+				#9
+				\ifstrequal{#5}{@}{}{\endaligned}
 			$}%
 		}%
 	\fi%
-	\ig@tmpm%
-	\par@centerfalse}
+	\cpge@tmpm%
+	\par@centerfalse%
+	\undef{\eqnframecmd}
+}
 
-%%% Goudies
+%%% Goodies
 \newif\ifeqn@break
 
 \NewDocumentCommand\xbreak{O{t} m}{%
@@ -1229,6 +1272,16 @@
 	\begin{multlined}[#1]
 		#2
 	\end{multlined}
+}
+\NewDocumentCommand\compactbreak{O{t} m}{%
+	\global\eqn@breaktrue
+	\ifcompact
+		\begin{multlined}[#1]
+			#2
+		\end{multlined}
+	\else
+		#2
+	\fi
 }
 \NewDocumentCommand\xaligned{O{t} m}{%
 	\begin{aligned}[#1]
@@ -1240,9 +1293,35 @@
 		#2
 	\end{split}
 }
+\NewDocumentCommand\compactsplit{O{t} m}{%
+	\ifcompact
+		\begin{split}[#1]
+			#2
+		\end{split}
+	\else
+		#2
+	\fi
+}
+%% Pour maintenir une compatibilité visuelle lorsque des \cas figurent
+%% dans un environnement {xalign} ou {xdevel} de cpgemath.sty
+\NewDocumentCommand\math@unit{ s O{} }{%
+	\ifdim\leftmargin=\z@
+		\leftmargin=\leftmargini
+	\fi
+	\IfBooleanTF{#1}
+		{%
+			\parshape=1 \leftmargin \dimexpr\linewidth-\leftmargin\relax%
+			\ignorespaces
+		}
+		{%
+			\parshape=2	\z@				\linewidth
+						\leftmargin		\dimexpr\linewidth-\leftmargin\relax%
+			\noindent\deco@unit{#2}\enskip\ignorespaces
+		}
+}
 \def\set@goodies{%
 	\@bsphack
-		\def\unit{\generic@unit}
+		\def\unit{\math@unit}
 		\def\xbrk{\xbreak}%
 		\def\xald{\xaligned}%
 		\def\xspl{\xsplit}%
@@ -1254,7 +1333,7 @@
 
 %%% xequation et xresult
 \long\def\xeqn@exec#1#2#3{%
-	\@center@{#1}{#2}{#3}{\ig@tmpl}%
+	\@center@{#1}{#2}{#3}{\cpge@tmpl}%
 }
 \NewDocumentEnvironment{xequation}{O{}+b}
 {%
@@ -1262,14 +1341,15 @@
 	\set@goodies%
 	\set@eqnparsers{xeqn}{exec}%
 	\set@eqnerrors%
-	\igsetmath{#1}
-	\eqn@initgrabers@#2\eline\xxx@eline%
+	\cpgesetmath{#1}
+	\eqn@initgrabers@#2\eline\xxx@eline\@ignoretrue%%
 }{}
-\igsetmath{
+
+\cpgesetmath{
 	wd/.code = \def\minipage@wd{#1}
 }
 \def\xqn{\xequation} 
-\def\endxqn{\endxequation} 
+\let\endxqn\endxequation 
 
 \NewDocumentEnvironment{xresult}{O{} +b}
 {%
@@ -1278,11 +1358,11 @@
 	\set@goodies%
 	\set@eqnparsers{xeqn}{exec}%
 	\set@eqnerrors%
-	\igsetmath{wd={100*},#1}%
+	\cpgesetmath{wd={100*},#1}%
 	\par@centertrue%
 	%\let\deco@formula\deco@result%
 	\let\eqn@fakecmd\deco@result%
-	\eqn@initgrabers@#2\eline\xxx@eline%
+	\eqn@initgrabers@#2\eline\xxx@eline\@ignoretrue%
 }{}
 
 %%% xdevel
@@ -1318,7 +1398,7 @@
 		{\IfBooleanF{#2}{\eqn@initgrabers}}%
 }
 \long\def\xdevel@exec#1#2#3{%
-	\eqn@item{#1}{#2}{#3}{\ig@tmpl}%
+	\eqn@item{#1}{#2}{#3}{\cpge@tmpl}%
 }
 	
 \NewDocumentEnvironment{xdevel}{O{}}
@@ -1327,42 +1407,47 @@
 	\set@goodies%
 	\set@eqnparsers{xdevel}{exec}%
 	\set@eqnerrors%
-	\igsetmath{#1}
+	\cpgesetmath{#1}
 	\begin@center@%
-		\eqn@initgrabers%
+	\eqn@initgrabers%
 }{\endtrivlist}
 	
 %%% \< et \> pour traiter directement une équation sans textes latéraux avec 
 %%% la même syntaxe
-\NewDocumentCommand\eqn@single{+u\>}
+% \NewDocumentCommand\eqn@single{+u\>}
+% 	{\begin{xequation}\<#1\>\end{xequation}}
+% \NewDocumentCommand\eqnline{O{} +u\eline}
+% 	{\begin{xequation}[#1]#2\end{xequation}}
+% \DeclareRobustCommand\<{\eqn@single}
+
+\NewDocumentCommand\eqn@single{r\<\>}
 	{\begin{xequation}\<#1\>\end{xequation}}
 \NewDocumentCommand\eqnline{O{} +u\eline}
 	{\begin{xequation}[#1]#2\end{xequation}}
-\DeclareRobustCommand\<{\eqn@single}
+\DeclareRobustCommand\<{\eqn@single\<}
 
 
 %%%%%%%% Alignement À la AMSmath
 \newdimen\largetextabove \largetextabove=3pt
 \newdimen\largetextbelow \largetextbelow=0pt
-\newbox\igtag@box
-\newdimen\igtag@width
+\newbox\cpgetag@box
+\newdimen\cpgetag@width
 
 \def\tag@kern{\kern\eqn@tagkern}
-\igdefdeco{tag}{(\hskip1pt#1\hskip1pt)}
+\cpgesetdeco{tag}{(\hskip1pt#1\hskip1pt)}
 \newtagform{ig}[\deco@tag]{}{}
 \DeclareListParser\doorloop\or
 \DeclareListParser*\fororloop\or
 
-\igsetmath[math]{%
-	big space/.code 		= \bigcenterskip#1,
-	med space/.code			= \medcenterskip#1,
-	small space/.code		= \smallcenterskip#1,
-	large text above/.code = \largetextabove=#1,
-	large text below/.code = \largetextbelow=#1,
-	tag sep/.code 		= \dimdef{\eqn@tagkern}{#1},
-	tag sep					=.5em,
-	%align math delimiters/.code two args = \set@mathdelimiters{#1}{#2},
-	allow break/.code = \allowsdsiplaybreak,
+\cpgesetmath[math]{%
+	big space/.code 		= \bcpgecenterskip\glueexpr#1\relax,
+	med space/.code			= \medcenterskip\glueexpr#1\relax,
+	small space/.code		= \smallcenterskip\glueexpr#1\relax,
+	large text above/.code 	= \largetextabove=#1,
+	large text below/.code 	= \largetextbelow=#1,
+	tag sep/.code 			= \dimdef{\eqn@tagkern}{#1},
+	tag sep					= .5em,
+	allow break/.code 		= \allowsdsiplaybreak,
 	} 
 	
 %%%% \largetext,  variant of mathools's \shortintertext
@@ -1453,21 +1538,21 @@
 }
 \def\text@mesuring#1#2{
 	\begingroup
-		\settowidth\ig@dima{#2}
-		\save@csentry{\the\ig@dima}{#1@widths}
+		\settowidth\cpge@dima{#2}
+		\save@csentry{\the\cpge@dima}{#1@widths}
 	\endgroup
 }
 \def\get@fieldwidth#1#2#3{
 	\begingroup
-	\ig@loop\z@
-	\edef\ig@tmpb{\fieldlengths@#1}%
-	\@for\ig@tmpa:=\ig@tmpb\do{%
-            \advance\ig@loop\@ne
-            \ifnum\ig@loop=#2\relax
-            	\edef\ig@tmpc{\ig@tmpa}
+	\cpge@loop\z@
+	\edef\cpge@tmpb{\fieldlengths@#1}%
+	\@for\cpge@tmpa:=\cpge@tmpb\do{%
+            \advance\cpge@loop\@ne
+            \ifnum\cpge@loop=#2\relax
+            	\edef\cpge@tmpc{\cpge@tmpa}
 			\fi
 	}
-	\xdef#3{\ig@tmpc}
+	\xdef#3{\cpge@tmpc}
 	\endgroup
 }
 \def\save@firstlastfields{
@@ -1475,21 +1560,21 @@
 	\def\do@row##1{	
 		\column@\z@
 		\docsvlist{##1}
-		\ifundef\ig@tmpfirst
+		\ifundef\cpge@tmpfirst
 			{
 				\save@entry0\firstfields@
 				\save@entry0\lastfields@
 			}{
-				\save@entry\ig@tmpfirst\firstfields@
-				\save@entry\ig@tmplast\lastfields@
+				\save@entry\cpge@tmpfirst\firstfields@
+				\save@entry\cpge@tmplast\lastfields@
 			}
-		\undef\ig@tmpfirst
+		\undef\cpge@tmpfirst
 	}
 	\def\do##1{%
 		\advance\column@\@ne
 		\ifdim##1>\z@\relax
-			\ifundef\ig@tmpfirst{\edef\ig@tmpfirst{\the\column@}}{}
-			\edef\ig@tmplast{\the\column@}
+			\ifundef\cpge@tmpfirst{\edef\cpge@tmpfirst{\the\column@}}{}
+			\edef\cpge@tmplast{\the\column@}
 		\fi
 	}
 	\@xp\fororloop\@xp\do@row\@xp{\field@lengths}
@@ -1497,12 +1582,12 @@
 }
 \def\find@maxtagwidth#1{%
 	\begingroup
-		\settowidth\ig@dima{\tag@kern\deco@tag{#1}}
-		\ifdim\ig@dima>\igtag@width
-			\global\igtag@width\ig@dima
+		\settowidth\cpge@dima{\tag@kern\deco@tag{#1}}
+		\ifdim\cpge@dima>\cpgetag@width
+			\global\cpgetag@width\cpge@dima
 		\fi
 		\setbox\z@\hbox{\tag@kern\deco@tag{}}
-		\ifdim\ig@dima>\wd\z@
+		\ifdim\cpge@dima>\wd\z@
 			\save@entry1\tag@presence
 		\else
 			\save@entry0\tag@presence
@@ -1510,7 +1595,7 @@
 	\endgroup
 }
 \def\tag@measuring#1{%
-	\ifig@number
+	\ifcpge@number
 		\stepcounter{equation}%
 		\find@maxtagwidth{\theequation}
 	\else
@@ -1518,28 +1603,28 @@
 	\fi
 }
 \def\set@tag#1{%
-	\ifig@number
+	\ifcpge@number
 		\refstepcounter{equation}%
-		\setbox\ig@boxa\hbox{%
+		\setbox\cpgem@boxa\hbox{%
 			\tag@kern\deco@tag{\theequation}%
 		}
 		\ifblank{#1}{}{\label{#1}}
 	\else
 		\ifblank{#1}
-			{\setbox\ig@boxa\hbox{}}
+			{\setbox\cpgem@boxa\hbox{}}
 			{%
-				\setbox\ig@boxa\hbox{%
+				\setbox\cpgem@boxa\hbox{%
 					\tag@kern\deco@tag{#1}
 				}
 			}
 	\fi
-	\ifdim\wd\ig@boxa>\z@
-		\global\setbox\ig@boxa\hb@xt@\igtag@width{%
-			\hss\unhbox\ig@boxa
+	\ifdim\wd\cpgem@boxa>\z@
+		\global\setbox\cpgem@boxa\hb@xt@\cpgetag@width{%
+			\hss\unhbox\cpgem@boxa
 		}
 	\fi
 }
-%%%% Principal macro. Prepare the shift tables for left and right text 
+%%%% Main macro. Prepare the shift tables for left and right text 
 %%%% after amsmath's measuring is done.
 \def\after@measuring{\begingroup
 	\numdef\rows@number{\row@}
@@ -1551,20 +1636,20 @@
 	\whileboolexpr{ test {\ifnumless\row@\rows@number} }
 		{
 			\advance\row@\@ne
-			\edef\ig@tmpf{\get@entry\row@\firstfields@}
-			\get@fieldwidth\row@\ig@tmpf\ig@tmpd
-			\ig@dimb=\dimexpr-\mintagsep-\ig@tmpd\relax
+			\edef\cpge@tmpf{\get@entry\row@\firstfields@}
+			\get@fieldwidth\row@\cpge@tmpf\cpge@tmpd
+			\cpge@dimb=\dimexpr-\mintagsep-\cpge@tmpd\relax
 			\column@\z@
-			\whileboolexpr{ test {\ifnumless\column@{\ig@tmpf}} }
+			\whileboolexpr{ test {\ifnumless\column@{\cpge@tmpf}} }
 				{
 					\advance\column@\@ne
-					\advance\ig@dimb\maxcol@width\column@\relax
+					\advance\cpge@dimb\maxcol@width\column@\relax
 					\unless\ifodd\column@
-						\advance\ig@dimb\alignsep@
+						\advance\cpge@dimb\alignsep@
 					\fi
 				}
-			\ig@dimc\get@entry\row@\ltext@widths\relax
-			\ifdim\ig@dimb<\ig@dimc
+			\cpge@dimc\get@entry\row@\ltext@widths\relax
+			\ifdim\cpge@dimb<\cpge@dimc
 				\save@entry1\left@shifts
 			\else
 				\save@entry0\left@shifts
@@ -1575,23 +1660,23 @@
 		{
 			\advance\row@\@ne
 			\column@\get@entry\row@\lastfields@\relax
-			\get@fieldwidth\row@\column@\ig@tmpd
-			\ig@dimb=-\ig@tmpd
+			\get@fieldwidth\row@\column@\cpge@tmpd
+			\cpge@dimb=-\cpge@tmpd
 			\whileboolexpr{ test {\ifnumless\column@{\maxfields@+1}} }
 				{
-					\advance\ig@dimb\maxcol@width\column@\relax
+					\advance\cpge@dimb\maxcol@width\column@\relax
 					\unless\ifodd\column@
-						\advance\ig@dimb\alignsep@
+						\advance\cpge@dimb\alignsep@
 					\fi
 					\advance\column@\@ne
 				}
-			\advance\ig@dimb-\alignsep@\relax
-			\advance\ig@dimb-\mintagsep\relax                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-			\ig@dimc\get@entry\row@\rtext@widths\relax
+			\advance\cpge@dimb-\alignsep@\relax
+			\advance\cpge@dimb-\mintagsep\relax
+			\cpge@dimc\get@entry\row@\rtext@widths\relax
 			\if1\get@entry\row@\tag@presence\relax
-				\advance\ig@dimc\igtag@width
+				\advance\cpge@dimc\cpgetag@width
 			\fi
-			\ifdim\ig@dimc<\ig@dimb
+			\ifdim\cpge@dimc<\cpge@dimb
 				\save@entry0\tag@shifts
 			\else
 				\save@entry1\tag@shifts
@@ -1616,7 +1701,7 @@
              \DN@{\align@recover}%
           \else
             \nomath@env
-            \DN@{\@namedef{end\ig@currenvir}{}\@gobble}%
+            \DN@{\@namedef{end\cpge@currenvir}{}\@gobble}%
           \fi
         \else
             $$%
@@ -1626,10 +1711,10 @@
     \fi
     \collect@body\next@
 }
-
+\iffalse $$\fi% Hack pour interrompre la coloration syntaxique causée par $$ dans VScode . 
 \def\xalign@#1#2#3{%
 	\inalign@true
-	\ig@indisplaytrue
+	\cpge@indisplaytrue
 	\chardef\dspbrk@context\z@
 	\ifingather@\else\displ@y@\fi
 	\let\math@cr@@@\math@cr@@@align
@@ -1642,7 +1727,7 @@
 	\appto\xalign@BODY{#2}
 %	\show\xalign@BODY
 	\xalign@BODY
-	\@xp\def\@xp\xalign@BODY\@xp{\ig@tmpw}
+	\@xp\def\@xp\xalign@BODY\@xp{\cpge@tmpw}
 %	\show\xalign@BODY
 	\measure@{\xalign@BODY}%
 	\after@measuring
@@ -1667,12 +1752,12 @@
 				{%
 					\IfBooleanTF{#1}
 						{\IfValueTF{#2}
-							{\appto\ig@tmpw{\math@cr*[#2]}}
-							{\appto\ig@tmpw{\math@cr*}}
+							{\appto\cpge@tmpw{\math@cr*[#2]}}
+							{\appto\cpge@tmpw{\math@cr*}}
 						}
 						{\IfValueTF{#2}
-							{\appto\ig@tmpw{\math@cr[#2]}}
-							{\appto\ig@tmpw{\math@cr}}
+							{\appto\cpge@tmpw{\math@cr[#2]}}
+							{\appto\cpge@tmpw{\math@cr}}
 						}
 					\eqn@initgrabers%
 				}%
@@ -1680,7 +1765,7 @@
 }
 %%%%
 \long\def\xalign@ltextfunc#1{%
-	\ig@indisplayfalse
+	\cpge@indisplayfalse
 	\ifmeasuring@ 
 		\hbox{}
 		\text@mesuring{ltext}{#1}
@@ -1694,28 +1779,28 @@
 	\fi
 }
 \def\xalign@rtextfunc#1{%
-	\ig@indisplayfalse
+	\cpge@indisplayfalse
 	\ifmeasuring@
 		\hbox{}
-		\tag@measuring{\ig@tmpl}
+		\tag@measuring{\cpge@tmpl}
 		\text@mesuring{rtext}{#1}
 		\tag@in@align*{}
 	\else
-		\@xp\set@tag\@xp{\ig@tmpl}
+		\@xp\set@tag\@xp{\cpge@tmpl}
 		\global\shifttag@true
 		\raisetag{-\numvskip}
-		\tag@in@align*{#1\box\ig@boxa}
+		\tag@in@align*{#1\box\cpgem@boxa}
 	\fi
 }
-\NewDocumentCommand\get@firstfield{ u& u\ig@nil }{#1}
+\NewDocumentCommand\get@firstfield{ u& u\cpge@nil }{#1}
 \NewDocumentCommand\xalign@mtextfunc{
 	t\n
-	E{\fr\lb}{{@}{}}
+	E{\fr\lb\lt\rt\al}{{@}{}{}{}{}}
 	u\math@nil
 }{%
 	\IfBooleanTF{#1}
-		{\global\ig@numbertrue}
-		{\global\ig@numberfalse}
+		{\global\cpge@numbertrue}
+		{\global\cpge@numberfalse}
 	\ifstrequal{#2}{@}{}
 		{%
 			\ifblank{#2}
@@ -1723,15 +1808,15 @@
 				{\gdef\eqn@framecmd{\Xboxed[#2]}}
 		}
 	\ifundef\saved@@@@
-		{\gdef\saved@@@@{\get@firstfield#4&\ig@nil}}
+		{\gdef\saved@@@@{\get@firstfield#7&\cpge@nil}}
 		{}
-	\gdef\ig@tmpl{#3}
-	\eqn@framecmd{#4}
+	\gdef\cpge@tmpl{#3}
+	\eqn@framecmd{#7}
 	\global\let\eqn@framecmd\eqn@fakecmd
 }
 \let\eqn@framecmd\eqn@fakecmd
 \def\xalign@exec#1#2#3{%
-	\appto\ig@tmpw{#1 \l@mpshift #2 \r@mpshift #3}
+	\appto\cpge@tmpw{#1 \l@mpshift #2 \r@mpshift #3}
 }
 %%% 
 \def\xalign@shift#1#2{
@@ -1752,24 +1837,23 @@
 \def\r@mpshift{&&&&}
 \def\set@eqnskips{%
 	\@bsphack
-		\abovedisplayskip\bigcenterskip\relax%
-		\belowdisplayskip\bigcenterskip\relax%
+		\abovedisplayskip\bcpgecenterskip\relax%
+		\belowdisplayskip\bcpgecenterskip\relax%
 		\abovedisplayshortskip\medcenterskip\relax%
 		\belowdisplayshortskip\medcenterskip\relax%
 	\@esphack%
 }
-\igsetmath{top page/.code = \vskip-\bigcenterskip}
 \NewDocumentEnvironment{xalign}{O{}}{%
-	\igtag@width\z@%
+	\cpgetag@width\z@%
 	\eqn@count@\z@%
-	\let\ig@tmpw\@empty%
-	\def\ig@currenvir{xalign}%
+	\let\cpge@tmpw\@empty%
+	\def\cpge@currenvir{xalign}%
 	\allowdisplaybreaks%
 	\set@eqnskips%
 	\set@goodies%
 	\set@eqnparsers{xalign}{}%
 	\set@eqnerrors%
-	\igsetmath{#1}%
+	\cpgesetmath{#1}%
 	\start@xalign{\eqn@initgrabers}{\eline\xxx@eline}
 }{%
 	\unset@goodies%
@@ -1781,170 +1865,120 @@
 		\gundef\saved@@@@%
 	\@esphack%
 }
-% patch for the usual alignement env of AMSmath to support the \< \> syntax
-\NewDocumentCommand\ig@eline{
-	s
-	O{\z@}
-	t\eline
-	e\end
-}{
-	\IfValueTF{#4}
-		{\end{#4}}
-		{
-			\IfBooleanTF{#1}
-				{\math@cr*[#2]}
-				{\math@cr[#2]}
-		}
-}
-\NewDocumentCommand\ig@bline{
-	 t{\n}
-	 E{\fr\lb}{{@}{}}
-	 u{\>}
-}{%
-	\IfBooleanTF{#1}
-		{\ig@number{#3}}
-		{\ig@nonumber{#3}}
-	\ifstrequal{#2}{@}
-		{\global\let\eqn@framecmd\eqn@fakecmd}	
-		{%
-			\ifblank{#2}
-				{\gdef\eqn@framecmd{\Xboxed[formula]}}
-				{\gdef\eqn@framecmd{\Xboxed[#2]}}
-		}
-	\ifundef\saved@@@@
-		{\gdef\saved@@@@{\get@firstfield#4&\ig@nil}}
-		{}
-	\eqn@framecmd{#4}
-}
-\def\ig@number#1{%
-	\ifst@rred
-		\st@rredfalse\global\@eqnswtrue
-		\ifblank{#1}{}{\label{#1}}
-	\else
-		\ifblank{#1}{}{\label{#1}}
-	\fi
-}
-\def\ig@nonumber#1{%
-	\ifst@rred
-		\ifblank{#1}{}{\tag*{\deco@tag{#1}}}
-	\else
-		\ifblank{#1}{\nonumber}{\tag*{\deco@tag{#1}}}
-	\fi
-}	
-\def\Let@ig{%
-	\let\ig@currenvir\@currenvir%
-	\set@eqnskips%
-	\set@goodies
-	\def\eline{\ig@eline}%
-	\def\<{\ig@bline}%
-	\let\eqnline\@empty%
-	\def\xsavedff{\saved@@@@}%
-	\def\sff{\saved@@@@}%
-	\ig@indisplaytrue%
-	\ignorespaces
-}
+% % patch for the usual alignement env of AMSmath to support the \< \> syntax
+% \NewDocumentCommand\cpge@eline{
+% 	s
+% 	O{\z@}
+% 	t\eline
+% 	e\end
+% }{
+% 	\IfValueTF{#4}
+% 		{\end{#4}}
+% 		{
+% 			\IfBooleanTF{#1}
+% 				{\math@cr*[#2]}
+% 				{\math@cr[#2]}
+% 		}
+% }
+% \NewDocumentCommand\cpge@bline{
+% 	 t{\n}
+% 	 E{\fr\lb}{{@}{}}
+% 	 u{\>}
+% }{%
+% 	\IfBooleanTF{#1}
+% 		{\cpge@number{#3}}
+% 		{\cpge@nonumber{#3}}
+% 	\ifstrequal{#2}{@}
+% 		{\global\let\eqn@framecmd\eqn@fakecmd}	
+% 		{%
+% 			\ifblank{#2}
+% 				{\gdef\eqn@framecmd{\Xboxed[formula]}}
+% 				{\gdef\eqn@framecmd{\Xboxed[#2]}}
+% 		}
+% 	\ifundef\saved@@@@
+% 		{\gdef\saved@@@@{\get@firstfield#4&\cpge@nil}}
+% 		{}
+% 	\eqn@framecmd{#4}
+% }
+% \def\cpge@number#1{%
+% 	\ifst@rred
+% 		\st@rredfalse\global\@eqnswtrue
+% 		\ifblank{#1}{}{\label{#1}}
+% 	\else
+% 		\ifblank{#1}{}{\label{#1}}
+% 	\fi
+% }
+% \def\cpge@nonumber#1{%
+% 	\ifst@rred
+% 		\ifblank{#1}{}{\tag*{\deco@tag{#1}}}
+% 	\else
+% 		\ifblank{#1}{\nonumber}{\tag*{\deco@tag{#1}}}
+% 	\fi
+% }	
+% \def\Let@ig{%
+% 	\let\cpge@currenvir\@currenvir%
+% 	\set@eqnskips%
+% 	\set@goodies
+% 	\def\eline{\cpge@eline}%
+% 	\def\<{\cpge@bline}%
+% 	\let\eqnline\@empty%
+% 	\def\xsavedff{\saved@@@@}%
+% 	\def\sff{\saved@@@@}%
+% 	\cpge@indisplaytrue%
+% 	\ignorespaces
+% }
 %%% Tag's style and patching
 \def\tagform@err{%
-	\igmath@err{%
+	\cpgemath@err{%
 		\string\usetagform\space n'est pas disponible
-		\MessageBreak utilisez \string\igdefdeco\string{deco\string}
+		\MessageBreak utilisez \string\cpgesetdeco\string{tag\string}
 		pour modifier le style des tags.
 	}{Voir le manuel}
 }
 \AtBeginDocument{%
-	\preto\align{\Let@ig}%
-	\preto\flalign{\Let@ig}%
-	\preto\aligned{\Let@ig}%
-	\preto\equation{\Let@ig}%
-	\cspreto{align*}{\Let@ig}%
-	\cspreto{flalign*}{\Let@ig}%
-	\cspreto{equation*}{\Let@ig}%
-	\appto\endalign{\unset@goodies}
+	%\preto\align{\Let@ig}%
+	%\preto\flalign{\Let@ig}%
+	%\preto\aligned{\Let@ig}%
+	%\preto\equation{\Let@ig}%
+	%\cspreto{align*}{\Let@ig}%
+	%\cspreto{flalign*}{\Let@ig}%
+	%\cspreto{equation*}{\Let@ig}%
+	%\appto\endalign{\unset@goodies}
     \usetagform{ig}
     \makeatletter
     	\def\usetagform{\tagform@err}
 	\makeatother
 }
 
-%%%% xconds
-%%%%
-\long\def\xconds@ltextfunc#1{%
-	\ig@indisplayfalse
-	\ifmeasuring@ 
-		\hbox{}
-		\text@mesuring{ltext}{#1}
-	\else
-		\advance\row@\@ne
-		\if0\get@entry\row@\left@shifts\relax
-			\rlap{#1}
-		\else
-			\largetext{#1}
-		\fi
-	\fi
-}
-\def\xconds@rtextfunc#1{%
-	\ig@indisplayfalse
-	\ifmeasuring@
-		\hbox{}
-		\tag@measuring{\ig@tmpl}
-		\text@mesuring{rtext}{#1}
-		\tag@in@align*{}
-	\else
-		\@xp\set@tag\@xp{\ig@tmpl}
-		\global\shifttag@true
-		\raisetag{-\numvskip}
-		\tag@in@align*{#1\box\ig@boxa}
-	\fi
-}
-\NewDocumentCommand\xconds@mtextfunc{
-	t\n
-	E{\fr\lb}{{@}{}}
-	u\math@nil
-}{%
-	\IfBooleanTF{#1}
-		{\global\ig@numbertrue}
-		{\global\ig@numberfalse}
-	\ifstrequal{#2}{@}{}
-		{%
-			\ifblank{#2}
-				{\gdef\eqn@framecmd{\Xboxed[formula]}}
-				{\gdef\eqn@framecmd{\Xboxed[#2]}}
-		}
-	\ifundef\saved@@@@
-		{\gdef\saved@@@@{\get@firstfield#4&\ig@nil}}
-		{}
-	\gdef\ig@tmpl{#3}
-	\eqn@framecmd{#4}
-	\global\let\eqn@framecmd\eqn@fakecmd
-}
-\def\xconds@exec#1#2#3{%
-	\appto\ig@tmpw{#1 \l@mpshift #2 \r@mpshift #3}
-}
-%%% 
+%%%% 
 %% \xboxed normale
-\igdefdeco*{formula}{\fbox}
-\igdefdeco{result}{%
-	\fboxsep0pt\fboxrule2pt%
+\cpgesetmath{
+	formula/.code=\cpgesetdeco{formula}{#1},
+	result/.code=\cpgesetdeco{result}{#1},
+	formula=\fbox{#1},
+	result={\fboxsep0pt\fboxrule2pt%
 	\fcolorbox{black!33}{white}{%
 		\fboxsep3pt\fboxrule1pt\fcolorbox{white}{black!5}
-			{\kern1em#1\kern1em}%
-		}%
+			{\kern1em#1\kern1em}}%
 	}
+}
+\def\deco@formule{\deco@formula}
+\def\decof{\deco@formula}
 \NewDocumentCommand\MakeXboxedCommand{mm}{
 	\newcommand#1[1]{%
 		\let\bgroup{\romannumeral-`}%
-		\csuse{xbxd\@xp\@gobble\string#1}##1&&\ig@nil
+		\csuse{xbxd\@xp\@gobble\string#1}##1&&\cpge@nil
 	}
-	\csdef{xbxd\@xp\@gobble\string#1}##1&##2&##3\ig@nil{%
-		\settowidth\ig@dimc{#2{}}%
+	\csdef{xbxd\@xp\@gobble\string#1}##1&##2&##3\cpge@nil{%
+		\settowidth\cpge@dimc{#2{}}%
 		\ifnum0=`{}\fi%
-		\setbox\z@\hbox{#2{$\displaystyle##1{}\m@th$\kern-.5\ig@dimc}}%
-		\edef\ig@tmpa{%
+		\setbox\z@\hbox{#2{$\displaystyle##1{}\m@th$\kern-.5\cpge@dimc}}%
+		\edef\cpge@tmpa{%
 			\kern\wd\z@&\kern-\the\wd\z@%
 		}%
 		\ifblank{##1##2}{}
 			{%
-				\ig@tmpa%
+				\cpge@tmpa%
 				#2{\m@th$\displaystyle ##1##2$}%
 			}%
   }
@@ -1959,7 +1993,7 @@
 	O{formula} >{\SplitList{&}} m
 }{
 	\ifcsundef{xdeco@#1}
-		{\igframe@err{#1}}
+		{\cpgeframe@err{#1}}
 		{\gdef\eqnframecmd{\csname xdeco@#1\endcsname}}
 	\xboxed@rec@#2@@\frame@nil%
 }
@@ -1982,88 +2016,108 @@
 %%% AMSmath end %%%%%%%
 
 %%%%%%%% Environnements basique pour théorèmes et Cie
-%%%%%%%% ajout le 17 mars 2021
+%%%%%%%% 
     \theoremstyle{plain}
-    \newtheorem{xtheo}{Th\'eor\`eme}
-    \newtheorem{xtheodef}{Th\'eor\`eme et d\'efinition}
-    \newtheorem{xppte}{Propri\'et\'es}
-    \newtheorem{xprop}{Proposition}
-    \newtheorem*{xtheo*}{Th\'eor\`eme}
-    \newtheorem*{xtheodef*}{Th\'eor\`eme et d\'efinition}
-    \newtheorem*{xppte*}{Propri\'et\'es}
-    \newtheorem*{xprop*}{Proposition}
+    \newtheorem{theo}{Th\'eor\`eme}
+    \newtheorem{theodef}{Th\'eor\`eme et d\'efinition}
+    \newtheorem{ppte}{Propri\'et\'es}
+    \newtheorem{prop}{Proposition}
+	\newtheorem{lemm}{Lemme}
+    \newtheorem*{theo*}{Th\'eor\`eme}
+    \newtheorem*{theodef*}{Th\'eor\`eme et d\'efinition}
+    \newtheorem*{ppte*}{Propri\'et\'es}
+    \newtheorem*{prop*}{Proposition}
+	\newtheorem*{lemm*}{Lemme}
     \theoremstyle{definition}
-    \newtheorem{xdefi}{D\'efinition}
-    \newtheorem*{xdefi*}{D\'efinition}
+    \newtheorem{defi}{D\'efinition}
+    \newtheorem*{defi*}{D\'efinition}
+	\newtheorem{voca}{Vocabulaire}
+    \newtheorem*{voca*}{Vocabulaire}
+	\theoremstyle{remark}
+	\newtheorem{rema}{Remarque}
+	\newtheorem*{rema*}{Remarque}
+%%%% Frame générique pour théorème et similaire
+\newdimen\xframe@gap
+\xframe@gap=\dimexpr2\fboxrule+2\fboxsep\relax
+\NewDocumentEnvironment{xframe}{m d() d<> +b}
+		{\deco@xframe{\parbox{\linewidth-\xframe@gap}{
+			\IfValueTF{#2}
+				{\IfValueTF{#3}{\begin{#1}[#2]\label{#3}}{\begin{#1}[#2]}}
+				{\IfValueTF{#3}{\begin{#1}\label{#3}}{\begin{#1}}}
+			#4
+			\end{#1}}
+		}}
+		{}
+\cpgedefdeco{xframe}{\fbox{#1}}
     
 %%% Quantificateurs 
-\igsetmath[quantifier]{%
+\cpgesetmath{%
 	forall sep/.code 2 args	= \def\forall@sep{#1}\def\forall@dsep{#2},
 	exists sep/.code 2 args	= \def\exists@sep{#1}\def\exists@dsep{#2},
 	forall sep				= {,\ }{\quad},
 	exists sep				= {\ ;\ }{\enskip;\enskip},
 }
+
 \NewDocumentCommand\xforall{
 	s
 	t\M
 	t\p
-	u{\;}
-	E{\ona}{{,\ }} 
+	u{\;} 
 }{%
-	\ifig@indisplay
-		\forall #4 \forall@dsep
-	\else
-		\IfBooleanTF{#1}
-			{\forall #4 \forall@sep}
-			{
-				\text{%
-					\IfBooleanTF{#2}{Pour tou}{pour tou}%
-				 	\IfBooleanTF{#3}{s\ }{t\ }%
+	\mathchoice 
+		{\forall #4 \forall@dsep}
+		{
+			\IfBooleanTF{#1}
+				{\forall #4 \forall@sep}
+				{
+					\text{%
+						\IfBooleanTF{#2}{Pour tou}{pour tou}%
+			 			\IfBooleanTF{#3}{s\ }{t\ }%
+					}
+					#4 \text{,\ }
 				}
-				#4 \text{#5}
-			}
-	\fi
+		}{\text{\text{Hoho ! c'est trop sérré ici}}}{}
 }
-\NewDocumentCommand\xexists{
+\NewDocumentCommand\xexists{%
 	s
+	t!
 	t\M
+	t\f
 	u{\;}
-	E{\tq}{{ tel que }} 
+	%E{\tq}{{ tel que }}
 }{%
-	\ifig@indisplay
-		\exists #3 \exists@dsep
-	\else
-		\IfBooleanTF{#1}
-			{\forall #3 \forall@sep}
+	\mathchoice
+		{\exists \IfBooleanT{#2}{!} #5 \exists@dsep}
+		{\IfBooleanTF{#1}
+			{\exists \IfBooleanT{#2}{!} #5 \exists@sep}
 			{
-				\text{%
-					\IfBooleanTF{#2}{I}{i}l existe %
-				}
-				#3 \text{#4}
+				\text{\IfBooleanTF{#3}{I}{i}l existe\ }
+				#5 \IfBooleanT{#2}{\text{ unique }} \text{ tel\IfBooleanT{#4}{le} que\ }
 			}
-	\fi
+		}{\text{Hoho ! c'est trop sérré ici}}{}
 }
+
 
 %%% Fractions
 %%% originated from nicefrac.sty
 %%% tribute to  Axel Reichert
 
-\igsetmath[fractions]{%
+\cpgesetmath[fractions]{%
 	delimiter/.code 	= \def\xfrac@dlm{#1},
 	d/.style			= {delimiter = #1},
 	d/.default			=\prt,
 }
-\def\igmathset@frac{\igsetmath[fractions]}
-\newlength{\ig@RaiseD}
-\newlength{\ig@RaiseT}
-\newlength{\ig@RaiseS}
+\def\cpgemathset@frac{\cpgesetmath[fractions]}
+\newlength{\cpge@RaiseD}
+\newlength{\cpge@RaiseT}
+\newlength{\cpge@RaiseS}
 
 \def\cst@D{\displaystyle\def\cst@D{\cst@T}}
 \def\cst@T{\textstyle\def\cst@T{\cst@S}}
 \def\cst@S{\scriptstyle\def\cst@S{\cst@SS}}
 \def\cst@SS{\scriptscriptstyle}
-\def\just@netoken#1{\just@netoken@#1&\ig@nil}
-\def\just@netoken@#1#2\ig@nil{%
+\def\just@netoken#1{\just@netoken@#1&\cpge@nil}
+\def\just@netoken@#1#2\cpge@nil{%
 	\ifstrequal{#2}{&}
 		{\def\xfrac@dlm##1{##1}}
 		{}
@@ -2071,36 +2125,36 @@
 \def\xfrac@slash{\mkern-1mu/\mkern-1mu}
 \newcommand\xfrac@[3][]{%
 	%\delimiterfactor701%\relax\delimitershortfall2pt\relax
-	\igmathset@frac{#1}
-	\settoheight{\ig@RaiseD}
+	\cpgemathset@frac{#1}
+	\settoheight{\cpge@RaiseD}
 		{\ensuremath{\displaystyle M}}%
-	\settoheight{\ig@RaiseT}
+	\settoheight{\cpge@RaiseT}
 		{\ensuremath{\textstyle M}}%
-	\settoheight{\ig@RaiseS}
+	\settoheight{\cpge@RaiseS}
 		{\ensuremath{\scriptstyle M}}%
 	\settoheight{\@tempdima}
 		{\ensuremath{\scriptscriptstyle M}}%
-	\addtolength{\ig@RaiseD}
-		{-\ig@RaiseS}%
-	\addtolength{\ig@RaiseT}
-		{-\ig@RaiseS}%
-	\addtolength{\ig@RaiseS}
+	\addtolength{\cpge@RaiseD}
+		{-\cpge@RaiseS}%
+	\addtolength{\cpge@RaiseT}
+		{-\cpge@RaiseS}%
+	\addtolength{\cpge@RaiseS}
 		{-\@tempdima}%
 	\mathchoice
 		{\frac{#2}{#3}}%
-		{\raisebox{\ig@RaiseT}
+		{\raisebox{\cpge@RaiseT}
 			{%
 				$\m@th\cst@T\just@netoken{#2}
 				\xfrac@dlm{#2}\xfrac@slash$%
 			}%
 		}%
-		{\raisebox{\ig@RaiseS}
+		{\raisebox{\cpge@RaiseS}
 			{%
 				$\m@th\cst@S\just@netoken{#2}
 				\xfrac@dlm{#2}\xfrac@slash$%
 			}%
 		}%
-		{\raisebox{\ig@RaiseS}
+		{\raisebox{\cpge@RaiseS}
 			{%
 				$\m@th\cst@SS\just@netoken{#2}
 				\xfrac@dlm{#2}\xfrac@slash$%
@@ -2124,11 +2178,11 @@
 
 %% Some ideas borrowed from mathtools and physics.sty
 
-%%%for test needs, \prr defined ala mathtools 
-\AtBeginDocument{
-	\delimiterfactor701
-	\delimitershortfall-1sp
-}
+%%%for test needs, \prr defined a la mathtools 
+%\AtBeginDocument{
+%	\delimiterfactor701
+	%\delimitershortfall-1sp
+%}
 \DeclarePairedDelimiter\prr()
 
 %% Sub/Sup Stacking and Cramping
@@ -2175,25 +2229,26 @@
 	\crcr\egroup\egroup
 }
 \newcommand{\xcsubstack}[2][]{
-	\igsetmath[supsub]{#1}
+	\cpgesetmath[supsub]{#1}
 	\xsubarray{c}#2\endxsubarray
 }
 \newcommand{\xlsubstack}[2][]{
-	\igsetmath[supsub]{#1}
+	\cpgesetmath[supsub]{#1}
 	\xsubarray{l}#2\endxsubarray
 }
 \let\xnsubstack\fake@cmd
 \newcommand{\xscsubstack}[2][]{
-	\igsetmath[supsub]{#1}
+	\cpgesetmath[supsub]{#1}
 	\xssubarray{c}#2\endxssubarray
 }
 \newcommand{\xslsubstack}[2][]{
-	\igsetmath[supsub]{#1}
+	\cpgesetmath[supsub]{#1}
 	\xssubarray{l}#2\endxssubarray
 }
 \let\xsnsubstack\fake@cmd
 
-\igsetmath[supsub]{
+\cpgesetmath[supsub]{
+	.unknown/.code=\relax,
 	l/.code				= \def\lsp@s{l},
 	c/.code				= \def\lsp@s{c},
 	r/.code				= \def\lsp@s{r}, 
@@ -2207,6 +2262,7 @@
 	style/s/.style		= s
 	style/ss/.style		= ss,
 	style/empty/.code	= \let\ss@style\@empty,
+	style/empty,
 	lap/.code			= \ifcsdef{math#1lap}
 							{\letcs\ss@lap{math#1lap}}
 						   	{\let\ss@lap\mathnlap},
@@ -2236,6 +2292,9 @@
 	h/.code				= \def\cramp@h{#1mu},
 	t/.code				= \def\cramp@t{#1ex/10},
 	b/.code				= \def\cramp@b{#1ex/10},
+	h/.default		=3,
+	t/.default		=1,
+	b/.default		=1,
 	.save/.code			= \edef\h@backup{\cramp@h}
 						  \edef\b@backup{\cramp@b}
 						  \edef\t@backup{\cramp@t}
@@ -2249,14 +2308,14 @@
 						  \let\ss@lap\last@lap,
 	noadjust/.style		= {h=0,t=0,b=0},
 }
-\igsetmath[supsub]{%
+\cpgesetmath[supsub]{%
 	h=3,
 	t=2.5,
 	b=2.5,
 	.save,
 	lap=n,
 	stack=n,
-	limits=relax,
+	limits={},
 	style=empty
 }
 \let\ss@style\@empty
@@ -2274,21 +2333,20 @@
 	o 
 	E{_^}{{}{}}
 }{%
-	\IfValueT{#1}
-		{\igsetmath[supsub]{.save,#1}}%
+	\IfValueT{#1}{\cpgesetmath[supsub]{.save,#1}}%
 	\ifblank{#2}{}
 		{%
 			_{{}\raisemath{\cramp@b}
-				{\mkern-\cramp@h\ss@lap{\ss@smashb{\ss@stack{#2}}}}
+				{\mkern-\cramp@h\ss@lap{\ss@smashb{\ss@stack{\ss@style#2}}}}
 			}
 		}%
 	\ifblank{#3}{}
 		{%
 			^{{}\raisemath{-\cramp@t}
-				{\mkern-\cramp@h\ss@lap{\ss@smasht{\ss@stack{#3}}}}
+				{\mkern-\cramp@h\ss@lap{\ss@smasht{\ss@stack{\ss@style#3}}}}
 			}
 		}%
-	\IfValueT{#1}{\igsetmath[supsub]{.restore}}
+	\IfValueT{#1}{\cpgesetmath[supsub]{.restore}}
 }
 \NewDocumentCommand\fake@subsup{%
 	o 
@@ -2298,7 +2356,7 @@
 	\ifblank{#3}{}{^{#3}}
 }
 \def\x@subsup{\fake@subsup}
-\let\xss\xsubsup
+\def\xss{\xsubsup}
 
 %%% Pushing
 
@@ -2311,10 +2369,10 @@
 					{\dimexpr\temp@n em/18}
 			}
 		}
-		{\igsetmath[pushing]{#1}}
+		{\cpgesetmath[pushing]{#1}}
 	\@push%
 }
-\igsetmath[pushing]{
+\cpgesetmath[pushing]{
 	s/.code		= \def\@push{\endgroup\,},
 	-s/.code	= \def\@push{\endgroup\!},
 	m/.code		= \def\@push{\endgroup\:},
@@ -2347,7 +2405,7 @@
 		\aftergroup\dlm@aftergroup@
 	\fi
 	\ifnumgreater{#1}{4}{}{
-	\xdef\ig@tmpti{%
+	\xdef\cpge@tmpti{%
 		\def\@xp\@nx\csname 
 				dlm@\romannumeral\@tmpx @outsize%
 			\endcsname{#1}
@@ -2361,10 +2419,10 @@
 				dlm@\romannumeral\numexpr\@tmpx+3 @outsize%
 			\endcsname{\ifnumgreater{#1}{3}{#1-3}{0}}
 	}
-	\ig@tmpti
+	\cpge@tmpti
 }}
-\def\dlm@aftergroup@{\aftergroup\ig@tmpti}
-\igsetmath{%
+\def\dlm@aftergroup@{\aftergroup\cpge@tmpti}
+\cpgesetmath{%
 	max delim size/.code	= \set@dlmoutbigggg{#1},
 	mds/.style				={max delim size=#1}
 }
@@ -2373,37 +2431,41 @@
 \def\dlm@iii@outsize	{5}
 \def\dlm@iv@outsize		{5}
 \def\dlm@v@outsize		{5}
+% \es :  espace 
 % \sa :  la taille se propage à tous les délimiteurs de même niveau.
 % \sz :  effet valable pour le délimiteur suivant
 \NewDocumentCommand\dlm@PREPROCESS{
+	s
 	m
 	t\l
 	t\r
 	E{\es\sa\sz\br}{{@}{@}{@}{@}}
 }{%
 	\advance\dlm@count@\@ne
-	\def\dlmpr@c@{\dlmpr@c}
-	\IfBooleanT{#2}{\def\dlmpr@c@{\dlmpr@cl}}
-	\IfBooleanT{#3}{\def\dlmpr@c@{\dlmpr@cr}}
-	\ifstrequal{#7}{@}
+	\IfBooleanF{#1}{%
+		\def\dlmpr@c@{\dlmpr@c}%
+		\IfBooleanT{#3}{\def\dlmpr@c@{\dlmpr@cl}}%
+		\IfBooleanT{#4}{\def\dlmpr@c@{\dlmpr@cr}}%
+	}
+	\ifstrequal{#8}{@}
 		{\br@@kfalse}
 		{
-			\br@@ktrue
-			\ifblank{#7}
+			\br@@ktrue%
+			\ifblank{#8}
 				{\def\vert@br@@k{t}}
-				{\def\vert@br@@k{#7}}
-		}
-	\ifstrequal{#4}{@}{}
-		{\ifblank{#4}
+				{\def\vert@br@@k{#8}}%
+		}%
+	\ifstrequal{#5}{@}{}
+		{\ifblank{#5}
 			{\xpush{3}}
-			{\xpush{#4}}
-		}
+			{\xpush{#5}}%
+		}%
 	\begingroup%
-	\xifnumber{#5}{\set@dlmoutbigggg{#5}}{}
-	\xifnumber{#6}
-		{\set@dlmbig{#6}}
-		{\set@dlmbig{\csuse{dlm@\romannumeral\dlm@count@ @outsize}}}
-	#1%
+	\xifnumber{#6}{\set@dlmoutbigggg{#6}}{}%
+	\xifnumber{#7}
+		{\set@dlmbig{#7}}
+		{\set@dlmbig{\csuse{dlm@\romannumeral\dlm@count@ @outsize}}}%
+	#2%
 }
 
 %%%%%%%%%%%% Les réglages essentiels sont là %%%%%%%%%%
@@ -2724,7 +2786,8 @@
 \create@basic@delim{brk}[]
 \create@basic@delim{brc}\{\}
 \create@basic@delim{abs}||
-\create@basic@delim{nrm}\|\|
+\create@basic@delim{norm}\|\|
+\create@basic@delim{mnorm}\lVERT\rVERT
 \create@basic@delim{ang}\langle\rangle
 \create@basic@delim{flr}\lfloor\rfloor[floor]
 \create@basic@delim{cil}\lceil\rceil[ceil]
@@ -2754,24 +2817,24 @@
 	% #4 = backend command name without \
 	\def\N@D@C{\NewDocumentCommand#1{#2}}
 	\begingroup
-	\edef\ig@tempd{\endgroup
+	\edef\cpge@tempd{\endgroup
 		\expandonce\N@D@C{%
 			\begingroup\unexpanded{#3}\@xp\noexpand\csname#4\endcsname
 		}
 	}
-	\ig@tempd
+	\cpge@tempd
 }
 
 %%% ReNewDelim is used to have error messages with the cmd name.
-%%% To bad that xparse definitions are not patchable
+%%% Too bad that xparse definitions are not patchable
 \def\dlmpr@c{%
 	\@ifnextchar({\renew@delim()()\next@delim}
 	 {\@ifnextchar\{{\renew@delim\{\}\{\}\next@delim}
 	  {\@ifnextchar[{\renew@delim[][]\next@delim}
+	  {\@ifnextchar\lb{\renew@delim\lb\rb[]\next@delim}
 	   {\@ifnextchar|{\renew@delim||||\next@delim}
 	    {\@ifnextchar\|{\renew@delim\|\|\|\|\next@delim}
 	     {\@ifnextchar\lV{\renew@delim\lV\rV\lVert\rVert\next@delim}
-	      {\@ifnextchar<{\renew@delim<>\langle\rangle\next@delim}
 	       {\@ifnextchar\la{\renew@delim\la\ra\langle\rangle\next@delim}
 	        {\@ifnextchar\lf{\renew@delim\lf\rf\lfoor\rfloor\next@delim}
 	         {\@ifnextchar\lc{\renew@delim\lc\rc\lceil\rceil\next@delim}
@@ -2786,13 +2849,12 @@
 	   {\@ifnextchar|{\renew@fdelim||||\next@delim}
 	    {\@ifnextchar\|{\renew@fdelim\|\|\|\|\next@delim}
 	     {\@ifnextchar\lV{\renew@fdelim\lV\rV\lVert\rVert\next@delim}
-	      {\@ifnextchar<{\renew@fdelim<>\langle\rangle\next@delim}
 	       {\@ifnextchar\la{\renew@fdelim\la\ra\langle\rangle\next@delim}
 	        {\@ifnextchar\lf{\renew@fdelim\lf\rf\lfoor\rfloor\next@delim}
 	         {\@ifnextchar\lc{\renew@fdelim\lc\rc\lceil\rceil\next@delim}
 	          {\@ifnextchar\bgroup{\renew@normal@fdelim\next@delim}
 	           {\let\next@delim\dlm@dummy@\next@delim}
-	}}}}}}}}}}
+	}}}}}}}}}
 }
 \def\dlmpr@cl{%
 	\@ifnextchar({\renew@deliml((\next@delim}
@@ -2801,13 +2863,12 @@
 	   {\@ifnextchar|{\renew@deliml||\next@delim}
 	    {\@ifnextchar\|{\renew@deliml\|\|\next@delim}
 	     {\@ifnextchar\lV{\renew@deliml\lV\lVert\next@delim}
-	      {\@ifnextchar<{\renew@deliml<\langle\next@delim}
 	       {\@ifnextchar\la{\renew@deliml\la\langle\next@delim}
 	        {\@ifnextchar\lf{\renew@deliml\lf\lfoor\next@delim}
 	         {\@ifnextchar\lc{\renew@deliml\lc\lceil\next@delim}
 	          {\@ifnextchar\bgroup{\renew@normal@delim\next@delim}
 	           {\let\next@delim\dlm@dummy@\next@delim}
-	}}}}}}}}}}
+	}}}}}}}}}
 }
 \def\dlmpr@cr{%
 	\@ifnextchar({\renew@delimr((\next@delim}
@@ -2816,37 +2877,36 @@
 	   {\@ifnextchar|{\renew@delimr||\next@delim}
 	    {\@ifnextchar\|{\renew@delimr\|\|\next@delim}
 	     {\@ifnextchar\lV{\renew@delimr\lV\lVert\next@delim}
-	      {\@ifnextchar<{\renew@delimr<\langle\next@delim}
 	       {\@ifnextchar\la{\renew@delimr\la\langle\next@delim}
 	        {\@ifnextchar\lf{\renew@delimr\lf\lfoor\next@delim}
 	         {\@ifnextchar\lc{\renew@delimr\lc\lceil\next@delim}
 	          {\@ifnextchar\bgroup{\renew@normal@delim\next@delim}
 	           {\let\next@delim\dlm@dummy@\next@delim}
-	}}}}}}}}}}
+	}}}}}}}}}
 }
 \def\next@delim{%
 	\csname delim@\romannumeral\dlm@count@\endcsname
 }
 \NewDocumentCommand\AddProcDelim{mmmm}{
 	\begingroup
-	\edef\ig@tmpa{%
+	\edef\cpge@tmpa{%
 		\unexpanded{\@ifnextchar#1{\renew@delim#1#2#3#4\next@delim}}
 		 {\expandonce\dlmpr@c}
 	}
-	\@xp\gdef\@xp\dlmpr@c\@xp{\ig@tmpa}
+	\@xp\gdef\@xp\dlmpr@c\@xp{\cpge@tmpa}
 	\endgroup
 }
 \NewDocumentCommand\fAddProcDelim{mmmm}{
 	\begingroup
-	\edef\ig@tmpa{%
+	\edef\cpge@tmpa{%
 		\unexpanded{\@ifnextchar#1{\renew@fdelim#1#2#3#4\next@delim}}
 		 {\expandonce\dlm@fproc}
 	}
-	\@xp\gdef\@xp\dlm@fproc\@xp{\ig@tmpa}
+	\@xp\gdef\@xp\dlm@fproc\@xp{\cpge@tmpa}
 	\endgroup
 }
 \def\fdelim@{\dlm@PREPROCESS\dlm@fproc}
-\def\delim@{\dlm@PREPROCESS\dlmpr@c@}
+\def\delim@{\@ifstar{\dlm@PREPROCESS*\dlmpr@c@}{\dlm@PREPROCESS\dlmpr@c@}}
 \DeclareRobustCommand\delim{%
 	\begingroup
 	\def\dlm@last@arg{}
@@ -2855,19 +2915,19 @@
 }
 \DeclareRobustCommand\fulldelim[2][]{%
 	\begingroup
-	\xifnumber{#1}{\igsetmath{max delim size=#1}}{}
+	\xifnumber{#1}{\cpgesetmath{max delim size=#1}}{}
 	\noexpandarg\exploregroups
-	\StrSubstitute{#2}{(}{\delim(}[\ig@tmp]
-	\@xp\StrSubstitute\@xp{\ig@tmp}{[}{\delim[}[\ig@tmp]
-	\@xp\StrSubstitute\@xp{\ig@tmp}{\{}{\delim\{}[\ig@tmp]
-	\@xp\StrSubstitute\@xp{\ig@tmp}{\[}{[}[\ig@tmp]
-	\@xp\StrSubstitute\@xp{\ig@tmp}{\]}{]}[\ig@tmp]
-	\ig@tmp
+	\StrSubstitute{#2}{(}{\delim(}[\cpge@tmp]
+	\@xp\StrSubstitute\@xp{\cpge@tmp}{[}{\delim[}[\cpge@tmp]
+	\@xp\StrSubstitute\@xp{\cpge@tmp}{\{}{\delim\{}[\cpge@tmp]
+	\@xp\StrSubstitute\@xp{\cpge@tmp}{\[}{[}[\cpge@tmp]
+	\@xp\StrSubstitute\@xp{\cpge@tmp}{\]}{]}[\cpge@tmp]
+	\cpge@tmp
 	\endgroup
 }
 \DeclareRobustCommand\recdelim[2][]{%
 	\begingroup
-	\xifnumber{#1}{\igsetmath{max delim size=#1}}{}
+	\xifnumber{#1}{\cpgesetmath{max delim size=#1}}{}
 	\def\mid@lefthook{\delim}
 	\def\fake@subsup{\xsubsup}
 	\delim#2
@@ -2880,6 +2940,8 @@
 	\fdelim@
 }	
 %%%% méta-commandes utilisateur pour construire des macros  gèrant les délimiteurs
+%%%% 
+%% Cree un synonyme de \delim
 \def\dec@xdelim#1{%
 	% #1 = user name of the command to become a synonym of \delim 
 	\NewDocumentCommand#1{}{
@@ -2889,6 +2951,7 @@
 		\delim@
 	}
 }
+%% prend en charge des arguments avant et apres le contenu a delimiter dynamiquement 
 \def\xdec@xdelim#1#2#3{%
 	% #1 = user command name
 	% #2 = explicit left contents
@@ -2900,6 +2963,7 @@
 		#2\delim@
 	}
 }
+%%% Meme chose mais permet des specifier le traitement du contenu a delimiter 
 \def\Xdec@xdelim#1#2#3#4#5{%
 	% #1 = user command name
 	% #2 = xparse arg specs
@@ -2913,6 +2977,21 @@
 		 	{\def\dlm@mid@func####1{####1}}
 			{\def\dlm@mid@func####1{#4}}
 		 #3\delim@
+	}
+}
+\def\Xdec@xdelim@star#1#2#3#4#5{%
+	% #1 = user command name
+	% #2 = xparse arg specs
+	% #3 = left contents code
+	% #4 = mid contents code, ##1 represents the contents between the delimiters
+	% #5 = right contents code, 
+	\NewDocumentCommand#1{#2}{%
+		\begingroup
+		 \def\dlm@last@arg{#5}
+		 \ifblank{#4}
+		 	{\def\dlm@mid@func####1{####1}}
+			{\def\dlm@mid@func####1{#4}}
+		 #3\delim@*
 	}
 }
 \def\dec@delim#1#2#3{%
@@ -3019,7 +3098,7 @@
 				{\csuse{#1@double}\double@fencetrue\interv@}
 				{\csuse{#1@}\appto\inter@tok{#2}\interv@}
 		}{%
-			\igmath@err
+			\cpgemath@err
 				{\string\interv\space:\space
 				#1 n'est pas un délimiteur valide}
 				{}
@@ -3031,11 +3110,13 @@
 }	
 
 \XDeclareDelimiters*\xnorm{}{}\lVert{\ifblank{##1}{\,\cdot\,}{##1}}\rVert{}
-\XDeclareDelimiters*\xmnorm{}{}\lVvert{\ifblank{##1}{\,\cdot\,}{##1}}\rVvert{}
+\XDeclareDelimiters*\xmnorm{}{}\lVERT{\ifblank{##1}{\,\cdot\,}{##1}}\rVERT{}
 \XDeclareDelimiters*\ippc{}{\def\x@subsup{\xsubsup}}[{##1}]{}
 \XDeclareDelimiters*\class{E{^}{{}}}{\ClSymbol\ifblank{#1}{}{^{#1}}}({##1}){}
 
-\NewDocumentCommand\ens{}{\brc}
+\newcommand\ens{}
+\def\ens{\brc}
+
 \XDeclareDelimiters\xPr{e{_}}
 	{\IfValueTF{#1}{\opn{\PSymbol}_{#1}}{\opn{\PSymbol}}}
 	{##1}
@@ -3074,7 +3155,7 @@
 		}
 }
 \bigopind{k,n,p}
-\igsetmath{
+\cpgesetmath{
 	big operator indices/.code	= \bigopind{#1},
 	boi/.style					= {big operator indices={#1}}
 }
@@ -3107,9 +3188,14 @@
 
 \XDeclareBigOperator\xsum\sum
 \XDeclareBigOperator\xprod\prod
-\XDeclareBigOperator\xcup\bigcup
-\XDeclareBigOperator\xcap\bigcap
+\XDeclareBigOperator\xcup\bcpgecup
+\XDeclareBigOperator\xcap\bcpgecap
 \XDeclareBigOperator\xoplus\bigoplus
+\def\lsum{\sum\limits}
+\def\lprod{\prod\limits}
+\def\lcap{\bcpgecap\limits}
+\def\lcup{\bcpgecup\limits}
+\def\llim{\lim\limits}
 %%% Integrales 
 \newcommand\intvar[1]{%
 	\ifblank{#1}
@@ -3125,7 +3211,7 @@
 		}
 }
 \intvar{t,x,u}
-\igsetmath{
+\cpgesetmath{
 	integrale variables/.code	= \intvar{#1},
 	iv/.style					= {integrale variables={#1}}
 }
@@ -3155,6 +3241,56 @@
 	\csappto{dt\romannumeral\int@count}{\csgundef{dt\romannumeral\int@count}}
 }
 \XDeclareDelimiters\xintd{}{}{\xint ##1}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% cases %%%%%%%%%
+%%% emprunts à mathtools.sty
+\def\dsts@cases#1#2#3{
+	\vcenter{
+		\Let@ \chardef\dspbrk@context\@ne \restore@math@cr
+		\let  \math@cr@@\AMS@math@cr@@
+		\spread@equation
+		\ialign{
+			\;\strut@#1\hfil &\quad \strut@#2\hfil
+		  	\crcr
+				#3
+			\crcr}
+		\restorecolumn@
+		}
+}
+\def\cmd@cases{\dsts@cases{$\m@th\displaystyle##$}{$\m@th\displaystyle##$}}
+\Xdec@xdelim@star\xcases{s}{%
+	\IfBooleanT{#1}
+		{\def\cmd@cases{\dsts@cases{$\m@th####$}{$\m@th####$}}}
+	\def\dlmpr@c@{\dlmpr@cl}
+}{\cmd@cases{##1}}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Les matrices %%%%%%
+
+%% Emprunt des fonctions essentielles a mathtools.sty
+\MHInternalSyntaxOn
+	\def\n@matrix@in{\MT_matrix_begin:N}
+	\def\n@matrix@out{\MT_matrix_end:}
+	\def\s@matrix@in{\MT_smallmatrix_begin:N}
+	\def\s@matrix@out{\MT_smallmatrix_end:}
+\MHInternalSyntaxOff
+\def\matrix@in{\n@matrix@in}
+\def\matrix@out{\n@matrix@out}
+\XDeclareDelimiters\xmatrix
+	{
+		t\s 
+		E{\al}{c} 
+	}{%
+		\IfBooleanT{#1}{%
+			\def\matrix@in{\s@matrix@in}%
+			\def\matrix@out{\s@matrix@out}%
+		}%
+		\def\coeff@align{#2}%
+	}
+	{\@xp\matrix@in\coeff@align ##1 \matrix@out}
+	{}
+\NewDocumentEnvironment{Xmatrix}{b}{\xmatrix#1}{}
 %%%%%%%%% Petits opérateurs
 
 %%% les petites fonctions qui manquent en français
@@ -3174,8 +3310,10 @@
 \def\rg{\qopname\relax o{rg}}
 \def\sign{\qopname\relax o{sign}}
 \def\tr{\qopname\relax o{tr}}
+\def\val{\qopname\relax o{val}}
 \def\vect{\qopname\relax o{vect}}
-\def\Com{\qopname\relax o{Com}}
+\def\com{\qopname\relax o{Com}}
+\let\Com\com
 \def\id{\qopname\relax o{id}}
 \def\diag{\qopname\relax o{diag}}
 \def\Va{\qopname\relax o{\VSymbol}}
@@ -3250,11 +3388,11 @@
     tan,
     tanh,
     tr,
-    Com,
-    id
+	val 
 }
 \XDeclareMathOperator\xker{Ker}
 \XDeclareMathOperator\xim{Im}
+\XDeclareMathOperator\xcom{Com}
 \XDeclareMathOperator\xre{Re}
 \XDeclareMathOperator\xvect{Vect}
 \XDeclareMathOperator*\xpgcd{pgcd}
@@ -3283,21 +3421,21 @@
 }
 \NewDocumentCommand\func{s}{%
 	\IfBooleanTF{#1}
-		{\ig@func}
-		{\ig@Func}
+		{\cpge@func}
+		{\cpge@Func}
 }
-\def\ig@func#1#2#3{%
+\def\cpge@func#1#2#3{%
 	\@ifempty{#1}
 		{}
 		{#1\::\:}%
 	#2\longmapsto#3%
 }
-\def\ig@Func{%
+\def\cpge@Func{%
 	\@ifnextchar[
-		{\ig@Func@}
-		{\ig@Func@[rcl]}
+		{\cpge@Func@}
+		{\cpge@Func@[rcl]}
 }
-\def\ig@Func@[#1]#2#3#4#5#6{%
+\def\cpge@Func@[#1]#2#3#4#5#6{%
 	\begingroup%
 		\@ifempty{#2}
 			{\def\ar@opt{c}}
@@ -3309,9 +3447,9 @@
 	\endgroup
 }
 \NewDocumentCommand\funcalt{O{rcl}}{%
-	\ig@funcalt[#1]
+	\cpge@funcalt[#1]
 }
-\def\ig@funcalt[#1]#2#3#4#5#6{%
+\def\cpge@funcalt[#1]#2#3#4#5#6{%
 	\begingroup%
 		\@ifempty{#2}
 			{}
@@ -3324,61 +3462,61 @@
 }	
 %%%%% Dérivation
 
-%%%%% Code from igmath.sty
+%%%%% Code from diffcoef.sty
 %%%%% tribute to Andrew Parsloe
 \ExplSyntaxOn
-\tl_const:Nn \c__igmath_digits_tl { 1234567890 }
-\seq_new:N \l__igmath_orders_seq
-\seq_new:N \l__igmath_vars_seq
-\seq_new:N \l__igmath_denom_seq
-\seq_new:N \l__igmath_paren_seq
-\prop_new:N \l__igmath_vars_prop
-\int_new:N \l__igmath_curr_tok_int
-\int_new:N \l__igmath_curr_state_int
-\int_new:N \l__igmath_nos_int
-\int_new:N \l__igmath_parenvar_int
+\tl_const:Nn \c__cpgemath_digits_tl { 1234567890 }
+\seq_new:N \l__cpgemath_orders_seq
+\seq_new:N \l__cpgemath_vars_seq
+\seq_new:N \l__cpgemath_denom_seq
+\seq_new:N \l__cpgemath_paren_seq
+\prop_new:N \l__cpgemath_vars_prop
+\int_new:N \l__cpgemath_curr_tok_int
+\int_new:N \l__cpgemath_curr_state_int
+\int_new:N \l__cpgemath_nos_int
+\int_new:N \l__cpgemath_parenvar_int
 
-\msg_new:nnn { igmath } { order-specification } 
+\msg_new:nnn { cpgemath } { order-specification } 
   {
     \iow_newline:
     charactère~#3~suivi~de~#2~dans~les~spécifications~des~ordres
     ~[#1]~\msg_line_context:.~
-    igmath~ne~peut~pas~calculer~l'ordre~total~dans~ce~cas.
+    cpgemath~ne~peut~pas~calculer~l'ordre~total~dans~ce~cas.
   }
 
 %%%%
-\cs_new:Npn \__igmath_calc_tot_order:NN #1 #2
+\cs_new:Npn \__cpgemath_calc_tot_order:NN #1 #2
   {
-    \tl_clear:N \l__igmath_nos_tl
-    \exp_args:Nx\__igmath_digest_expr:n { \seq_use:Nn #1 { + } }
-    \prop_if_empty:NTF \l__igmath_vars_prop
-      { \tl_set:NV #2 \l__igmath_nos_tl }
-      { \__igmath_evaluate:NN \l__igmath_vars_prop #2 }
+    \tl_clear:N \l__cpgemath_nos_tl
+    \exp_args:Nx\__cpgemath_digest_expr:n { \seq_use:Nn #1 { + } }
+    \prop_if_empty:NTF \l__cpgemath_vars_prop
+      { \tl_set:NV #2 \l__cpgemath_nos_tl }
+      { \__cpgemath_evaluate:NN \l__cpgemath_vars_prop #2 }
   }
 %%%%%
-\cs_new:Npn \__igmath_digest_expr:n #1
+\cs_new:Npn \__cpgemath_digest_expr:n #1
   {
-    \tl_set:Nn \l__igmath_curr_num_tl { + }
-    \tl_set:Nn \l__igmath_paren_tl { +1 }
-    \tl_set:Nn \l__igmath_nos_tl { 0 }
-    \int_zero:N \l__igmath_curr_state_int
-    \int_zero:N \l__igmath_curr_tok_int
+    \tl_set:Nn \l__cpgemath_curr_num_tl { + }
+    \tl_set:Nn \l__cpgemath_paren_tl { +1 }
+    \tl_set:Nn \l__cpgemath_nos_tl { 0 }
+    \int_zero:N \l__cpgemath_curr_state_int
+    \int_zero:N \l__cpgemath_curr_tok_int
     \tl_map_inline:nn { #1+ }
       { 
-        \__igmath_get_curr_ndx:nN { ##1 } \l__igmath_curr_tok_int
-        \__igmath_transitions:nNN { ##1 } 
-            \l__igmath_curr_state_int \l__igmath_curr_tok_int 
+        \__cpgemath_get_curr_ndx:nN { ##1 } \l__cpgemath_curr_tok_int
+        \__cpgemath_transitions:nNN { ##1 } 
+            \l__cpgemath_curr_state_int \l__cpgemath_curr_tok_int 
       }
-    \int_set:Nn \l__igmath_nos_int { \l__igmath_nos_tl }
-    \tl_set:Nx \l__igmath_nos_tl { \int_use:N \l__igmath_nos_int }
-    \int_compare:nNnT { \l__igmath_nos_int } = { 0 }
-      { \tl_clear:N \l__igmath_nos_tl }
+    \int_set:Nn \l__cpgemath_nos_int { \l__cpgemath_nos_tl }
+    \tl_set:Nx \l__cpgemath_nos_tl { \int_use:N \l__cpgemath_nos_int }
+    \int_compare:nNnT { \l__cpgemath_nos_int } = { 0 }
+      { \tl_clear:N \l__cpgemath_nos_tl }
   }
 % #1 curr tok (tl); #2 <== curr tok ndx (int)
 %%%%%%%
-\cs_new_protected:Npn \__igmath_get_curr_ndx:nN #1#2
+\cs_new_protected:Npn \__cpgemath_get_curr_ndx:nN #1#2
   { 
-    \tl_if_in:NnTF \c__igmath_digits_tl { #1 }
+    \tl_if_in:NnTF \c__cpgemath_digits_tl { #1 }
       { \int_set:Nn #2 { 1 } } % digit
       { 
         \str_case:nnF { #1 }
@@ -3393,45 +3531,45 @@
   }
 % #1(tl) curr tok; #2(int) curr state; #3(int) curr tok ndx
 %%%%%%%%
-\cs_new:Npn \__igmath_transitions:nNN #1#2#3
+\cs_new:Npn \__cpgemath_transitions:nNN #1#2#3
   { 
     \int_case:nn { #2 }
       { 
         { 0 } % sgn + -
-          { \__igmath_sgn_transitions:nNN { #1 }#2#3 }
+          { \__cpgemath_sgn_transitions:nNN { #1 }#2#3 }
         { 1 } % num 
-          { \__igmath_num_transitions:nNN { #1 }#2#3 }
+          { \__cpgemath_num_transitions:nNN { #1 }#2#3 }
         { 2 } % alg
-          { \__igmath_alg_transitions:nNN { #1 }#2#3 }
+          { \__cpgemath_alg_transitions:nNN { #1 }#2#3 }
         { 4 } % )
-          { \__igmath_rpar_transitions:nNN { #1 }#2#3 }
+          { \__cpgemath_rpar_transitions:nNN { #1 }#2#3 }
       }
   }
 % transitions from the signed state
 % #1(tl) curr tok; #2(int) 0, curr state; #3 curr tok ndx
 %%%%%%
-\cs_new_protected:Npn \__igmath_sgn_transitions:nNN #1#2#3
+\cs_new_protected:Npn \__cpgemath_sgn_transitions:nNN #1#2#3
   {
     \int_case:nnT { #3 }
       {
         { 0 } % tok = s
           {
-            \tl_if_eq:nVTF { #1 } \l__igmath_curr_num_tl
-              { \tl_set:Nn \l__igmath_curr_num_tl { + } }
-              { \tl_set:Nn \l__igmath_curr_num_tl { - } }
+            \tl_if_eq:nVTF { #1 } \l__cpgemath_curr_num_tl
+              { \tl_set:Nn \l__cpgemath_curr_num_tl { + } }
+              { \tl_set:Nn \l__cpgemath_curr_num_tl { - } }
           }
         { 1 } % tok = d
-          { \tl_put_right:Nn \l__igmath_curr_num_tl { #1 } }
+          { \tl_put_right:Nn \l__cpgemath_curr_num_tl { #1 } }
         { 2 } % tok = v
           {
-            \tl_put_right:Nn \l__igmath_curr_num_tl { 1 }
-            \tl_set:Nn \l__igmath_curr_var_tl { #1 }
+            \tl_put_right:Nn \l__cpgemath_curr_num_tl { 1 }
+            \tl_set:Nn \l__cpgemath_curr_var_tl { #1 }
           }
         { 3 } % tok = (
           {
-            \seq_push:NV \l__igmath_paren_seq \l__igmath_paren_tl
-            \tl_put_left:NV \l__igmath_paren_tl \l__igmath_curr_num_tl
-            \tl_set:Nn \l__igmath_curr_num_tl { + }
+            \seq_push:NV \l__cpgemath_paren_seq \l__cpgemath_paren_tl
+            \tl_put_left:NV \l__cpgemath_paren_tl \l__cpgemath_curr_num_tl
+            \tl_set:Nn \l__cpgemath_curr_num_tl { + }
             \int_set:Nn #3 { 0 }
           }
       }
@@ -3440,40 +3578,40 @@
 % transitions from the numeric state
 % #1 = curr. tok.; #2 = 0, curr. state; #3 curr. tok. index
 %%%%%%%%
-\cs_new_protected:Npn \__igmath_num_transitions:nNN #1#2#3
+\cs_new_protected:Npn \__cpgemath_num_transitions:nNN #1#2#3
   {
     \int_case:nnT { #3 }
       {
         { 0 } % tok = s
           {
-            \tl_put_right:NV\l__igmath_nos_tl 
-              { \l__igmath_paren_tl * \l__igmath_curr_num_tl }
-            \tl_set:Nn \l__igmath_curr_num_tl { #1 } 
+            \tl_put_right:NV\l__cpgemath_nos_tl 
+              { \l__cpgemath_paren_tl * \l__cpgemath_curr_num_tl }
+            \tl_set:Nn \l__cpgemath_curr_num_tl { #1 } 
           }
         { 1 } % tok = d
-          { \tl_put_right:Nn \l__igmath_curr_num_tl { #1 } }
+          { \tl_put_right:Nn \l__cpgemath_curr_num_tl { #1 } }
         { 2 } % tok = v
           {
             \tl_if_in:nnTF { ^ \times * / \div } { #1 }
               {
-                \msg_error:nnxxx { igmath } { order-specification } 
-                { \seq_use:Nn \l__igmath_orders_seq { , } } 
+                \msg_error:nnxxx { cpgemath } { order-specification } 
+                { \seq_use:Nn \l__cpgemath_orders_seq { , } } 
                 { #1 } { number }
               }
-              { \tl_set:Nn \l__igmath_curr_var_tl { #1 } }
+              { \tl_set:Nn \l__cpgemath_curr_var_tl { #1 } }
           }
         { 3 } % tok = (
           { 
-            \seq_push:NV \l__igmath_paren_seq \l__igmath_paren_tl
-            \tl_put_left:Nn \l__igmath_paren_tl { * }
-            \tl_put_left:NV \l__igmath_paren_tl \l__igmath_curr_num_tl
-             \tl_set:Nn \l__igmath_curr_num_tl { + }
+            \seq_push:NV \l__cpgemath_paren_seq \l__cpgemath_paren_tl
+            \tl_put_left:Nn \l__cpgemath_paren_tl { * }
+            \tl_put_left:NV \l__cpgemath_paren_tl \l__cpgemath_curr_num_tl
+             \tl_set:Nn \l__cpgemath_curr_num_tl { + }
             \int_set:Nn #3 { 0 } 
           }
         { 4 } % tok = )
           {
-            \tl_put_right:NV \l__igmath_nos_tl 
-                { \l__igmath_paren_tl * \l__igmath_curr_num_tl }
+            \tl_put_right:NV \l__cpgemath_nos_tl 
+                { \l__cpgemath_paren_tl * \l__cpgemath_curr_num_tl }
           }
       }
       { 
@@ -3482,49 +3620,49 @@
 % transitions from the algebraic state
 % #1 = curr. tok.; #2 = 2, curr. state; #3 curr. tok. index
 %%%%%%%%%
-\cs_new:Npn \__igmath_alg_transitions:nNN #1#2#3
+\cs_new:Npn \__cpgemath_alg_transitions:nNN #1#2#3
   { 
     \int_case:nnT { #3 }
       {
         { 0 } % tok = s
           { 
-            \int_compare:nNnTF { \l__igmath_parenvar_int } = { 0 }
+            \int_compare:nNnTF { \l__cpgemath_parenvar_int } = { 0 }
               {
-                \__igmath_store_var:NNN \l__igmath_curr_var_tl
-                    \l__igmath_paren_tl \l__igmath_curr_num_tl
-                \tl_clear:N \l__igmath_curr_var_tl
-                \tl_set:Nn \l__igmath_curr_num_tl { #1 }
+                \__cpgemath_store_var:NNN \l__cpgemath_curr_var_tl
+                    \l__cpgemath_paren_tl \l__cpgemath_curr_num_tl
+                \tl_clear:N \l__cpgemath_curr_var_tl
+                \tl_set:Nn \l__cpgemath_curr_num_tl { #1 }
               }
               {
-                \tl_put_right:Nn \l__igmath_curr_var_tl { #1 }
+                \tl_put_right:Nn \l__cpgemath_curr_var_tl { #1 }
                 \int_set:Nn #3 { 2 }
               }
           }
         { 1 } % tok = d
           { 
-            \tl_put_right:Nn \l__igmath_curr_var_tl { #1 } 
+            \tl_put_right:Nn \l__cpgemath_curr_var_tl { #1 } 
             \int_set:Nn #3 { 2 }
           }
         { 2 } % tok = v
-          { \tl_put_right:Nn \l__igmath_curr_var_tl { #1 } }
+          { \tl_put_right:Nn \l__cpgemath_curr_var_tl { #1 } }
         { 3 } % tok = (
           {
-            \tl_put_right:Nn \l__igmath_curr_var_tl { #1 }
+            \tl_put_right:Nn \l__cpgemath_curr_var_tl { #1 }
             \int_set:Nn #3 { 2 }
-            \int_incr:N \l__igmath_parenvar_int
+            \int_incr:N \l__cpgemath_parenvar_int
           }
         { 4 } % tok = )
           {
-            \int_compare:nNnTF { \l__igmath_parenvar_int } = { 0 }
+            \int_compare:nNnTF { \l__cpgemath_parenvar_int } = { 0 }
               {
-                \__igmath_store_var:NNN \l__igmath_curr_var_tl
-                    \l__igmath_paren_tl \l__igmath_curr_num_tl
-                \tl_clear:N \l__igmath_curr_var_tl
+                \__cpgemath_store_var:NNN \l__cpgemath_curr_var_tl
+                    \l__cpgemath_paren_tl \l__cpgemath_curr_num_tl
+                \tl_clear:N \l__cpgemath_curr_var_tl
               }
               {
-                \tl_put_right:Nn \l__igmath_curr_var_tl { #1 }
+                \tl_put_right:Nn \l__cpgemath_curr_var_tl { #1 }
                 \int_set:Nn #3 { 2 }
-                \int_decr:N \l__igmath_parenvar_int
+                \int_decr:N \l__cpgemath_parenvar_int
               }
           }
       }
@@ -3533,30 +3671,30 @@
 % transitions from the ) state
 % #1 = curr. tok.; #2 = 4, curr. state; #3 curr. tok. index
 %%%%%%%%%%%
-\cs_new:Npn \__igmath_rpar_transitions:nNN #1#2#3
+\cs_new:Npn \__cpgemath_rpar_transitions:nNN #1#2#3
   {
     \int_compare:nNnTF { \int_mod:nn { #3 } { 4} } = { 0 }
       { 
-        \tl_set:Nn \l__igmath_curr_num_tl { #1 }
-        \seq_pop:NN \l__igmath_paren_seq \l__igmath_paren_tl
+        \tl_set:Nn \l__cpgemath_curr_num_tl { #1 }
+        \seq_pop:NN \l__cpgemath_paren_seq \l__cpgemath_paren_tl
         \int_set_eq:NN #2 #3
       }
       {
-        \msg_error:nnxxx { igmath } { order-specification } 
-            { \seq_use:Nn \l__igmath_orders_seq { , } } { #1 } { ) }
+        \msg_error:nnxxx { cpgemath } { order-specification } 
+            { \seq_use:Nn \l__cpgemath_orders_seq { , } } { #1 } { ) }
       }
   }
 % #1 is var. (tlvar); #2 is num. (tlvar); #3 num. coeff. (tlvar)
-\cs_new:Npn \__igmath_store_var:NNN #1#2#3
+\cs_new:Npn \__cpgemath_store_var:NNN #1#2#3
   {
-    \prop_get:NVNF \l__igmath_vars_prop #1 \l_tmpa_tl
+    \prop_get:NVNF \l__cpgemath_vars_prop #1 \l_tmpa_tl
       { \tl_clear:N \l_tmpa_tl }
     \tl_put_right:NV \l_tmpa_tl { #2 * #3 }
-    \prop_put:NVV \l__igmath_vars_prop #1 \l_tmpa_tl
+    \prop_put:NVV \l__cpgemath_vars_prop #1 \l_tmpa_tl
   }
 % #1 (propv) key=var, val=coeff; #2 <= total order
 %%%%%%
-\cs_new_protected:Npn \__igmath_evaluate:NN #1#2
+\cs_new_protected:Npn \__cpgemath_evaluate:NN #1#2
   {
     \prop_map_inline:Nn #1 { \seq_put_left:Nn \l_tmpa_seq { ##1 } }
     \seq_sort:Nn \l_tmpa_seq
@@ -3571,23 +3709,23 @@
        }
     \tl_clear:N \l_tmpa_tl
     \seq_mapthread_function:NNN \l_tmpa_seq \l_tmpb_seq 
-        \__igmath_tot_order:nn
+        \__cpgemath_tot_order:nn
     \exp_args:NV \tl_if_head_eq_charcode:nNTF \l_tmpa_tl +
       { 
         \tl_set:Nx \l_tmpb_tl { \tl_tail:N \l_tmpa_tl }
-        \int_compare:nNnT { \l__igmath_nos_int } > { 0 }
-          { \tl_put_left:Nn \l__igmath_nos_tl { + } }
-         \tl_concat:NNN #2 \l_tmpb_tl \l__igmath_nos_tl
+        \int_compare:nNnT { \l__cpgemath_nos_int } > { 0 }
+          { \tl_put_left:Nn \l__cpgemath_nos_tl { + } }
+         \tl_concat:NNN #2 \l_tmpb_tl \l__cpgemath_nos_tl
       }
       { 
-        \int_compare:nNnTF { \l__igmath_nos_int } > { 0 }
-          { \tl_concat:NNN #2 \l__igmath_nos_tl \l_tmpa_tl }
-          { \tl_concat:NNN #2 \l_tmpa_tl \l__igmath_nos_tl }
+        \int_compare:nNnTF { \l__cpgemath_nos_int } > { 0 }
+          { \tl_concat:NNN #2 \l__cpgemath_nos_tl \l_tmpa_tl }
+          { \tl_concat:NNN #2 \l_tmpa_tl \l__cpgemath_nos_tl }
       }
     \tl_set_rescan:Nno #2 { } #2
   }
 %%%%%%
-\cs_new:Npn \__igmath_tot_order:nn #1#2
+\cs_new:Npn \__cpgemath_tot_order:nn #1#2
   { 
     \int_compare:nNnTF { #2 } > { 0 }
       { 
@@ -3607,35 +3745,35 @@
 
 \NewDocumentCommand\calc@totorder{ mm }
 	{
-		\seq_set_from_clist:Nn \l__igmath_orders_seq { #2 }
-		\__igmath_calc_tot_order:NN  \l__igmath_orders_seq #1
+		\seq_set_from_clist:Nn \l__cpgemath_orders_seq { #2 }
+		\__cpgemath_calc_tot_order:NN  \l__cpgemath_orders_seq #1
 	}
 
 \ExplSyntaxOff
 
 \def\get@arg#1^{#1}
-\def\get@var#1{\get@var@#1^\ig@nil}
+\def\get@var#1{\get@var@#1^\cpge@nil}
 \let\der@var\@empty
 \let\order@csv\@empty
-\def\get@var@#1^#2\ig@nil{%
+\def\get@var@#1^#2\cpge@nil{%
 	\ifblank{#2}
 		{%
-			\def\ig@tmpo{1}
+			\def\cpge@tmpo{1}
 			\appto\order@csv{, 1}
 			\eappto\der@var{\@nx\diff@sym #1}
 		}{%
-			\edef\ig@tmpo{\get@arg #2}
-			\eappto\order@csv{, \ig@tmpo}
-			\eappto\der@var{\@nx\diff@sym #1\@nx\xsubsup[h=0,t=0]^{\ig@tmpo}}
+			\edef\cpge@tmpo{\get@arg #2}
+			\eappto\order@csv{, \cpge@tmpo}
+			\eappto\der@var{\@nx\diff@sym #1\@nx\xsubsup[h=0,t=0]^{\cpge@tmpo}}
 		}
 }
 \XDeclareDelimiters\xder{s e{\or\vl} mm }
 	{%	
 		\def\diff@sym{\dSymbol}
 		\get@var{#5}
-		\ifdefstring{\ig@tmpo}{1}
+		\ifdefstring{\cpge@tmpo}{1}
 			{\def\der@func{\diff@sym #4}}
-			{\def\der@func{\diff@sym\xsubsup[h=-2]^{\ig@tmpo}#4}}
+			{\def\der@func{\diff@sym\xsubsup[h=-2]^{\cpge@tmpo}#4}}
 		\def\der@frac{%
 			\IfBooleanTF{#1}
 				{\xfrac*{\der@func}{\der@var}}
@@ -3654,11 +3792,11 @@
 		\let\order@csv\@empty
 		\def\diff@sym{\partial}
 		\forcsvlist\get@var{#5}
-		\@xp\calc@totorder\@xp\ig@tmpo\@xp{\order@csv}
-		\IfValueT{#2}{\def\ig@tmpo{#2}}
-		\ifdefstring{\ig@tmpo}{1}
+		\@xp\calc@totorder\@xp\cpge@tmpo\@xp{\order@csv}
+		\IfValueT{#2}{\def\cpge@tmpo{#2}}
+		\ifdefstring{\cpge@tmpo}{1}
 			{\def\der@func{\diff@sym #4}}
-			{\def\der@func{\diff@sym\xsubsup[h=-2,t=0]^{\ig@tmpo}#4}}
+			{\def\der@func{\diff@sym\xsubsup[h=-2,t=0]^{\cpge@tmpo}#4}}
 		\def\der@frac{%
 			\IfBooleanTF{#1}
 				{\xfrac*{\der@func}{\der@var}}
@@ -3694,10 +3832,9 @@
 
 %% Probas
 \def\lrfloor#1{\lfloor#1\rfloor}
-\def\bfone#1{\mathbf 1_{#1}}
-\def\PP{\OPN{\mathbf P}}
-\def\EE{\OPN{\mathbf E}}
-\def\vad{{\scshape vad}}
+\def\PP{\OPN{\PSymbol}}
+\def\EE{\OPN{\ESymbol}}
+\def\VV{\OPN{\VSymbol}}
 \def\tsprod{\mathop{\mathchar"1351}}
 \def\tssum{\mathop{\mathchar"1350}}
 
@@ -3705,8 +3842,8 @@
 \def\sgpe#1{\langle #1\rangle}
 \def\ntr#1#2{\mathbf{#1}_{#2}}
 \let\xtor\texorpdfstring
-\def\divise{\,|\,}
-\def\nodivise{\,\nmid\,}
+\let\divise\mid
+\let\nodivise\nmid
 \def\modulo#1#2#3{#1\equiv#2\quad[#3]}
 \makeatletter
 \def\OV{\@ifnextchar[\OVC\OVN}
@@ -3716,35 +3853,6 @@
 \def\sign{\OPN{sign}}
 \def\downeq{\underset{\smash{\downarrow}}=}
 \def\upeq{\overset{\smash{\uparrow}}=}
-
-%% algebra lineaire
-%\newcommand\Pmatrix[1]{\begin{pmatrix}#1\end{pmatrix}}
-%\newcommand\VMatrix[1]{\begin{vmatrix}#1\end{vmatrix}}
-%\newcommand\Chi{\raisebox{.4ex}{$\chi$}}
-%\def\ker{\OPN{Ker}}
-%\def\card{\OPN{Card}}
-%\def\im{\OPN{Im}}
-%\def\re{\OPN{Re}}
-%\def\rg{\OPN{rg}}
-%\def\vect{\OPN{Vect}}
-%\def\tr{\OPN{Tr}}
-%\def\Com{\OPN{Com}}
-%\def\codim{\OPN{codim}}
-%\def\diag{\OPN{diag}}
-%\def\id{\OPN{id}}
-%\def\grad{\OPN{grad}}
-%\let\Det\det
-%\def\det{\Det\nolimits}
-%\def\vap{\emph{va.p.}}
-%\def\vep{\emph{ve.p.}}
-%\def\sev{\emph{sev}}
-%\def\sevp{\emph{sev.p.}}
-%\newcommand\base[1][B]{\mathcal #1}
-%\newcommand\Mn[2][\K]{\mathcal M_{#2}(#1)}
-%\newcommand\GL[2][\K]{\OPN{GL}_{#2}(#1)}
-%\newcommand\LE[1][E]{\mathcal L(#1)}
-
-
 
 %% ensembles
 \newcommand\ic[1]{\left[\,#1\,]}
@@ -3761,14 +3869,14 @@
 \let\ts\textstyle
 \let\leq\leqslant
 \let\geq\geqslant
-\def\setminus{\!\smallsetminus\!}
+\def\setminus{\mathbin{\smallsetminus}}
 \let\ssi\Longleftrightarrow
 \let\lra\longrightarrow
 \let\Lra\Longrightarrow
 \let\Llra\Longleftrightarrow
 \let\cqfd\qed
 \let\nom\textsc
-\newcommand{\hp}{\textcolor{black!75}{\scriptsize\scshape (H.P.)}}
+
 
 %%% raccourcis pour environnements usuels 
 \newcommand\be{\begin{questions}}
@@ -3793,6 +3901,19 @@
 	\fi
 }
 \newcommand\Mn[2][\K]{\mathcal M_{#2}(#1)}
+\NewDocumentCommand\MN{E{_}{\dimSymbol}D(){\corpsSymbol}}{%
+	\OPN{\mathcal M}_{#1}(#2)%
+}
+\NewDocumentCommand\GL{E{_}{\dimSymbol} D(){\corpsSymbol}}{%
+	\OPN{GL}_{#1}(#2)%
+}
+\def\map@mathcal#1#2{%
+	\ifblank{#2}{\mathcal #1}{\mathcal #1,\mathcal #2}%
+}
+\NewDocumentCommand\MAT{>{\SplitList{,}}E{_}{B} D(){u}}{%
+	\OPN{Mat}_{\map@mathcal #1}(#2)%
+}
+
 \def\Pmatrix#1{\begin{pmatrix}#1\end{pmatrix}}
 %% fonction
 %\newcommand{\fct}[4]{\begin{array}[t]{rcl}

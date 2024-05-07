@@ -2,7 +2,7 @@
 %% Adaption de subfile.cls
 %% Tribute to Federico Garcia
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{igsubdoc}[2023/11/25 v0.1alpha Multi-file projects (class)]
+\ProvidesClass{cpgesub}[2023/11/25 v0.1alpha Multi-file projects (class)]
 \RequirePackage{pgfopts}
 \RequirePackage{etoolbox}
 
@@ -53,25 +53,25 @@
 	hint*/.default=true, 
 	cours/.code={%
 		\courstrue
-		\ifundef{\ig@class}{\def\ig@class{book}}{}
+		\ifundef{\cpge@class}{\def\cpge@class{book}}{}
 	},
 	serie/.code={%
 		\serietrue
-		\ifundef{\ig@class}{\def\ig@class{article}}{}
+		\ifundef{\cpge@class}{\def\cpge@class{article}}{}
 	},
 	soutien/.code={
 		\soutientrue\courstrue
-		\def\ig@class{article}
+		\def\cpge@class{article}
 	},
 	article/.code={
-		\def\ig@class{article}
+		\def\cpge@class{article}
 	},
 	report/.code={
-		\def\ig@class{report}
+		\def\cpge@class{report}
 	},
 	book/.code={
 		\unless\ifsoutien
-			\def\ig@class{book}
+			\def\cpge@class{book}
 		\fi
 	},
 	.unknown/.code={
@@ -82,7 +82,7 @@
     	\def\preamble@file{#1}
  	},
 	web/.code=\compacttrue\webtrue\def\convert@options{}
-		\def\igcomment@list{quiz,notations,#1},
+		\def\cpgecomment@list{quiz,notations,#1},
  	web/.default={},
 	singleimage/.is if=singleimage,	
 }
@@ -95,22 +95,22 @@
 \ProcessPgfOptions{/IGSD}
 \subdoctrue
 \let\@classoptionslist\relax
-\def\igdoc@shipoutsolutions{%
+\def\cpgedoc@shipoutsolutions{%
 	\ifdraft\else
-		\edef\ig@tmpe{\the\toks@prv}
+		\edef\cpge@tmpe{\the\toks@prv}
 			\ifproof
-				\ifdefvoid\ig@tmpe{}{\typeoutdemonstrations}
+				\ifdefvoid\cpge@tmpe{}{\typeoutdemonstrations}
 			\fi
-		\edef\ig@tmpe{\the\toks@sol}
+		\edef\cpge@tmpe{\the\toks@sol}
 			\ifsolution
-				\ifdefvoid\ig@tmpe{}{\typeoutsolutions}
+				\ifdefvoid\cpge@tmpe{}{\typeoutsolutions}
 			\fi
 	\fi%
 }
 \RequirePackage{import}
-\let\igsubdoc@documentclass\documentclass
+\let\cpgesub@documentclass\documentclass
 \def\documentclass{%
-  \let\documentclass\igsubdoc@documentclass
+  \let\documentclass\cpgesub@documentclass
   \LoadClass
 }
 \filename@parse{\preamble@file}
@@ -122,10 +122,10 @@
 }
 
 \AtEndDocument{
-	\ifdefstring\igcurrentclass{igdoc}
-		{\igdoc@shipoutsolutions}{}
-	\ifdefstring\igcurrentclass{igddev}{}{\straighttrue}
+	\ifdefstring\cpgecurrentclass{cpgedoc}
+		{\cpgedoc@shipoutsolutions}{}
+	\ifdefstring\cpgecurrentclass{cpgedev}{}{\straighttrue}
 }
 \endinput
 %%
-%% End of file `igsubdoc.cls'.
+%% End of file `cpgesub.cls'.

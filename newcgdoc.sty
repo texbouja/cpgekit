@@ -1,16 +1,19 @@
 %%% Jeu de couleurs du theme
 
 %%% Colors 
-\definecolor{igblue}{HTML}{373A73}
-\definecolor{igaltblue}{HTML}{007AFF}
+\definecolor{cpgeblue}{HTML}{373A73}
+\definecolor{cpgealtblue}{HTML}{007AFF}
 \definecolor{iggreen}{HTML}{8CBA30}
 \definecolor{stcol}{HTML}{D68A36}
+\definecolor{cpgeblack}{HTML}{202736}
 
 
-\igset[colors]{    
+\cpgeset[colors]{    
     warm={iggreen!85!black}{iggreen},
-    cold={igblue}{igaltblue},
+    cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!66!black}{CornflowerBlue},
+	page={white}{cpgeblack},
+	bg={white}{cpgeblack},
 	tcbtext=fgcol,
 	tcbframe=warmcol,
 	tcbback=bgcol,
@@ -19,7 +22,7 @@
 }
 \def\TitlingFont{\sffamily\scshape\lsstyle}
 \usetikzlibrary{shapes.misc}
-\igset{simple deco={%
+\cpgeset{simple deco={%
 	\shorthandoff{;}%
 	\tikz [anchor=base,baseline] 
 	\node [
@@ -30,22 +33,22 @@
 		rounded corners=2pt
 	] {#1};\ignorespaces%
 }}
-\igdefdeco{lrmargin}{\deco@simple{#1}}
+\cpgedefdeco{lrmargin}{\deco@simple{#1}}
 \fadjwidth=6pt 
-\igdefdeco{formula}{%
+\cpgedefdeco{formula}{%
 	\tikz [baseline, anchor=base]
 		\node [inner xsep=.5\fadjwidth-.8pt, draw=maincol, fill=none, rounded corners=4pt] {#1};%
 }
-\igdefdeco{result}{%
+\cpgedefdeco{result}{%
 	\tikz [baseline, anchor=base]
 		\node [inner xsep=.5\fadjwidth-.8pt,draw=maincol, fill=maincol!10!bgcol, rounded corners=4pt] {#1};%
 }
-\igdefdeco*{formule}{\deco@formula}
-\igdefdeco{discuss}{\textcolor{maincol}{$\bullet\;$ \bfseries\boldmath #1}}
-\igdefdeco{enumi}{\TitlingFont\smaller\color{maincol}#1.}
-\igdefdeco{enumii}{\TitlingFont\smaller\color{maincol}#1.}
-\igdefdeco{enumiii}{\TitlingFont\smaller\color{maincol}#1.}
-\igdefdeco{unite}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgedefdeco*{formule}{\deco@formula}
+\cpgedefdeco{discuss}{\textcolor{maincol}{$\bullet\;$ \bfseries\boldmath #1}}
+\cpgedefdeco{enumi}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgedefdeco{enumii}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgedefdeco{enumiii}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgedefdeco{unite}{\TitlingFont\smaller\color{maincol}#1.}
 
 
 
@@ -58,10 +61,10 @@
 			] 
         (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
 }
-\igset[mini]{%
+\cpgeset[mini]{%
 	left margin=2pc,
 	label font=\fontsize{8}{8}\TitlingFont,
-	font=\fontsize{9}{9}\sffamily,
+	font=\sffamily\relsize{-1},
 	mini deco=\llap{\funnyarrow{1em}{maincol}}%
 		\textcolor{maincol}{#1~:}%
 }
@@ -84,15 +87,15 @@
 	\frm@margin12pt
 \fi
 \tcbset{frame left margin/.code={\frm@margin=#1}}
-\igset{frame left margin/.forward to=/tcb/frame left margin}
+\cpgeset{frame left margin/.forward to=/tcb/frame left margin}
 \usetikzlibrary{arrows.meta, positioning}
 \tcbsubskin{thmskin}{empty}{%
 	coltitle=maincol,
 	frame code={%
 		\ifdef\tcboxedtitlewidth
 			{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
-				([xshift=4pt]title.south east) |- 
-				([xshift=-2pt,yshift=+10pt]frame.north west) -- 
+				(title.south east) |- 
+				([xshift=-3pt]title.north west) -- 
 				([xshift=-3pt]frame.south west) ;}
         	{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
             	(frame.north east)  -| ([xshift=-3pt]frame.south west) ;}
@@ -106,8 +109,8 @@
 	frame code={%
 		\ifdef{\tcboxedtitlewidth}
 			{\draw [{Circle}-{Diamond}, maincol,rounded corners=4pt, line width=.4pt] 
-				([xshift=4pt]title.south east) |- 
-				([xshift=-2pt,yshift=+10pt]frame.north west) -- 
+				(title.south east) |- 
+				([xshift=-3pt]title.north west) -- 
 				([xshift=-3pt]frame.south west) ;}
         	{\draw [{Circle}-{Circle}, maincol,rounded corners=4pt, line width=.4pt] 
             	(frame.north east)  -| ([xshift=-3pt]frame.south west);}
@@ -243,7 +246,7 @@
 	thmdefault/.style={
 		skin=thmskin,
 		attach boxed title to top left,
-		boxed title style={blank, left=4pt, right=2pt},
+		boxed title style={blank, boxsep=0pt, left=\frm@margin, right=\frm@margin, top=3pt},
 		boxsep=0pt,
 		top=6pt, bottom=6pt, right=0pt,
 		before skip=\bigskipamount,
@@ -260,7 +263,7 @@
 		left=\frm@margin,
 	}}
 
-\igsettheoremstyle{%
+\cpgesettheoremstyle{%
 	theorem style=thmdefault,
 	definition style=thmdefault,
 	exercise style=thmdefault,
@@ -268,23 +271,23 @@
 }
 
 
-% \igrenewtheorem[use counter from=rema]{remas}
+% \cpgerenewtheorem[use counter from=rema]{remas}
 % {Remarques}
 % {}
 % {remark}
 % {titled items}
 
-\igrenewtheorem[use counter from=exem]{exemf}
+\cpgerenewtheorem[use counter from=exem]{exemf}
 {Exemples fondamentaux}
 {}
 {theorem}
 {maincol=warmcol, coltitle=maincol, titled items}
-\igrenewtheorem[use counter from=defi]{voca}
+\cpgerenewtheorem[use counter from=defi]{voca}
 	{Vocabulaire}
 	{}
 	{remark}
 	{theorem name, titled items}
-\igrenewtheorem[use counter from=defi]{nota}
+\cpgerenewtheorem[use counter from=defi]{nota}
 	{Notations}
 	{}
 	{remark}
@@ -301,8 +304,8 @@
 
 %%% Style des titres 
 
-\igdeflabel{section}{|1|}
-\igdeflabel{subsection}{|S|.|1|}
+\cpgedeflabel{section}{|1|}
+\cpgedeflabel{subsection}{|S|.|1|}
 \titleformat{\section}[display]
 	{\sffamily\scshape\LARGE\color{coldcol}}
 	{\begin{tikzpicture} [overlay, baseline=(S.base)] 
@@ -343,7 +346,7 @@
 \titlespacing{\section}{\z@}{*4}{*2}
 \titlespacing{\subsection}{\z@}{*4}{*2}
 
-\igdeflabel{chapter}{\oldstylenums{|1|}}
+\cpgedeflabel{chapter}{\oldstylenums{|1|}}
 
 \titleformat{\chapter}[display]
 	{\sffamily\fontsize{28}{28}\scshape\color{coldcol}}
@@ -382,15 +385,15 @@
 \newif\ifcover@exists 
 \cover@existstrue
 \def\setcover@back#1{%
-	\IfFileExists{../../img/cover/#1-\ig@classe.pdf}
+	\IfFileExists{../../img/cover/#1-\cpge@classe.pdf}
 		{\pgfdeclareimage[width=1.05\pdfpagewidth]
 			{cover}
-			{../../img/cover/#1-\ig@classe}%
+			{../../img/cover/#1-\cpge@classe}%
 		}{%
-			\IfFileExists{#1-\ig@classe.pdf}
+			\IfFileExists{#1-\cpge@classe.pdf}
 				{\pgfdeclareimage[width=1.05\pdfpagewidth]
 					{cover}
-					{#1-\ig@classe}%
+					{#1-\cpge@classe}%
 				}{%
 				\cover@existsfalse%
 				\colorlet{coverfill}{stcol}%
@@ -437,16 +440,16 @@
 	\iftitlepage@exception%
 		\smash{%
 			\resizebox{.33\paperwidth}{!}{%
-				\bfseries\scshape\color{igblue}%
-				\csuse{ig@matiere}%
+				\bfseries\scshape\color{cpgeblue}%
+				\csuse{cpge@matiere}%
 			}%
 		}%
 	\else%
 		\vskip.01\pdfpageheight\leavevmode%
 		\hfill\smash{%
 			\resizebox{.33\paperwidth}{!}{%
-				\bfseries\scshape\color{igblue}%
-				\csuse{ig@matiere}%
+				\bfseries\scshape\color{cpgeblue}%
+				\csuse{cpge@matiere}%
 			}%
 		}%
 		\hskip.05\pdfpagewidth\null%
@@ -501,14 +504,14 @@
 				[	xshift=.5\linewidth, 
 					anchor=east,
 					white, 
-					font=\sffamily\bfseries\ig@relsize,
+					font=\sffamily\bfseries\cpge@relsize,
 					inner sep=0pt
 				]
-			{\ig@classe\kern6pt};
+			{\cpge@classe\kern6pt};
 		\end{tikzpicture}%
 		\end{STRIP}%
 }
-\igset[title]{%
+\cpgeset[title]{%
 	before 	=	\ifstriptitle
 							\let\STRIP\strip%
 							\let\endSTRIP\endstrip%
@@ -527,7 +530,7 @@
 \AtEndPreamble{%
 	\iftitlepage
 		\renew@title@format[4]
-			(\bfseries\color{igblue})
+			(\bfseries\color{cpgeblue})
 			{document}%
 		\renew@title@format[3]
 			(\scshape\bfseries)
@@ -540,7 +543,7 @@
 			{auteur}%
 		\fi%
 }
-\igdeftitleformat*{
+\cpgedeftitleformat*{
   |document|\par
   \bigskip\hrule\bigskip
   |theme|\\
@@ -548,7 +551,7 @@
   \bigskip
   |auteur|
 }
-\igdeftitleformat{
+\cpgedeftitleformat{
   |document|\par
   \bigskip
   |theme|\\
@@ -596,7 +599,7 @@
 	\fi%
 \fi%
 %%%% Pieds de page
-\def\igcenter{Ibn\! Ghazi}
+\def\cpgecenterenter{Ibn\! Ghazi}
 \ifsoutien
 	\setfoot@logo{capge}
 	\iffootimage@exists	
@@ -616,7 +619,7 @@
 				\node at (\textwidth,0)
 					[anchor=east, baseline, yshift=.5ex,
 						fill=bgcol, font=\sffamily\scshape\bfseries] 
-					{\color{stcol}\small capge\kern1ex\large\color{coldcol}\igcenter};%
+					{\color{stcol}\small capge\kern1ex\large\color{coldcol}\cpgecenterenter};%
 			\end{tikzpicture}%
 		}
 	\fi 
@@ -639,17 +642,17 @@
 				\node at (\textwidth,0)
 					[anchor=east, baseline,  yshift=.5ex,
 						fill=bgcol, font=\sffamily\scshape\bfseries]  
-					{\color{warmcol}\small cpge\kern1ex\large\color{coldcol}\igcenter};
+					{\color{warmcol}\small cpge\kern1ex\large\color{coldcol}\cpgecenterenter};
 			\end{tikzpicture}%
 		}
 	\fi
 \fi
 
-\renewpagestyle{igmain}[\fontsize{8}{8}\sffamily\scshape\itshape]{ 
+\renewpagestyle{cpgemain}[\fontsize{8}{8}\sffamily\scshape\itshape]{ 
 	\renewcommand\makeheadrule{\newcg@head}
 	\renewcommand\makefootrule{\newcg@foot}
-	\igsethead(|theme|)()(|document|)
-	\igsetfoot(|classe|)(|pages|)()
+	\cpgesethead(|theme|)()(|document|)
+	\cpgesetfoot(|classe|)(|pages|)()
 }
 \renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
 	\renewcommand\makefootrule{\newcg@foot}
