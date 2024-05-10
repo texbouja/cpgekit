@@ -2,16 +2,13 @@
 %% Adaption de subfile.cls
 %% Tribute to Federico Garcia
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{cpgesub}[2023/11/25 v0.1alpha Multi-file projects (class)]
+\ProvidesClass{cpgesubfile}[2023/11/25 v0.1alpha Multi-file projects (class)]
 \RequirePackage{pgfopts}
 \RequirePackage{etoolbox}
 
 \newif\ifsubdoc
 
-\newif\ifcours
-\newif\ifserie
 \newif\ifcolle
-\newif\ifsoutien
 \newif\ifdraft
 \newif\ifweb
 \newif\ifsingleimage
@@ -23,9 +20,6 @@
 \newif\ifcompact
 \newif\ifsolution
 \newif\ifsolutiondelayed
-\newif\ifproof
-\newif\ifproofdelayed
-\newif\ifjustification\justificationtrue
 \newif\ifhint
 \newif\ifhintocg
 \newif\ifstriptitle
@@ -42,27 +36,10 @@
 			\justificationfalse,
 	solution*/.code=\solutiontrue\solutiondelayedtrue%
 			\justificationfalse,
-	proof/.code=\prooftrue\proofdelayedfalse%
-			\justificationfalse,
-	proof*/.code=\prooftrue\proofdelayedtrue%
-			\justificationfalse,
-	nojustification/.code=\justificationfalse,
 	hint/.code=\csuse{hint#1}\csuse{hintocg#1}\justificationfalse,
 	hint/.default=true,
 	hint*/.code=\csuse{hint#1}\hintocgfalse\justificationfalse,
 	hint*/.default=true, 
-	cours/.code={%
-		\courstrue
-		\ifundef{\cpge@class}{\def\cpge@class{book}}{}
-	},
-	serie/.code={%
-		\serietrue
-		\ifundef{\cpge@class}{\def\cpge@class{article}}{}
-	},
-	soutien/.code={
-		\soutientrue\courstrue
-		\def\cpge@class{article}
-	},
 	article/.code={
 		\def\cpge@class{article}
 	},
@@ -70,9 +47,7 @@
 		\def\cpge@class{report}
 	},
 	book/.code={
-		\unless\ifsoutien
 			\def\cpge@class{book}
-		\fi
 	},
 	.unknown/.code={
 		\expandafter\appto\expandafter\class@options\expandafter		
@@ -122,8 +97,6 @@
 }
 
 \AtEndDocument{
-	\ifdefstring\cpgecurrentclass{cpgedoc}
-		{\cpgedoc@shipoutsolutions}{}
 	\ifdefstring\cpgecurrentclass{cpgedev}{}{\straighttrue}
 }
 \endinput

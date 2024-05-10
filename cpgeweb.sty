@@ -1236,12 +1236,12 @@
 
 %%%% écriture du CSV
 
-\newwrite\cpge@record@out
+\newwrite\cpge@out
 
 \def\cpge@null#1{}
 \newcommand{\cpgecsv@record}[1]{%
     \begingroup\let\tofs\@secondoftwo%
-    \cpgeprotected@iwrite\cpge@record@out{}{#1}
+    \cpgeprotected@iwrite\cpge@out{}{#1}
     \endgroup}
 
 \def\question@do{%
@@ -1256,12 +1256,12 @@
     \question@do%
     \let\cpgecsvrecord\cpgecsv@record%
     \edef\cpge@record@file{\jobname.csv}%
-    \immediate\openout\cpge@record@out\cpge@record@file%
+    \immediate\openout\cpge@out\cpge@record@file%
     \cpgecsvrecord{\csv@header}
 }
 
 \newcommand{\stopcsvrecording}{%
-    \immediate\closeout\cpge@record@out%
+    \immediate\closeout\cpge@out%
     \let\cpgecsvrecord\cpge@null%
 }
 

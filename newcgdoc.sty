@@ -3,13 +3,13 @@
 %%% Colors 
 \definecolor{cpgeblue}{HTML}{373A73}
 \definecolor{cpgealtblue}{HTML}{007AFF}
-\definecolor{iggreen}{HTML}{8CBA30}
+\definecolor{cpgegreen}{HTML}{8CBA30}
 \definecolor{stcol}{HTML}{D68A36}
 \definecolor{cpgeblack}{HTML}{202736}
 
 
 \cpgeset[colors]{    
-    warm={iggreen!85!black}{iggreen},
+    warm={cpgegreen!85!black}{cpgegreen},
     cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!66!black}{CornflowerBlue},
 	page={white}{cpgeblack},
@@ -430,7 +430,7 @@
 	\color{white}%
 	\ignorespaces%
 	\ifsoutien%
-		\pagecolor{iggreen}% 
+		\pagecolor{cpgegreen}% 
 		\setcover@back{capge}%
 	\else%
 		\pagecolor{white}%
@@ -592,7 +592,7 @@
 	\else 
 		\def\newcg@head{%
 			\tikz[overlay]
-				\draw [iggreen, line width=\head@height] 
+				\draw [cpgegreen, line width=\head@height] 
 					(-.75\paperwidth,.5\head@height-3pt) -- 
 					(\paperwidth+3cm,.5\head@height-3pt);%
 		}%

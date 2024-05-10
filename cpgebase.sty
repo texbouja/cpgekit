@@ -21,24 +21,22 @@
 	{\RequirePackage{xparse}}
 	{}
 \ifcustomtitles
-	\RequirePackage[explicit,nobottomtitles*]{cpgetitle}
-	\def\newpagestyle{\cpgetnewpagestyle}
-	\def\renewpagestyle{\cpgetrenewpagestyle}
-	\def\sethead{\cpgetsethead}
-	\def\setfoot{\cpgetsetfoot}
-\else
-	\RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
-   \titleformat\section
-      {\Large\sffamily\scshape}
-      {\deco@section{\label@section}}
-      {1.8pc}
-      {#1}
-   \titleformat\subsection
-      {\large\sffamily\scshape
-      }{\deco@subsection{\label@subsection}}
-      {1.8pc}
-      {#1}
-\fi
+   \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
+\else 
+   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
+\fi 
+\RequirePackage{titletoc}
+   % \titleformat\section
+   %    {\Large\sffamily\scshape}
+   %    {\deco@section{\label@section}}
+   %    {1.8pc}
+   %    {#1}
+   % \titleformat\subsection
+   %    {\large\sffamily\scshape
+   %    }{\deco@subsection{\label@subsection}}
+   %    {1.8pc}
+   %    {#1}
+
 
 %%%%% Déclarations
 \newbox\cpge@boxa
@@ -507,14 +505,19 @@
 % {} = name, [] = within list, () = shortcut, <> = label numbering format
 \DeclareDocumentCommand\cpgedefcounter{mm o d() d<>}{%
 \@bsphack\begingroup
-	\IfValueT{#4}{\cpge@cnt@shortcut{#4}{#1}}
-	\ifcpgein@\else
-	   \ifltxcounter{#1}{}{\newcounter{#1}}
-      \ifblank{#2}{\cpgedeflabel*{#1}{|1|}}{\cpgedeflabel*{#1}{#2}}
-	   \IfValueT{#3}
-		   {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
-      \IfValueT{#5}{\csdef{p@#1}{#5}}
-	\fi
+   \def\cpge@tmpa{#2}
+   \ifx\cpge@tmpa*
+      \global\cslet{label@#1}\relax
+   \else 
+      \IfValueT{#4}{\cpge@cnt@shortcut{#4}{#1}}
+      \ifcpgein@\else
+         \ifltxcounter{#1}{}{\newcounter{#1}}
+         \ifblank{#2}{\cpgedeflabel*{#1}{|1|}}{\cpgedeflabel*{#1}{#2}}
+         \IfValueT{#3}
+            {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
+         \IfValueT{#5}{\csdef{p@#1}{#5}}
+      \fi
+   \fi
 \endgroup\@esphack}
 
 %%%%% commande utilisateur \cpgedeflabel
@@ -898,6 +901,9 @@
    \fi%
  }
  \def\endxenum{\save@enumctr\endlist}
+ \def\save@enumctr{%
+	\csnumgdef{last@\cpge@listctr}{\value{\cpge@listctr}}%
+}
  \NewDocumentCommand\xitem{o}{%
   \def\cpge@listenv{item}
   \def\cpge@xlistenv{xitem}
@@ -930,7 +936,7 @@
       \IfValueT{#4}
          {\label{\cpge@enumlabelprefix#4}}%
  }
- \def\xitenum{\init@xlist{xenum}\xit@enum}
+\def\xitenum{\init@xlist{xenum}\xit@enum}
 \NewDocumentCommand\xit@item{E{\lab\zap}{{}{@}} d() d<>}{%
    \ifblank{#1}
          {\item}
@@ -978,206 +984,6 @@
       \def#3{\init@xlist{#2}\xit@item}
    }
 }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Commandes pour les questions %%%%
-%%%% remplacé par {xenum} et \xit %%%%
-	
-\def\question{%
-     \@ifnextchar+%
-     {\expandafter\ques@plus\@gobble}%
-     \ques@interim
-  }%
-\def\ques@interim{\@ifnextchar-\ques@minus\ques@normal}
-\def\ques@plus{\@ifnextchar({\ques@plus@}{\ques@plus@@}}
-\def\ques@plus@(#1){\begin{questions}(#1)\ques@normal}
-\def\ques@plus@@{\begin{questions}\ques@normal}
-\def\ques@minus{%
-   \ifnum\@enumdepth>\@ne\end{questions}\fi%
-   \expandafter\ques@normal\@gobble}
-\def\ques@normal{%
-	\@ifnextchar[
-		\ques@normal@%
-		{\item\ques@titre}}
-\def\ques@normal@[#1]{%
-   \saveexpandmode\exploregroup\csname c@\cpge@listctr\expandafter\endcsname
-   \csname last@\cpge@listctr\endcsname\relax%s\noexpandarg%
-   \IfSubStr{#1}{|*|}{\stepcounter{\cpge@listctr}}{}%
-   \StrSubstitute{#1}{|*|}{\csname label@\cpge@listctr\endcsname}[\tmp@string]%
-   \restoreexpandmode%
-   \item[\tmp@string]%
-   \ques@titre%
- }
-\def\ques@titre{%
-	\ifcpge@itemtitle\global\cpge@itemtitlefalse\expandafter\deco@itemtitle\fi%
-}
-\def\save@enumctr{%
-	\csnumgdef{last@\cpge@listctr}{\value{\cpge@listctr}}%
-}
-\def\end@question{%
-	\@ifstar
-		{%
-			\ifnum\@enumdepth>\z@%
-				 \end{questions}%
-			\fi
-		}%
-		{\end@question@}%
-	}
-\def\end@question@{%
-	\ifnum\@enumdepth=\z@%
-	\else
-		 \end{questions}%
-		  \expandafter\end@question
-	\fi%
-  }
-\def\resumequestion{%
-   \begin{questions}%
-   	\csname c@\cpge@listctr\expandafter\endcsname
-   	 \csname last@\cpge@listctr\endcsname\relax%
-   	  \question%
-   }
-\cpgedefdeco{itemtitle}{\textbf{\boldmath #1}}
-\def\questiontitre{\cpge@itemtitletrue\question}
-\def\qq{\question}
-\def\endqq{\end@question}
-\def\rqq{\resumequestion}
-\def\qqt{\questiontitre}
-\def\rqqt{\cpge@itemtitletrue\resumequestion}
-\def\bqq{\begin{questions}}
-\def\brqq{%
-	\begin{questions}
-	 \setcounter{\cpge@listctr}{\csname last@\cpge@listctr\endcsname}%
-	}
-
-\def\questions{%
-   \def\cpge@listenv{enum}%
-   \def\cpge@xlistenv{xenum}%
-   \ifnum \@enumdepth >2 \@toodeep\else%
-      \advance\@enumdepth\@ne%
-      \edef\cpge@listdepth{\the\@enumdepth}
-      \edef\cpge@listlevel{\romannumeral\the\@enumdepth}%
-      \edef\cpge@listctr{enum\cpge@listlevel}%
-    \fi%
-    \@ifnextchar({\@@ques@}{\@ques@}%
- }
-\def\endquestions{\save@enumctr\endlist}
-\def\@@ques@(#1){%
-  \cpgedeflabel{\cpge@listctr}{#1}%
-  \@ques@}
-
-%%%%% Migration depuis cpgedev.cls
-%%%%% effectuée le 20/04/2024
-%%% Patch de la commande \item pour qu'elle supporte 
-%%% sa présence dans un environnement et qu'elle
-%%% ne produise ni numéro ni espaces en cas 
-%%% d'un argument optionnel vide. 
-\def\item@ques{%
-  \@inmatherr\item
-  \@ifnextchar[\@item@ques{\@noitemargtrue \@item@ques[\@itemlabel]}%
-}
-\def\@item@ques[#1]{%
- \@hyper@itemtrue %appliquer d'avance le patch hyperref normal
-  \if@noparitem
-    \@donoparitem
-  \else
-    \if@inlabel
-      \indent \par
-    \fi
-    \ifhmode
-      \unskip\unskip \par
-    \fi
-    \if@newlist
-      \if@nobreak
-        \@nbitem
-      \else
-        \addpenalty\@beginparpenalty
-        %\addvspace\@topsep
-		\ifblank{#1}{\addvspace{-\@topsep-\baselineskip}}{\addvspace{\@topsep}}
-        \addvspace{-\parskip}%
-      \fi
-    \else
-      \addpenalty\@itempenalty
-      %\addvspace\itemsep
-	  \ifblank{#1}{\addvspace{-\itemsep-\baselineskip}}{\addvspace\itemsep}
-    \fi
-    \global\@inlabeltrue
-  \fi
-  \everypar{%
-    \@minipagefalse
-    \global\@newlistfalse
-%    \if@inlabel %%% Le patch en question
-      \global\@inlabelfalse
-      {\setbox\z@\lastbox
-       \ifvoid\z@
-         \kern-\itemindent
-       \fi}%
-      \box\@labels
-      \penalty\z@
-%    \fi %%% Le patch en question
-    \if@nobreak
-      \@nobreakfalse
-      \clubpenalty \@M
-    \else
-      \clubpenalty \@clubpenalty
-      \everypar{}%
-    \fi}%
-  \if@noitemarg
-    \@noitemargfalse
-    \if@nmbrlist
-      \refstepcounter\@listctr
-    \fi
-  \fi
-  \sbox\@tempboxa{\makelabel{#1}}%
-  \global\setbox\@labels\hbox{%
-    \unhbox\@labels
-    \hskip \itemindent
-    \hskip -\labelwidth
-    \hskip -\labelsep
-    \ifdim \wd\@tempboxa >\labelwidth
-      \box\@tempboxa
-    \else
-      \hbox to\labelwidth {\unhbox\@tempboxa}%
-    \fi
-    \hskip \labelsep}%
-  \ignorespaces}
-  
-%% Fin du patch
-
-% Adaptation de \xit pour les problèmes avec solutions
-\let\switch@to@ques\relax 
-\ifltxcounter{score}{}{\newcounter{score}}
-\ifltxcounter{score@tmp}{\newcounter{score@tmp}}
-\NewDocumentCommand\startques{t\r E{\op}{{}}}{%
-	\IfBooleanTF{#1}
-		{\begin{xenum}[r,#2]}
-		{\begin{xenum}[#2]}%
-	\switch@to@ques%
-}
-\NewDocumentCommand\init@ques{m t- t- t- t\r t+  E{\op}{{}} }{
-	\IfBooleanTF{#5}%
-        {\startques\r\op{#7}}
-        {\IfBooleanT{#6}{\startques\op{#7}}}%
-	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
-	#1%
-}
-\NewDocumentCommand\x@ques{o e{\bar\zap} d() d<>}{%
-	\IfValueT{#2}{%
-		\addtocounter{score@tmp}{#2}%
-		\addtocounter{score}{#2}%
-		\def\cpge@tmpscore{\ttfamily\footnotesize(#2pt)}%
-	}%
-	\IfValueT{#3}
-            {\ifblank{#3}{\stepcounter{\cpge@listctr}}{\addtocounter{\cpge@listctr}{#3}}}%
-	\IfValueTF{#1}
-		{\item@ques[#1]%
-			\ifblank{#1}{\stepcounter{\cpge@listctr}\hskip-\labelsep}{}}%
-		{\item@ques}
-	\IfValueT{#4}{\deco@itemtitle{#4}}%
-	\IfValueT{#5}{\label{\cpge@enumlabelprefix#5}}%
-}
-\def\xques{\init@ques{\x@ques}}
-\def\stopques{\exit}
-
 
 
 
@@ -1626,9 +1432,9 @@
 %%% trop loin des arguments, avalant des espaces et empêchant une lecture
 %%% verbatim correcte.  (prefixer les spec des arguments xparse par !)
 \RequirePackage{verbatim}
-\def\cpge@allocate@cpge@out{%
+\def\cpge@allocate@out{%
   \newwrite\cpge@out%
-  \xdef\cpge@allocate@cpge@out{}%
+  \xdef\cpge@allocate@out{}%
 }
 \let\cpge@verbatim@begin@hook\@empty
 \let\cpge@verbatim@end@hook\@empty
@@ -1637,7 +1443,7 @@
 \def\cpgewriteonce#1{%
   \@bsphack
   \cpge@set@verbatim@finish%
-  %\cpge@allocate@cpge@out%
+  %\cpge@allocate@out%
   \cpgeopenfile{solhandle}
   \immediate\openout\solhandle@file #1.tex
   \cpge@verbatim@begin@hook%
@@ -1651,6 +1457,21 @@
   \cpge@verbatim@end@hook%
   \immediate\closeout\solhandle@file
   \@esphack%
+}
+
+\def\cpge@null#1{}
+\newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
+
+\newcommand{\cpgestartrecording}[1][\jobname.records]{%
+  \let\cpgerecord\cpge@record%
+  \edef\cpge@record@file{#1}%
+  \cpge@allocate@out%
+  \immediate\openout\cpge@out\cpge@record@file%
+}
+
+\newcommand{\cpgestoprecording}{%
+  \immediate\closeout\cpge@out%
+  \let\cpgerecord\cpge@null%
 }
 
 %%% answers.sty : 
@@ -1796,578 +1617,25 @@
 
 %%%%% Enonce/Corrige %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\NewDocumentEnvironment{enonce}{mm O{} d() d<>}{%
-			\def\cpge@current@id{#2}%
-			\csepreto{\cpge@current@id @opts}{\expandonce\corr@common@opt,}%
-			\cpgeset[@problem]{current counter=#1,#3}%
-			\ifcsundef{#2@title}{\csdef{#2@title}{#4}}{}%
-			%\problemtitle{#2}{#3}(##3)<##4>
-			\setup@id%
-			\setup@sol%
-			\setup@hint%
-			\csuse{hook@beforeproblem}%
-		}{%
-			\exit%
-			\csuse{hook@afterproblem}%
-			\close@problem{#2}%
-		}
-%%%%% Geometrie di document
-%%%%% Document geometry
-\RequirePackage{geometry}
-\RequirePackage{cuted}
+% \NewDocumentEnvironment{enonce}{mm O{} d() d<>}{%
+% 			\def\cpge@current@id{#2}%
+% 			\csepreto{\cpge@current@id @opts}{\expandonce\corr@common@opt,}%
+% 			\cpgeset[@problem]{current counter=#1,#3}%
+% 			\ifcsundef{#2@title}{\csdef{#2@title}{#4}}{}%
+% 			%\problemtitle{#2}{#3}(##3)<##4>
+% 			\setup@id%
+% 			\setup@sol%
+% 			\setup@hint%
+% 			\csuse{hook@beforeproblem}%
+% 		}{%
+% 			\exit%
+% 			\csuse{hook@afterproblem}%
+% 			\close@problem{#2}%
+% 		}
 
-\ifundef\ifdraft{\newif\ifdraft}{}
-\ifundef\ifsolution{\newif\ifsolution}{}
-\ifundef\ifdark{\newif\ifdark}{}
-\ifundef\ifcompact{\newif\ifcompact}{}
-\ifundef\ifstriptitle{\newif\ifstriptitle}{}
-\ifundef\ifprint{\newif\ifprint}{}
-\ifundef\iftitlepage{\newif\iftitlepage}{}
-\ifundef\ifsoutien{\newif\ifsoutien}{}
-
-
-% patch de la commande qui contrôle le format de papier
-\newdimen\Gm@littlemargin
-\Gm@littlemargin\z@
-\dimdef\compactlimit{131mm}
-% \preto\Gm@adjustpaper{%
-% 	\ifdim\linewidth<\compactlimit\relax
-% 		\compacttrue%
-% 	\fi}
-
-% ajout de formats, reconnaissables par la commande \goemetry
-\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(126,224){truemm}}
-\@namedef{Gm@sc16x9b}#1{\Gm@setsize{#1}(150,266){truemm}}
-\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(126,266){truemm}}
-\@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(150,240){truemm}}
-\@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}
-\@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}
-%\define@key{Gm}{a4paper}[true]{\Gm@setpaper@ifpre{a4paper}}%
-\define@key{Gm}{sc16x9}[true]{\Gm@setpaper@ifpre{sc16x9}}
-\define@key{Gm}{sc16x9big}[true]{\Gm@setpaper@ifpre{sc16x9b}}
-\define@key{Gm}{sc19x9}[true]{\Gm@setpaper@ifpre{sc19x9}}
-\define@key{Gm}{sc16x10}[true]{\Gm@setpaper@ifpre{sc16x10}}
-\define@key{Gm}{sc4x3}[true]{\Gm@setpaper@ifpre{sc4x3}}
-\define@key{Gm}{sc4x3beamer}[true]{\Gm@setpaper@ifpre{sc4x3b}}
-% ajout de la clé Gm@littlemargin
-\define@key{Gm}{littlemargin}{%
-    \ifdefstring\cpgecurrentclass{cpgedev}
-        {\Gm@setlength\Gm@littlemargin{#1}
-        \Gm@setlength\marginparwidth{#1}%
-        \Gm@setlength\marginparsep\z@}
-		{}
-}
-\appto\Gm@save{\Gm@savelength{Gm@littlemargin}}
-%\appto\Gm@save{\Gm@saveboolean{compact}}
-
-% interface pgfkeys pour geometry
-\newif\iftitlepage@exception
-\newif\ifforced@geometry
-\newif\ifactivated@geometry
-\def\geom@options{}
-
-\cpgeset[@geometry]{%
-	print/.code=%
-		\printtrue%
-		\darkfalse%
-		\compactfalse%
-		\geometry{%
-			a4paper,
-			inner=3.6cm, outer=2.4cm,
-			vmargin={2.4cm,3.6cm}, 
-			littlemargin=3em
-		}, 
-	qprint/.code=%
-		\printtrue%
-		\darkfalse%
-		\compactfalse%
-		\geometry{%
-			a4paper,
-			inner=1.8cm, outer=1.2cm,
-			vmargin={2cm,3cm}, 
-			littlemargin=3.2em
-		}, 
-	2print/.code=%
-		\printtrue%
-		\darkfalse%
-		\compacttrue%
-		\striptitletrue
-		\geometry{%
-			a4paper,
-			twocolumn, columnsep=20truept,
-			%mag=830,
-			inner=1truecm, outer=1truecm,
-			vmargin={2.4truecm,2.4truecm},
-			littlemargin=2.4em
-		},
-	lsprint/.code=%
-		\printtrue%
-		\darkfalse%
-		\compactfalse%
-		\striptitlefalse%
-		\geometry{%
-			a4paper,
-			landscape,
-			twocolumn, columnsep=24truept,
-			%mag=870,
-			inner=1.8truecm, outer=1.8truecm,
-			vmargin={1.5truecm,1.5truecm},
-			littlemargin=3em
-		},
-	draft/.code=%
-		\printfalse%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			a5paper,
-			inner=1.5cm, outer=1.5cm,
-			vmargin={1.8cm,2.4cm},
-			littlemargin=2.4em 
-		}, 
-	screen 16x9/.code=%
-		\printfalse%
-		\darktrue%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			sc16x9,
-			mag=1100,
-			hmargin={.5cm,.5cm},
-			vmargin={1.2cm,1.4cm},
-			littlemargin=2.4em,
-		},%
-		screen 16x9big/.code=%
-		\printfalse%
-		\darktrue%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			sc16x9big,
-			mag=1100,
-			hmargin={.5cm,.5cm},
-			vmargin={1.2cm,1.4cm},
-			littlemargin=2.4em,
-		},%
-	screen 19x9/.code=%
-		\printfalse%
-		\darktrue%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			sc19x9,
-			hmargin={.5cm,.5cm},
-			vmargin={1.4cm,1.8cm},
-			littlemargin=2.4em
-		},%
-	beamer/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3beamer,
-			hmargin={.4cm,.4cm},
-			vmargin={.4cm,1.2cm},
-			littlemargin=3em
-		},%
-	screen/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3,
-			hmargin={1.8cm,1.8cm},
-			vmargin={1.5cm,2cm},
-			%mag=1100,
-			littlemargin=3em
-		},%
-	lsscreen/.code=%
-		\printfalse%
-		\compacttrue%
-		\darkfalse%
-		\titlepagetrue%
-		\titlepage@exceptiontrue%
-		\geometry{%
-			sc4x3,
-			landscape,
-			twocolumn, columnsep=24pt,
-			hmargin={.5cm,.5cm},
-			vmargin={1.2cm,1.4cm},
-			%mag=880,
-			littlemargin=2.4em
-		},%
-	altscreen/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc16x10,
-			hmargin={1cm,1cm},
-			vmargin={1.5cm,2cm},
-			%mag=1100,
-			littlemargin=3em
-		},%
-	lsaltscreen/.code=%
-		\printfalse%
-		\compacttrue%
-		\darkfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc16x10,
-			landscape,
-			twocolumn, columnsep=32pt,
-			hmargin={.8cm,.8cm},
-			vmargin={1.2cm,1.4cm},
-			%mag=880,
-			littlemargin=2.4em
-		},%
-	soutien/.code=%
-		\printfalse%
-		\compacttrue%
-		\darkfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3,
-			landscape, 
-			twocolumn, columnsep=24pt,
-			outer=.5cm, inner=1cm,
-			vmargin={1.2cm,1.4cm},
-			%mag=930,
-			littlemargin=2.4em
-		}%	
-}
-\cpgeset[geometry]{%
-	.unknown/.code=\expandafter\appto\expandafter\geom@options\expandafter{%
-		\pgfkeyscurrentname=#1,}, 
-	force compact/.is if=compact,
-	force geometry/.is if=forced@geometry,
-	draft/.is if=draft,
-}
-\NewDocumentCommand\cpgegeometry{O{}m}{%
-	\unless\ifdraft%
-		\unless\ifsoutien%
-			\forced@geometrytrue%
-	\fi\fi%
-	\cpgeset[geometry]{#1}
-	\ifactivated@geometry\else%
-		\activated@geometrytrue%
-		\ifforced@geometry
-			\cpgeset[@geometry]{#2}
-		\else
-			\ifdraft
-				\cpgeset[@geometry]{draft}
-			\else
-				\ifsoutien
-					\cpgeset[@geometry]{soutien} 
-				\fi
-			\fi
-		\fi 
-	\fi
-	\ifdefempty{\geom@options}{}{
-		\expandafter\geometry\expandafter{\geom@options}
-	}%
-}
-\AtEndPreamble{%
-	\unless\ifactivated@geometry
-			\cpgeset[@geometry]{draft}
-	\fi% 
-	\def\multicols#1{\relax}
-	\csdef{multicols*}#1{\relax}
-	\let\endumlticols\relax 
-	\cslet{endmulticols*}{\relax}
-	\unless\if@twocolumn
-		\unless\ifcompact\RequirePackage{multicol}\fi
-	\fi
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Titre du document %%%%%
-\ifdim\paperwidth>127mm\relax
-   \def\cpge@relsize{\relsize{2}}
-\else
-   \def\cpge@relsize{\relsize{1}}%
-\fi%
-\newdimen\cpge@ttlw
-\cpge@ttlw=3cm
-%% Ajout des mots cles du titre
-\DeclareDocumentCommand\cpgeaddkeyword@title{D(){}m}{%
-   \cpgeaddkeyword{title}{#2}{%
-      {#1\cpge@relsize\csuse{cpge@#2@format}%
-      \global\cpge@dima\baselineskip}%
-      \baselineskip\cpge@dima%
-   }
-}
-\cpgeaddkeyword@title(\normalsize\scshape){centre}
-\cpgeaddkeyword@title(\normalsize\scshape){classe}
-\cpgeaddkeyword@title(\Large\bfseries){document}
-\cpgeaddkeyword@title(\Large\bfseries){devoir}
-\cpgeaddkeyword@title(\Large\bfseries){epreuve}
-\cpgeaddkeyword@title(\Large\bfseries){concours}
-\cpgeaddkeyword@title(\Large\scshape){theme}
-\cpgeaddkeyword@title(\scshape\itshape){subtheme} 
-\cpgeaddkeyword@title(\small\itshape){periode}
-\cpgeaddkeyword@title(\small\itshape){duree}
-\cpgeaddkeyword@title(\small\itshape){session}
-\cpgeaddkeyword@title(\small){auteur}
-\cpgeaddkeyword@title(\small\ttfamily){email}
-\cpgeaddkeyword@title(\small\ttfamily){website}
-
-
-%% Commande \title@parser qui traduit les mots cles 
-%% pour le titre. Le resultat
-%% est stocke dans la macro \title@contents
-\long\def\title@change#1{%
-   \StrSubstitute{\title@contents}
-     {|#1|}{\csname title@#1\endcsname}[\title@string]%
-     \global\let\title@contents\title@string
- }
-\long\def\title@parser#1{\begingroup%
-    \gdef\title@contents{#1}%
-    \exploregroups\expandarg%
-    \forlistloop{\title@change}{\list@title}%
-    \endgroup%
-}
-
-%% Commande qui specifie le format du titre.
-%% Elle utilise \title@contents pour formater
-%% la macro \cpgetitlecontents (titre normal) 
-%% ou \titlepagecontents, si * (page de garde)
-\DeclareDocumentCommand\cpgedeftitleformat{s+m}{%
-	\title@parser{#2}%
-	\IfBooleanTF{#1}
-		{%
-			\expandafter\long\expandafter\gdef
-				\expandafter\titlepagecontents\expandafter
-					{\title@contents}
-		}{%
-			\expandafter\long\expandafter\gdef
-				\expandafter\cpgetitlecontents\expandafter
-					{\title@contents}
-		}%
-}
-\def\cpgenewtitle{\cpgedeftitleformat}
-
-%% commande qui prend en charge
-%% une eventuelle description
-%% du format par l'utilisateur
-%% (argument entre () de la commande \titre)
-\DeclareDocumentCommand\cpge@localtitle{s+m}{%
-	\title@parser{#2}%
-	\IfBooleanTF{#1}
-		{%
-			\expandafter\long\expandafter\def
-				\expandafter\titlepagecontents\expandafter
-					{\title@contents}
-		}{%
-			\expandafter\long\expandafter\def
-				\expandafter\cpgetitlecontents\expandafter
-					{\title@contents}
-		}%
-}
-
-%% Formats par defaut
-\cpgedeftitleformat{|document| \\ |theme| \\ |periode|}
-\cpgedeftitleformat*{|document| \\ |theme| \\ |periode|}
-
-%% Options du formatage 
-\cpgeset[title]{
-	inner align/.is choice, %alignement interne 
-	inner align/l/.code=\let\fil@inner\raggedright, 
-	inner align/r/.code=\let\fil@inner\raggedleft,
-	inner align/c/.code=\let\fil@inner\centering,
-   	inner align*/.is choice, %alignement interne dans titlepage
-	inner align*/c/.code=\let\fil@inner@titlepage\centering,
-	inner align*/l/.code=\let\fil@inner@titlepage\raggedright, 
-	inner align*/r/.code=\let\fil@inner@titlepage\raggedleft,
-   	outer align/.is choice, % alignement externe
-	outer align/l/.code=\let\fil@outer\raggedright,
-	outer align/r/.code=\let\fil@outer\raggedleft,
-	outer align/c/.code=\let\fil@outer\centering,
-	before/.code=\def\hook@beforetitle{#1}, % hook avant titre normal 
-	after/.code=\def\hook@aftertitle{#1}, % hook apres titre normal 
-	before*/.code=\def\hook@beforetitlepage{#1}, % hook avant titre, titlepage
-	after*/.code=\def\hook@aftertitlepage{#1}, % hook apres titre, titlepage
-	before title/.code=\title@parser{#1}%
-               \expandafter\def\expandafter 
-		          \hook@titlebeforetitle\expandafter
-                {\title@contents}, % prefix au format
-	after title/.code=\title@parser{#1}%
-               \expandafter\def\expandafter
-		         \hook@titleaftertitle\expandafter
-               {\title@contents}, % postfix au format 
-	before title*/.code=\title@parser{#1}
-               \expandafter\def\expandafter 
-		         \hook@titlebeforetitlepage\expandafter
-               {\title@contents}, % prefix au format
-	after title*/.code=\title@parser{#1}%
-               \expandafter\def\expandafter
-		         \hook@titleaftertitlepage\expandafter
-               {\title@contents}, % postfix au format 
-   early before*/.code=\def\hook@earlybeforetitlepage{#1}, 
-	late after*/.code=\def\hook@lateaftertitlepage{#1},
-	width/.code=\dimdef\title@width{#1}, % largeur du titre 
-	format/.code=\cpgedeftitleformat{#1}, % specification du format normal 
-	format*/.code=\cpgedeftitleformat*{#1}, % specification du format titlepage 
-	afterskip/.code=\dimdef\aftertitleskip{\bigskipamount*#1}
-         % saut apres titre
-}
-\cpgeset[title]{
-	inner align/.default=c,
-   inner align*/.default=l,
-	outer align/.default=c,
-	width/.default=\linewidth,
-	afterskip/.default=3,
-	inner align, 
-   inner align*, 
-	outer align, 
-	before=\minipage{\title@width},
-	after=\endminipage,
-	width,
-   afterskip
-	}
-
-%% La commande utilisateur qui produit le titre
-%% titre normal sans *, page de titre avec *
-%% option [] pour \cpgeset[title]{}, sinon option par defaut 
-%% option () pour le format, sinon format par defaut
-\newif\iftitlepage@used
-\NewDocumentCommand\titre{so+d()}{%
-   \IfBooleanT{#1}{\titlepagetrue}
-   \begingroup%
-	\IfValueT{#2}{\cpgeset[title]{#2}}%
-	\IfValueT{#3}{%
-		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
-		}%
-	\iftitlepage%
-      \unless\iftitlepage@used%
-			\csuse{hook@earlybeforetitlepage}%
-			\begin{titlepage}%
-				\ifbackground\def\back@code{}\fi%
-            \fil@inner@titlepage%
-				\csuse{hook@beforetitlepage}%
-				\csuse{hook@title@beforetitlepage}%
-            \csuse{titlepagecontents}%
-				\csuse{hook@titleaftertitlepage}%
-            \csuse{hook@aftertitlepage}%
-			\end{titlepage}%
-			\csuse{hook@lateaftertitlepage}\clearpage%
-      \fi%
-	\else%
-			\thispagestyle{plain}%
-			\begingroup\par%
-				\fil@outer
-            \csuse{hook@beforetitle}%
-				\fil@inner
-				\csuse{hook@titlebeforetitle}
-				\csuse{cpgetitlecontents}%
-				\csuse{hook@titleaftertitle}%
-				\csuse{hook@aftertitle}%
-			\endgroup%
-			\par\addvspace{\aftertitleskip}%
-	\fi%
-   \endgroup%
-   \iftitlepage\titlepage@usedtrue\fi%
-}
-
-%%% Commandes utilitaires pour switcher vers 
-%%% une geometrie particuliere (en 4x3)
-%%% pour la page de garde
-%%% Par defaut, la page de garde n'est
-%%% generee que pour les versions pour ecran
-%%% mais peut etre activee ou desactivee avec
-%%% l'option "title page" de \cpgetheme 
-
-\AtEndPreamble{%
-	\dimdef\paperheight@origin{\paperheight}%
-	\dimdef\paperheight@titlepage{.75\paperwidth}%
-	\savegeometry{cpge@orcpgein@geom}%
-}
-\def\titlepage@geometry{%
-		\newgeometry{%
-			hmargin=\z@, vmargin=\z@,
-		} 
-		%\textheight=\textheight@titlepage
-}
-\colorlet{pagecol}{white}
-\def\restore@geometry{%
-	\pdfpageheight=\paperheight@origin%
-	\restoregeometry%
-}
-\AfterEndPreamble{%
-	\cpgeset[title]{%
-		early before*={%
-			\unless\iftitlepage@exception%
-				\pdfpageheight=\paperheight@titlepage%
-				\titlepage@geometry%
-			\fi%
-		},
-		late after*={%
-			\pagecolor{pagecol}%
-			\unless\iftitlepage@exception%
-				\restore@geometry%
-			\fi%
-		}%
-	}%
-}
-\NewDocumentCommand\renew@title@format{O{1}D(){}m}{
-	\ifcase #1\relax	
-			\or \csdef{title@#3}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{3\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#2\csuse{cpge@#3@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip\cpge@dima%
-	}
-			 \or 
-			 \csdef{title@#3}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{2\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#2\csuse{cpge@#3@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip\cpge@dima%
-	}
-			  \or \csdef{title@#3}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{1.5\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#2\csuse{cpge@#3@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip\cpge@dima%
-	}
-				 \or \csdef{title@#3}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#2\csuse{cpge@#3@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip\cpge@dima%
-	}
-	\fi 
-} 
-\AtEndPreamble{%
-	\iftitlepage
-		\renew@title@format[3](\bfseries){matiere}%
-		\renew@title@format[4](\bfseries){document}%
-		\renew@title@format[3](\scshape){theme}%
-		\renew@title@format[2](\scshape\itshape){subtheme}%
-		\renew@title@format(\itshape){periode}%
-		\renew@title@format(\small){auteur}%
-		\renew@title@format(\small\ttfamily){email}%
-		\renew@title@format(\small\ttfamily){website}%
-	\fi%
-}
 
 %%% Ajout 07/08/2021
-%%% interface pgfkeys pour contrôler cpgetitle.sty %%%
-%%% (titlesec, titleps et titletoc) 
+%%% interface pgfkeys pour contrôler les styles de page selon titlesec.sty %%%
 
 \newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{
    \renewcommand\makeheadrule{\csuse{deco@headrule}}

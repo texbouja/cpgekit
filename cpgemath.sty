@@ -480,7 +480,7 @@
 \precenterpenalty\@highpenalty \postcenterpenalty\z@
 
 %%%% Quelques commandes utilitaires %%%%
-\def\m@cpge@stop{\vrule\@width\z@}
+\let\m@cpge@stop\null
 \def\m@cpge@par{\par\nointerlineskip}
 \def\m@cpge@narrowpar{\rightskip \z@ plus .5em 
  	 \@rightskip\rightskip \parfillskip\z@ plus .1\hsize}  
@@ -669,7 +669,7 @@
 	\tag*{(\theequation)}\refstepcounter{equation}%
 	\ifblank{#1}{}{\label{#1}}%
 	}
-\cpgesetdeco{formule}{\fbox{#1}}  
+\cpgesetdeco{formula}{\fbox{#1}}  
 \setlength\fadjwidth{2\fboxsep+2\fboxrule}
 
 \NewDocumentEnvironment{Formule}{O{} O{} b}{\formule[#1]{#3}[#2]}{}
@@ -1962,7 +1962,6 @@
 			{\kern1em#1\kern1em}}%
 	}
 }
-\def\deco@formule{\deco@formula}
 \def\decof{\deco@formula}
 \NewDocumentCommand\MakeXboxedCommand{mm}{
 	\newcommand#1[1]{%
