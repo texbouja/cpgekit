@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{lipsum}
+\NewDocumentEnvironment{hello}{E{\cmd}{{}}b}{#1#2}{}
+\def\<{\begingroup\def\>{\end{hello}}\begin{hello}}
+
+
+\begin{document}
+
+\lipsum[1]
+
+ \hfill$\vcenter{\hsize.6\linewidth\begin{minipage}{.6\linewidth}
+    \lipsum[3]
+\end{minipage}}$\hfill\mbox{}
+
+\lipsum[2]
+
+ 
+\end{document}

@@ -11,7 +11,7 @@
 \ProcessOptions\relax
 
 \RequirePackage{calc}
-\RequirePackage{pgfkeys,pgfmath,pgffor}
+\RequirePackage{pgfkeys}
 \RequirePackage{etoolbox}
 \RequirePackage{xstring}
 \RequirePackage{relsize}
@@ -64,136 +64,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% localisation des commandes pgfkeys %%%%%
 
-\ifundef{\cpgeset}{
-\pgfkeys{/cpge/.is family}
-\DeclareDocumentCommand\cpgeset{o}{%
-	\IfValueT{#1}
-		{\pgfkeysifdefined{/cpge/#1/.is family}{}{\pgfkeys{/cpge/#1/.is family}}}%
-	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
-	}
-}{}
+\ifundef\cpgesetup
+{
+	\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
+	\NewDocumentCommand\cpgesetup{o}{%
+      \IfValueT{#1}
+   	   {\pgfkeysifdefined{/cpge/#1/.is family}{}
+			   {\pgfkeys{/cpge/#1/.is family}}}%
+      \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
+   }
+   }{}
+%\pgfkeysdef{/handlers/.set}{\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
+\pgfkeys{/handlers/.set/.code=
+	   \pgfqkeys{\pgfkeyscurrentpath}{#1}##1%
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% gestion des erreurs %%%%%
 \DeclareRobustCommand\cpgeb@error[2]{%
 	\PackageError{cpgebase}{#1}{#2}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%% Gestion des metadonnées %%%%%
-
-\def\Document#1{%
-   \gdef\cpge@document{#1}%
-   \gdef\cpge@document@format{#1}%
-}
-\def\Epreuve#1{%
-   \gdef\cpge@epreuve{#1}%
-   \gdef\cpge@epreuve@format{#1}%
-}
-\def\Periode#1{%
-   \gdef\cpge@periode{#1}%
-   \gdef\cpge@periode@format{#1}%   
-}
-\def\Duree#1{%
-   \gdef\cpge@duree{#1}%
-   \gdef\cpge@duree@format{Dur\'ee~:~#1~heures}
-}
-\def\Theme#1{%
-   \gdef\cpge@theme{#1}%
-   \gdef\cpge@theme@format{#1}%
-}
-\def\Subtheme#1{%
-   \gdef\cpge@subtheme{#1}%
-   \gdef\cpge@subtheme@format{#1}%
-}
-
-\def\Centre#1{%
-   \gdef\cpge@centre{#1}%
-   \gdef\cpge@centre@format{#1}%
-}
-\def\Concours#1{%
-   \gdef\cpge@concours{#1}%
-   \gdef\cpge@concours@format{#1}%
-}
-\def\Session#1{%
-   \gdef\cpge@session{#1}%
-   \gdef\cpge@session@format{#1}%
-}
-\def\Classe#1{%
-   \gdef\cpge@classe{#1}%
-   \gdef\cpge@classe@format{\MakeLowercase{#1}}%
-}
-\def\Email#1{%
-   \gdef\cpge@email{#1}%
-   \gdef\cpge@email@format{#1}%
-}
-\def\Website#1{%
-   \gdef\cpge@website{#1}%
-   \gdef\cpge@website@format{#1}%
-}
-\def\Auteur#1{%
-   \gdef\cpge@auteur{#1}%
-   \gdef\cpge@auteur@format{\normalsize \cpge@preauthor~\scshape #1}%
-}
-\def\Matiere#1{%
-   \gdef\cpge@matiere{#1}%
-   \gdef\cpge@matiere@format{#1}%
-}
-
-\cpgeset[meta]{%
-	Centre/.code=\Centre{#1},
-	Centre/.default= CPGE Ibn Ghazi,
-	Classe/.code=\Classe{#1},
-	Classe/.default=MP,
-	Auteur/.code=\Auteur{#1},
-	Email/.code=\Email{#1},
-	Website/.code=\Website{#1},
-	Matiere/.code=\Matiere{#1},
-	Matiere/.default=Math\'ematiques,
-	Document/.code=\Document{#1},
-	Theme/.code=\Theme{#1},
-   Subtheme/.code=\Subtheme{#1},
-	Concours/.code=\Concours{#1},
-	Session/.code=\Session{#1},
-	Epreuve/.code=\Epreuve{#1},
-	Periode/.code=\Periode{#1},
-	Periode/.default=\the\date,
-	Duree/.code=\Duree{#1},
-   preauteur/.code=\def\cpge@preauthor{#1},
-   preauteur={R\'edig\'e par}
-}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Décoration de l'arrière-plan %%%%%
-
-%%%% première application de la  commande \cpgeset ci-dessus
-\cpgeset[background]{
-	position/.is choice,
-	position/pb/.code=\def\back@pos{\AtPageLowerleft},
-	position/pt/.code=\def\back@pos{\AtPageupperleft},
-	position/pc/.code=\def\back@pos{\AtPageCenter},
-	position/tb/.code=\def\back@pos{\AtTextLowerleft},
-	position/tt/.code=\def\back@pos{\AtTextupperleft},
-	position/tc/.code=\def\back@pos{\AtTextCenter},
-	code/.code=\def\back@code{#1},
-}
-\cpgeset[background]{position=pb, code=\relax}
-\AtEndPreamble{%
-	\ifbackground
-	  \RequirePackage{eso-pic}
-	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
-  \fi}
-
-% \AtBeginDocument{%
-%  \cpgeset{background}
-%  \ifbackground%
-%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
-%   \fi%
-% }
-
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -246,18 +135,16 @@
 \def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
 
 \def\cpge@removestar#1*{#1}
-\def\cpge@erasesymbol#1#2+{#2}
 \def\cpge@erasestar*#1+{#1}
 
-\newcommand\cpgedefdeco{\@ifstar\cpge@deco@\cpge@deco}
+\newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 
-\long\def\@cpge@deco#1#2{
-  \long\csdef{deco@#2}##1{\begingroup#1\endgroup}}
-\long\def\@cpge@deco@#1#2{
-  \long\csdef{deco@#2}{#1}}
-\long\def\cpge@deco#1#2{\forcsvlist{\@cpge@deco{#2}}{#1}}
-\long\def\cpge@deco@#1#2{\forcsvlist{\@cpge@deco@{#2}}{#1}}
-\cpgedefdeco*{simple}{\fbox}
+\long\def\cpge@deco#1#2{%
+   \long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
+\long\def\cpge@deco@#1#2{%
+   \long\csdef{deco@#1}{#2}}
+\long\def\usedeco#1{\csuse{deco@#1}}
+\cpgesetdeco*{simple}{\fbox}
 
 \DeclareDocumentCommand\cpgename{smm}{%
 	\IfBooleanT{#1}{\csglobal}%
@@ -269,8 +156,8 @@
 	\lorg@csedef{name@#2}{#3}%
 	\endcslorg%
 }
-\cpgeset[decorations]{
-   .unknown/.code=\cpgedefdeco{\pgfkeyscurrentname}{#1}
+\cpgesetup[decorations]{
+   .unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
 }
 \def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
 
@@ -401,8 +288,99 @@
 %% le code <texte> a la commande \name@elt  
 %% avec un seul parametre 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Gestion des metadonnées %%%%%
+
+\newcommand\addmeta[4]{
+   \csdef{#1}##1{
+      \csgdef{cpge@#2}{##1}
+      \csgdef{cpge@#2@format}{{#3{##1}}}
+   }
+   \ifblank{#4}{}{\csuse{#1}{#4}}
+}
+\newcommand\meta[1]{\csuse{cpge@#1@format}}
+\def\ifdefmeta#1{\ifcsdef{cpge@#1}\iftrue\iffalse}
+
+\addmeta{Centre}{centre}{\scshape}{}
+\addmeta{Classe}{classe}{\scshape}{}
+\addmeta{Matiere}{matiere}{\scshape}{}
+
+\addmeta{Auteur}{auteur}{\scshape}{}
+\addmeta{Email}{email}{\ttfamily}{}
+\addmeta{Website}{website}{\ttfamily}{}
+\addmeta{Preauteur}{preauthor}{\itshape}{Rédigé par~}
+
+\addmeta{Document}{document}{}{}
+\addmeta{Devoir}{devoir}{}{}
+\addmeta{Theme}{theme}{}{}
+\addmeta{Subtheme}{subtheme}{}{}
+\addmeta{Periode}{periode}{}{\the\date}
+
+\addmeta{Concours}{concours}{}{}
+\addmeta{Epreuve}{epreuve}{}{}
+\addmeta{Session}{session}{}{}
+\addmeta{Duree}{duree}{\@duree}{}
+\def\@duree#1{Durée~:~#1~heures}
+\addmeta{Texte}{texte}{\@texte}{}
+\def\@texte#1{\parbox{.75\columnwidth}
+   {\centering #1}%
+}
+
+\cpgesetup[meta]{%
+   add/.code n args={4}{%
+      \addmeta{#1}{#2}{#3}{#4}%
+      \pgfqkeys{#1/.code=\csuse{#1}{##1}}%
+      },
+	Centre/.code=\Centre{#1},
+	Classe/.code=\Classe{#1},
+	Auteur/.code=\Auteur{#1},
+	Email/.code=\Email{#1},
+	Website/.code=\Website{#1},
+   Preauteur/.code=\Preauteur{#1},
+	Matiere/.code=\Matiere{#1},
+	Document/.code=\Document{#1},
+   Devoir/.code=\Devoir{#1},
+	Theme/.code=\Theme{#1},
+   Subtheme/.code=\Subtheme{#1},
+	Concours/.code=\Concours{#1},
+	Session/.code=\Session{#1},
+	Epreuve/.code=\Epreuve{#1},
+	Periode/.code=\Periode{#1},
+	Duree/.code=\Duree{#1},
+   Texte/.code=\Texte{#1},
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Décoration de l'arrière-plan %%%%%
+
+%%%% première application de la  commande \cpgesetup ci-dessus
+\cpgesetup[background]{
+	position/.is choice,
+	position/pb/.code=\def\back@pos{\AtPageLowerleft},
+	position/pt/.code=\def\back@pos{\AtPageupperleft},
+	position/pc/.code=\def\back@pos{\AtPageCenter},
+	position/tb/.code=\def\back@pos{\AtTextLowerleft},
+	position/tt/.code=\def\back@pos{\AtTextupperleft},
+	position/tc/.code=\def\back@pos{\AtTextCenter},
+	code/.code=\def\back@code{#1},
+}
+\cpgesetup[background]{position=pb, code=\relax}
+\AtEndPreamble{%
+	\ifbackground
+	  \RequirePackage{eso-pic}
+	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
+  \fi}
+
+% \AtBeginDocument{%
+%  \cpgesetup{background}
+%  \ifbackground%
+%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
+%   \fi%
+% }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%% utilitaires de gestion des compteurs façon cpgebase %%%%%
+%%% utilitaires de gestion des compteurs façon cpgebase %%%%%
 
 
 \def\MO@rdinal#1{%
@@ -512,7 +490,7 @@
       \IfValueT{#4}{\cpge@cnt@shortcut{#4}{#1}}
       \ifcpgein@\else
          \ifltxcounter{#1}{}{\newcounter{#1}}
-         \ifblank{#2}{\cpgedeflabel*{#1}{|1|}}{\cpgedeflabel*{#1}{#2}}
+         \ifblank{#2}{\cpgesetlabel*{#1}{|1|}}{\cpgesetlabel*{#1}{#2}}
          \IfValueT{#3}
             {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
          \IfValueT{#5}{\csdef{p@#1}{#5}}
@@ -520,7 +498,7 @@
    \fi
 \endgroup\@esphack}
 
-%%%%% commande utilisateur \cpgedeflabel
+%%%%% commande utilisateur \cpgesetlabel
 
 \def\single@count@change#1#2{\begingroup%
  \exploregroups\expandarg%
@@ -554,7 +532,7 @@
    \ifcpge@thetolabel\makethetolabel{#1}\fi%
    \endcslorg%
    }
-\newcommand\cpgedeflabel{\@ifstar{\csglobal\count@parser}{\count@parser}}
+\newcommand\cpgesetlabel{\@ifstar{\csglobal\count@parser}{\count@parser}}
 \let\allthetolabel\cpge@thetolabeltrue
 \DeclareDocumentCommand\makethetolabel{sm}{%
 	\IfBooleanT{#1}{\csglobal}
@@ -569,10 +547,90 @@
 %%%%%%%%%% Environnements de type list %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%% Patch de la commande \item pour qu'elle supporte 
+%%% sa présence dans un environnement et qu'elle
+%%% ne produise ni numéro ni espaces en cas 
+%%% d'un argument optionnel vide. 
+\def\cpge@item{%
+  \@inmatherr\item%
+  \@ifnextchar[\@item@ques{\@noitemargtrue \@item@ques[\@itemlabel]}%
+}
+\def\@item@ques[#1]{%
+ \@hyper@itemtrue %appliquer d'avance le patch hyperref normal
+  \if@noparitem
+    \@donoparitem
+  \else
+    \if@inlabel
+      \indent \par
+    \fi
+    \ifhmode
+      \unskip\unskip \par
+    \fi
+    \if@newlist
+      \if@nobreak
+        \@nbitem
+      \else
+        \addpenalty\@beginparpenalty
+        %\addvspace\@topsep
+		\ifblank{#1}{}{
+			\addvspace{\@topsep}%
+			\addvspace{-\parskip}%
+		}%
+		%\addvspace{-\parskip}%
+      \fi
+    \else
+      \addpenalty\@itempenalty
+      %\addvspace\itemsep
+	  \ifblank{#1}{}{\addvspace\itemsep}%
+    \fi
+    \global\@inlabeltrue
+  \fi
+  \everypar{%
+    \@minipagefalse
+    \global\@newlistfalse
+    \if@inlabel %%% Le patch en question
+      \global\@inlabelfalse
+      {\setbox\z@\lastbox
+       \ifvoid\z@
+         \kern-\itemindent
+       \fi}%
+      \box\@labels
+      \penalty\z@
+   	\fi %%% Le patch en question
+    \if@nobreak
+      \@nobreakfalse
+      \clubpenalty \@M
+    \else
+      \clubpenalty \@clubpenalty
+      \everypar{}%
+    \fi}%
+  \if@noitemarg
+    \@noitemargfalse
+    \if@nmbrlist
+      \refstepcounter\@listctr
+    \fi
+  \fi
+  \sbox\@tempboxa{\makelabel{#1}}%
+  \global\setbox\@labels\hbox{%
+    \unhbox\@labels
+    \hskip \itemindent
+    \hskip -\labelwidth
+    \hskip -\labelsep
+    \ifdim \wd\@tempboxa >\labelwidth
+      \box\@tempboxa
+    \else
+      \hbox to\labelwidth {\unhbox\@tempboxa}%
+    \fi
+    \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}%
+	%\hskip\labelsep}%
+  \ignorespaces}
+  
+%% Fin du patch
+
 %%%% Options de gestion des espaces pour les questions
 %%% clés pour marge et separation
 %%% ne doivent pas être utilisées directement
-\cpgeset[@lists]{%
+\cpgesetup[@lists]{%
    marge/.code=\list@setmarge{#1},
    marge/.default=\z@,
    marge*/.code=\list@setmarge@star{#1},
@@ -594,8 +652,8 @@
 \def\list@setmarge#1{%
    \expandafter\global\csname leftmargin\cpge@listlevel\endcsname=%
         \dimexpr\wd\cpge@boxa+#1\relax%
-   \ifdim\csname leftmargin\cpge@listlevel\endcsname>4em%
-       \expandafter\global\csname leftmargin\cpge@listlevel\endcsname=4em%
+   \ifdim\csname leftmargin\cpge@listlevel\endcsname>5em%
+       \expandafter\global\csname leftmargin\cpge@listlevel\endcsname=5em%
     \fi%
     \csgdef{marge@\cpge@listctr}{%
         \labelwidth%
@@ -625,7 +683,7 @@
 %%% et celles-ci ne seront utilisées que lors de l'initialisation  
 %%% d'une liste (par \list@setprop)
 
-\NewDocumentCommand\cpgeset@list{ s mm }{
+\NewDocumentCommand\cpgesetup@list{ s mm }{
    \IfBooleanT{#1}{\csdef{prop@\cpge@listenv\romannumeral#2}{}}
    \ifnum\numexpr#2>\z@%
       \csappto{prop@\cpge@listenv\romannumeral#2}{#3,}%
@@ -634,7 +692,7 @@
       \forcsvlist{\tmp@for}{1,2,3}%
    \fi%
 }
-\NewDocumentCommand\cpgeset@list@name{ s mm }{
+\NewDocumentCommand\cpgesetup@list@name{ s mm }{
    \IfBooleanT{#1}{\csdef{prop@#2}{}}
       \csappto{prop@#2}{#3,}%
 }
@@ -669,7 +727,7 @@
          \csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}\hskip\labelsep\null%
       \color@endgroup}
    \edef\cpge@tempa{%
-      \noexpand\cpgeset[@lists]{\csuse{prop@\cpge@listctr}}
+      \noexpand\cpgesetup[@lists]{\csuse{prop@\cpge@listctr}}
       }%
    \cpge@tempa% 
    \endgroup%
@@ -677,17 +735,17 @@
 
 \cpgesetenum{0}{marge}
 \cpgesetitem{0}{marge=1pc}
-\cpgedeflabel{enumi}{|1|}
-\cpgedeflabel{enumii}{|a|}
-\cpgedeflabel{enumiii}{|i|}
-\cpgedeflabel{section}{|I|}
-\cpgedeflabel{subsection}{|A|}
+\cpgesetlabel{enumi}{|1|}
+\cpgesetlabel{enumii}{|a|}
+\cpgesetlabel{enumiii}{|i|}
+\cpgesetlabel{section}{|I|}
+\cpgesetlabel{subsection}{|A|}
 
-\cpgedefdeco{enumi}{\bfseries #1.}
-\cpgedefdeco{enumii}{\bfseries #1.}
-\cpgedefdeco{enumii}{(#1)}
-\cpgedefdeco{section}{#1}
-\cpgedefdeco{subsection}{#1}
+\cpgesetdeco{enumi}{\bfseries #1.}
+\cpgesetdeco{enumii}{\bfseries #1.}
+\cpgesetdeco{enumii}{(#1)}
+\cpgesetdeco{section}{#1}
+\cpgesetdeco{subsection}{#1}
 %%%% Chargement de font pour des symboles à utiliser avec {xitem}
 \DeclareFontFamily{U}{FdSymbolA}{}
 \DeclareFontShape{U}{FdSymbolA}{m}{n}{
@@ -748,14 +806,14 @@
 \newif\iflocal@prop
 \def\set@local@prop#1{
    \iflocal@prop%
-      \cpgeset@list@name{\cpge@listctr}{#1}
+      \cpgesetup@list@name{\cpge@listctr}{#1}
    \else
       \local@proptrue%
-      \cpgeset@list@name*{\cpge@listctr}{#1}
+      \cpgesetup@list@name*{\cpge@listctr}{#1}
    \fi
 }
 \newif\ifresume@xenum
-\cpgeset[lists]{%
+\cpgesetup[lists]{%
    custom counter/.code={%
       \lists@outerr{cc}%
       \ifltxcounter{#1}{}{\cpgedefcounter{#1}{}}%
@@ -766,11 +824,11 @@
    r/.style={resume=#1},
    label prefix/.code=\def\cpge@enumlabelprefix{#1},
    l/.style={label prefix=#1},
-   n/.code=\lists@outerr{n}\cpgedeflabel{\cpge@listctr}{#1},
+   n/.code=\lists@outerr{n}\cpgesetlabel{\cpge@listctr}{#1},
    n*/.code=\lists@outerr{n*}\cslet{deco@\cpge@listctr}\fake@deco%
-             \cpgedeflabel{\cpge@listctr}{#1},
-   d/.code=\lists@outerr{d}\cpgedefdeco*{\cpge@listctr}{#1},
-   d*/.code=\lists@outerr{d*}\cpgedefdeco{\cpge@listctr}{#1},
+             \cpgesetlabel{\cpge@listctr}{#1},
+   d/.code=\lists@outerr{d}\cpgesetdeco*{\cpge@listctr}{#1},
+   d*/.code=\lists@outerr{d*}\cpgesetdeco{\cpge@listctr}{#1},
    m/.code=\lists@outerr{m}\set@local@prop{marge=#1},
    m*/.code=\lists@outerr{m*}\set@local@prop{marge*=#1},
    s/.code=\lists@outerr{s}\set@local@prop{separation=#1},
@@ -778,11 +836,11 @@
    m/.default=\z@,
    m*/.default=\z@,
    enum@i/.is family,
-   enum@i/n/.code=\cpgedeflabel{enumi}{#1},
+   enum@i/n/.code=\cpgesetlabel{enumi}{#1},
    enum@i/n*/.code=\let\deco@enumi\fake@deco
-                    \cpgedeflabel{enumi}{#1},
-   enum@i/d*/.code=\cpgedefdeco{enumi}{#1},
-   enum@i/d/.code=\cpgedefdeco*{enumi}{#1},
+                    \cpgesetlabel{enumi}{#1},
+   enum@i/d*/.code=\cpgesetdeco{enumi}{#1},
+   enum@i/d/.code=\cpgesetdeco*{enumi}{#1},
    enum@i/m/.code=\cpgesetenum{1}{marge=#1},
    enum@i/m*/.code=\cpgesetenum{1}{marge*=#1},
    enum@i/s/.code=\cpgesetenum{1}{separation=#1},
@@ -791,11 +849,11 @@
    enum@i/m*/.default=\z@,
    enumi/.code=\pgfqkeys{/cpge/lists/enum@i}{#1},
    enum@ii/.is family,
-   enum@ii/n/.code=\cpgedeflabel{enumii}{#1},
+   enum@ii/n/.code=\cpgesetlabel{enumii}{#1},
    enum@ii/n*/.code=\let\deco@enumii\fake@deco%
-                     \cpgedeflabel{enumii}{#1},
-   enum@ii/d*/.code=\cpgedefdeco{enumii}{#1},
-   enum@ii/d/.code=\cpgedefdeco*{enumii}{#1},
+                     \cpgesetlabel{enumii}{#1},
+   enum@ii/d*/.code=\cpgesetdeco{enumii}{#1},
+   enum@ii/d/.code=\cpgesetdeco*{enumii}{#1},
    enum@ii/m/.code=\cpgesetenum{2}{marge=#1},
    enum@ii/m*/.code=\cpgesetenum{2}{marge*=#1},
    enum@ii/s/.code=\cpgesetenum{2}{separation=#1},
@@ -804,11 +862,11 @@
    enum@ii/m*/.default=\z@,
    enumii/.code=\pgfqkeys{/cpge/lists/enum@ii}{#1},
    enum@iii/.is family,
-   enum@iii/n/.code=\cpgedeflabel{enumiii}{#1},
+   enum@iii/n/.code=\cpgesetlabel{enumiii}{#1},
    enum@iii/n*/.code=\let\deco@enumiii\fake@deco%
-                      \cpgedeflabel{enumiii}{#1},
-   enum@iii/d*/.code=\cpgedefdeco{enumiii}{#1},
-   enum@iii/d/.code=\cpgedefdeco*{enumiii}{#1},
+                      \cpgesetlabel{enumiii}{#1},
+   enum@iii/d*/.code=\cpgesetdeco{enumiii}{#1},
+   enum@iii/d/.code=\cpgesetdeco*{enumiii}{#1},
    enum@iii/m/.code=\cpgesetenum{3}{marge=#1},
    enum@iii/m*/.code=\cpgesetenum{3}{marge*=#1},
    enum@iii/s/.code=\cpgesetenum{3}{separation=#1},
@@ -819,9 +877,9 @@
    item@i/.is family,
    item@i/n/.store in=\label@itemi,
    item@i/n*/.code=\let\deco@itemi\fake@deco%
-                    \cpgedeflabel{itemi}{#1},
-   item@i/d/.code=\cpgedefdeco{itemi}{#1},
-   item@i/d*/.code=\cpgedefdeco*{itemi}{#1},
+                    \cpgesetlabel{itemi}{#1},
+   item@i/d/.code=\cpgesetdeco{itemi}{#1},
+   item@i/d*/.code=\cpgesetdeco*{itemi}{#1},
    item@i/m/.code=\cpgesetitem{1}{marge=#1},
    item@i/m*/.code=\cpgesetitem{1}{marge*=#1},
    item@i/s/.code=\cpgesetitem{1}{separation=#1},
@@ -832,9 +890,9 @@
    item@ii/.is family,
    item@ii/n/.store in=\label@itemii,
    item@ii/n*/.code=\let\deco@itemii\fake@deco%
-                         \cpgedeflabel{itemii}{#1},
-   item@ii/d/.code=\cpgedefdeco{itemii}{#1},
-   item@ii/d*/.code=\cpgedefdeco*{itemii}{#1},
+                         \cpgesetlabel{itemii}{#1},
+   item@ii/d/.code=\cpgesetdeco{itemii}{#1},
+   item@ii/d*/.code=\cpgesetdeco*{itemii}{#1},
    item@ii/m/.code=\cpgesetitem{2}{marge=#1},
    item@ii/m*/.code=\cpgesetitem{2}{marge*=#1},
    item@ii/s/.code=\cpgesetitem{2}{separation=#1},
@@ -845,9 +903,9 @@
    item@iii/.is family,
    item@iii/n/.store in=\label@itemiii,
    item@iii/n*/.code=\let\deco@itemiii\fake@deco%
-                      \cpgedeflabel{itemiii}{#1},
-   item@iii/d/.code=\cpgedefdeco{itemiii}{#1},
-   item@iii/d*/.code=\cpgedefdeco*{itemiii}{#1},
+                      \cpgesetlabel{itemiii}{#1},
+   item@iii/d/.code=\cpgesetdeco{itemiii}{#1},
+   item@iii/d*/.code=\cpgesetdeco*{itemiii}{#1},
    item@iii/m/.code=\cpgesetitem{3}{marge=#1},
    item@iii/m*/.code=\cpgesetitem{3}{marge*=#1},
    item@iii/s/.code=\cpgesetitem{3}{separation=#1},
@@ -856,9 +914,9 @@
    item@iii/m*/.default=\z@,
    itemiii/.code=\pgfqkeys{/cpge/lists/item@iii}{#1},
 }
-\cpgeset[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
+\cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
 
-\def\cpgesetlists{\cpgeset[lists]}
+\def\cpgesetuplists{\cpgesetup[lists]}
 \def\@ques@{%
    \list@setprop%
    \expandafter
@@ -883,7 +941,7 @@
         }
    }
 \def\cpge@makelabel#1{\hfill\ifblank{#1}{}{\csuse{deco@\cpge@listctr}{#1}}}
-\NewDocumentCommand\xenum{o}{%
+\NewDocumentCommand\xenum{!e{\op}}{%
    \def\cpge@listenv{enum}
    \def\cpge@xlistenv{xenum}
    \ifnum \@enumdepth >2 \@toodeep\else%
@@ -892,7 +950,7 @@
       \edef\cpge@listlevel{\romannumeral\@enumdepth}%
       \edef\cpge@listctr{enum\cpge@listlevel}%
    \fi%
-   \IfValueT{#1}{\cpgeset[lists]{#1}}%
+   \IfValueT{#1}{\cpgesetup[lists]{#1}}%
    \@ques@%
    \ifresume@xenum%
       \csname c@\cpge@listctr\expandafter\endcsname
@@ -904,7 +962,7 @@
  \def\save@enumctr{%
 	\csnumgdef{last@\cpge@listctr}{\value{\cpge@listctr}}%
 }
- \NewDocumentCommand\xitem{o}{%
+ \NewDocumentCommand\xitem{!e{\op}}{%
   \def\cpge@listenv{item}
   \def\cpge@xlistenv{xitem}
   \ifnum \@itemdepth >2 \@toodeep\else%
@@ -913,19 +971,19 @@
       \edef\cpge@listlevel{\romannumeral\@itemdepth}%
       \edef\cpge@listctr{item\cpge@listlevel}%
   \fi%
-  \IfValueT{#1}{\cpgeset[lists]{#1}}%
+  \IfValueT{#1}{\cpgesetup[lists]{#1}}%
   \@ques@star%
  }
 \let\endxitem\endlist
-\NewDocumentCommand\init@xlist{mm t- t- t- t\r t+  E{\op}{{}} }{
+\NewDocumentCommand\init@xlist{mm !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
 	\IfBooleanTF{#6}%
-        {\begin{#1}[r,#8]}
-        {\IfBooleanT{#7}{\begin{#1}[#8]}}%
+        {\begin{#1}\op{r,#8}}
+        {\IfBooleanT{#7}{\begin{#1}\op{#8}}}%
 	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
-	\cpgeset[lists]{local,#8}
+	\cpgesetup[lists]{local,#8}
 	#2%
 }
-\NewDocumentCommand\xit@enum{o E{\zap}{{@}} d() d<>}{%
+\NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
       \ifstrequal{#2}{@}{}
             {\addtocounter{\cpge@listctr}{#2}}%
       \IfValueTF{#1}
@@ -937,7 +995,7 @@
          {\label{\cpge@enumlabelprefix#4}}%
  }
 \def\xitenum{\init@xlist{xenum}\xit@enum}
-\NewDocumentCommand\xit@item{E{\lab\zap}{{}{@}} d() d<>}{%
+\NewDocumentCommand\xit@item{!E{\lab\zap}{{}{@}} !d() !d<>}{%
    \ifblank{#1}
          {\item}
          {\item[\csuse{deco@\cpge@listctr}{#1}]}%
@@ -955,7 +1013,7 @@
 		 \end@xlist@rec%
   }%
 }%
-\NewDocumentCommand\exit{t- t- t- t-}{
+\NewDocumentCommand\exit{!t- !t- !t- !t-}{
    \IfBooleanTF{#1}
       {%
          \end@xlist%
@@ -972,14 +1030,14 @@
 }
 \NewDocumentCommand\cpgenewlist{ smmm }{
    \IfBooleanF{#1}{
-      \expandafter\newcommand\csname#2\endcsname[1][]
-         {\xenum[#4,##1]\def\cpge@xlistenv{#2}}
+      \expandafter\NewDocumentCommand\csname#2\endcsname{!E{\op}}
+         {\xenum\op{#4,##1}\def\cpge@xlistenv{#2}}
       \csdef{end#2}{\save@enumctr\endlist}
-      \def#3{\init@xlist{#2}\xit@enum}
+      \newcommand#3{\init@xlist{#2}\xit@enum}
    }
    \IfBooleanT{#1}{
-      \expandafter\newcommand\csname#2\endcsname[1][]
-         {\xitem[#4]\def\cpge@xlistenv{#2}}
+      \expandafter\NewDocumentCommand\csname#2\endcsname{!E{\op}}
+         {\xitem\op{#4}\def\cpge@xlistenv{#2}}
       \cslet{end#2}\endlist
       \def#3{\init@xlist{#2}\xit@item}
    }
@@ -993,7 +1051,7 @@
 }
 \def\item@imp#1#2{\item[$#1\Rightarrow#2\,)$]} 
 \def\item@equiv#1#2{\item[$#1\Leftrightarrow#2\,)$]} 
-\newenvironment*{discussion}[1][]{%
+\NewDocumentEnvironment{discussion}{!e{\wd}}{%
 	\def\unite{\disc@unite{}{~:~}}%
 	\def\si{\disc@unite{Si\ }{~:~}}%
 	\def\cas{\disc@unite{Cas où\ }{~:~}}
@@ -1002,7 +1060,7 @@
 	\def\cs{\item[$\Leftarrow\,)$]}
 	\def\cn{\item[$\Rightarrow\,)$]}
 	\list{}{%
-		\ifblank{#1}
+		\IfNoValueTF{#1}
 			{\labelwidth=\z@ \leftmargin=1pc \itemindent=-\leftmargin}
 			{%
 				\settowidth\leftmargin{#1}%
@@ -1021,7 +1079,7 @@
 		{\makebox[\leftmargin-\labelsep][l]{\deco@discuss{}}}
 		{\deco@discuss{#1}\hfil}%
 	}
-\cpgedefdeco{discuss}{$\bullet\;$ \bfseries\boldmath #1}
+\cpgesetdeco{discuss}{$\bullet\;$ \bfseries\boldmath #1}
 %% Pour compatibilite
 \let\discuss\discussion
 \let\enddiscuss\enddiscussion
@@ -1032,11 +1090,11 @@
 %% C'est l'environnement qui s'en charge.
 %% Il doit initier la commande \unite avec \def\unite{\first@unite}
 %% dans le bloc d'ouverture.
-%% et avoir \endlist dans le bloc de fermeture ou d'utilise \closeunite. 
+%% et avoir \endlist dans le bloc de fermeture ou d'utiliser \closeunite. 
 \let\thegobbler\@gobble
 \cpge@cnt@shortcut{X}{gobbler}
 \cpgedefcounter{unite}{|X|.|1|}(T)
-\cpgedefdeco{unite}{\bfseries#1.}
+\cpgesetdeco{unite}{\bfseries#1.}
 \makethetolabel{unite}
 \newif\ifinsideuniteenv
 \def\unite@env{%
@@ -1060,8 +1118,8 @@
 }
  \def\first@unite{%   
    \insideuniteenvtrue
-   \cpgedeflabel{enumii}{|T|.|1|}%
- 	\cpgedeflabel{enumiii}{|q|.|a|}%
+   \cpgesetlabel{enumii}{|T|.|1|}%
+ 	\cpgesetlabel{enumiii}{|q|.|a|}%
 	\def\unite{\unite@}%
 	\unite@env\unite%
  }
@@ -1070,14 +1128,14 @@
 	\IfValueT{#2}{\deco@unitetitle{#2}}%
 	\IfValueT{#3}{\IfValueF{#1}{\label{#3}}}%
 }
-\cpgedefdeco{unitetitle}{\textbf{#1~:~}}
+\cpgesetdeco{unitetitle}{\textbf{#1~:~}}
 \def\set@defaultforlistsinsideunite{
 	\def\unite{\first@unite}%
 	\cpgesetenum{1}{marge*}%
 	\cpgesetenum{2}{marge}%
 	\cpgesetenum{3}{marge*}%
-	\cpgedefdeco{enumii}{\bfseries ##1.}%
-	\cpgedefdeco{enumiii}{\bfseries ##1.}
+	\cpgesetdeco{enumii}{\bfseries ##1.}%
+	\cpgesetdeco{enumiii}{\bfseries ##1.}
 }
 
 %%% Ajout 2020 
@@ -1202,7 +1260,7 @@
    \dimdef\ccrightmargin@limit{.17\linewidth}%
    \symbol@measuring{\ccsi}%
    \symbol@measuring{\ccalors}%
-   \cpgeset[condcons]{#1}%
+   \cpgesetup[condcons]{#1}%
    \condcons@measuring{#2}%
    \ifdim\ccleftmargin>\ccleftmargin@limit\relax%
       \ccleftmargin=\ccleftmargin@limit%
@@ -1220,7 +1278,7 @@
       #2 
    \close@tab%
 }{}
-\cpgeset[condcons]{%
+\cpgesetup[condcons]{%
    l/.code=\dimdef\ccleftmargin@limit{#1},
    r/.code=\dimdef\ccrightmargin@limit{#1},
    s/.code=\dimdef\ccjot{#1},
@@ -1255,52 +1313,50 @@
 	\ifblank{#1}{\relax}
 				 {\csuse{deco@lrmargin}{#1}}%
 	}
-\cpgedefdeco{lrmargin}{\fbox{#1}} 
+\cpgesetdeco{lrmargin}{\textbf{#1.}} 
 
 \dimdef\lrmarginleft{\z@}
 \dimdef\lrmarginright{\z@}
-\cpgeset[mini]{%
+\cpgesetup[mini]{%
 	left margin/.code=\dimdef{\lrmarginleft}{#1},
 	right margin/.code=\dimdef{\lrmarginright}{#1},
    lm/.style={left margin=#1},
    rm/.style={right margin=#1},
 	font/.code=\def\mini@font{#1},
 	label font/.code=\def\mini@label@font{#1\vphantom{(}},
-	mini deco/.code=\cpgedefdeco{lrmargin}{\mini@label@font#1},
+	deco/.code=\cpgesetdeco{lrmargin}{\mini@label@font#1},
 }
-\cpgeset[mini]{%
+\cpgesetup[mini]{%
 	font=\sffamily\small,
 	label font=\sffamily\small\scshape\bfseries,
-	mini deco/.initial={#1.}
+	deco/.initial={#1.}
 	}
-\DeclareDocumentEnvironment{MINI}{O{} D(){}}{%
-		\cpgeset[mini]{#1}%
+\DeclareDocumentEnvironment{mini}{O{}m d()}{%
+		\cpgesetup[mini]{#1}%
       \ifdim\leftmargin>3.4em\relax
          \let\lrmarginleft\z@
       \fi
-		\begin{lrmargin}[\MakeLowercase{#2}]
+		\lrmargin[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]
 			{\lrmarginleft}
 			{}%
 		\mini@font%
-	}{\end{lrmargin}}
+	}{\endlrmargin}
 
-\def\mini{\begin{MINI}}
-\def\endmini{\end{MINI}}
-\def\nb{\mini(n.b)}
+\def\nb{\mini{n.b}}
 \let\endnb\endmini
-\def\dem{\mini(dem)}
+\def\dem{\mini{dem}}
 \let\enddem\endmini
-\def\ind{\mini(ind)}
+\def\ind{\mini{indication}}
 \let\endind\endmini
-\def\snt{\mini(synthèse)}
-\let\endsnt\endmini 
-\def\newmini#1#2{\csdef{#1}{\mini(#2)}\cslet{end#1}\endmini}
+\def\synt{\mini{synthèse}}
+\let\endsynt\endmini 
+\def\newmini#1#2{\csdef{#1}{\mini{#2}}\cslet{end#1}\endmini}
 
 %%%%%% Ajout 17/07/2021 %%%%%%%%
 %%%%% Pointillé 
 \setlength{\ligneskip}{\baselineskip*\real{.33}}
 \def\set@point@box{\setbox\cpge@boxb=\hbox{\deco@pointille\hss}}
-\cpgedefdeco{pointille}{\textcolor{black!75}{\rule{.8pt}{.4pt}\hskip1.2pt}}
+\cpgesetdeco{pointille}{\textcolor{black!75}{\rule{.8pt}{.4pt}\hskip1.2pt}}
 \def\lignes{\@ifstar\cpge@lign\cpge@lign@}
 \def\cpge@lign@{\set@point@box%
 	\hbox{}\vrule height \ligneskip width\z@\relax%
@@ -1412,7 +1468,7 @@
 \def\fntht{\fontcharht\font`}
 \def\fntdp{\fontchardp\font`}
 \def\fntwd{\fontcharwd\font`}
-\newcommand\cpge@square[1][x]{\rule{\fntht#1}{\fntht#1}}
+\newcommand\cpgesquare[1][x]{\rule{\fntht#1}{\fntht#1}}
   
 %%%% Ajout 09/10/2023
 %%%% emprunté à answers.sty et tcolorbox.sty avec adaptation 
@@ -1461,12 +1517,16 @@
 
 \def\cpge@null#1{}
 \newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
-
-\newcommand{\cpgestartrecording}[1][\jobname.records]{%
+\newif\ifrecordfileopen
+\newcommand{\cpgestartrecording}[1][\jobname.rec]{%
   \let\cpgerecord\cpge@record%
   \edef\cpge@record@file{#1}%
-  \cpge@allocate@out%
-  \immediate\openout\cpge@out\cpge@record@file%
+  \ifcpge@open{recordfile}{}
+      {
+            \global\recordfile@isopentrue%
+            \cpge@allocate@out%
+            \immediate\openout\cpge@out\cpge@record@file%
+      }%
 }
 
 \newcommand{\cpgestoprecording}{%
@@ -1615,23 +1675,31 @@
    }{}%
 }
 
-%%%%% Enonce/Corrige %%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \NewDocumentEnvironment{enonce}{mm O{} d() d<>}{%
-% 			\def\cpge@current@id{#2}%
-% 			\csepreto{\cpge@current@id @opts}{\expandonce\corr@common@opt,}%
-% 			\cpgeset[@problem]{current counter=#1,#3}%
-% 			\ifcsundef{#2@title}{\csdef{#2@title}{#4}}{}%
-% 			%\problemtitle{#2}{#3}(##3)<##4>
-% 			\setup@id%
-% 			\setup@sol%
-% 			\setup@hint%
-% 			\csuse{hook@beforeproblem}%
-% 		}{%
-% 			\exit%
-% 			\csuse{hook@afterproblem}%
-% 			\close@problem{#2}%
-% 		}
+%%% Si le moteur de compilation est luatex
+%%% charger pdftexcmd.sty qui définit certaines 
+%%% primitives pdftex qui ne sont pas disponibles dans lualatex
+\RequirePackage{ifluatex}
+   \ifluatex\RequirePackage{pdftexcmds}
+\fi 
+%%%
+
+\def\Ifcpge@FileExists#1{%
+  \expandafter\ifx\expandafter&\pdffilesize{#1}&%
+    \expandafter\@secondoftwo
+  \else
+    \expandafter\@firstoftwo
+  \fi
+}
+\def\Ifcpge@FileEmpty#1{%
+\let\cpge@filesize\z@
+\IfFileExists{#1}{\edef\cpge@filesize{\pdf@filesize{#1}}}{}
+  \ifnum0\cpge@filesize>\z@
+    \expandafter\@secondoftwo%
+  \else
+    \expandafter\@firstoftwo%
+  \fi%
+}
+
 
 
 %%% Ajout 07/08/2021
@@ -1710,20 +1778,35 @@
      }
   }
 \RequirePackage{lastpage}
-\cpgeaddkeyword{hf}{auteur}{\scshape\csuse{cpge@auteur}}
-\cpgeaddkeyword{hf}{concours}{\scshape\csuse{cpge@concours}}
-\cpgeaddkeyword{hf}{session}{\scshape\csuse{cpge@session}}
+\DeclareDocumentCommand\cpgenewpagestylekeyword{mm}{%
+   \cpgeaddkeyword{hf}{#1}{{#2\csuse{cpge@#1}}
+   }%
+}
+\cpgenewpagestylekeyword{centre}{\scshape}
+\cpgenewpagestylekeyword{classe}{\scshape}
+\cpgenewpagestylekeyword{matiere}{\scshape}
+\cpgenewpagestylekeyword{document}{}
+\cpgenewpagestylekeyword{devoir}{}
+\cpgenewpagestylekeyword{theme}{\scshape}
+\cpgenewpagestylekeyword{concours}{\scshape}
+\cpgenewpagestylekeyword{epreuve}{\scshape}
+\cpgenewpagestylekeyword{session}{\itshape}
+\cpgenewpagestylekeyword{auteur}{\scshape}
+\cpgenewpagestylekeyword{siteweb}{\ttfamily}
+\cpgenewpagestylekeyword{email}{\ttfamily}
+
 \cpgeaddkeyword{hf}{chapter}{\chaptertitle}
 \cpgeaddkeyword{hf}{section}{\sectiontitle}
 \cpgeaddkeyword{hf}{C}{\ifnum\value{chapter}>\z@\thechapter\fi}
 \cpgeaddkeyword{hf}{S}{\ifnum\value{section}>\z@\thesection\fi}
 \cpgeaddkeyword{hf}{page}{\thepage}
 \cpgeaddkeyword{hf}{pages}{page\enskip\thepage{} / \pageref*{LastPage}}
-\cpgeaddkeyword{hf}{square}{\cpge@square}
-\cpgeaddkeyword{hf}{tpsvp}{\quad\cpge@square[1]\ %
-  \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
-  \cpge@square[1]\ \cpge@square[1]
-  \fi}
+\cpgeaddkeyword{hf}{square}{\cpgesquare}
+\cpgeaddkeyword{hf}{tpsvp}{\quad\cpgesquare[1]\ %
+   \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
+      \cpgesquare[1]\ \cpgesquare[1]
+   \fi%
+}
 \def\hf@deco{\title@deco}
 
 

@@ -10,7 +10,7 @@
 \definecolor{stcol}{HTML}{D68A36}
 \definecolor{cpgeblack}{HTML}{1F1F1F}
 
-\cpgeset[colors]{    
+\cpgesetup[colors]{    
     warm={cpgegreen!85!black}{cpgegreen},
     cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
@@ -50,7 +50,7 @@
 	boxrule=.4pt, bottomrule=1.4pt,
 	colback=bgcol, coltext=fgcol, colframe=coldcol
 }}
-\cpgedefdeco{quiz}{%
+\cpgesetdeco{quiz}{%
 	\tcolorbox[%
 			arc=10pt, sharp corners=south, boxrule=0pt, 
 			boxsep=0pt, left=8pt, right=8pt, top=2pt, bottom=2pt,  
@@ -59,14 +59,14 @@
 	 #1
 	\endtcolorbox%
 }
-\cpgedefdeco{choice}{%
+\cpgesetdeco{choice}{%
 	\tikz[baseline=(T.base)]\node (T) 
 				[inner sep=0pt, 
 				rounded corners=3pt,
 				fill=none, draw=coldcol, text=fgcol
 		]{#1};%
 	}
-\cpgedefdeco{solchoice}{%
+\cpgesetdeco{solchoice}{%
 	\tikz[baseline=(T.base)]\node (T) 
 				[inner sep=2pt, 
 				line width=0pt, rounded corners=2pt,
@@ -76,7 +76,7 @@
 
 \tcbset{student infos/.style={toprule=1pt, bottomrule=1pt}}
 
-\cpgedefdeco{unite}{%
+\cpgesetdeco{unite}{%
 	\hfill
 	\genboxcmd[boxrule=.4pt, boxsep=1.5pt, arc=5pt, left=3pt, right=3pt, colback=warmcol, colframe=white, coltext=white]
 		{\sffamily\footnotesize #1 \name@unity}%
@@ -117,7 +117,7 @@
 			]{{\vphantom{)}#2}}
 	}%
 }
-\DeclareDocumentCommand\bcpgetext@deco{O{}m}{%
+\DeclareDocumentCommand\bigtext@deco{O{}m}{%
 	\genboxcmd[%
 			fontupper=\sffamily,
 			arc=4pt, %sharp corners=west,
@@ -144,8 +144,7 @@
 		#1
 	}}
 \renewtcbox{\rslt@box}[1][]{math@box,#1}
-%\fadjwidth=12pt
-\cpgedefdeco{result}{\rslt@box[colback=bgcol!85!tcbcolbacktitle]{#1}}
+\cpgesetdeco{result}{\rslt@box[colback=bgcol!85!tcbcolbacktitle]{#1}}
 \setlength\xframe@gap{6.8pt}
 
 %%%% Styles des titres
@@ -160,7 +159,7 @@
 			\\ \LARGE\bfseries #2%
 	\end{minipage}%
 }
-\cpgedefdeco{devoirlabelnumberless}{%
+\cpgesetdeco{devoirlabelnumberless}{%
 	\begin{tikzpicture} [overlay] 
 		\ifcpge@tmpswa
 			\draw [warmcol, line width=12pt, rounded corners=30pt, line cap=round] 
@@ -223,7 +222,7 @@
 			\tikzset{top color=neutralcol!90,bottom color=neutralcol!60!black}
 		\fi}
 }
-\cpgedefdeco{problemlabel}{%
+\cpgesetdeco{problemlabel}{%
 	\hskip-5pt\begin{tikzpicture}  [baseline=(S.base)] 
 		\node (S)  [rounded rectangle,
 			collink,
@@ -243,7 +242,7 @@
 		\fi
 	\end{tikzpicture}\hfill%
 }
-\cpgedefdeco{problemlabelnumberless}{%
+\cpgesetdeco{problemlabelnumberless}{%
 	\begin{tikzpicture}  [overlay, baseline=(S.base)] 
 		\ifcpge@tmpswa%
 			\draw [warmcol, line width=.6pt, rounded corners=6pt] 
@@ -254,7 +253,7 @@
 		\fi
 	\end{tikzpicture}\hfill%
 }
-\cpgedefdeco{problem}{%
+\cpgesetdeco{problem}{%
 	\ifblank{#1}
 		{\vskip-1.2\baselineskip}
 		{\color{coldcol}\parbox[t]{\columnwidth-16pt}{\filleft #1}\hskip8pt\null}%
@@ -288,51 +287,51 @@
 	{.5em}
 	{#1}
 
-%\cpgedeflabel{parti}{|1|}
-%\cpgedeflabel{partii}{|P|.|a|}
-\cpgedefdeco{partii}{%
+%\cpgesetlabel{parti}{|1|}
+%\cpgesetlabel{partii}{|P|.|a|}
+\cpgesetdeco{partii}{%
 	\textcolor{warmcol}{#1}}
-\cpgedefdeco{partiilabel}{%
+\cpgesetdeco{partiilabel}{%
 	\longminimal@deco[colback=coldcol, coltext=white]
 		{\small\bfseries#1}%
 }
-\cpgedefdeco{enumi}{%
+\cpgesetdeco{enumi}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{enumii}{%
+\cpgesetdeco{enumii}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{enumiii}{%
+\cpgesetdeco{enumiii}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{nolinkenumi}{%
+\cpgesetdeco{nolinkenumi}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{nolinkenumii}{%
+\cpgesetdeco{nolinkenumii}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{nolinkenumiii}{%
+\cpgesetdeco{nolinkenumiii}{%
 	\minimal@deco[colback=neutralcol, coltext=bgcol]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{linkenumi}{%
+\cpgesetdeco{linkenumi}{%
 	\minimal@deco[colback=linkcol, coltext=white]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{linkenumii}{%
+\cpgesetdeco{linkenumii}{%
 	\minimal@deco[colback=linkcol, coltext=white]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{linkenumiii}{%
+\cpgesetdeco{linkenumiii}{%
 	\minimal@deco[colback=linkcol, coltext=white]
 		{\scriptsize\bfseries#1}%
 }
-\cpgedefdeco{innersol}{%
+\cpgesetdeco{innersol}{%
 	\longminimal@deco[colback=linkcol, coltext=white]
 		{\scriptsize\bfseries#1}%
 	}
@@ -367,8 +366,8 @@
 			] 
         (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
 }
-\cpgeset[mini]{%
-	mini deco=\llap{\funnyarrow{1.2em}{warmcol}}%
+\cpgesetup[mini]{%
+	deco=\llap{\funnyarrow{1.2em}{warmcol}}%
 		\textcolor{coldcol}{#1.}\kern1ex%
 }
 %%% Page de garde 
@@ -514,7 +513,7 @@
 		\end{tikzpicture}
 		\end{STRIP}%
 }
-\cpgeset[title]{%
+\cpgesetup[title]{%
 	before 	=	\ifstriptitle
 					\let\STRIP\strip%
 					\let\endSTRIP\endstrip%
@@ -558,7 +557,7 @@
 			{auteur}%
 		\fi%
 }
-\cpgedeftitleformat*{
+\cpgesettitle*{
   |document|\par
   \bigskip\hrule\bigskip
   |theme|\\
@@ -566,7 +565,7 @@
   \bigskip
   |auteur|
 }
-\cpgedeftitleformat{
+\cpgesettitle{
   |document|\par
   \bigskip
   |theme|\\

@@ -1,0 +1,91 @@
+\cpgefont{utopia} 
+
+\Preauteur{Corrigé proposé par~}
+\AtBeginDocument{\@bsphack
+\cpgesettitle{
+    \ifdefmeta{document}
+        |document| \par \vskip\dimexpr\bigskipamount*3
+    \fi
+    \ifdefmeta{concours}
+        |concours| \\
+    \fi
+    \ifdefmeta{session}
+        |session|  \\
+    \fi 
+    \ifdefmeta{epreuve}
+        |epreuve|  
+    \fi
+    \ifdefmeta{auteur}
+        \ifsolution
+            \par \vskip\dimexpr\bigskipamount*3
+            |auteur| 
+        \fi
+    \fi
+}
+\cpgesettitle*{
+    |document| \par
+    \bigskip\hrule\bigskip
+    |concours| \\
+    |session|  \\
+    |epreuve|  \par \vskip \z@ plus .2fill 
+    \ifsolution |auteur|   \fi
+}
+\cpgesetuptitle{
+    late after* =   \tableofcontents,
+    late after  =   \vskip \z@ plus .5fill
+                     \tableofcontents 
+                      \vskip \z@ plus 1fill
+}
+\def\problembreak{\clearpage}
+\cpgesetuplists{
+    enumi={
+        n=|1|, 
+        d*={\normalfont\ifsolution\bfseries#1\ifdraft.\fi%
+        \else\textlf{\bfseries#1}
+            \Large$\,\triangleright\,$\fi}, 
+        m, 
+        s=8pt plus 2pt minus 4pt,
+    },
+    itemi = {d={}--{} , m = 2em, s = 6pt }
+}
+\cpgesetupsectiontitle{
+    problem={
+        font = \Large\sffamily\bfseries,
+        label deco = \ifisasolution#1\fi,
+        deco = \ifisasolution 
+                    #1 
+                \else 
+                    \large\mdseries#1\par\bigskip\titlerule
+                \fi,
+        fill = center, 
+        spacing = {\z@}{\z@}{*4}
+    },
+    parti={
+            font=\Large\itshape\bfseries,
+            label=|I|,
+            label deco=\bfseries Partie #1\enskip-\enskip,
+            fill=center,
+            spacing={\z@}{*5}{*3}
+        },
+    partii={
+            font=\large\itshape\bfseries,
+            label=|A|,
+            label deco=\bfseries\itshape Section #1\ - \ ,
+            deco = \bfseries\slshape #1,
+            fill=right,
+            spacing={\z@}{*3}{*1.5}
+        }
+} 
+\cpgesetupmath{
+    symbol={
+        C=\mathbf C,
+        R=\mathbf R, 
+        Q=\mathbf Q,
+        Z=\mathbf Z,
+        N=\mathbf N,
+        P=\mathbf P,
+        E=\mathbf E,
+        V=\mathbf V
+    }
+}
+\@esphack}

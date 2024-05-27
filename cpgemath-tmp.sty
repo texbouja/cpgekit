@@ -499,10 +499,21 @@
 \precenterpenalty\@highpenalty 
 \postcenterpenalty\z@
 
+%%%% Quelques commandes utilitaires %%%%
+\def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ \@plus .5em 
+ 	 \@rightskip\rightskip \parfillskip\z@ \@plus .1\hsize}  
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
+\def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
+\let\cpge@ifnextchar\new@ifnextchar
+
 
 %%%% Quelques commandes utilitaires %%%%
 \def\m@cpge@stop{\vrule\@width\z@}
 \def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ \@plus .5em 
+ 	 \@rightskip\rightskip \parfillskip\z@ \@plus .1\hsize}  
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
 \def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
 \newcommand\xtag[1][]{%
 	\tag*{(\theequation)}\refstepcounter{equation}%
@@ -589,57 +600,61 @@
 		}
 
 \long\def\eqn@prepareboxes#1#2#3{%
-\@bsphack
-	\setbox\z@\hbox{\eqnframecmd{}}
-	\fadjwidth\wd\z@
+	\setbox\z@\hbox{\eqnframecmd{}}%
+	\fadjwidth\wd\z@%
 	\setbox\cpgem@boxa\hbox{%
 		\color@begingroup#2\color@endgroup%
-	}
-	\iftextmode
-		\eqn@preparemidbox{#1}{#3}
+	}%
+	\ifdim\wd\cpgem@boxa=\z@%
+		\if@inlabel%
+			\setbox\cpgem@boxa\hbox{\kern 1em}%
+		\fi%
+	\fi%
+	\iftextmode%
+		\eqn@preparemidbox{#1}{#3}%
 		\setbox\cpgem@boxb\hbox{\cpge@indisplaytrue%
-			\eqnframecmd{$\m@th
-				\vcenter{
-					\hsize\midwidth\@parboxrestore\box\midbox
-			}$}
-		}
-	\else
+			\eqnframecmd{$\m@th%
+				\vcenter{%
+					\hsize\midwidth\@parboxrestore\box\midbox%
+			}$}%
+		}%
+	\else%
 		\setbox\cpgem@boxb\hbox{\cpge@indisplaytrue%
 			\eqnframecmd{#3}%
-	}
-	\fi
-	\setlength\cpge@dima{(\linewidth-\wd\cpgem@boxb)/2}
-	\unless\ifdim\cpge@dima<\z@
-		\setlength\cpge@dimb{\cpge@dima*(\l@qnshift-\r@qnshift)/10}
-		\setlength\cpge@dima{\cpge@dima+\cpge@dimb}
-		\setlength\cpge@dimc{\cpge@dima-\cpge@dimb}
-	\fi
-\@esphack%
+	}%
+	\fi%
+	\setlength\cpge@dima{(\linewidth-\wd\cpgem@boxb)/2}%
+	\unless\ifdim\cpge@dima<\z@%
+		\setlength\cpge@dimb{\cpge@dima*(\l@qnshift-\r@qnshift)/10}%
+		\setlength\cpge@dima{\cpge@dima+\cpge@dimb}%
+		\setlength\cpge@dimc{\cpge@dima-\cpge@dimb}%
+	\fi%
 }
+\def\mid@pos{[t]}
 \long\def\eqn@preparemidbox#1#2{%
-\@bsphack
-	\def\in@@{\in@{*!}}
-	\@xp\in@@\@xp{#1!}
-	\ifin@
-		\edef\num@pt{\cpge@removestar #1}
-		\def\@renderer{varwidth}
-	\else
-		\def\num@pt{#1}
-		\def\@renderer{minipage}
-	\fi
-	\ifnum\num@pt<50\relax
-		\ifnum\num@pt=0\relax
-			\midwidth\hsize
-		\else
-			\midwidth.5\hsize
-		\fi
-	\else
-		\setlength\midwidth{\hsize*\ratio{\num@pt\p@}{100\p@}}
-	\fi
-	\midwidth=\dimexpr\midwidth-\fadjwidth-2em\relax
-	\eqn@setmidbox{#2}
-	\setlength\midwidth{\wd\midbox+\fadjwidth}
-\@esphack%
+	\def\in@@{\in@{*!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\num@pt{\cpge@removestar #1}%
+		\let\@render\m@cpge@narrowpar% 
+		\def\@renderer{varwidth}%
+	\else%
+		\def\num@pt{#1}%
+		\let\@render\relax%
+		\def\@renderer{minipage}%
+	\fi%
+	\ifnum\num@pt<50\relax%
+		\ifnum\num@pt=0\relax%
+			\midwidth\hsize%
+		\else%
+			\midwidth.5\hsize%
+		\fi%
+	\else%
+		\setlength\midwidth{\hsize*\ratio{\num@pt\p@}{100\p@}}%
+	\fi%
+	\midwidth=\dimexpr\midwidth-\fadjwidth-2em\relax%
+	\eqn@setmidbox{#2}%
+	%\setlength\midwidth{\wd\midbox+\fadjwidth}%
 }
 \long\def\eqn@setmidbox#1{%
 	\setbox\midbox\hbox{%
@@ -647,47 +662,58 @@
 		\begin{\@renderer}\midwidth%
 			\cpge@minipagetrue%
 			\everymath{\displaystyle}%
-			\abovedisplayskip\medcenterskip%
-			\belowdisplayskip\medcenterskip%		
-		 		#1%
+			\abovedisplayskip\bigcenterskip%
+			\belowdisplayskip\bigcenterskip%		
+		 	%\par va compter le nombre de ligne dans la boite
+		 	\@setpar{%
+				\hfill{\@@par}\global\advance\cpge@count\prevgraf
+				%\addvspace{\belowdisplayskip}
+			}%
+		 	\@render #1\hfill\null%
 		\end{\@renderer}%
 	}%
+	%\midwidth\wd\midbox%
+	%\setbox\midbox\vbox{\hsize\midwidth\unhbox\midbox}%
 }
 \def\hacked@item{%
-	% \if@inlabel
-	% 	\vskip\bigcenterskip%
-	% \fi%
-	\ifcpge@minipage%
-		\topsep\medcenterskip%
-	\else%
-		\topsep\bigcenterskip%
-	\fi%
-	\itemsep\medcenterskip%
-	\trivlist%
-		\@topsep\topsep%
-		\partopsep\topsep%
-		\@topsepadd\z@skip%
-		\parsep\z@skip%
-		\@beginparpenalty\precenterpenalty%
-		\@endparpenalty\postcenterpenalty%
-	\item[]%
+	\item[]\@trivlist\@noparlistfalse\item[]\leavevmode%
 }
-\def\begin@center@{%	
+\def\begin@center@{%
+	\if@inlabel
+		\vskip\bigcenterskip
+	\fi%	
+	\trivlist%\parindent\z@%
+	\ifcpge@minipage%
+		\@topsep\smallcenterskip%
+		\partopsep\medcenterskip%
+	\else%
+		\@topsep\bigcenterskip%
+		\partopsep\bigcenterskip%
+	\fi%
+	\@topsepadd\z@skip%
+	\parsep\z@skip%
+	\itemsep\medcenterskip%
+	\@beginparpenalty\precenterpenalty%
+	\@endparpenalty\postcenterpenalty%
 }
 \long\def\eqn@item#1#2#3#4#5{%
+	\hacked@item%
 	%\begingroup%
 	\eqn@prepareboxes{#1}{#2}{#3}%
 	\ifdim\wd\cpgem@boxa>\cpge@dima\relax%
-		% \ifhmode%
-		% 	\unskip\par\nobreak\vskip-\parskip\noindent%
-		% \fi%
-		\unskip\unskip\unskip\ignorespaces\unhbox\cpgem@boxa\hfill\par%
+		\ifhmode%
+			\unskip\par\nobreak\vskip-\parskip\noindent%
+		\fi%
+		\unhbox\cpgem@boxa\par%
 		\vskip-\lineskiplimit%
         \vskip\normallineskiplimit%
-		\vskip\medcenterskip%
+		\vskip\largetextbelow%
 	\fi%
-	\hacked@item%
-	\leavevmode\hb@xt@\z@{\unhcopy\cpgem@boxa\hss}%
+	\ifdim\wd\cpgem@boxa>\z@%
+		\leavevmode\hb@xt@\z@{%
+			\unhcopy\cpgem@boxa\hss%
+		}%
+	\fi%
 	\setbox\cpgem@boxb\hbox{\kern\cpge@dimb\box\cpgem@boxb}%
 	\ifdim\wd\cpgem@boxb>\linewidth%
 		\hskip-\@totalleftmargin%
@@ -705,8 +731,7 @@
 			\tag@kern\deco@tag{\theequation}%
 		}%
 		\unless\ifx\@empty\cpge@tmpl%
-			\Make@Link%
-			\label{eq:\cpge@problem@id:\cpge@tmpl}%
+			\@xp\label\@xp{\cpge@tmpl}%
 		\fi%
 	\else%
 		\ifx\@empty\cpge@tmpl%
@@ -737,12 +762,10 @@
 	\ifdim\wd\cpgem@boxc>\z@%
 		\hb@xt@\z@{\hss\box\cpgem@boxc}%
 	\fi%
-	\ifcpge@minipage%
-		\aftergroup\leavevmode\aftergroup\par%
-	\fi%
 	%\endgroup%
 }
 \def\@center@#1#2#3#4#5{%
+	\begin@center@%
 	\eqn@item%
 		{#1} % width argument, used only if \iftextmode is true
 		{#2} % left text
@@ -784,13 +807,14 @@
 		\wd % #7 : minipage width, sets \textmodetrue
 		\lb % #8 : \label, if numbered
 		\vs % #9 : skip to add to \bigcenterskip
-	}{{}{}{}{}{@}{@}{}{@}{}}
+	}{{}{}{}{}{@}{@}{}{}{}}
 }{%
 	\def\minipage@wd{100*}%
 	\def\cpge@tmpl{#1}%
 	\def\cpge@tmpr{#2}%
 	\ifblank{#3}{}{\eqn@shift{l}{#3}}
 	\ifblank{#4}{}{\eqn@shift{r}{#4}}
+	\def\cpge@tmplb{#8}%
 	\ifstrequal{#5}{@}
 		{}
 		{%
@@ -816,9 +840,6 @@
 				{\def\@ligned{\aligned[t]}}
 				{\def\@ligned{\aligned[#6]}}%
 		}%
-	\ifstrequal{#8}{@}%
-		{\def\Make@Link{}\def\cpge@tmplb{}}
-		{\label@parts{#8}}
 	\ifblank{#9}{}{\setlength\bigcenterskip{\bigcenterskip*\real{#9}}}
 	\xmath@process
 }
@@ -863,75 +884,6 @@
 \NewDocumentCommand\xmath@single{+r\<\>}
 	{\begin{xmath}#1\end{xmath}}
 \long\def\<{\xmath@single\<}
-
-%%% Système des références croisées pour les équations
-\ifundef\MakeLinkTarget{
-	\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
-	\ProvideDocumentCommand\LinkTargetOn{}{}
-	\ProvideDocumentCommand\LinkTargetOff{}{}
-	\ProvideDocumentCommand\NextLinkTarget{m}{}
-}{}
-\def\set@label@#1#2{
-	\def\cpge@tmplb{#2}%
-	\ifstrequal{#1}{f}
-		{\def\Make@Link{\MakeLinkTarget[formule]{equation}}}
-		{%
-			\ifstrequal{#1}{e}
-				{\def\Make@Link{\MakeLinkTarget[egalite]{equation}}}
-				{%
-					\ifstrequal{#1}{i}
-						{\def\Make@Link{\MakeLinkTarget[inegalite]{equation}}}
-						{%
-							\ifstrequal{#1}{m}
-								{\def\Make@Link{\MakeLinkTarget[majoration]{equation}}}
-								{%
-									\ifstrequal{#1}{r}
-										{\def\Make@Link{\MakeLinkTarget[relation]{equation}}}
-										{
-											\ifstrequal{#1}{p}
-												{\def\Make@Link{\MakeLinkTarget[propriete]{equation}}}
-												{\def\Make@Link{\MakeLinkTarget[#1]{equation}}}
-								}%
-						}%
-				}%
-		}%
-	}% 
-}
-\def\label@parts#1{%
-	\in@{&}{#1}%
-	\ifin@%
-		\label@parts@#1\cpge@nil%
-	\else%
-		\def\cpge@tmplb{#1}%
-		\def\Make@Link{}
-	\fi%
-}
-\let\cpge@plural\relax
-\def\def@autorefname#1#2{\csdef{#1autorefname}~##1\null{#2\cpge@plural\space\deco@tag{##1}\null}}
-\def@autorefname{equation}{équation}
-\def@autorefname{formule}{formule}
-\def@autorefname{relation}{relation}
-\def@autorefname{egalite}{égalité}
-\def@autorefname{inegalite}{inégalité}
-\def@autorefname{propriete}{propriété}
-\def@autorefname{majoration}{majoration}
-\def\label@parts@#1&#2\cpge@nil{\set@label@{#1}{#2}}%
-\def\cpge@problem@id{Unnamed}
-\NewDocumentCommand\xeqref{s t\n t\s t\p O{@} m}{%
-		\IfBooleanT{#3}{\def\cpge@plural{s\let\cpge@plural\relax}}%
-		\ifstrequal{#5}{@}
-			{\let\problem@id\cpge@problem@id}
-			{\ifblank{#5}{\def\problem@id{Unnamed}}{\def\problem@id{#5}}}%
-		\IfBooleanTF{#2}
-			{\def\eq@ref{\eqref}}
-			{\def\eq@ref{\autoref}}%
-		\IfBooleanTF{#1}
-			{\eq@ref*{eq:\problem@id:#6}}
-			{\eq@ref{eq:\problem@id:#6}}%
-		\IfBooleanT{#4}
-			{\deco@pageref{\pageref*{eq:\problem@id:#6}}}%
-}
-\cpgesetdeco{pageref}{\sffamily\smaller{}[p. #1]}
 
 
 %%%%% Interfaces utilisateur pour \@center@ et \begin@center@
@@ -1148,6 +1100,9 @@
 }
 
 %%% generic commands
+\long\def\eqn@exec#1#2#3{#1$#2$#3}
+\long\def\eqn@ltextfunc{\fake@cmd}
+\long\def\eqn@rtextfunc{\fake@cmd}
 \NewDocumentCommand\fake@eqn@mtextfunc{
 	t\n
 	t\r
@@ -1173,7 +1128,69 @@
 				}%
 		}}%
 }
-
+\NewDocumentCommand\eqn@mtextfunc{
+	t\n
+	t\r
+	E{\fr\lb\al\wd\lt\rt}{{@}{}{@}{@}{}{}}
+	u\math@nil
+}{
+	\let\eqnframecmd\eqn@fakecmd%
+	\def\minipage@wd{100*}%
+	\IfBooleanTF{#1}
+		{\global\eqn@numbertrue}
+		{\global\eqn@numberfalse}%
+	\IfBooleanTF{#2}
+		{\textmodetrue%
+			 \let\eqnframecmd\deco@result}
+		{\textmodefalse}%
+	\ifstrequal{#3}{@}
+		{}
+		{%
+			\ifblank{#3}
+				{\IfBooleanF{#2}{\let\eqnframecmd\deco@formula}}
+				{%
+					\ifcsundef{deco@#3}
+						{\cpgeframe@err{#3}}
+						{\letcs\eqnframecmd{deco@#3}}%
+				}%
+		}%
+	\gdef\cpge@tmpl{#4}%
+	\ifstrequal{#6}{@}{}
+		{%
+			\textmodetrue%
+			\ifblank{#6}{}{\def\minipage@wd{#6}}
+		}%
+	\iftextmode%
+		\@xp\eqn@preparemidbox\@xp{\minipage@wd}{%
+			\ifstrequal{#5}{@}
+				{#9}
+				{%
+					\ifblank{#5}
+						{$\aligned[t]#9\endaligned$}
+						{$\aligned[#5]#9\endaligned$}
+				}
+		}%%
+		\def\cpge@tmpm{%
+			\eqnframecmd{$\m@th
+			\vcenter{%
+				\hsize\midwidth\@parboxrestore\box\midbox%
+			}$}%
+		}%
+		\textmodefalse%
+	\else
+		\def\cpge@tmpm{%
+			\eqnframecmd{$\m@th\displaystyle
+				\ifstrequal{#5}{@}{}
+					{\ifblank{#5}{\aligned[t]}{\aligned[#5]}}
+				#9
+				\ifstrequal{#5}{@}{}{\endaligned}
+			$}%
+		}%
+	\fi%
+	\cpge@tmpm%
+	\textmodefalse%
+	\undef{\eqnframecmd}
+}
 
 %%% Goodies
 \newif\ifeqn@break

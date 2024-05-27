@@ -12,7 +12,7 @@
 \definecolor{stcol}{HTML}{D68A36}
 \definecolor{cpgeblack}{HTML}{202232}
 
-\cpgeset[colors]{    
+\cpgesetup[colors]{    
     warm={cpgegreen!85!black}{cpgegreen},
     cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
@@ -32,15 +32,15 @@
 \def\SubTitleFont{\fontsize{16}{18}\firasemibold}
 \def\NumberFont{\fontsize{14}{14}\firaextrabold}
 
-\cpgedefdeco{unitetitle}{\color{warmcol}\SubTitleFont#1~:~}
+\cpgesetdeco{unitetitle}{\color{warmcol}\SubTitleFont#1~:~}
 \def\set@defaultforlistsinsideunite{
-	\cpgedefdeco{unite}{\textcolor{coldcol}{\NumberFont ##1.}}
+	\cpgesetdeco{unite}{\textcolor{coldcol}{\NumberFont ##1.}}
 	\def\unite{\first@unite}%
 	\cpgesetenum{1}{marge}%
 	\cpgesetenum{2}{marge}%
 	\cpgesetenum{3}{marge}%
-	\cpgedefdeco{enumi}{\textcolor{warmcol}{\NumberFont ##1.}}
-	\cpgedefdeco{enumii}{\textcolor{warmcol}{\NumberFont ##1.}}
+	\cpgesetdeco{enumi}{\textcolor{warmcol}{\NumberFont ##1.}}
+	\cpgesetdeco{enumii}{\textcolor{warmcol}{\NumberFont ##1.}}
 }
 
 \tikzset{question style/.style={
@@ -115,7 +115,7 @@
 
 
 
-\cpgeset[webenv]{page decoration code={ 
+\cpgesetup[webenv]{page decoration code={ 
 	\ifcommonquizimage
 		\draw [overlay, stcol, line width=\cpge@headheight+.4cm, rounded corners=\cpge@headheight] 
 		([xshift=-.5\cpge@headheight+.32cm] page.south west)
@@ -139,8 +139,8 @@
 			] 
         (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
 }
-\cpgeset[mini]{%
-	mini deco=\llap{\funnyarrow{1.2em}{warmcol}}%
+\cpgesetup[mini]{%
+	deco=\llap{\funnyarrow{1.2em}{warmcol}}%
 		\textcolor{coldcol}{#1.}\kern1ex%
 }
 

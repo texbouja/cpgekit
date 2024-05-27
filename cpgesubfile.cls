@@ -70,18 +70,6 @@
 \ProcessPgfOptions{/IGSD}
 \subdoctrue
 \let\@classoptionslist\relax
-\def\cpgedoc@shipoutsolutions{%
-	\ifdraft\else
-		\edef\cpge@tmpe{\the\toks@prv}
-			\ifproof
-				\ifdefvoid\cpge@tmpe{}{\typeoutdemonstrations}
-			\fi
-		\edef\cpge@tmpe{\the\toks@sol}
-			\ifsolution
-				\ifdefvoid\cpge@tmpe{}{\typeoutsolutions}
-			\fi
-	\fi%
-}
 \RequirePackage{import}
 \let\cpgesub@documentclass\documentclass
 \def\documentclass{%
@@ -95,10 +83,9 @@
 {\makeatletter
   \gdef\import@path{}
 }
-
-\AtEndDocument{
-	\ifdefstring\cpgecurrentclass{cpgedev}{}{\straighttrue}
-}
+%\AtBeginDocument{
+%	\ifdefstring\cpgecurrentclass{cpgedev}{}{\straighttrue}
+%}
 \endinput
 %%
-%% End of file `cpgesub.cls'.
+%% End of file `cpgesubfile.cls'.

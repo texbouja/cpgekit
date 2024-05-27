@@ -8,7 +8,7 @@
 \definecolor{cpgeblack}{HTML}{202736}
 
 
-\cpgeset[colors]{    
+\cpgesetup[colors]{    
     warm={cpgegreen!85!black}{cpgegreen},
     cold={cpgeblue}{cpgealtblue},
 	link={CornflowerBlue!66!black}{CornflowerBlue},
@@ -22,7 +22,7 @@
 }
 \def\TitlingFont{\sffamily\scshape\lsstyle}
 \usetikzlibrary{shapes.misc}
-\cpgeset{simple deco={%
+\cpgesetup{simple deco={%
 	\shorthandoff{;}%
 	\tikz [anchor=base,baseline] 
 	\node [
@@ -33,22 +33,21 @@
 		rounded corners=2pt
 	] {#1};\ignorespaces%
 }}
-\cpgedefdeco{lrmargin}{\deco@simple{#1}}
-\fadjwidth=6pt 
-\cpgedefdeco{formula}{%
+\cpgesetdeco{lrmargin}{\deco@simple{#1}}
+\cpgesetdeco{formula}{%
 	\tikz [baseline, anchor=base]
 		\node [inner xsep=.5\fadjwidth-.8pt, draw=maincol, fill=none, rounded corners=4pt] {#1};%
 }
-\cpgedefdeco{result}{%
+\cpgesetdeco{result}{%
 	\tikz [baseline, anchor=base]
 		\node [inner xsep=.5\fadjwidth-.8pt,draw=maincol, fill=maincol!10!bgcol, rounded corners=4pt] {#1};%
 }
-\cpgedefdeco*{formule}{\deco@formula}
-\cpgedefdeco{discuss}{\textcolor{maincol}{$\bullet\;$ \bfseries\boldmath #1}}
-\cpgedefdeco{enumi}{\TitlingFont\smaller\color{maincol}#1.}
-\cpgedefdeco{enumii}{\TitlingFont\smaller\color{maincol}#1.}
-\cpgedefdeco{enumiii}{\TitlingFont\smaller\color{maincol}#1.}
-\cpgedefdeco{unite}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgesetdeco*{formule}{\deco@formula}
+\cpgesetdeco{discuss}{\textcolor{maincol}{$\bullet\;$ \bfseries\boldmath #1}}
+\cpgesetdeco{enumi}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgesetdeco{enumii}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgesetdeco{enumiii}{\TitlingFont\smaller\color{maincol}#1.}
+\cpgesetdeco{unite}{\TitlingFont\smaller\color{maincol}#1.}
 
 
 
@@ -61,11 +60,11 @@
 			] 
         (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
 }
-\cpgeset[mini]{%
+\cpgesetup[mini]{%
 	left margin=2pc,
 	label font=\fontsize{8}{8}\TitlingFont,
 	font=\sffamily\relsize{-1},
-	mini deco=\llap{\funnyarrow{1em}{maincol}}%
+	deco=\llap{\funnyarrow{1em}{maincol}}%
 		\textcolor{maincol}{#1~:}%
 }
 
@@ -87,7 +86,7 @@
 	\frm@margin12pt
 \fi
 \tcbset{frame left margin/.code={\frm@margin=#1}}
-\cpgeset{frame left margin/.forward to=/tcb/frame left margin}
+\cpgesetup{frame left margin/.forward to=/tcb/frame left margin}
 \usetikzlibrary{arrows.meta, positioning}
 \tcbsubskin{thmskin}{empty}{%
 	coltitle=maincol,
@@ -263,7 +262,7 @@
 		left=\frm@margin,
 	}}
 
-\cpgesettheoremstyle{%
+\cpgesetuptheoremstyle{%
 	theorem style=thmdefault,
 	definition style=thmdefault,
 	exercise style=thmdefault,
@@ -304,8 +303,8 @@
 
 %%% Style des titres 
 
-\cpgedeflabel{section}{|1|}
-\cpgedeflabel{subsection}{|S|.|1|}
+\cpgesetlabel{section}{|1|}
+\cpgesetlabel{subsection}{|S|.|1|}
 \titleformat{\section}[display]
 	{\sffamily\scshape\LARGE\color{coldcol}}
 	{\begin{tikzpicture} [overlay, baseline=(S.base)] 
@@ -346,7 +345,7 @@
 \titlespacing{\section}{\z@}{*4}{*2}
 \titlespacing{\subsection}{\z@}{*4}{*2}
 
-\cpgedeflabel{chapter}{\oldstylenums{|1|}}
+\cpgesetlabel{chapter}{\oldstylenums{|1|}}
 
 \titleformat{\chapter}[display]
 	{\sffamily\fontsize{28}{28}\scshape\color{coldcol}}
@@ -511,7 +510,7 @@
 		\end{tikzpicture}%
 		\end{STRIP}%
 }
-\cpgeset[title]{%
+\cpgesetup[title]{%
 	before 	=	\ifstriptitle
 							\let\STRIP\strip%
 							\let\endSTRIP\endstrip%
@@ -543,7 +542,7 @@
 			{auteur}%
 		\fi%
 }
-\cpgedeftitleformat*{
+\cpgesettitle*{
   |document|\par
   \bigskip\hrule\bigskip
   |theme|\\
@@ -551,7 +550,7 @@
   \bigskip
   |auteur|
 }
-\cpgedeftitleformat{
+\cpgesettitle{
   |document|\par
   \bigskip
   |theme|\\

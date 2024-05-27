@@ -152,7 +152,7 @@
 
 
 %%%%% Interface de configuration pgfkeys
-\ifundef\cpgesetup
+\@ifundefined{cpgesetup}
     {
 		\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
 		\NewDocumentCommand\cpgesetup{o}{%
@@ -160,9 +160,7 @@
     		{\pgfkeysifdefined{/cpge/#1/.is family}{}
 				{\pgfkeys{/cpge/#1/.is family}}}%
     	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
-    	}
-	\pgfkeysdef{/handlers/.set}{\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
-	}{}
+    	}}{}
 
 \cpgesetup{math/.is family}
 \NewDocumentCommand\cpgesetupmath{o}{%
@@ -419,10 +417,10 @@
 \newcount\eqn@count@
 \newcount\dlm@count@
 
-\newif\iftextmode
-\newif\ifeqn@number 
-\newif\ifis@result
+\newif\ifcpge@frame
+\newif\ifcpge@number 
 \newif\ifcpge@minipage
+\newif\ifcpge@inmini
 \newif\ifcpge@indisplay
 \ifundef{\ifcompact}{\newif\ifcompact}{}
 
@@ -477,60 +475,287 @@
 %%%%%%%%%%%%%%%%%%%%% Formules mathématiques %%%%%%%%%%%%%%%%%%%%%
 
 % registres permanents pour la famille \formula
-\newbox\midbox % boite qui contient le texte central dans \@center@
+\newbox\midbox % boite qui contient le texte central dans \mlcenterr
 \newdimen\midwidth % largeur de cette boite
-\newskip\bigcenterskip %grand espace vertical avant et après \@center@
-\newskip\medcenterskip % espace vertical moyen avant et après \@center@
-\newskip\smallcenterskip %petit espace, si \@center@ imbriqué
+\newskip\bigcenterskip %grand espace vertical avant et après \lcenterr
+\newskip\medcenterskip % espace vertical moyen avant et après \lcenterr
+\newskip\smallcenterskip %petit espace, si \lcenterr dans \mlcenterr
 \newcount\precenterpenalty 
 \newcount\postcenterpenalty
-\newdimen\fadjwidth % reçoit l'excédent de largeur ajouté par le cadre
-
 \def\numvskip{\dimexpr\medcenterskip*1/2\relax}
 \AtBeginDocument{
-	\bigcenterskip=8\p@ \@plus 2\p@ \@minus 4\p@
-	\medcenterskip=6\p@ \@plus 2\p@ \@minus 3\p@
-	\smallcenterskip=\z@  \@plus 3\p@
+	\bigcenterskip=8\p@ plus 2pt minus 4\p@
+	\medcenterskip=6\p@ plus 2pt minus 3\p@
+	\smallcenterskip=\z@  plus 3\p@
 	\abovedisplayskip\bigcenterskip\relax%
 	\belowdisplayskip\bigcenterskip\relax%
 	\abovedisplayshortskip\medcenterskip\relax%
 	\belowdisplayshortskip\medcenterskip\relax
 }
-\precenterpenalty\@highpenalty 
-\postcenterpenalty\z@
+\precenterpenalty\@highpenalty \postcenterpenalty\z@
 
+%%%% Quelques commandes utilitaires %%%%
+\let\m@cpge@stop\null
+\def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ plus .5em 
+ 	 \@rightskip\rightskip \parfillskip\z@ plus .1\hsize}  
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
+\def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
+\let\cpge@ifnextchar\new@ifnextchar
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Formules mathématiques (obsolete) %%%%% 
+%%%%% Maintenu pour compatibilité %%%%%%%%%%%
+
+% registres permanents pour la famille \formule
+\newskip\bigcenterskip %grand espace vertical avant et après \lcenterr
+\newskip\midcenterskip % espace vertical moyen avant et après \lcenterr
+\newskip\smallcenterskip %petit espace, si \lcenterr dans \mlcenterr
+\newdimen\fadjwidth % excédent de largeur ajouté par le cadre
+\fadjwidth=4.6pc
 
 %%%% Quelques commandes utilitaires %%%%
 \def\m@cpge@stop{\vrule\@width\z@}
 \def\m@cpge@par{\par\nointerlineskip}
+\def\m@cpge@narrowpar{\rightskip \z@ plus .5em 
+ 	 \@rightskip\rightskip \parfillskip\z@ plus .1\hsize}  
+\def\m@cpge@noindent{\everypar{{\setbox\z@\lastbox}}}
 \def\endpar{\ifhmode\unskip\nobreak\hfill\m@cpge@stop\fi}
+\def\m@cpge@for{\@for\m@cpge@fortok:=}
+
+%%%%  Les commandes butineuses %%%%
+
+%% \@center@ s'occupe du placement des éléments, 
+%% esp. vert. et pénalités de rupture de page
+\def\let@bracket{\let\[=[\let\]=]}
+\def\obs@center@#1#2#3{%
+  \begingroup%
+  %% récupération des paramètres
+  \def\cpge@tempa{#3}
+  \ifcpge@number%
+    \refstepcounter{equation}%
+    \ifx\@empty\cpge@tempa\else%
+      \expandafter\label\expandafter{\cpge@tempa}
+    \fi
+    \def\cpge@tempa{(\theequation)}
+  \fi%
+  \setbox\cpgem@boxc\hbox{\color@begingroup\cpge@tempa\color@endgroup}%
+  \setbox\cpgem@boxa\hbox{\color@begingroup\let@bracket#1\color@endgroup}%
+  \edef\every@math{\the\everymath}
+  \everymath{\every@math\displaystyle}%
+  \setbox\cpgem@boxb\hbox{\color@begingroup\let@bracket#2\color@endgroup}%
+  \setlength\cpge@dima{.5\linewidth-.5\wd\cpgem@boxb-1em}%
+  %% si pas assez d'espace pour #1, l'insérer en dehors de \trivlist
+  \ifdim\wd\cpgem@boxa>\cpge@dima%
+    \ifhmode\unskip\par\nobreak\noindent\fi%
+    \unhbox\cpgem@boxa\topsep\midcenterskip%
+  \fi%
+  %% si \cpgem@boxb trop haute, #1 en dehors de \trivlist.
+  \ifnum\cpge@count>2\relax
+    \ifdim\wd\cpgem@boxa>\z@
+      \ifhmode\unskip\par\nobreak\noindent\fi%
+      \unhbox\cpgem@boxa\topsep\smallcenterskip%
+  \fi\fi%
+  %% hack pour une meilleure gestion des espaces vert.
+  \if@inlabel\vskip\bigcenterskip\fi%
+  	\@topsep\bigcenterskip%
+	\@topsepadd\bigcenterskip%
+	\itemsep\medcenterskip%
+	\parsep\z@skip%
+	\partopsep\z@skip%
+	\parsep\z@skip%
+  %% début trivlist
+  \trivlist %\parindent\z@%
+  %% pénalités, pas de rupture de page si #1 vide ou trop long.
+   \ifdim\wd\cpgem@boxa=\z@%
+       \@beginparpenalty\@M%
+   \else%
+       \@beginparpenalty\precenterpenalty%
+   \fi%
+   \@endparpenalty\postcenterpenalty%
+  %% mise en place des pénalités et des sauts avec \item.
+  %% Double \item[] +\@noparlistfalse = hack pour 
+  %% mieux gérer les espaces verticaux si imbriqué dans une liste
+  \item[]\@trivlist\@noparlistfalse\item[]%
+  %% insérer #1 si non encore fait
+  \ifdim\wd\cpgem@boxa>\z@%
+    \leavevmode\hbox to\z@{\unhcopy\cpgem@boxa\hss}%
+  \fi%
+  %% recul si #2 trop long
+  \ifdim\wd\cpgem@boxb>\linewidth%
+     \hskip-\@totalleftmargin%
+  \fi%
+  %% insérer #2, \m@cpge@stop à la fin pour empêcher disparition de \hfill
+  %% si jamais saut de ligne pour insérer #3
+  \m@cpge@stop\hfill\box\cpgem@boxb\hfill\m@cpge@stop%
+  %% inserer #3, si trop long saut de ligne avec \m@cpge@par
+  \ifdim\wd\cpgem@boxc>\z@%
+    \ifcpge@minipage\else%
+      \ifdim\cpge@dima<\wd\cpgem@boxc\m@cpge@par\nobreak\vskip\numvskip\hfill%
+     \fi\fi%
+    \hbox to\z@{\hss\unhbox\cpgem@boxc}%
+  \fi%
+\endtrivlist%
+\endgroup
+%% réinitialisation des variables booléennes
+\cpge@framefalse\cpge@numberfalse}
+
+
+
+%% \obs@m@center@, préparation de la boite centrale
+%% appel de \obs@center@ pour placement
+\def\obs@m@center@#1#2#3#4{%
+  \cpge@minipagetrue%
+  %% traitement de #1
+  \in@{*!}{#1!}%
+  \ifin@% 
+     \edef\num@pt{\cpge@removestar #1}%
+     \let\@render\m@cpge@narrowpar \def\@renderer{varwidth}%
+  \else%
+     \def\num@pt{#1}%
+     \let\@render\relax \def\@renderer{minipage}%
+  \fi%
+  \ifnum\num@pt<50\relax%
+    \ifnum\num@pt=0\relax%
+      \midwidth\linewidth%
+    \else%
+       \midwidth.5\linewidth%
+    \fi%
+  \else%
+    \setlength\midwidth{\linewidth*\ratio{\num@pt\p@}{100\p@}}%
+  \fi%
+  %% mise en boite de partie centrale
+  \advance\midwidth-\fadjwidth%
+  \everymath{\displaystyle}%
+  \set@mid@box{#3}%
+  \setlength\midwidth{\wd\midbox+\fadjwidth}%
+  %% preparation du cadre
+  \ifcpge@frame%
+     \let\m@cpge@framecmd\deco@formula%
+  \else%
+     \let\m@cpge@framecmd\relax%
+  \fi%
+  %% appel de \@center@ pour le placement
+  %% \vcenter sert a centrer verticalement 
+  \obs@center@{#2}{%
+        $\m@th\vcenter{\hsize\midwidth\@parboxrestore%
+           \m@cpge@framecmd{\box\midbox}}$}{#4}%
+\cpge@minipagefalse%
+}
+
+\long\def\set@mid@box#1{%
+ \setbox\midbox\hbox{\hbadness\@M\cpge@count\z@%
+     \csname \@renderer\endcsname\midwidth%
+       \cpge@inminitrue%
+       %\par va compter le nombre de ligne dans la boite
+       \@setpar{{\@@par}\global\advance\cpge@count\prevgraf}
+      \@render #1\par%
+     \csname end\@renderer\endcsname}%
+}
+
+%% petite commande intermédiaire pour \flcenterr
+\def\f@center@#1#2#3{%
+   \cpge@frametrue%
+    \obs@center@{#1}{\fbox{#2}}{#3}}
+
+%%%% Les commandes utilisateur %%%%
+\def\lcenterr{%
+   \@ifstar{\cpge@numbertrue\obs@center@}{\cpge@numberfalse\obs@center@}}
+       
+\def\flcenterr{%
+   \@ifstar{\cpge@numbertrue\f@center@}{\cpge@numberfalse\f@center@}}
+   
+\def\mlcenterr{%
+   \@ifstar{\cpge@numbertrue\obs@m@center@}{\cpge@numberfalse\obs@m@center@}}
+
+\def\fmlcenterr{\cpge@frametrue%
+   \@ifstar{\cpge@numbertrue\obs@m@center@}{\cpge@numberfalse\obs@m@center@}}
+   
+%%%% Les commandes \formule et \resultat %%%%
+
+\NewDocumentCommand\formule{sO{}mO{}}{%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
+	\obs@center@{#2}{#3}{#4}%
+}
+\NewDocumentCommand\mformule{sO{}mO{}}{%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
+	\obs@center@{#2}{$#3$}{#4}%
+	}
 \newcommand\xtag[1][]{%
 	\tag*{(\theequation)}\refstepcounter{equation}%
 	\ifblank{#1}{}{\label{#1}}%
 	}
-\@ifpackageloaded{xcolor}{}{\RequirePackage{xcolor}}{}
-\colorlet{framecol}{black!66}
-\colorlet{backcol}{black!18}
-\long\def\fancyb@x#1{%
-	\fboxsep\z@\fboxrule1.2\p@%
-	\fcolorbox{framecol}{white}{%
-		\fboxsep3\p@\fboxrule0.8\p@\fcolorbox{white}{backcol}
-		{\kern1em#1\kern1em}%
-	}%
+\cpgesetdeco{formula}{\fbox{#1}}  
+
+\NewDocumentEnvironment{Formule}{O{} O{} b}{\formule[#1]{#3}[#2]}{}
+\NewDocumentEnvironment{Formule*}{O{} O{} b}{\forumle*[#1]{#3}[#2]}{}
+\NewDocumentEnvironment{mFormule}{O{} O{} b}{\formule[#1]{$#3$}[#2]}{}
+\NewDocumentEnvironment{mFormule*}{O{} O{} b}{\formule*[#1]{$#3$}[#2]}{}
+
+\NewDocumentCommand\resultat{sD(){100*}O{}mO{}}{%
+	\IfBooleanTF{#1}{\cpge@numbertrue}{\cpge@numberfalse}%
+	\cpge@frametrue\obs@m@center@{#2}{#3}{#4}{#5}%
 }
-\cpgesetupmath{
-	formula/.code=\cpgesetdeco{formula}{#1},
-	result/.code=\cpgesetdeco{result}{#1},
-	r/.code=\cpgesetdeco{result}{#1},
-	formula=\fbox{#1},
-	result=\fancyb@x{#1},
+
+
+\NewDocumentEnvironment{Resultat}{D(){100*} O{} O{} +b}
+	{\resultat(#1)[#2]{#4}[#3]}
+	{}
+\NewDocumentEnvironment{Resultat*}{D(){100*} O{} O{} +b}
+	{\resultat*(#1)[#2]{#4}[#3]}
+	{}
+\NewDocumentEnvironment{alignedresult}{D(){100*} O{} O{} +b}
+	 {\resultat(#1)[#2]{\begin{empheq}[box=\fakebox]{align*}#4\end{empheq}}[#3]}
+	{}
+\NewDocumentEnvironment{alignedresult*}{D(){100*} O{} O{} +b}
+	 {\resultat*(#1)[#2]{\begin{empheq}[box=\fakebox]{align*}#4\end{empheq}}[#3]}
+	{}
+\NewDocumentEnvironment{multlineresult}{D(){100*} O{} O{} +b}
+	 {\resultat(#1)[#2]{\begin{empheq}[box=\fakebox]{multline*} #4\end{empheq}}[#3]}
+	{}
+\NewDocumentEnvironment{multlineresult*}{D(){100*} O{} O{} +b}
+	 {\resultat*(#1)[#2]{\begin{empheq}[box=\fakebox]{multline}#4\end{empheq}}[#3]}
+	{}
+\NewDocumentEnvironment{emresult}{m O{} O{} +b}
+	 {\resultat[#2]{\begin{empheq}[box=\fakebox]{#1*}#4\end{empheq}}[#3]}
+	{}
+\NewDocumentEnvironment{emresult*}{m O{} O{} +b}
+	 {\resultat*[#2]{\begin{empheq}[box=\fakebox]{#1*}#4\end{empheq}}[#3]}
+	{}
+
+\newenvironment{develop}{%
+	\let\align@preamble\cpge@align@preamble%
+ 	\start@align\tw@\st@rredtrue\m@ne%
+	&&&&\\\noalign{\vskip-\baselineskip}
+}{%
+  \endalign
 }
-\def\deco@r{\deco@result}
-\def\decof{\deco@formula}
+\def\column@minus{%
+    \global\advance\column@\m@ne
+}
+\def\cpge@align@preamble{%
+	&\setboxz@h to \z@{##\hss}%
+    \set@field%
+    \tabskip\alignsep@%
+   &\hfil
+   \strut@%
+    \setboxz@h{\@lign$\m@th\displaystyle{##}$}%
+    \ifmeasuring@\savefieldlength@\fi%
+    \set@field%
+    \tabskip\z@skip%
+   &\setboxz@h{\@lign$\m@th\displaystyle{{}##}$}%
+    \ifmeasuring@\savefieldlength@\fi%
+    \set@field%
+    \tabskip\alignsep@%
+    \hfil%
+   &\setboxz@h to \z@{\hss##\unskip}%
+    \set@field%
+    \tabskip\z@skip%
+}
 
 %%%% Nouveaux environnement pour les maths %%%%
 %%%%  	Les commandes butineuses 	        %%%%
-%%%% 	backends pour l'environnement xmath  et \< ... \> %%%%
+%%%% 	backends pour l'environnement xdevel  %%%%
 
 %%%%% Triming space, from trimspaces.sty
 %%%%% tribute to Will Robertson
@@ -579,134 +804,118 @@
 %% \@center@ s'occupe du placement des éléments, 
 %% esp. vert. et pénalités de rupture de page
 
-\long\def\eqn@fakecmd#1{#1}
+\def\eqn@fakecmd#1{#1}
 \let\eqnframecmd\eqn@fakecmd
 \def\cpgeframe@err#1{\cpgemath@err
 			{Aucune décoration #1 trouvée. 
 			\MessageBreak Appuyez sur entrée pour l'ignorer}
-			{les valeurs possibles sont formula (par défaut), \MessageBreak 
-				result ou simplement r.}
+			{les valeurs possibles sont formula ou result}
 		}
 
-\long\def\eqn@prepareboxes#1#2#3{%
-\@bsphack
-	\setbox\z@\hbox{\eqnframecmd{}}
-	\fadjwidth\wd\z@
+\long\def\prepare@boxes#1#2{%
 	\setbox\cpgem@boxa\hbox{%
-		\color@begingroup#2\color@endgroup%
-	}
-	\iftextmode
-		\eqn@preparemidbox{#1}{#3}
-		\setbox\cpgem@boxb\hbox{\cpge@indisplaytrue%
-			\eqnframecmd{$\m@th
-				\vcenter{
-					\hsize\midwidth\@parboxrestore\box\midbox
-			}$}
-		}
-	\else
-		\setbox\cpgem@boxb\hbox{\cpge@indisplaytrue%
-			\eqnframecmd{#3}%
-	}
-	\fi
-	\setlength\cpge@dima{(\linewidth-\wd\cpgem@boxb)/2}
-	\unless\ifdim\cpge@dima<\z@
-		\setlength\cpge@dimb{\cpge@dima*(\l@qnshift-\r@qnshift)/10}
-		\setlength\cpge@dima{\cpge@dima+\cpge@dimb}
-		\setlength\cpge@dimc{\cpge@dima-\cpge@dimb}
-	\fi
-\@esphack%
+		\color@begingroup#1\color@endgroup%
+	}%
+	\setbox\cpgem@boxb\hbox{%
+			\cpge@indisplaytrue%
+			#2%
+	}%
+	\setlength\cpge@dima{(\linewidth-\wd\cpgem@boxb)/2-1ex}%
+	\unless\ifdim\cpge@dima<\z@%
+		\setlength\cpge@dimb{\cpge@dima*(\l@qnshift-\r@qnshift)/10}%
+		\setlength\cpge@dima{\cpge@dima+\cpge@dimb}%
+		\setlength\cpge@dimc{\cpge@dima-\cpge@dimb}%
+	\fi%
 }
-\long\def\eqn@preparemidbox#1#2{%
-\@bsphack
-	\def\in@@{\in@{*!}}
-	\@xp\in@@\@xp{#1!}
-	\ifin@
-		\edef\num@pt{\cpge@removestar #1}
-		\def\@renderer{varwidth}
-	\else
-		\def\num@pt{#1}
-		\def\@renderer{minipage}
-	\fi
-	\ifnum\num@pt<50\relax
-		\ifnum\num@pt=0\relax
-			\midwidth\hsize
-		\else
-			\midwidth.5\hsize
-		\fi
-	\else
-		\setlength\midwidth{\hsize*\ratio{\num@pt\p@}{100\p@}}
-	\fi
-	\midwidth=\dimexpr\midwidth-\fadjwidth-2em\relax
-	\eqn@setmidbox{#2}
-	\setlength\midwidth{\wd\midbox+\fadjwidth}
-\@esphack%
+\def\prepare@midbox#1#2{%
+	\cpge@minipagetrue%
+	\def\in@@{\in@{*!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\num@pt{\cpge@removestar #1}%
+		\let\@render\m@cpge@narrowpar% 
+		\def\@renderer{varwidth}%
+	\else%
+		\def\num@pt{#1}%
+		\let\@render\relax%
+		\def\@renderer{minipage}%
+	\fi%
+	\ifnum\num@pt<50\relax%
+		\ifnum\num@pt=0\relax%
+			\midwidth\linewidth%
+		\else%
+			\midwidth.5\linewidth%
+		\fi%
+	\else%
+		\setlength\midwidth{\linewidth*\ratio{\num@pt\p@}{100\p@}}%
+	\fi%
+	\advance\midwidth-\fadjwidth%
+	\set@eqnmidbox{#2}%
+	\setlength\midwidth{\wd\midbox+\fadjwidth}%
 }
-\long\def\eqn@setmidbox#1{%
+\long\def\set@eqnmidbox#1{%
+	\abovedisplayskip\medcenterskip%
+	\belowdisplayskip\medcenterskip%
 	\setbox\midbox\hbox{%
 		\hbadness\@M\cpge@count\z@%
-		\begin{\@renderer}\midwidth%
-			\cpge@minipagetrue%
-			\everymath{\displaystyle}%
-			\abovedisplayskip\medcenterskip%
-			\belowdisplayskip\medcenterskip%		
-		 		#1%
-		\end{\@renderer}%
+		\everymath{\displaystyle}%
+		\csname \@renderer\endcsname\midwidth%
+		\cpge@inminitrue%
+		 %\par va compter le nombre de ligne dans la boite
+		 \@setpar{\hfill{\@@par}\global\advance\cpge@count\prevgraf}%
+		 \@render #1\hfill\null%
+		 \csname end\@renderer\endcsname%
 	}%
+	\cpge@minipagefalse%
 }
-\def\hacked@item{%
-	% \if@inlabel
-	% 	\vskip\bigcenterskip%
-	% \fi%
-	\ifcpge@minipage%
-		\topsep\medcenterskip%
-	\else%
-		\topsep\bigcenterskip%
+\def\x@hackitem{%
+	\item[]\@trivlist\@noparlistfalse\item[]%
+}
+\def\begin@center@{%
+	\if@inlabel
+		\vskip\bigcenterskip
 	\fi%
+	\@topsep\bigcenterskip%
+	\@topsepadd\bigcenterskip%
 	\itemsep\medcenterskip%
-	\trivlist%
-		\@topsep\topsep%
-		\partopsep\topsep%
-		\@topsepadd\z@skip%
-		\parsep\z@skip%
-		\@beginparpenalty\precenterpenalty%
-		\@endparpenalty\postcenterpenalty%
-	\item[]%
+	\parsep\z@skip%
+	\partopsep\z@skip%
+	\parsep\z@skip%
+	\@beginparpenalty\precenterpenalty%
+	\@endparpenalty\postcenterpenalty%
+	\trivlist %\parindent\z@%
 }
-\def\begin@center@{%	
-}
-\long\def\eqn@item#1#2#3#4#5{%
+\long\def\eqn@item#1#2#3#4{%
+	\x@hackitem%
 	%\begingroup%
-	\eqn@prepareboxes{#1}{#2}{#3}%
+	\prepare@boxes{#1}{#2}%
 	\ifdim\wd\cpgem@boxa>\cpge@dima\relax%
-		% \ifhmode%
-		% 	\unskip\par\nobreak\vskip-\parskip\noindent%
-		% \fi%
-		\unskip\unskip\unskip\ignorespaces\unhbox\cpgem@boxa\hfill\par%
+		\ifhmode%
+			\unskip\par\nobreak\vskip-\parskip\noindent%
+		\fi%
+		\unhbox\cpgem@boxa\par%
 		\vskip-\lineskiplimit%
         \vskip\normallineskiplimit%
-		\vskip\medcenterskip%
+		\vskip\largetextbelow%
 	\fi%
-	\hacked@item%
-	\leavevmode\hb@xt@\z@{\unhcopy\cpgem@boxa\hss}%
-	\setbox\cpgem@boxb\hbox{\kern\cpge@dimb\box\cpgem@boxb}%
+	\ifdim\wd\cpgem@boxa>\z@%
+		\leavevmode\hb@xt@\z@{%
+			\unhcopy\cpgem@boxa\hss%
+		}%
+	\fi%
 	\ifdim\wd\cpgem@boxb>\linewidth%
 		\hskip-\@totalleftmargin%
-		\setbox\cpgem@boxb\hb@xt@\linewidth{\unhbox\cpgem@boxb}%
 	\fi%
-	\m@cpge@stop%
-	\hskip\z@\@plus .5fill%
-	\box\cpgem@boxb%
-	\hskip\z@\@plus .5fill%
-	\m@cpge@stop%
-	\protected@edef\cpge@tmpl{#5}%
-	\ifeqn@number%
+	\setbox\cpgem@boxb\hbox{\kern\cpge@dimb\box\cpgem@boxb}
+	\m@cpge@stop\hfill\box\cpgem@boxb\hfill\m@cpge@stop%
+	\protected@edef\cpge@tmpl{#4}%
+	\ifcpge@number%
 		\refstepcounter{equation}%
 		\setbox\cpgem@boxc\hbox{%
 			\tag@kern\deco@tag{\theequation}%
 		}%
 		\unless\ifx\@empty\cpge@tmpl%
-			\Make@Link%
-			\label{eq:\cpge@problem@id:\cpge@tmpl}%
+			\expandafter\label\expandafter{\cpge@tmpl}%
 		\fi%
 	\else%
 		\ifx\@empty\cpge@tmpl%
@@ -718,18 +927,18 @@
 	\ifdim\wd\cpgem@boxc>\z@\relax%
 		\ifdim\cpge@dimc>\wd\cpgem@boxc\relax%
 			\hb@xt@\z@{\hss\box\cpgem@boxc}%
-			\setbox\cpgem@boxc\hbox{\xtrimspaces{#4}}%
+			\setbox\cpgem@boxc\hbox{\xtrimspaces{#3}}%
 			\ifdim\wd\cpgem@boxc>\z@%
 				\m@cpge@par\nobreak\vskip\numvskip\hfill%
 			\fi%
 		\else%
 			\setbox\cpgem@boxc\hbox{%
-				\xtrimspaces{#4}\unhbox\cpgem@boxc%
+				\xtrimspaces{#3}\unhbox\cpgem@boxc%
 			}%
 			\m@cpge@par\nobreak\vskip\numvskip\hfill%
-		\fi%\x@hackitem
+		\fi%
 	\else%
-		\setbox\cpgem@boxc\hbox{\xtrimspaces{#4}}%
+		\setbox\cpgem@boxc\hbox{\xtrimspaces{#3}}%
 		\ifdim\wd\cpgem@boxc>\cpge@dimc%
 			\m@cpge@par\nobreak\vskip\numvskip\hfill%
 		\fi%
@@ -737,201 +946,30 @@
 	\ifdim\wd\cpgem@boxc>\z@%
 		\hb@xt@\z@{\hss\box\cpgem@boxc}%
 	\fi%
-	\ifcpge@minipage%
-		\aftergroup\leavevmode\aftergroup\par%
-	\fi%
 	%\endgroup%
+	\par%
 }
-\def\@center@#1#2#3#4#5{%
+\def\@center@#1#2#3#4{%
+	\begin@center@%
 	\eqn@item%
-		{#1} % width argument, used only if \iftextmode is true
-		{#2} % left text
-		{#3} % middle text
-		{#4} % right text
-		{#5}%% \label used only if \ifeqn@number is true
+		{#1}
+		{#2}
+		{#3}
+		{#4}%
 	\endtrivlist%
 }
-
-	
-%%% Interfacce utilisateur (xparse) pour \@center@
-
-
-\NewDocumentCommand\xmath@init{ 
-		t\n % numbered or not 
-		t\r % framed text mode for the mid part
-		t\t % unframed text mode for the mid part
-}{
-	\let\eqnframecmd\eqn@fakecmd%
-	\IfBooleanTF{#1}
-		{\eqn@numbertrue}
-		{\eqn@numberfalse}%
-	\IfBooleanTF{#2}
-		{\is@resulttrue}
-		{\is@resultfalse}%
-	\IfBooleanTF{#3}
-		{\textmodetrue}
-		{\textmodefalse}%
-	\xmath@preprocess
+%% \m@center@, préparation de la boite centrale
+%% appel de \@center@ pour placement
+\def\m@center@#1#2#3#4#5{%
+	\begin@center@%
+	\prepare@midbox{#1}{#3}%
+	\eqn@item%
+		{#2}
+		{$\m@th\vcenter{\hsize\midwidth\@parboxrestore\box\midbox}$}
+		{#4}
+		{#5}%
+	\endtrivlist%
 }
-\NewDocumentCommand\xmath@preprocess{
-	E{
-		\lt % #1 : left text
-		\rt % #2 : right text
-		\ls % #3 : left shift
-		\rs % #4 : right shift 
-		\fr % #5 : framed or not 
-		\al % #6 : aligned or not 
-		\wd % #7 : minipage width, sets \textmodetrue
-		\lb % #8 : \label, if numbered
-		\vs % #9 : skip to add to \bigcenterskip
-	}{{}{}{}{}{@}{@}{}{@}{}}
-}{%
-	\def\minipage@wd{100*}%
-	\def\cpge@tmpl{#1}%
-	\def\cpge@tmpr{#2}%
-	\ifblank{#3}{}{\eqn@shift{l}{#3}}
-	\ifblank{#4}{}{\eqn@shift{r}{#4}}
-	\ifstrequal{#5}{@}
-		{}
-		{%
-			\ifblank{#5}
-				{\let\eqnframecmd\deco@formula}
-				{%
-					\ifcsundef{deco@#5}
-						{\cpgeframe@err{#5}}
-						{\letcs\eqnframecmd{deco@#5}}%
-				}%
-		}%
-	\ifis@result%
-		\textmodetrue%
-		\let\eqnframecmd\deco@result%
-	\fi%
-	\iftextmode
-		\ifblank{#7}{}{\def\minipage@wd{#7}}%
-	\fi%
-	\ifstrequal{#6}{@}
-		{\let\@ligned\relax}
-		{%
-			\ifblank{#6}
-				{\def\@ligned{\aligned[t]}}
-				{\def\@ligned{\aligned[#6]}}%
-		}%
-	\ifstrequal{#8}{@}%
-		{\def\Make@Link{}\def\cpge@tmplb{}}
-		{\label@parts{#8}}
-	\ifblank{#9}{}{\setlength\bigcenterskip{\bigcenterskip*\real{#9}}}
-	\xmath@process
-}
-\long\def\xmath@process#1\end@xmath{%
-	\ifx\relax\@ligned%
-		\iftextmode%
-			\long\def\cpge@tmpm{#1}%
-		\else
-			\def\cpge@tmpm{$\m@th\displaystyle#1$}%
-		\fi%
-	\else 
-		\def\cpge@tmpm{$\m@th\displaystyle\@ligned#1\endaligned$}%
-	\fi%
-	\@xp\@center@\@xp
-		{\minipage@wd}
-		{\cpge@tmpl}
-		{\cpge@tmpm}
-		{\cpge@tmpr}
-		{\cpge@tmplb}%
-}
-\def\set@xmatherror{%
-	\let\xmath@orig\<%
-	\long\def\<{%
-		\ifmmode
-			\cpgemath@err
-				{Commandes \string\< imbriquées}
-				{deux séquences \string\< ...\string \> 
-					ne peuvent être imbriquées ^^Jsauf si
-					la première utilise le modificateur \r 
-				}
-		\else
-			\@xp\xmath@orig
-		\fi
-	}
-}
-\NewDocumentEnvironment{xmath}{ t\a +b}
-	{%
-		\set@xmatherror%
-		\xmath@init#2\end@xmath%
-	}{}
-
-\NewDocumentCommand\xmath@single{+r\<\>}
-	{\begin{xmath}#1\end{xmath}}
-\long\def\<{\xmath@single\<}
-
-%%% Système des références croisées pour les équations
-\ifundef\MakeLinkTarget{
-	\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
-	\ProvideDocumentCommand\LinkTargetOn{}{}
-	\ProvideDocumentCommand\LinkTargetOff{}{}
-	\ProvideDocumentCommand\NextLinkTarget{m}{}
-}{}
-\def\set@label@#1#2{
-	\def\cpge@tmplb{#2}%
-	\ifstrequal{#1}{f}
-		{\def\Make@Link{\MakeLinkTarget[formule]{equation}}}
-		{%
-			\ifstrequal{#1}{e}
-				{\def\Make@Link{\MakeLinkTarget[egalite]{equation}}}
-				{%
-					\ifstrequal{#1}{i}
-						{\def\Make@Link{\MakeLinkTarget[inegalite]{equation}}}
-						{%
-							\ifstrequal{#1}{m}
-								{\def\Make@Link{\MakeLinkTarget[majoration]{equation}}}
-								{%
-									\ifstrequal{#1}{r}
-										{\def\Make@Link{\MakeLinkTarget[relation]{equation}}}
-										{
-											\ifstrequal{#1}{p}
-												{\def\Make@Link{\MakeLinkTarget[propriete]{equation}}}
-												{\def\Make@Link{\MakeLinkTarget[#1]{equation}}}
-								}%
-						}%
-				}%
-		}%
-	}% 
-}
-\def\label@parts#1{%
-	\in@{&}{#1}%
-	\ifin@%
-		\label@parts@#1\cpge@nil%
-	\else%
-		\def\cpge@tmplb{#1}%
-		\def\Make@Link{}
-	\fi%
-}
-\let\cpge@plural\relax
-\def\def@autorefname#1#2{\csdef{#1autorefname}~##1\null{#2\cpge@plural\space\deco@tag{##1}\null}}
-\def@autorefname{equation}{équation}
-\def@autorefname{formule}{formule}
-\def@autorefname{relation}{relation}
-\def@autorefname{egalite}{égalité}
-\def@autorefname{inegalite}{inégalité}
-\def@autorefname{propriete}{propriété}
-\def@autorefname{majoration}{majoration}
-\def\label@parts@#1&#2\cpge@nil{\set@label@{#1}{#2}}%
-\def\cpge@problem@id{Unnamed}
-\NewDocumentCommand\xeqref{s t\n t\s t\p O{@} m}{%
-		\IfBooleanT{#3}{\def\cpge@plural{s\let\cpge@plural\relax}}%
-		\ifstrequal{#5}{@}
-			{\let\problem@id\cpge@problem@id}
-			{\ifblank{#5}{\def\problem@id{Unnamed}}{\def\problem@id{#5}}}%
-		\IfBooleanTF{#2}
-			{\def\eq@ref{\eqref}}
-			{\def\eq@ref{\autoref}}%
-		\IfBooleanTF{#1}
-			{\eq@ref*{eq:\problem@id:#6}}
-			{\eq@ref{eq:\problem@id:#6}}%
-		\IfBooleanT{#4}
-			{\deco@pageref{\pageref*{eq:\problem@id:#6}}}%
-}
-\cpgesetdeco{pageref}{\sffamily\smaller{}[p. #1]}
 
 
 %%%%% Interfaces utilisateur pour \@center@ et \begin@center@
@@ -961,9 +999,9 @@
 }
 \long\def\lr@textgraber#1\"#2\"#3\grab@nil{%
 	\ifblank{#2}
-		{\textmodefalse\lr@graber#1\grab@nil}
+		{\par@centerfalse\lr@graber#1\grab@nil}
 		{
-			\textmodetrue%
+			\par@centertrue%
 			\eqn@graber@i@{#1}%
 			\eqn@graber@ii@{#2}%
 			\eqn@graber@iii@{#3}%
@@ -1148,6 +1186,10 @@
 }
 
 %%% generic commands
+\long\def\eqn@exec#1#2#3{#1$#2$#3}
+\long\def\eqn@ltextfunc{\fake@cmd}
+\long\def\eqn@rtextfunc{\fake@cmd}
+\newif\ifpar@center
 \NewDocumentCommand\fake@eqn@mtextfunc{
 	t\n
 	t\r
@@ -1165,7 +1207,7 @@
 			}%
 		}%
 	\ifblank{#8}{}
-		{%\def\eqn@num@{iii}
+		{%
 			\edef\cpge@tmpz{%
 				\unexpanded{\def\eqn@num@{iii}}%
 				\expandonce\eqn@rtextfunc{%
@@ -1173,7 +1215,69 @@
 				}%
 		}}%
 }
-
+\NewDocumentCommand\eqn@mtextfunc{
+	t\n
+	t\r
+	E{\fr\lb\al\wd\lt\rt}{{@}{}{@}{@}{}{}}
+	u\math@nil
+}{
+	\let\eqnframecmd\eqn@fakecmd%
+	\def\minipage@wd{100*}%
+	\IfBooleanTF{#1}
+		{\global\cpge@numbertrue}
+		{\global\cpge@numberfalse}%
+	\IfBooleanTF{#2}
+		{\par@centertrue%
+			 \let\eqnframecmd\deco@result}
+		{\par@centerfalse}%
+	\ifstrequal{#3}{@}
+		{}
+		{%
+			\ifblank{#3}
+				{\IfBooleanF{#2}{\let\eqnframecmd\deco@formula}}
+				{%
+					\ifcsundef{deco@#3}
+						{\cpgeframe@err{#3}}
+						{\letcs\eqnframecmd{deco@#3}}%
+				}%
+		}%
+	\gdef\cpge@tmpl{#4}%
+	\ifstrequal{#6}{@}{}
+		{%
+			\par@centertrue%
+			\ifblank{#6}{}{\def\minipage@wd{#6}}
+		}%
+	\ifpar@center%
+		\@xp\prepare@midbox\@xp{\minipage@wd}{%
+			\ifstrequal{#5}{@}
+				{#9}
+				{%
+					\ifblank{#5}
+						{$\aligned[t]#9\endaligned$}
+						{$\aligned[#5]#9\endaligned$}
+				}
+		}%%
+		\def\cpge@tmpm{%
+			\eqnframecmd{$\m@th
+			\vcenter{%
+				\hsize\midwidth\@parboxrestore\box\midbox%
+			}$}%
+		}%
+		\par@centerfalse%
+	\else
+		\def\cpge@tmpm{%
+			\eqnframecmd{$\m@th\displaystyle
+				\ifstrequal{#5}{@}{}
+					{\ifblank{#5}{\aligned[t]}{\aligned[#5]}}
+				#9
+				\ifstrequal{#5}{@}{}{\endaligned}
+			$}%
+		}%
+	\fi%
+	\cpge@tmpm%
+	\par@centerfalse%
+	\undef{\eqnframecmd}
+}
 
 %%% Goodies
 \newif\ifeqn@break
@@ -1228,7 +1332,7 @@
 			\parshape=2	\z@				\linewidth
 						\leftmargin		\dimexpr\linewidth-\leftmargin\relax%
 			\noindent\deco@unit{#2}\enskip\ignorespaces
-		} 
+		}
 }
 \def\set@goodies{%
 	\@bsphack
@@ -1242,14 +1346,110 @@
 	\@esphack%
 }
 
+%%% xequation et xresult
+\long\def\xeqn@exec#1#2#3{%
+	\@center@{#1}{#2}{#3}{\cpge@tmpl}%
+}
+\NewDocumentEnvironment{xequation}{O{}+b}
+{%
+	\eqn@count@\z@%
+	\set@goodies%
+	\set@eqnparsers{xeqn}{exec}%
+	\set@eqnerrors%
+	\cpgesetupmath{#1}
+	\eqn@initgrabers@#2\eline\xxx@eline\@ignoretrue%%
+}{}
+
+\cpgesetupmath{
+	wd/.code = \def\minipage@wd{#1}
+}
+\def\xqn{\xequation} 
+\let\endxqn\endxequation 
+
+\NewDocumentEnvironment{xresult}{O{} +b}
+{%
+	\eqn@count@\z@%
+	\largetextbelow\dimexpr\medcenterskip*2/3\relax
+	\set@goodies%
+	\set@eqnparsers{xeqn}{exec}%
+	\set@eqnerrors%
+	\cpgesetupmath{wd={100*},#1}%
+	\par@centertrue%
+	%\let\deco@formula\deco@result%
+	\let\eqn@fakecmd\deco@result%
+	\eqn@initgrabers@#2\eline\xxx@eline\@ignoretrue%
+}{}
+
+%%% xdevel
+\NewDocumentCommand\xdevel@finalizer{%
+	s
+	o
+	e{\begin}
+}{%
+	\IfNoValueTF{#3}
+		{%
+			\IfBooleanT{#1}{\endpar}%
+			\IfValueT{#2}{\vskip#2}%
+			\eqn@initgrabers%
+		}{
+			\csdef{inner#3}{\csuse{#3}}
+			\csdef{endinner#3}{\csuse{end#3}}
+			\NewDocumentEnvironment{#3}{o +b}{
+				\IfValueTF{##1}
+					{\csuse{inner#3}[##1]}
+					{\csuse[inner#3]}
+				##2
+				\csuse{endinner#3}
+			}{}
+	}
+}
+\NewDocumentCommand\xdevel@finalizer@{
+	t\eline 
+	t\xxx@eline
+	e{\end}
+}{	
+	\IfValueTF{#3}
+		{\end{#3}}
+		{\IfBooleanF{#2}{\eqn@initgrabers}}%
+}
+\long\def\xdevel@exec#1#2#3{%
+	\eqn@item{#1}{#2}{#3}{\cpge@tmpl}%
+}
+	
+\NewDocumentEnvironment{xdevel}{O{}}
+{%
+	\eqn@count@\z@%
+	\set@goodies%
+	\set@eqnparsers{xdevel}{exec}%
+	\set@eqnerrors%
+	\cpgesetupmath{#1}
+	\begin@center@%
+	\eqn@initgrabers%
+}{\endtrivlist}
+	
+%%% \< et \> pour traiter directement une équation sans textes latéraux avec 
+%%% la même syntaxe
+% \NewDocumentCommand\eqn@single{+u\>}
+% 	{\begin{xequation}\<#1\>\end{xequation}}
+% \NewDocumentCommand\eqnline{O{} +u\eline}
+% 	{\begin{xequation}[#1]#2\end{xequation}}
+% \DeclareRobustCommand\<{\eqn@single}
+
+\NewDocumentCommand\eqn@single{r\<\>}
+	{\begin{xequation}\<#1\>\end{xequation}}
+\NewDocumentCommand\eqnline{O{} +u\eline}
+	{\begin{xequation}[#1]#2\end{xequation}}
+\DeclareRobustCommand\<{\eqn@single\<}
+
+
 %%%%%%%% Alignement À la AMSmath
-\newdimen\largetextabove \largetextabove=3\p@
-\newdimen\largetextbelow \largetextbelow=\z@
+\newdimen\largetextabove \largetextabove=3pt
+\newdimen\largetextbelow \largetextbelow=0pt
 \newbox\cpgetag@box
 \newdimen\cpgetag@width
 
 \def\tag@kern{\kern\eqn@tagkern}
-\cpgesetdeco{tag}{(\hskip1\p@#1\hskip1\p@)}
+\cpgesetdeco{tag}{(\hskip1pt#1\hskip1pt)}
 \newtagform{cpge}[\deco@tag]{}{}
 \DeclareListParser\doorloop\or
 \DeclareListParser*\fororloop\or
@@ -1410,7 +1610,7 @@
 	\endgroup
 }
 \def\tag@measuring#1{%
-	\ifeqn@number
+	\ifcpge@number
 		\stepcounter{equation}%
 		\find@maxtagwidth{\theequation}
 	\else
@@ -1418,7 +1618,7 @@
 	\fi
 }
 \def\set@tag#1{%
-	\ifeqn@number
+	\ifcpge@number
 		\refstepcounter{equation}%
 		\setbox\cpgem@boxa\hbox{%
 			\tag@kern\deco@tag{\theequation}%
@@ -1526,7 +1726,7 @@
     \fi
     \collect@body\next@
 }
-\iffalse $$\fi% Hack benin pour interrompre la coloration syntaxique causée par $$ dans l'éditeur . 
+\iffalse $$\fi% Hack pour interrompre la coloration syntaxique causée par $$ dans VScode . 
 \def\xalign@#1#2#3{%
 	\inalign@true
 	\cpge@indisplaytrue
@@ -1614,8 +1814,8 @@
 	u\math@nil
 }{%
 	\IfBooleanTF{#1}
-		{\global\eqn@numbertrue}
-		{\global\eqn@numberfalse}
+		{\global\cpge@numbertrue}
+		{\global\cpge@numberfalse}
 	\ifstrequal{#2}{@}{}
 		{%
 			\ifblank{#2}
@@ -1701,7 +1901,7 @@
 % 	 u{\>}
 % }{%
 % 	\IfBooleanTF{#1}
-% 		{\eqn@number{#3}}
+% 		{\cpge@number{#3}}
 % 		{\cpge@nonumber{#3}}
 % 	\ifstrequal{#2}{@}
 % 		{\global\let\eqn@framecmd\eqn@fakecmd}	
@@ -1715,7 +1915,7 @@
 % 		{}
 % 	\eqn@framecmd{#4}
 % }
-% \def\eqn@number#1{%
+% \def\cpge@number#1{%
 % 	\ifst@rred
 % 		\st@rredfalse\global\@eqnswtrue
 % 		\ifblank{#1}{}{\label{#1}}
@@ -1767,7 +1967,25 @@
 
 %%%% 
 %% \xboxed normale
-
+\@ifpackageloaded{xcolor}{}{\RequirePackage{xcolor}}{}
+\colorlet{framecol}{black!66}
+\colorlet{backcol}{black!18}
+\long\def\fancybox#1{%
+	\fboxsep0pt\fboxrule1.2pt%
+	\fcolorbox{framecol}{white}{%
+		\fboxsep3pt\fboxrule0.8pt\fcolorbox{white}{backcol}
+		{\kern1em#1\kern1em}%
+	}%
+}
+\cpgesetupmath{
+	formula/.code=\cpgesetdeco{formula}{#1},
+	result/.code=\cpgesetdeco{result}{#1},
+	r/.code=\cpgesetdeco{result}{#1},
+	formula=\fbox{#1},
+	result=\fancybox{#1},
+}
+\def\deco@r{\deco@result}
+\def\decof{\deco@formula}
 \NewDocumentCommand\MakeXboxedCommand{mm}{
 	\newcommand#1[1]{%
 		\let\bgroup{\romannumeral-`}%
@@ -2950,7 +3168,7 @@
 	{##1}
 	{}
 \XDeclareDelimiters\xVa{e{_}}
-	{\IfValueTF{#1}{\opn{\Vsymb}\xsubsup[h=4,b=-3]_{#1}}{\opn{\Vsymb}}}
+	{\IfValueTF{#1}{\opn{\Psymb}\xsubsup[h=4,b=-3]_{#1}}{\opn{\Psymb}}}
 	{##1}
 	{}
 \XDeclareDelimiters\xgo{e{_}}

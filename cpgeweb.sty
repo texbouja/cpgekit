@@ -400,8 +400,8 @@
     \setkeys{CPGEWEB}{multi}%
 }
 \@onlypreamble\cpgewebenv
-\newcommand*{\cpgesetweb}{\setkeys{CPGEWEB}}
-\expandafter\cpgesetweb\expandafter{\convert@options}
+\newcommand*{\cpgesetupweb}{\setkeys{CPGEWEB}}
+\expandafter\cpgesetupweb\expandafter{\convert@options}
 \let\@cpgewebenv\@gobble
 \newcount\cpge@internal
 \newcounter{cpgepage}
@@ -876,13 +876,13 @@
 
         \def\mlform#1{\formule{$\begin{multlined}#1\end{multlined}$}}
 
-        \def\cpgesetnullify#1{\cpgeset{#1/.is family, #1/.unknown/.code=\relax}}
-        \cpgesetnullify{geometry}
-        \cpgesetnullify{tcb}
-        \cpgesetnullify{devoir}
-        \cpgesetnullify{problem}
+        \def\cpgesetupnullify#1{\cpgesetup{#1/.is family, #1/.unknown/.code=\relax}}
+        \cpgesetupnullify{geometry}
+        \cpgesetupnullify{tcb}
+        \cpgesetupnullify{devoir}
+        \cpgesetupnullify{problem}
 
-        \cpgeset[theme]{%
+        \cpgesetup[theme]{%
             dark/.is if=dark,
             colors/.code=\pgfkeysalso{/cpge/colors/.cd,#1},
             font/.style={},
@@ -892,7 +892,7 @@
         }
 
         \DeclareDocumentCommand\cpgetheme{O{} m}{%
-            \cpgeset[theme]{#1}
+            \cpgesetup[theme]{#1}
             \cpgeusefont{sf}
             \IfFileExists{#2web.sty}
             {\AtEndPreamble{\RequirePackage{#2web}}}{}%
@@ -947,7 +947,7 @@
             \hfill\null%
         }
         \newcommand\cpgetitleformat[1]{\long\def\title@format##1##2{#1}}
-        \cpgeset[webenv]{
+        \cpgesetup[webenv]{
             before/.store in=\webenv@prehook,
             image width/.code= \imagewidth#1,
             image height/.code = \tikzset{minimum height=#1\imagewidth},
@@ -963,7 +963,7 @@
         }
         \def\tikz@opts{}
         \NewDocumentEnvironment{webenv}{m O{} D(){} d<> +b}{%
-            \cpgeset[webenv]{#2}%
+            \cpgesetup[webenv]{#2}%
             \csuse{webenv@prehook}%
             \stepcounter{imgcnt}%
             \long\def\titlelabel{#1}%
@@ -1003,14 +1003,14 @@
             \end{tikzpicture}%
         }{\closeunite}
         \NewDocumentEnvironment{notations}{}{%
-            \cpgedefdeco{enumi}{\color{warmcol}\xsquare}
+            \cpgesetdeco{enumi}{\color{warmcol}\xsquare}
             \webenv{Notations}
         }{\endwebenv}
 
         \newcommand\cpgenewwebenv[3][]{
             \ifblank{#1}
             {\csdef{#2}{\webenv{#3}}}
-            {\csdef{#2}{\cpgeset[webenv]{#1}\webenv{#3}}}
+            {\csdef{#2}{\cpgesetup[webenv]{#1}\webenv{#3}}}
             \cslet{end#2}\endwebenv
         }
         \cpgenewwebenv[before=\hideproof, image height=.75]{theo}{Théorème}
@@ -1022,11 +1022,11 @@
         \cpgenewwebenv{remas}{Remarques}
         \cpgenewwebenv{defi}{Définition}
         \newenvironment{genthm}[2][]{
-            \cpgeset[webenv]{image height=.75,#1}%
+            \cpgesetup[webenv]{image height=.75,#1}%
             \webenv{#2}
         }{\endwebenv}
         \newenvironment{image}[1][]{
-            \cpgeset[webenv]{tikz options=#1}%
+            \cpgesetup[webenv]{tikz options=#1}%
             \webenv{}
         }{\endwebenv}
         \def\hideproof{\def\proof{\let\fi@\fi\iffalse}}
@@ -1446,7 +1446,7 @@
 \usetikzlibrary{shadows, fadings, positioning}
 \newdimen\imagewidth
 
-\cpgeset[tikz]{%
+\cpgesetup[tikz]{%
     image width/.code={\imagewidth=#1},
     image width=16cm,
 }
@@ -1461,11 +1461,11 @@
 
 
 
-\cpgedefdeco{thequiz}{{\color{warmcol}\bfseries[\ #1\ ]}}
+\cpgesetdeco{thequiz}{{\color{warmcol}\bfseries[\ #1\ ]}}
 
 
 %%%%% Définition du contenu de la commande \titre.
-\cpgeset[rules]{ %
+\cpgesetup[rules]{ %
     question style/.code=\gdef\cpge@quesnum{#1},
     quiz number/.code=\gdef\cpge@quiznum{#1},
     title/.code=\cpgename*{rules}{#1},
@@ -1485,7 +1485,7 @@
 
 \NewDocumentEnvironment{regles}{O{}+b}{}{}
 \NewDocumentEnvironment{webregles}{O{}+b}{%
-    \cpgeset[rules]{#1}%
+    \cpgesetup[rules]{#1}%
     \ifblank{#2}
     {%
         \gdef\rules@body{%
@@ -1516,7 +1516,7 @@
     \everymath{\displaystyle}%
 }
 
-\cpgeset[mini]{%
+\cpgesetup[mini]{%
     font=\Large,
     label font=\Large\scshape\bfseries\color{warmcol},
     left margin=1pc
