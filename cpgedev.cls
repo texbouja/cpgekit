@@ -1379,7 +1379,7 @@
 		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
 	}
 	\RenewDocumentCommand\listbox{O{} +m}{%
-		\tikz [baseline=(T.base)] \node (T) [generic style, inner ysep=\z@, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
+		\tikz [anchor=base, baseline, yshift=.25ex]  \node [generic style, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
 	}
 \fi\fi
 \unless\ifdraft\tikzset{%
@@ -1810,7 +1810,6 @@
 
 \cpgesetuplists{
 	switchdeco/.code=\let\outerdeco@list\deco@nolink@
-		\csletcs{deco@\cpge@listctr @o}{deco@\cpge@listctr}
 }
 \NewDocumentCommand\questions{!E\op{}}{%
 	\xenum\op{switchdeco,#1}%
@@ -2008,17 +2007,17 @@
 
 %%% Style des numérotations pour les questions et les solutions  
 %%% selon disponibilité de la solution ou non.
-\def\outer@ques@nolink#1#2{%
-	\csuse{deco@\cpge@listctr @o}{#2}%
+\def\outer@ques@nolink#1{%
+	\csuse{deco@\cpge@listctr @o}{#1}%
 	}	
-\def\outer@ques@link#1#2{%%
+\def\outer@ques@link#1{%%
 	\ifcpge@withsol%
 		\hypersetup{linkcolor=white}%
 		\hypertarget%
-			{hyeno:\cpge@problem@id:#2}%
-			{\hyperlink{hysol:\cpge@problem@id:#2}{\csuse{deco@\cpge@listctr @o}{#2}}}%
+			{hyeno:\cpge@problem@id:#1}%
+			{\hyperlink{hysol:\cpge@problem@id:#1}{\csuse{deco@\cpge@listctr @o}{#1}}}%
 	\else%
-		\csuse{deco@\cpge@listctr @o}{#2}%
+		\csuse{deco@\cpge@listctr @o}{#1}%
 	\fi%
 	}
 \def\outer@sol@deco#1{%
@@ -2068,10 +2067,11 @@
 			\@xp\deco@nolink@%
 		\fi%
 	}
+	\csletcs{deco@\cpge@listctr @o}{deco@\cpge@listctr}
 	\edef\score@width{\dimexpr\score@placement\@enumdepth\relax}%
 	\ifsolution 
 		\csdef{deco@\cpge@listctr}##1{%
-			\outer@ques@link{}{##1}%
+			\outer@ques@link{##1}%
 		}
 	\else
 		\csdef{deco@\cpge@listctr}##1{%
