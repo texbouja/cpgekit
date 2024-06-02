@@ -42,6 +42,8 @@
 \newbox\cpge@boxa
 \newbox\cpge@boxb
 \newdimen\cpge@dima
+\newskip\cpge@skipa
+\newtoks\toks@listopts
 %% permanents, pour pointillé
 \newskip\ligneskip
 
@@ -52,14 +54,12 @@
 \newif\ifbackground
 \newif\ifcpge@global
 \newif\ifcpge@thetolabel
-\newif\ifcpge@itemtitle
 \newif\ifcpgein@
 
 %%%%% Sauvegarde de certaines dimensions de la classe d'origine.
 \edef\topsep@origin{\the\topsep}
 \edef\partopsep@origin{\the\partopsep}
 \edef\itemsep@origin{\the\itemsep}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% localisation des commandes pgfkeys %%%%%
@@ -83,6 +83,8 @@
 %%%%% gestion des erreurs %%%%%
 \DeclareRobustCommand\cpgeb@error[2]{%
 	\PackageError{cpgebase}{#1}{#2}}
+\DeclareRobustCommand\cpgeb@warning[2]{%
+	\PackageWarning{cpgebase}{#1}{#2}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -572,23 +574,20 @@
       \else
         \addpenalty\@beginparpenalty
         %\addvspace\@topsep
-		\ifblank{#1}{}{
-			\addvspace{\@topsep}%
-			\addvspace{-\parskip}%
-		}%
-		%\addvspace{-\parskip}%
+        %\addvspace{-\parskip}%
+		\ifblank{#1}{}{\addvspace{\@topsep}\addvspace{-\parskip}}% patched
       \fi
     \else
       \addpenalty\@itempenalty
       %\addvspace\itemsep
-	  \ifblank{#1}{}{\addvspace\itemsep}%
+	  \ifblank{#1}{}{\addvspace\itemsep}% patched
     \fi
     \global\@inlabeltrue
   \fi
   \everypar{%
     \@minipagefalse
     \global\@newlistfalse
-    \if@inlabel %%% Le patch en question
+    \if@inlabel 
       \global\@inlabelfalse
       {\setbox\z@\lastbox
        \ifvoid\z@
@@ -596,7 +595,7 @@
        \fi}%
       \box\@labels
       \penalty\z@
-   	\fi %%% Le patch en question
+   	\fi 
     \if@nobreak
       \@nobreakfalse
       \clubpenalty \@M
@@ -621,120 +620,450 @@
     \else
       \hbox to\labelwidth {\unhbox\@tempboxa}%
     \fi
-    \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}%
+    \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
 	%\hskip\labelsep}%
   \ignorespaces}
   
 %% Fin du patch
 
-%%%% Options de gestion des espaces pour les questions
-%%% clés pour marge et separation
+%%%% Options de gestion des espaces pour les \item
+%%% clés pour marge, saut vertical et aligenement du label
 %%% ne doivent pas être utilisées directement
+\pgfkeys{/pgf/key filters/active families/.install key filter}
 \cpgesetup[@lists]{%
-   marge/.code=\list@setmarge{#1},
+   marge/.code=\cpgelist@setmarge{1}{#1},
    marge/.default=\z@,
-   marge*/.code=\list@setmarge@star{#1},
+   marge+/.code=\cpgelist@setmarge{0}{#1},
+   marge+/.default=\z@,
+   marge*/.code=\cpgelist@setmargealt{#1},
    marge*/.default=\z@,
-   separation/.code=\list@setsep{#1},
-   separation/.default=\itemsep@origin,
-   separation*/.code=\list@setsep@star{#1},
-   separation*/.default=\z@,
+   saut/.code=\cpgelist@setsep{#1},
+   saut/.default=\itemsep@origin,
+   align/.code=\cpgelist@setalign{#1},
+   align/.default=r,
+}
+\def\cpgesetup@lists#1{%
+   \pgfqkeys{/cpge/@lists}{#1}%
 }
 
 %%% les commandes suivantes 
 %%% ne devraient être utilisées qu'une fois la boite
-%%% \cpge@boxa préparée avec un échantillon de numéro.
-%%% c'est la commande \list@setprop qui veille à l'exécution
+%%% \@tempboxa préparée avec un échantillon de numéro.
+%%% c'est la commande \cpgelist@setprop qui veille à l'exécution
 %%% de toute la séquence dans le bon ordre.
 %%% Elle même n'est exécutée que lorsqu'une liste
 %%% est sur le point d'être initiée.
 
-\def\list@setmarge#1{%
-   \expandafter\global\csname leftmargin\cpge@listlevel\endcsname=%
-        \dimexpr\wd\cpge@boxa+#1\relax%
-   \ifdim\csname leftmargin\cpge@listlevel\endcsname>5em%
-       \expandafter\global\csname leftmargin\cpge@listlevel\endcsname=5em%
-    \fi%
-    \csgdef{marge@\cpge@listctr}{%
-        \labelwidth%
-            \dimexpr\csname leftmargin\cpge@listlevel\endcsname-\labelsep\relax%
-         \itemindent\z@}%
-   }
-\def\list@setmarge@star#1{%
-   \expandafter\global\csname leftmargin\cpge@listlevel\endcsname\dimexpr#1\relax%
-   \csgdef{marge@\cpge@listctr}{%
+\def\listmaxwidth{30\p@}
+\def\cpgelist@setmarge#1#2{%
+\ifcsundef{marge@\cpge@listctr}% une fois exécutée, ignore les clés suivantes
+   {\labelsep=.33em%
+   \csname leftmargin\cpge@listlevel\endcsname=%
+        \dimexpr\wd\@tempboxa+#2\relax%
+   \if#11\relax
+      \ifdim\csname leftmargin\cpge@listlevel\endcsname>\listmaxwidth\relax%
+       \csname leftmargin\cpge@listlevel\endcsname=\dimexpr\csname leftmargin\cpge@listlevel\endcsname-.5\wd\@tempboxa-\labelsep\relax%
+    \fi\fi%
+    \csdef{marge@\cpge@listctr}{%une fois exécutée, ignore les clés suivantes
+        \labelwidth\dimexpr\csname leftmargin\cpge@listlevel\endcsname-\labelsep\relax%
+         \itemindent\z@}
+   }{}}
+\def\cpgelist@setmargealt#1{%
+\ifcsundef{marge@\cpge@listctr}%une fois exécutée, ignore les clés suivantes
+   {\labelsep.66em%
+   \csname leftmargin\cpge@listlevel\endcsname\dimexpr#1\relax%
+   \csdef{marge@\cpge@listctr}{%
          \labelwidth\z@\itemindent\labelsep}%
-  }
-\def\list@setsep#1{%
-   \csgdef{separation@\cpge@listctr}{%
-     \topsep\glueexpr#1\relax%
-     \partopsep\z@%
-     \itemsep\glueexpr#1\relax}%
- }
-\def\list@setsep@star#1{%
-   \csgdef{separation@\cpge@listctr}{%
-     \topsep\glueexpr#1\relax%
-     \partopsep\z@%
-     \itemsep\z@}%
- } 
+  }{}}
+\def\cpgelist@setsep#1{%
+\ifcsundef{saut@\cpge@listctr}%une fois exécutée, ignore les clés suivantes
+   {\csdef{saut@\cpge@listctr}{%
+   \cpge@skipa=#1
+     \addtolength\topsep{\cpge@skipa}%
+     \addtolength\itemsep{\cpge@skipa*\real{.5}}}%
+     \addtolength\parsep{\cpge@skipa*\real{.5}}%
+ }{}}
+\let\left@listfil\hfil
+\let\right@listfil\relax
+\def\cpgelist@setalign#1{%
+\ifcsundef{align@\cpge@listctr}{%
+   \if#1l 
+   \csdef{align@\cpge@listctr}{%b
+      \let\left@listfil\relax%
+      \let\right@listfil\hfil}%
+   \else
+      \if#1c
+      \csdef{align@\cpge@listctr}{%
+         \let\left@listfil\hfil%
+         \let\right@listfil\hfil}%
+      \else
+         \if#1r 
+         \csdef{align@\cpge@listctr}{%
+            \let\left@listfil\hfil%
+            \let\right@listfil\relax}%
+         \fi%
+      \fi%
+   \fi%
+ }{}}
 
-%%% Commandes utilisateur pour configurer marge et separation
+%%% Commandes utilisateur pour configurer marge, saut vertical et 
+%%% alignement du label.
 %%% Ne font que stocker tels quels les couples key=val dans des macros
 %%% et celles-ci ne seront utilisées que lors de l'initialisation  
-%%% d'une liste (par \list@setprop)
+%%% d'une liste (par \cpgelist@setprop)
 
-\NewDocumentCommand\cpgesetup@list{ s mm }{
-   \IfBooleanT{#1}{\csdef{prop@\cpge@listenv\romannumeral#2}{}}
-   \ifnum\numexpr#2>\z@%
-      \csappto{prop@\cpge@listenv\romannumeral#2}{#3,}%
-   \else%
-      \def\tmp@for##1{\csapto{prop@\cpge@listenv\romannumeral##1}{#3}}%
-      \forcsvlist{\tmp@for}{1,2,3}%
-   \fi%
-}
-\NewDocumentCommand\cpgesetup@list@name{ s mm }{
+\NewDocumentCommand\cpgelist@addprop{ s mm }{
    \IfBooleanT{#1}{\csdef{prop@#2}{}}
-      \csappto{prop@#2}{#3,}%
+      \cspreto{prop@#2}{#3,}%
 }
 \NewDocumentCommand\cpgesetenum{ s mm }{
    \IfBooleanT{#1}{\csdef{prop@enum\romannumeral#2}{}}
    \ifnum\numexpr#2>\z@%
-       \csappto{prop@enum\romannumeral#2}{#3,}%
+       \cspreto{prop@enum\romannumeral#2}{#3,}%
    \else%
-      \def\tmp@for##1{\csappto{prop@enum\romannumeral##1}{#3,}}%
+      \def\tmp@for##1{\cspreto{prop@enum\romannumeral##1}{#3,}}%
       \forcsvlist{\tmp@for}{1,2,3}%
    \fi%
-   %\expandafter\show\csname prop@enum\romannumeral#2\endcsname
 }
 \NewDocumentCommand\cpgesetitem{ s mm }{
    \IfBooleanT{#1}{\csdef{prop@item\romannumeral#2}{}}
    \ifnum\numexpr#2>\z@%
-       \csappto{prop@item\romannumeral#2}{#3,}%
+       \cspreto{prop@item\romannumeral#2}{#3,}%
    \else%
-      \def\tmp@for##1{\csappto{prop@item\romannumeral##1}{#3,}}%
+      \def\tmp@for##1{\cspreto{prop@item\romannumeral##1}{#3,}}%
       \forcsvlist{\tmp@for}{1,2,3}%
    \fi%
-}                                                
-\def\list@setprop{\begingroup%
-   \ifcsdef{c@\cpge@listctr}
-      {\csname c@\cpge@listctr\endcsname11\relax}%
-      {}
-    \setbox\cpge@boxa\hbox{\color@begingroup%
-         \csuse{label@\cpge@listctr}\hskip\labelsep\null%
-      \color@endgroup}%
-      \dimgdef\item@maxwidth{\wd\cpge@boxa}
-      \setbox\cpge@boxa\hbox{\color@begingroup%
-         \csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}\hskip\labelsep\null%
-      \color@endgroup}
-   \edef\cpge@tempa{%
-      \noexpand\cpgesetup[@lists]{\csuse{prop@\cpge@listctr}}
-      }%
-   \cpge@tempa% 
-   \endgroup%
-}   
+}
+\def\prop@enumi{marge}
+\def\prop@enumii{marge} 
+\def\prop@enumiii{marge}
+\def\prop@itemi{marge=1pc}
+\def\prop@itemii{marge=1pc}
+\def\prop@itemiii{marge=1pc}                             
 
-\cpgesetenum{0}{marge}
-\cpgesetitem{0}{marge=1pc}
+\def\cpgelist@setprop{%
+   \ifcsdef{c@\cpge@listctr}
+      {\csname c@\cpge@listctr\endcsname88\relax}%
+      {}
+   \setbox\@tempboxa\hbox{\color@begingroup%
+   \outerdeco@list{\csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}}\hskip\labelsep% 
+      \color@endgroup}%
+   \begingroup
+   \edef\cpge@tempa{\endgroup%
+      \noexpand\cpgesetup@lists{\csuse{prop@\cpge@listctr}}%
+      }%
+   \cpge@tempa%
+}   
+\def\cpgelist@builder{%
+   \cpgelist@setprop% calcule \leftmargin et définit \sep@... , \marge@... 
+   \expandafter%
+   \list
+   \csname label@\cpge@listctr\endcsname%
+        {\usecounter{\cpge@listctr}%
+          \csuse{sep@\cpge@listctr}%
+           \csuse{marge@\cpge@listctr}%
+            \csuse{saut@\cpge@listctr}%
+             \csuse{align@\cpge@listctr}%
+          \listparindent\parindent%
+          \def\makelabel{\cpge@makelabel}%%
+        }%
+   }
+\def\cpgelist@builder@star{%
+   \let\outerdeco@list\deco@fake
+   \cpgelist@setprop%
+   \expandafter
+   \list
+   \csname label@\cpge@listctr\endcsname%
+        {\csuse{sep@\cpge@listctr}%
+          \csuse{marge@\cpge@listctr}%
+           \csuse{saut@\cpge@listctr}%
+            \csuse{align@\cpge@listctr}%
+         \listparindent\parindent%
+         \let\makelabel\cpge@makelabel%
+        }
+   }
+\def\cpge@makelabel#1{%
+\ifblank{#1}{}{
+   \null\left@listfil%
+      \outerdeco@list{\csuse{deco@\cpge@listctr}{#1}}%
+   \right@listfil\null%
+}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Ajouts 9/12/23 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% interface utilisateur plus conforme à l'orientation globale 
+\newif\ifenum@resume
+\newif\ifenum@restore 
+\def\deco@fake#1{#1}
+\def\outerdeco@list#1{#1}
+\def\cpgelist@outwarn#1{
+   \ifundef\cpge@listenv{
+      \cpgeb@warning{l'option #1 n'aura aucun effet ici.}
+   }{}
+}
+\ProvideDocumentCommand\cpgelist@addlocalprop{smm}{
+   \cpgelist@outwarn{#2}   
+   \IfBooleanTF{#1}
+      {\cpgelist@addprop*{\cpge@listctr}{#3}}%
+      {\cpgelist@addprop{\cpge@listctr}{#3}}%
+}
+\def\cpgelist@savecounter{%
+	\csnumgdef{last@\cpge@listctr}{\value{\cpge@listctr}}%
+}
+\def\cpgelist@save#1{%
+   \unless\ifenum@restore
+      \@xp\toks@listopts\@xp{\the\toks@listopts,#1}
+   \fi 
+}
+\cpgesetup[lists]{%
+   .default=\cpgelist@save{dummy},
+   dummy/.code={},
+   backup/.is family,
+   backup/restore/.is if=enum@restore,
+   backup/resume/.code=
+      \csname enum@resume#1\endcsname\ifenum@resume\enum@restoretrue\fi,
+   backup/resume/.default=true,
+   backup/r/.style={/cpge/lists/backup, resume},
+   backup/.unknown/.code=\relax,
+   resume/.code=\relax,
+   restore/.code=\relax,
+   r/.code=\relax,
+   custom counter/.code={%
+      \cpgelist@outwarn{cc}%
+      \ifltxcounter{#1}{}{\cpgedefcounter{#1}{}}%
+      \def\cpge@listctr{#1}%
+   },
+   cc/.style={custom counter=#1},
+   label prefix/.code=\def\cpge@enumlabelprefix{#1},
+   p/.style={label prefix=#1},
+   n/.code=\cpgelist@outwarn{n}\cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n=#1},
+   n*/.code=\cpgelist@outwarn{n*}\cslet{deco@\cpge@listctr}\deco@fake%
+             \cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n*=#1},
+   d/.code=\cpgelist@outwarn{d}\cpgesetdeco*{\cpge@listctr}{#1}\cpgelist@save{d=#1},
+   d*/.code=\cpgelist@outwarn{d*}\cpgesetdeco{\cpge@listctr}{#1}\cpgelist@save{d*=#1},
+   m/.code=\cpgelist@addlocalprop{m}{marge=#1}\cpgelist@save{m=#1},
+   m+/.code=\cpgelist@addlocalprop{m+}{marge+=#1}\cpgelist@save{m+=#1},
+   m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
+   s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1},
+   a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
+   m/.default=\z@,
+   m+/.default=\z@,
+   m*/.default=\z@,
+   s/.default=\z@,
+   a/.default=r,
+   enum@i/.is family,
+   enum@i/n/.code=\cpgesetlabel{enumi}{#1},
+   enum@i/n*/.code=\let\deco@enumi\deco@fake
+                    \cpgesetlabel{enumi}{#1},
+   enum@i/d*/.code=\cpgesetdeco{enumi}{#1},
+   enum@i/d/.code=\cpgesetdeco*{enumi}{#1},
+   enum@i/m/.code=\cpgesetenum{1}{marge=#1},
+   enum@i/m+/.code=\cpgesetenum{1}{marge+=#1},
+   enum@i/m*/.code=\cpgesetenum{1}{marge*=#1},
+   enum@i/s/.code=\cpgesetenum{1}{saut=#1},
+   enum@i/a/.code=\cpgesetenum{1}{align=#1},
+   enum@i/a/.default=r,
+   enum@i/m/.default=\z@,
+   enum@i/m+/.default=\z@,
+   enum@i/m*/.default=\z@,
+   enumi/.code=\pgfqkeys{/cpge/lists/enum@i}{#1},
+   enum@ii/.is family,
+   enum@ii/n/.code=\cpgesetlabel{enumii}{#1},
+   enum@ii/n*/.code=\let\deco@enumii\deco@fake%
+                     \cpgesetlabel{enumii}{#1},
+   enum@ii/d*/.code=\cpgesetdeco{enumii}{#1},
+   enum@ii/d/.code=\cpgesetdeco*{enumii}{#1},
+   enum@ii/m/.code=\cpgesetenum{2}{marge=#1},
+   enum@ii/m+/.code=\cpgesetenum{2}{marge+=#1},
+   enum@ii/m*/.code=\cpgesetenum{2}{marge*=#1},
+   enum@ii/s/.code=\cpgesetenum{2}{saut=#1},
+   enum@ii/a/.code=\cpgesetenum{1}{align=#1},
+   enum@ii/a/.default=r,
+   enum@ii/m/.default=\z@,
+   enum@ii/m+/.default=\z@,
+   enum@ii/m*/.default=\z@,
+   enumii/.code=\pgfqkeys{/cpge/lists/enum@ii}{#1},
+   enum@iii/.is family,
+   enum@iii/n/.code=\cpgesetlabel{enumiii}{#1},
+   enum@iii/n*/.code=\let\deco@enumiii\deco@fake%
+                      \cpgesetlabel{enumiii}{#1},
+   enum@iii/d*/.code=\cpgesetdeco{enumiii}{#1},
+   enum@iii/d/.code=\cpgesetdeco*{enumiii}{#1},
+   enum@iii/m/.code=\cpgesetenum{3}{marge=#1},
+   enum@iii/m+/.code=\cpgesetenum{3}{marge+=#1},
+   enum@iii/m*/.code=\cpgesetenum{3}{marge*=#1},
+   enum@iii/s/.code=\cpgesetenum{3}{saut=#1},
+   enum@iii/a/.code=\cpgesetenum{1}{align=#1},
+   enum@iii/a/.default=r,
+   enum@iii/m/.default=\z@,
+   enum@iii/m+/.default=\z@,
+   enum@iii/m*/.default=\z@,
+   enumiii/.code=\pgfqkeys{/cpge/lists/enum@iii}{#1},
+   item@i/.is family,
+   item@i/n/.store in=\label@itemi,
+   item@i/n*/.code=\let\deco@itemi\deco@fake%
+                    \cpgesetlabel{itemi}{#1},
+   item@i/d*/.code=\cpgesetdeco{itemi}{#1},
+   item@i/d/.code=\cpgesetdeco*{itemi}{#1},
+   item@i/m/.code=\cpgesetitem{1}{marge=#1},
+   item@i/m*/.code=\cpgesetitem{1}{marge*=#1},
+   item@i/s/.code=\cpgesetitem{1}{saut=#1},
+   item@i/a/.code=\cpgesetitem{1}{align=#1},
+   item@i/a/.default=r,
+   item@i/m/.default=\z@,
+   item@i/m*/.default=\z@,
+   itemi/.code=\pgfqkeys{/cpge/lists/item@i}{#1},
+   item@ii/.is family,
+   item@ii/n/.store in=\label@itemii,
+   item@ii/n*/.code=\let\deco@itemii\deco@fake%
+                         \cpgesetlabel{itemii}{#1},
+   item@ii/d*/.code=\cpgesetdeco{itemii}{#1},
+   item@ii/d/.code=\cpgesetdeco*{itemii}{#1},
+   item@ii/m/.code=\cpgesetitem{2}{marge=#1},
+   item@ii/m*/.code=\cpgesetitem{2}{marge*=#1},
+   item@ii/s/.code=\cpgesetitem{2}{saut=#1},
+   item@ii/a/.code=\cpgesetitem{1}{align=#1},
+   item@ii/a/.default=r,
+   item@ii/m/.default=\z@,
+   item@ii/m*/.default=\z@,
+   itemii/.code=\pgfqkeys{/cpge/lists/item@ii}{#1},
+   item@iii/.is family,
+   item@iii/n/.store in=\label@itemiii,
+   item@iii/n*/.code=\let\deco@itemiii\deco@fake%
+                      \cpgesetlabel{itemiii}{#1},
+   item@iii/d*/.code=\cpgesetdeco{itemiii}{#1},
+   item@iii/d/.code=\cpgesetdeco*{itemiii}{#1},
+   item@iii/m/.code=\cpgesetitem{3}{marge=#1},
+   item@iii/m*/.code=\cpgesetitem{3}{marge*=#1},
+   item@iii/s/.code=\cpgesetitem{3}{saut=#1},
+   item@iii/a/.code=\cpgesetitem{1}{align=#1},
+   item@iii/a/.default=r,
+   item@iii/m/.default=\z@,
+   item@iii/m*/.default=\z@,
+   itemiii/.code=\pgfqkeys{/cpge/lists/item@iii}{#1},
+}
+\cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
+
+\def\cpgesetuplists{\cpgesetup[lists]}
+
+\NewDocumentCommand\xenum{!e{\op}}{%
+   \def\cpge@listenv{enum}
+   \def\cpge@xlistenv{xenum}
+   \ifnum \@enumdepth >2 \@toodeep\else%
+      \advance\@enumdepth\@ne%
+      \edef\cpge@listdepth{\the\@enumdepth}
+      \edef\cpge@listlevel{\romannumeral\@enumdepth}%
+      \edef\cpge@listctr{enum\cpge@listlevel}%
+   \fi%
+   \IfValueT{#1}{%
+      \cpgesetuplists{backup,#1}
+      \ifenum@restore%
+         \csuse{setlastopts@\cpge@listctr}
+      \else
+         \toks@listopts{}%
+         \cpgesetuplists{#1}%
+         \csxdef{setlastopts@\cpge@listctr}
+            {\@nx\cpgesetuplists{\the\toks@listopts}}
+      \fi%
+      %\csshow{setlastopts@\cpge@listctr}
+   }
+   \cpgelist@builder%
+   \ifenum@resume%
+      \csname c@\cpge@listctr\expandafter\endcsname
+       \csname last@\cpge@listctr\endcsname\relax%
+        \enum@resumefalse% pour les niveaux imbriqués
+   \fi%
+ }
+ \def\endxenum{\cpgelist@savecounter\endlist}
+ \NewDocumentCommand\xitem{!e{\op}}{%
+  \def\cpge@listenv{item}
+  \def\cpge@xlistenv{xitem}
+  \ifnum \@itemdepth >2 \@toodeep\else%
+      \advance\@itemdepth\@ne%
+      \edef\cpge@listdepth{\the\@itemdepth}
+      \edef\cpge@listlevel{\romannumeral\@itemdepth}%
+      \edef\cpge@listctr{item\cpge@listlevel}%
+  \fi%
+  \IfValueT{#1}{\cpgesetup[lists]{#1}}%
+  \cpgelist@builder@star%
+ }
+\let\endxitem\endlist
+\NewDocumentCommand\init@xlist{mm !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
+	\IfBooleanTF{#6}%
+        {\begin{#1}\op{r,#8}}
+        {\IfBooleanT{#7}{\begin{#1}\op{#8}}}%
+	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
+	#2%
+}
+\cpgesetdeco{itemtitle}{\bfseries #1.\enskip}
+\NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
+      \ifstrequal{#2}{@}{}
+            {\addtocounter{\cpge@listctr}{#2}}%
+      \IfValueTF{#1}
+         {\item[#1]}
+         {\item}%
+      \IfValueT{#3}
+         {\deco@itemtitle{#3}\protected@edef\@currentlabelname{#3}}%
+      \IfValueT{#4}
+         {\label{\cpge@enumlabelprefix#4}}%
+ }
+\def\xitenum{\init@xlist{xenum}\xit@enum}
+\NewDocumentCommand\xit@item{!o !E{\zap}{{@}} !d() !d<>}{%
+   \IfValueTF{#1}
+      {\item[\csuse{deco@\cpge@listctr}{#1}]}%
+      {\item}
+   \IfValueT{#3}{\deco@itemtitle{#3}}%
+   \IfValueT{#4}{
+      \phantomsection%
+      \protected@edef\@currentlabelname{#3}%
+      \label{\cpge@enumlabelprefix#4}%
+   }
+}
+\def\xititem{\init@xlist{xitem}\xit@item}
+\def\xit{\@ifstar\xititem\xitenum}
+\def\cpge@enumlabelprefix{}
+\def\end@xlist{%
+	\ifundef\cpge@listenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
+}
+\def\end@xlist@rec{%
+   \ifundef\cpge@listenv{}{%
+      \expandafter\end\expandafter{\cpge@xlistenv}%
+		 \end@xlist@rec%
+  }%
+}%
+\NewDocumentCommand\exit{!t- !t- !t- !t-}{
+   \IfBooleanTF{#1}
+      {%
+         \end@xlist%
+         \IfBooleanT{#2}
+            {\end@xlist%
+               \IfBooleanT{#3}{%
+                     \end@xlist%
+                      \IfBooleanT{#3}{%
+                         \end@xlist}%
+               }%
+            }%
+      }%
+      {\end@xlist@rec}%
+}
+\NewDocumentCommand\cpgenewlist{ smmm }{
+   \toks@listopts{#4}
+   \IfBooleanF{#1}{
+      \@xp\NewDocumentCommand\csname#2\endcsname{!E{\op}{{}}}
+         {\@xp\xenum\@xp\op\@xp{\the\toks@listopts,##1}\def\cpge@xlistenv{#2}}
+      \csdef{end#2}{\cpgelist@savecounter\endlist}
+      \newcommand#3{\init@xlist{#2}\xit@enum}
+   }
+   \IfBooleanT{#1}{
+      \@xp\NewDocumentCommand\csname#2\endcsname{!E{\op}{{}}}
+         {\@xp\xitem\@xp\op\@xp{\the\toks@listopts,##1}\def\cpge@xlistenv{#2}}
+      \cslet{end#2}\endlist
+      \newcommand#3{\init@xlist{#2}\xit@item}
+   }
+}
+
+%% Markup 
 \cpgesetlabel{enumi}{|1|}
 \cpgesetlabel{enumii}{|a|}
 \cpgesetlabel{enumiii}{|i|}
@@ -746,7 +1075,7 @@
 \cpgesetdeco{enumii}{(#1)}
 \cpgesetdeco{section}{#1}
 \cpgesetdeco{subsection}{#1}
-%%%% Chargement de font pour des symboles à utiliser avec {xitem}
+%%%% Chargement de polices pour des symboles à utiliser avec {xitem}
 \DeclareFontFamily{U}{FdSymbolA}{}
 \DeclareFontShape{U}{FdSymbolA}{m}{n}{
     <-> s * [1] FdSymbolA-Book
@@ -789,262 +1118,6 @@
 \def\label@itemi{\relsize{-2}$\xdiamond$}
 \def\label@itemii{\relsize{-2}$\xsquare$}
 \def\label@itemiii{\relsize{-2}$\xcircle$}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Ajouts 9/12/23 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% interface utilisateur plus conforme à l'orientation globale 
-
-\def\fake@deco#1{#1}
-\def\lists@outerr#1{
-   \ifundef\cpge@listenv{
-   \cpgeb@error{
-         l'option #1 ne peut être utilisée \MessageBreak
-         en dehors d'un environnement de liste
-      }{L'option #1 n'aura aucun effet}
-   }{}
-}
-\newif\iflocal@prop
-\def\set@local@prop#1{
-   \iflocal@prop%
-      \cpgesetup@list@name{\cpge@listctr}{#1}
-   \else
-      \local@proptrue%
-      \cpgesetup@list@name*{\cpge@listctr}{#1}
-   \fi
-}
-\newif\ifresume@xenum
-\cpgesetup[lists]{%
-   custom counter/.code={%
-      \lists@outerr{cc}%
-      \ifltxcounter{#1}{}{\cpgedefcounter{#1}{}}%
-      \def\cpge@listctr{#1}%
-   },
-   cc/.style={custom counter=#1},
-   resume/.is if=resume@xenum,%
-   r/.style={resume=#1},
-   label prefix/.code=\def\cpge@enumlabelprefix{#1},
-   l/.style={label prefix=#1},
-   n/.code=\lists@outerr{n}\cpgesetlabel{\cpge@listctr}{#1},
-   n*/.code=\lists@outerr{n*}\cslet{deco@\cpge@listctr}\fake@deco%
-             \cpgesetlabel{\cpge@listctr}{#1},
-   d/.code=\lists@outerr{d}\cpgesetdeco*{\cpge@listctr}{#1},
-   d*/.code=\lists@outerr{d*}\cpgesetdeco{\cpge@listctr}{#1},
-   m/.code=\lists@outerr{m}\set@local@prop{marge=#1},
-   m*/.code=\lists@outerr{m*}\set@local@prop{marge*=#1},
-   s/.code=\lists@outerr{s}\set@local@prop{separation=#1},
-   s*/.code=\lists@outerr{s*}\set@local@prop{separation*=#1},
-   m/.default=\z@,
-   m*/.default=\z@,
-   enum@i/.is family,
-   enum@i/n/.code=\cpgesetlabel{enumi}{#1},
-   enum@i/n*/.code=\let\deco@enumi\fake@deco
-                    \cpgesetlabel{enumi}{#1},
-   enum@i/d*/.code=\cpgesetdeco{enumi}{#1},
-   enum@i/d/.code=\cpgesetdeco*{enumi}{#1},
-   enum@i/m/.code=\cpgesetenum{1}{marge=#1},
-   enum@i/m*/.code=\cpgesetenum{1}{marge*=#1},
-   enum@i/s/.code=\cpgesetenum{1}{separation=#1},
-   enum@i/s*/.code=\cpgesetenum{1}{separation*=#1},
-   enum@i/m/.default=\z@,
-   enum@i/m*/.default=\z@,
-   enumi/.code=\pgfqkeys{/cpge/lists/enum@i}{#1},
-   enum@ii/.is family,
-   enum@ii/n/.code=\cpgesetlabel{enumii}{#1},
-   enum@ii/n*/.code=\let\deco@enumii\fake@deco%
-                     \cpgesetlabel{enumii}{#1},
-   enum@ii/d*/.code=\cpgesetdeco{enumii}{#1},
-   enum@ii/d/.code=\cpgesetdeco*{enumii}{#1},
-   enum@ii/m/.code=\cpgesetenum{2}{marge=#1},
-   enum@ii/m*/.code=\cpgesetenum{2}{marge*=#1},
-   enum@ii/s/.code=\cpgesetenum{2}{separation=#1},
-   enum@ii/s*/.code=\cpgesetenum{2}{separation*=#1},
-   enum@ii/m/.default=\z@,
-   enum@ii/m*/.default=\z@,
-   enumii/.code=\pgfqkeys{/cpge/lists/enum@ii}{#1},
-   enum@iii/.is family,
-   enum@iii/n/.code=\cpgesetlabel{enumiii}{#1},
-   enum@iii/n*/.code=\let\deco@enumiii\fake@deco%
-                      \cpgesetlabel{enumiii}{#1},
-   enum@iii/d*/.code=\cpgesetdeco{enumiii}{#1},
-   enum@iii/d/.code=\cpgesetdeco*{enumiii}{#1},
-   enum@iii/m/.code=\cpgesetenum{3}{marge=#1},
-   enum@iii/m*/.code=\cpgesetenum{3}{marge*=#1},
-   enum@iii/s/.code=\cpgesetenum{3}{separation=#1},
-   enum@iii/s*/.code=\cpgesetenum{3}{separation*=#1},
-   enum@iii/m/.default=\z@,
-   enum@iii/m*/.default=\z@,
-   enumiii/.code=\pgfqkeys{/cpge/lists/enum@iii}{#1},
-   item@i/.is family,
-   item@i/n/.store in=\label@itemi,
-   item@i/n*/.code=\let\deco@itemi\fake@deco%
-                    \cpgesetlabel{itemi}{#1},
-   item@i/d/.code=\cpgesetdeco{itemi}{#1},
-   item@i/d*/.code=\cpgesetdeco*{itemi}{#1},
-   item@i/m/.code=\cpgesetitem{1}{marge=#1},
-   item@i/m*/.code=\cpgesetitem{1}{marge*=#1},
-   item@i/s/.code=\cpgesetitem{1}{separation=#1},
-   item@i/s*/.code=\cpgesetitem{1}{separation*=#1},
-   item@i/m/.default=\z@,
-   item@i/m*/.default=\z@,
-   itemi/.code=\pgfqkeys{/cpge/lists/item@i}{#1},
-   item@ii/.is family,
-   item@ii/n/.store in=\label@itemii,
-   item@ii/n*/.code=\let\deco@itemii\fake@deco%
-                         \cpgesetlabel{itemii}{#1},
-   item@ii/d/.code=\cpgesetdeco{itemii}{#1},
-   item@ii/d*/.code=\cpgesetdeco*{itemii}{#1},
-   item@ii/m/.code=\cpgesetitem{2}{marge=#1},
-   item@ii/m*/.code=\cpgesetitem{2}{marge*=#1},
-   item@ii/s/.code=\cpgesetitem{2}{separation=#1},
-   item@ii/s*/.code=\cpgesetitem{2}{separation*=#1},
-   item@ii/m/.default=\z@,
-   item@ii/m*/.default=\z@,
-   itemii/.code=\pgfqkeys{/cpge/lists/item@ii}{#1},
-   item@iii/.is family,
-   item@iii/n/.store in=\label@itemiii,
-   item@iii/n*/.code=\let\deco@itemiii\fake@deco%
-                      \cpgesetlabel{itemiii}{#1},
-   item@iii/d/.code=\cpgesetdeco{itemiii}{#1},
-   item@iii/d*/.code=\cpgesetdeco*{itemiii}{#1},
-   item@iii/m/.code=\cpgesetitem{3}{marge=#1},
-   item@iii/m*/.code=\cpgesetitem{3}{marge*=#1},
-   item@iii/s/.code=\cpgesetitem{3}{separation=#1},
-   item@iii/s*/.code=\cpgesetitem{3}{separation*=#1},
-   item@iii/m/.default=\z@,
-   item@iii/m*/.default=\z@,
-   itemiii/.code=\pgfqkeys{/cpge/lists/item@iii}{#1},
-}
-\cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
-
-\def\cpgesetuplists{\cpgesetup[lists]}
-\def\@ques@{%
-   \list@setprop%
-   \expandafter
-   \list
-   \csname label@\cpge@listctr\endcsname%
-        {\usecounter{\cpge@listctr}%
-        \csuse{marge@\cpge@listctr}%
-         \csuse{separation@\cpge@listctr}%
-         \listparindent\parindent%
-          \let\makelabel\cpge@makelabel%
-        }
-   }
-\def\@ques@star{%
-   \list@setprop%
-   \expandafter
-   \list
-   \csname label@\cpge@listctr\endcsname%
-        {\csuse{marge@\cpge@listctr}%
-         \csuse{separation@\cpge@listctr}%
-         \listparindent\parindent%
-          \let\makelabel\cpge@makelabel%
-        }
-   }
-\def\cpge@makelabel#1{\hfill\ifblank{#1}{}{\csuse{deco@\cpge@listctr}{#1}}}
-\NewDocumentCommand\xenum{!e{\op}}{%
-   \def\cpge@listenv{enum}
-   \def\cpge@xlistenv{xenum}
-   \ifnum \@enumdepth >2 \@toodeep\else%
-      \advance\@enumdepth\@ne%
-      \edef\cpge@listdepth{\the\@enumdepth}
-      \edef\cpge@listlevel{\romannumeral\@enumdepth}%
-      \edef\cpge@listctr{enum\cpge@listlevel}%
-   \fi%
-   \IfValueT{#1}{\cpgesetup[lists]{#1}}%
-   \@ques@%
-   \ifresume@xenum%
-      \csname c@\cpge@listctr\expandafter\endcsname
-       \csname last@\cpge@listctr\endcsname\relax%
-        \resume@xenumfalse%
-   \fi%
- }
- \def\endxenum{\save@enumctr\endlist}
- \def\save@enumctr{%
-	\csnumgdef{last@\cpge@listctr}{\value{\cpge@listctr}}%
-}
- \NewDocumentCommand\xitem{!e{\op}}{%
-  \def\cpge@listenv{item}
-  \def\cpge@xlistenv{xitem}
-  \ifnum \@itemdepth >2 \@toodeep\else%
-      \advance\@itemdepth\@ne%
-      \edef\cpge@listdepth{\the\@itemdepth}
-      \edef\cpge@listlevel{\romannumeral\@itemdepth}%
-      \edef\cpge@listctr{item\cpge@listlevel}%
-  \fi%
-  \IfValueT{#1}{\cpgesetup[lists]{#1}}%
-  \@ques@star%
- }
-\let\endxitem\endlist
-\NewDocumentCommand\init@xlist{mm !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
-	\IfBooleanTF{#6}%
-        {\begin{#1}\op{r,#8}}
-        {\IfBooleanT{#7}{\begin{#1}\op{#8}}}%
-	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
-	\cpgesetup[lists]{local,#8}
-	#2%
-}
-\NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
-      \ifstrequal{#2}{@}{}
-            {\addtocounter{\cpge@listctr}{#2}}%
-      \IfValueTF{#1}
-         {\item[#1]}
-         {\item}%
-      \IfValueT{#3}
-         {\deco@itemtitle{#3}}%
-      \IfValueT{#4}
-         {\label{\cpge@enumlabelprefix#4}}%
- }
-\def\xitenum{\init@xlist{xenum}\xit@enum}
-\NewDocumentCommand\xit@item{!E{\lab\zap}{{}{@}} !d() !d<>}{%
-   \ifblank{#1}
-         {\item}
-         {\item[\csuse{deco@\cpge@listctr}{#1}]}%
-   \IfValueT{#3}{\deco@itemtitle{#3}}%
-}
-\def\xititem{\init@xlist{xitem}\xit@item}
-\def\xit{\@ifstar\xititem\xitenum}
-\def\cpge@enumlabelprefix{}
-\def\end@xlist{%
-	\ifundef\cpge@listenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
-}
-\def\end@xlist@rec{%
-   \ifundef\cpge@listenv{}{%
-      \expandafter\end\expandafter{\cpge@xlistenv}%
-		 \end@xlist@rec%
-  }%
-}%
-\NewDocumentCommand\exit{!t- !t- !t- !t-}{
-   \IfBooleanTF{#1}
-      {%
-         \end@xlist%
-         \IfBooleanT{#2}
-            {\end@xlist%
-               \IfBooleanT{#3}{%
-                     \end@xlist%
-                      \IfBooleanT{#3}{%
-                         \end@xlist}%
-               }%
-            }%
-      }%
-      {\end@xlist@rec}%
-}
-\NewDocumentCommand\cpgenewlist{ smmm }{
-   \IfBooleanF{#1}{
-      \expandafter\NewDocumentCommand\csname#2\endcsname{!E{\op}}
-         {\xenum\op{#4,##1}\def\cpge@xlistenv{#2}}
-      \csdef{end#2}{\save@enumctr\endlist}
-      \newcommand#3{\init@xlist{#2}\xit@enum}
-   }
-   \IfBooleanT{#1}{
-      \expandafter\NewDocumentCommand\csname#2\endcsname{!E{\op}}
-         {\xitem\op{#4}\def\cpge@xlistenv{#2}}
-      \cslet{end#2}\endlist
-      \def#3{\init@xlist{#2}\xit@item}
-   }
-}
-
-
-
 %%%% 
 \DeclareDocumentCommand\disc@unite{mmd()}{
    \IfValueTF{#3}{\item[#1#3#2]}{\item}

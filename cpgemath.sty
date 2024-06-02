@@ -636,7 +636,7 @@
 	\else
 		\setlength\midwidth{\hsize*\ratio{\num@pt\p@}{100\p@}}
 	\fi
-	\midwidth=\dimexpr\midwidth-\fadjwidth-2em\relax
+	\midwidth=\dimexpr\midwidth-\fadjwidth\relax
 	\eqn@setmidbox{#2}
 	\setlength\midwidth{\wd\midbox+\fadjwidth}
 \@esphack%
@@ -670,7 +670,7 @@
 		\parsep\z@skip%
 		\@beginparpenalty\precenterpenalty%
 		\@endparpenalty\postcenterpenalty%
-	\item[]%
+	\item[]\leavevmode%
 }
 \def\begin@center@{%	
 }
@@ -687,7 +687,7 @@
 		\vskip\medcenterskip%
 	\fi%
 	\hacked@item%
-	\leavevmode\hb@xt@\z@{\unhcopy\cpgem@boxa\hss}%
+	\hb@xt@\z@{\unhcopy\cpgem@boxa\hss}%
 	\setbox\cpgem@boxb\hbox{\kern\cpge@dimb\box\cpgem@boxb}%
 	\ifdim\wd\cpgem@boxb>\linewidth%
 		\hskip-\@totalleftmargin%
@@ -3282,7 +3282,7 @@
 }	
 %%%%% Dérivation
 
-%%%%% Code from diffcoef.sty
+%%%%% Impressive code from diffcoef.sty
 %%%%% tribute to Andrew Parsloe
 \ExplSyntaxOn
 \tl_const:Nn \c__cpgemath_digits_tl { 1234567890 }

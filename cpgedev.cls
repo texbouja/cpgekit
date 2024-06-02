@@ -25,6 +25,7 @@
 	\newif\ifsolution 
 	\newif\ifsolutiondelayed
 	\newif\ifhint
+	\newif\ifscore
 	\newif\ifhintocg
 }{}
 
@@ -42,6 +43,7 @@
 	solution*/.style={},
 	hint/.style={},
 	hint*/.style={},
+	score/.style={},
 	book/.code=\def\cpge@class{book},
 	report/.code=\def\cpge@class{report},
 }
@@ -62,7 +64,8 @@
 	hint/.code=\csuse{hint#1}\csuse{hintocg#1},
 	hint/.default=true,
 	hint*/.code=\csuse{hint#1}\hintocgfalse,
-	hint*/.default=true, 
+	hint*/.default=true,
+	score/.is if=score,
 	.search also=/IGD
 }
 \pgfkeys{/IGD/.unknown/.code=%
@@ -93,6 +96,7 @@
 \def\Solution{\Dummy@Solution}
 \def\setup@solutionmode{%
 	\ifsolutiondelayed\solutiontrue\fi
+	\ifsolution\hinttrue\fi%
 	\ifsolution
 		\def\Solution{\Real@Solution}
 	\fi%
@@ -118,7 +122,7 @@
 %% Declarations 
 \newcounter{tmpdo}
 
-\newif\ifinsolutions
+\newif\ifsolutionlist
 \newif\ifcpge@withsol % vrai si le numero de la question courante doit être un hyperlien 
 \newif\ifcpge@tmpswa
 \newif\ifcpge@tmpswb
@@ -246,7 +250,7 @@
 			a4paper,
 			inner=3.6cm, outer=2.4cm,
 			vmargin={2.4cm,3.6cm}, 
-			littlemargin=3em
+			littlemargin=4pc
 		}, 
 	2print/.code=%
 		\printtrue%
@@ -259,7 +263,7 @@
 			%mag=830,
 			inner=1truecm, outer=1truecm,
 			vmargin={2.4truecm,2.4truecm},
-			littlemargin=2.4em
+			littlemargin=3.2pc%
 		},
 	lsprint/.code=%
 		\printtrue%
@@ -269,11 +273,11 @@
 		\geometry{%
 			a4paper,
 			landscape,
-			twocolumn, columnsep=24truept,
+			twocolumn, columnsep=1truecm,
 			%mag=870,
 			inner=1.8truecm, outer=1.8truecm,
 			vmargin={1.5truecm,1.5truecm},
-			littlemargin=3em
+			littlemargin=3.2pc
 		},
 	draft/.code=%
 		\printfalse%
@@ -283,7 +287,7 @@
 			a5paper,
 			inner=1.5cm, outer=1.5cm,
 			vmargin={1.8cm,2.4cm},
-			littlemargin=2.4em 
+			littlemargin=4pc 
 		}, 
 	phone/.code=%
 		\printfalse%
@@ -293,9 +297,9 @@
 		\geometry{%
 			sc16x9,
 			mag=1100,
-			hmargin={.5cm,.5cm},
+			hmargin={1cm,.5cm},
 			vmargin={1.2cm,1.4cm},
-			littlemargin=2.4em,
+			littlemargin=3.2pc,
 		},%
 	phone 19x9/.code=%
 		\printfalse%
@@ -304,7 +308,7 @@
 		\titlepagetrue%
 		\geometry{%
 			sc19x9,
-			hmargin={.5cm,.5cm},
+			hmargin={1cm,.5cm},
 			vmargin={1.4cm,1.8cm},
 			littlemargin=2.4em
 		},%
@@ -315,9 +319,9 @@
 		\titlepagetrue%
 		\geometry{%
 			sc4x3beamer,
-			hmargin={.4cm,.4cm},
+			hmargin={1cm,.5cm},
 			vmargin={.4cm,1.2cm},
-			littlemargin=3em
+			littlemargin=4pc
 		},%
 	tablet/.code=%
 		\printfalse%
@@ -329,7 +333,7 @@
 			hmargin={1.8cm,1.8cm},
 			vmargin={1.5cm,2cm},
 			%mag=1100,
-			littlemargin=3em
+			littlemargin=4pc
 		},%
 	lstablet/.code=%
 		\printfalse%
@@ -343,7 +347,7 @@
 			hmargin={.5cm,.5cm},
 			vmargin={1.2cm,1.4cm},
 			%mag=880,
-			littlemargin=2.4em
+			littlemargin=3.2pc
 		},%
 	tablet 16x10/.code=%
 		\printfalse%
@@ -355,7 +359,7 @@
 			hmargin={1cm,1cm},
 			vmargin={1.5cm,2cm},
 			%mag=1100,
-			littlemargin=3em
+			littlemargin=4pc
 		},%
 	lstablet 16x10/.code=%
 		\printfalse%
@@ -369,12 +373,13 @@
 			hmargin={.8cm,.8cm},
 			vmargin={1.2cm,1.4cm},
 			%mag=880,
-			littlemargin=2.4em
+			littlemargin=3.2pc
 		},%
 }
 \cpgesetup[geometry]{%
-	.unknown/.code=\@xp\appto\@xp\geom@options\@xp{%
-		\pgfkeyscurrentname=#1,}, 
+	.unknown/.code=\edef\tmp@value{#1}\ifdefvoid{\tmp@value}{\eappto\geom@options{%
+		\pgfkeyscurrentname,}}{\eappto\geom@options{%
+		\pgfkeyscurrentname={\tmp@value},}}, 
 	force compact/.is if=compact,
 	force geometry/.is if=forced@geometry,
 	draft/.is if=draft,
@@ -621,7 +626,6 @@
 %% titre normal sans *, page de garde avec *
 %% option [] pour \cpgesetup[title]{}, sinon option par defaut 
 %% option () pour le format, sinon format par defaut
-\newif\iftitlepage@used
 \NewDocumentCommand\titre{s+e\op+d()}{%
    \IfBooleanT{#1}{\titlepagetrue}
    \begingroup%
@@ -716,18 +720,18 @@
 \pgfkeys{/handlers/.colordef/.code=
 	\pgfkeysalso{\pgfkeyscurrentpath/.code=\preparecolor{#1}{named}{##1}}
 }
-\def\cpgesetup@color#1#2#3{%
+\def\cpgeset@colors#1#2#3{%
 	\csdef{cpge@#1col}{\ifdark #3\else #2\fi}
 }
 \cpgesetup[colors]{
-	warm/.code 2 args=\cpgesetup@color{warm}{#1}{#2},
-	cold/.code 2 args=\cpgesetup@color{cold}{#1}{#2},
-	neutral/.code 2 args=\cpgesetup@color{neutral}{#1}{#2},
-	main/.code 2 args=\cpgesetup@color{main}{#1}{#2},
-	link/.code 2 args=\cpgesetup@color{link}{#1}{#2},
-	fg/.code 2 args=\cpgesetup@color{fg}{#1}{#2},
-	bg/.code 2 args=\cpgesetup@color{bg}{#1}{#2},
-	page/.code 2 args=\cpgesetup@color{page}{#1}{#2},
+	warm/.code 2 args=\cpgeset@colors{warm}{#1}{#2},
+	cold/.code 2 args=\cpgeset@colors{cold}{#1}{#2},
+	neutral/.code 2 args=\cpgeset@colors{neutral}{#1}{#2},
+	main/.code 2 args=\cpgeset@colors{main}{#1}{#2},
+	link/.code 2 args=\cpgeset@colors{link}{#1}{#2},
+	fg/.code 2 args=\cpgeset@colors{fg}{#1}{#2},
+	bg/.code 2 args=\cpgeset@colors{bg}{#1}{#2},
+	page/.code 2 args=\cpgeset@colors{page}{#1}{#2},
 	warmcol/.colorlet=warmcol,
     coldcol/.colorlet=coldcol,
     neutralcol/.colorlet=neutralcol,
@@ -801,20 +805,17 @@
 
 %%%% Fonts loading. 
 \RequirePackage{ifxetex}
-\newif\iffontsloaded
 \cpgesetup[font]{%
 	libertine/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
+				\RequirePackage{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
 				\RequirePackage{microtype}
 			\fi
+			\RequirePackage[french]{babel}
 			\RequirePackage[tt=false]{libertine}
 			\RequirePackage[%
 				libertine,smallerops,bigdelims,upint,vvarbb
@@ -826,30 +827,26 @@
 	lmodern/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
+				\RequirePackage{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
 				\RequirePackage{microtype}
 			\fi
 		\usepackage{lmodern}
+		\RequirePackage[french]{babel}
 		\def\TitlingFont{\sffamily\scshape}
 	}},
 	utopia/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
+				\RequirePackage{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
 				\RequirePackage{microtype}
 			\fi
+		\RequirePackage[french]{babel}
 		\usepackage[p,scaled=.98,space]{erewhon}
 		\usepackage[varqu,varl]{inconsolata} % typewriter
 		\usepackage[type1,scaled=.95]{cabin} % sans serif like Gill Sans
@@ -860,15 +857,13 @@
 	palatino/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
+				\RequirePackage{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
 				\RequirePackage{microtype}
 			\fi
+		\RequirePackage[french]{babel}
 		\usepackage{newpxtext}
 		\usepackage[vvarbb]{newpxmath}
 		\useosf
@@ -877,16 +872,14 @@
 	fira/.code={%
 		\def\load@thefonts{%
 			\ifxetex
-				\RequirePackage{polyglossia}
-				\setdefaultlanguage{french}
-				\def\shorthandoff####1{}
+				\RequirePackage{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
-				\RequirePackage[french]{babel}
 				\RequirePackage{microtype}
 
 			\fi
+			\RequirePackage[french]{babel}
 			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
 			\RequirePackage[scaled=.88]{FiraMono}
 			\RequirePackage[smallerops,upint]{newtxsf}
@@ -1005,6 +998,7 @@
 %%% repose sur cpgetitle.sty qui fusionne titlesec, titleps et titletoc %%%
 
 %%% Résiliation des commandes de titrage usuelles
+\undef\chapter
 \undef\section
 \undef\subsection
 \undef\parapgraph
@@ -1017,6 +1011,8 @@
 \titleclass{\parti}{straight}[\problem] 
 \titleclass{\partii}{straight}[\parti]
 \titleclass{\bigques}{straight}[\partii]
+
+\def\chapter{\@devoir}
 
 \def\cpgesetupsectiontitle{\cpgesetup[sectiontitle]}
 \cpgesetupsectiontitle{
@@ -1035,6 +1031,7 @@
 	devoir/shape/.code=\def\@devoir@shape{#1}\cpge@tmpswatrue,
 	devoir/deco/.code=\cpgesetdeco{@devoir}{#1},
 	devoir/label deco/.code=\cpgesetdeco{@devoirlabel}{#1},
+	devoir/numberless label deco/.code=\cpgesetdeco{@devoirlabelnumberless}{#1},
 	devoir/spacing/.code n args={3}{\cpgetitle@spacing{\@devoir}{#1}{#2}{#3}},
 	devoir/.code=\pgfqkeys{/cpge/sectiontitle/devoir}{#1}
 				 \ifcpge@tmpswa
@@ -1126,27 +1123,28 @@
 %%%%%%%%%%%%%%%%%%
 
 %%% Styles des versions internes des commandes de titre 
+\cpgesetupsectiontitle{devoir={numberless label deco={}, deco=#1}}
 \cpgetitle@shape{display}{@devoir}[default]
 \def\@devoir@format{
 	\cpgetitle@format{\@devoir}[\@devoir@shape]
 		{\csundef@afterexec{hook@beforedevtitle}}
-		{\devoirlabel@align%
+		{\@devoirlabel@align%
 			\ifcpge@tmpswb
 				\addtocounter{@devoir}{-1}%
-				\deco@devoirlabelnumberless{}%
+				\deco@@devoirlabelnumberless{}%
 			\else
-				\deco@devoirlabel{\devoir@name}{\label@@devoir}
+				\deco@@devoirlabel{\@devoir@name}{\label@@@devoir}
 			\fi
 		}
 		{\z@}
-		{\devoir@align\deco@devoir{\cnt@name}{##1}}
+		{\@devoir@align\deco@@devoir{\cnt@name}{##1}}
 		[\csundef@afterexec{hook@afterdevtitle}]
 	\cpgetitle@format{name=\@devoir, numberless}[\@devoir@shape]
 		{\csundef@afterexec{hook@beforedevtitle}}
-		{\devoirlabel@align%
-			\deco@devoirlabelnumberless}
+		{\@devoirlabel@align%
+			\deco@@devoirlabelnumberless}
 		{\z@}
-		{\devoir@align\deco@devoir{##1}}
+		{\@devoir@align\deco@@devoir{##1}}
 		[\csundef@afterexec{hook@afterdevtitle}]
 }
 \@devoir@format
@@ -1371,16 +1369,41 @@
 }
 
 %%% Boite tikz générique pour différentes déorations
-\ifdraft
-	\NewDocumentCommand\genboxcmd{O{}m}{%
-		\fbox{#2}%
-	}
-\else 
+\NewDocumentCommand\genboxcmd{O{}m}{\fbox{#2}}
+\NewDocumentCommand\listbox{O{}m}{#2}
+\cpgesetdeco{indication}{\textbf{#1 :}\kern4pt}
+
+\unless\ifdraft\unless\ifprint
 	\tikzset{generic style/.style={fill=none, draw=maincol, inner sep = 3pt, rounded corners=3pt}}
-	\NewDocumentCommand\genboxcmd{O{} +m}{%
+	\RenewDocumentCommand\genboxcmd{O{} +m}{%
 		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
 	}
-\fi
+	\RenewDocumentCommand\listbox{O{} +m}{%
+		\tikz [baseline=(T.base)] \node (T) [generic style, inner ysep=\z@, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
+	}
+\fi\fi
+\unless\ifdraft\tikzset{%
+		collink/.style={%
+			fill=linkcol, 
+			draw=none, 
+			text=white},
+		enodeco/.style={%
+			minimum width=2em,
+			},
+		soldeco/.style={%
+			minimum width=2.4em,
+			}
+	}
+\fi%
+\let\show@quesscore\relax
+\cpgesetdeco{linknum}
+	{\listbox[collink]{#1}}
+\cpgesetdeco{link@}
+	{\show@quesscore\listbox[enodeco, collink, align=right]{#1}}
+\cpgesetdeco{nolink@}
+	{\show@quesscore\listbox[enodeco, align=center]{#1}}
+\cpgesetdeco{link@sol}
+	{\listbox[soldeco, collink, align=left]{#1}}
 
 \NewDocumentEnvironment{genbox}{O{} d() +b}{%
 	\par\IfValueT{#2}{\textbf{#2}\newline\nobreak}%
@@ -1399,10 +1422,10 @@
 	}
 \cpgesetdeco{section}{\protect\boldmath\bfseries #1}
 \cpgesetlabel{parti}{|I|}
-\cpgesetdeco{partilabel}{\bfseries#1.}
+\cpgesetdeco{partilabel}{\bfseries#1.\enkskip}
 \cpgesetdeco{parti}{#1}
 \cpgesetlabel{partii}{|P|.|A|}
-\cpgesetdeco{partiilabel}{\bfseries#1.}
+\cpgesetdeco{partiilabel}{\bfseries#1.\enkskip}
 \cpgesetdeco{partii}{#1}
 \cpgesetdeco{bigques}{#1 --}
 
@@ -1410,7 +1433,6 @@
 \def\partiiautorefname{partie}
 \def\questionautorefname{question}
 \def\solutionautorefname{solution}
-
 
 %%%%%%%
 \newif\ifisasolution
@@ -1513,10 +1535,10 @@
 		\IfValueTF{#5}%
 			{\cpge@tmpswafalse%
 				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueTF{#4}{~:~#4}{~:~#5}]{#5}}
+					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}]{#5}}
 			}{\cpge@tmpswatrue%
 				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueT{#4}{~:~#4}]{}}}%
+					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}]{}}}%
 		\LinkTargetOff\cpge@tmpa\LinkTargetOn%
 		\IfValueT{#6}{%
 			\IfValueTF{#5}
@@ -1607,7 +1629,7 @@
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
-			\ifcsundef{##1@title}{\csdef{##1@title}{##3}}{}%
+			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
 			\setup@id%
 			\@problemtitle{#2}{#3}[##3](##4)<##5>%
 			\setup@sol%
@@ -1626,7 +1648,7 @@
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
-			\ifcsundef{##1@title}{\csdef{##1@title}{##3}}{}%
+			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
 			\setup@id%
 			\@problemtitle*{#2}{#3}[##3](##4)<##5>
 			\setup@sol%
@@ -1646,7 +1668,7 @@
 \cpgenewproblem{epreuve}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem{enonce}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem*{Corrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
-\def\label@Corrige{Corrigé \ignorespaces\csuse{label@@\cpge@problem@id}}
+\def\label@Corrige{Corrigé\ignorespaces\csuse{label@@\cpge@problem@id}}
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%% table des matières
@@ -1776,7 +1798,7 @@
 \def\xhint#1{%
 	\hypertarget{hint:\cpge@problem@id:#1}%
 		{\hyperlink{eno:\cpge@problem@id:#1}%
-			{\deco@linksol{#1}\enskip}}%
+			{\deco@link@sol{#1}\enskip}}%
 }
 \def\x@hint{%
 	\set@xhint%
@@ -1786,15 +1808,20 @@
 % Adaptation de \xit pour les problèmes avec solutions
 
 
-\def\switch@to@ques{%
-	\csletcs{deco@\cpge@listctr @o}{deco@\cpge@listctr}
-	\csletcs{deco@\cpge@listctr}{deco@\cpge@listctr @}
+\cpgesetuplists{
+	switchdeco/.code=\let\outerdeco@list\deco@nolink@
+		\csletcs{deco@\cpge@listctr @o}{deco@\cpge@listctr}
 }
+\NewDocumentCommand\questions{!E\op{}}{%
+	\xenum\op{switchdeco,#1}%
+	\set@solutionslinks%
+	}
+\let\endquestions\exit 
 \NewDocumentCommand\startques{!t\r !E{\op}{{}}}{%
 	\IfBooleanTF{#1}
-		{\begin{xenum}\op{r,#2}}
-		{\begin{xenum}\op{#2}}%
-	\switch@to@ques%
+		{\begin{xenum}\op{switchdeco,r,#2}}
+		{\begin{xenum}\op{switchdeco,#2}}%
+	\set@solutionslinks%
 }
 \NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
 	\IfBooleanTF{#5}%
@@ -1803,14 +1830,22 @@
 	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
 	#1%
 }
+\cpgesetdeco{quesscore}{\ttfamily\footnotesize\strut #1\smaller\;\vrule\,\textsubscript{pt}}
+\def\print@score#1{%
+	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{#1}\kern3\p@}\hss}}}%
+	\global\let\show@quesscore\relax%
+}
 \NewDocumentCommand\x@ques{o E{\sc\zp}{{}{@}} d() d<>}{%
 	\ifblank{#2}{}{%
-		\addtocounter{score@tmp}{#2}%
-		\addtocounter{score}{#2}%
-		\def\cpge@tmpscore{\ttfamily\footnotesize(#2pt)}%
+		\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
+		\global\c@score=\numexpr\c@score+#2\relax%
+		\def\show@quesscore{\print@score{#2}}%
 	}%
 	\ifstrequal{#3}{@}{}
             {\addtocounter{\cpge@listctr}{#3}}%
+	\ifcpge@withsol%
+		\IfValueTF{#5}{\gdef\ques@label@{#5}}{\gdef\ques@label@{}}%
+	\fi%
 	\IfValueTF{#1}
 		{\cpge@item[#1]%
 			\ifblank{#1}
@@ -1818,6 +1853,9 @@
 				{}%
 		}%
 		{\cpge@item}
+	\ifcpge@withsol%
+		\xappto\queslist{{\csuse{label@\cpge@listctr}}{\ques@label@},}
+	\fi%
 	\begingroup%
 	\IfValueT{#4}{\def\@currentlabelname{#4}\deco@itemtitle{#4}}%
 	\IfValueT{#5}{%
@@ -1830,18 +1868,32 @@
 }
 \def\xques{\init@ques{\cpge@withsoltrue\x@ques}}
 \def\zques{\init@ques{\cpge@withsolfalse\x@ques}}
-\newenvironment{ques}{\cpge@withsoltrue\x@ques}{} 
 \def\stopques{\exit}
 
 %%% mécanisme d'écriture des solutions dans un fichier
 %%% et de réinsertion immédiate ou différée
 %%% du contenu de ce fichier selon les options de la classe.
 
-\NewDocumentCommand\draft@save{o}{%
-	\par\medskip%
-	%\hskip-\Gm@littlemargin%
+\NewDocumentCommand\draft@save{!o!d()!d<>}{%
+	\ifsolution%
+		\par\medskip\let\start@sol\relax%
+		\def\endsolution{\par\medskip}%
+	\else%
+		\let\start@sol\comment%
+		\let\endsolution\endcomment
+	\fi%
+	\start@sol%
 	\strut\textbf{\scshape solution~:~}%
 	\isasolutiontrue%
+	\def\xref{\xref@cor}%
+	\IfValueTF{#3}%
+		{\label{cor:\cpge@problem@id:#3}}%
+		{\ifdefvoid\ques@label@{}{
+			\MakeLinkTarget[solution]{Item}%
+			\edef\@currentlabel{\csuse{label@\cpge@listctr}}%
+ 			\phantomsection%
+			\label{cor:\cpge@problem@id:\ques@label@}%
+		}}
 }
 \NewDocumentCommand\real@save{!o}{%
 	\let\endsolution\endcpgefilesave%
@@ -1854,11 +1906,10 @@
 		}%
 	\cpgefilesave{solhandle}%
 }
-\NewDocumentCommand\draft@write{!o}{\cslet{endsolution*}\endcomment\comment}
+\NewDocumentCommand\draft@write{o}{\slshape\csdef{endsolution*}{\aftergroup\par}}
 \NewDocumentCommand\real@write{!o}{\cslet{endsolution*}\endcpgefilesave\cpgefilesave{solhandle}}
 \def\aux@dir{tmp}
 \def\setup@sol{%
-	\setupsolutionslinks%
 	\ifsolution\hinttrue\fi%
 	\let\solution\draft@save%
 	\cslet{solution*}\draft@write
@@ -1878,11 +1929,11 @@
 			\cslet{solution*}\real@write%
 		\fi%
 }
-\NewDocumentEnvironment{cpgewrite}{mm !e\op !d() !d<>}
+\NewDocumentEnvironment{cpgewrite}{mm !e\op o !d() !d<>}
 	{%
 		\IfValueT{#3}{\csgdef{#2@opts}{#3}}%
-		\IfValueT{#4}{\csgdef{#2@title}{#4}}%
-		\IfValueT{#5}{\csgdef{#2@label}{#5}}%
+		\IfValueT{#4}{\csgdef{#2@title}{[#4](#5)}}%
+		\IfValueT{#5}{\csgdef{#2@label}{#6}}%
 		\cpgewriteonce{\aux@dir/#2-#1}%
 	}
 	{\endcpgewriteonce}
@@ -1911,8 +1962,8 @@
 				\ifdefempty{\queslist}{}{%
 					\cpgerecord{%
 						\string\Solution
-							{\cpge@problem@id} % identifiant
-							{\@xp\@xo\csname \cpge@problem@id @title\endcsname} % titre (de l'énoncé) 
+							\cpge@problem@id % identifiant
+							\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
 							{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
 							{\queslist}% liste des questions avec solutions
 					}%
@@ -1921,15 +1972,16 @@
 				\ifdefempty\queslist{}{%
 					\csxdef{\cpge@problem@id cor}{%
 						\@nx\Solution%
-							{\cpge@problem@id} % identifiant
-							{\@xp\@xo\csname \cpge@problem@id @title\endcsname} % titre (de l'énoncé) 
+							\cpge@problem@id % identifiant
+							\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
 							{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
 							{\queslist}% liste des questions avec solutions
 					}%
-					\@xp\aftergroup\csname \cpge@problem@id cor\endcsname%
+					\@xp\aftergroup\csname\cpge@problem@id cor\endcsname%
 				}%
 			\fi%
 	\fi%
+	%\show\queslist%
 	\gdef\queslist{}%
 }
 \def\shipoutsolutions{%
@@ -1940,78 +1992,53 @@
 	\fi%
 }	
 \let\corriges\shipoutsolutions
-\def\Real@Solution#1#2#3#4{
+\def\Real@Solution#1[#2](#3)#4#5{
 	\Ifcpge@FileEmpty{\aux@dir/#1-cor.tex}
 		{%
-			\csgdef{Solution@#1}{\Solution{#1}{#2}{#3}{#4}}
+			\csgdef{Solution@#1}{\Solution #1[#2](#3){#4}{#5}}
 		}{%
-			\begin{Corrige}{#1}\op{#3}(#2)
-				\ifdefempty\queslist{\def\queslist{#4}}{}%
+			\begin{Corrige}{#1}\op{#4}[#2](#3)
+				\ifdefempty\queslist{\def\queslist{#5}}{}%
 				\ifdefempty\queslist{\noqueslistmessage}{}%
 				\input{\aux@dir/#1-cor}
 			\end{Corrige}%
 	}%
 }
-\def\Dummy@Solution#1#2#3#4{}
+\def\Dummy@Solution#1[#2](#3)#4#5{}
 
 %%% Style des numérotations pour les questions et les solutions  
 %%% selon disponibilité de la solution ou non.
-\unless\ifdraft\tikzset{%
-		collink/.style={%
-			fill=linkcol, 
-			draw=none, 
-			text=white,
-			font=\sffamily\footnotesize\bfseries},
-		soldeco/.style={%
-			collink,
-			align=left,
-			text width=2.4em,
-			rounded corners=2.4pt,
-			inner ysep=1pt, inner xsep=4pt,
-			},
-		enodeco/.style={
-			text width=1.8em,
-			rounded corners=2.4pt,
-			inner ysep=1pt, inner xsep=4pt,
-			}
-	}
-\fi%
 \def\outer@ques@nolink#1#2{%
-	\ifhint%
-		\ifdef\cpge@tmpscore%
-			{%
-				\llap{\smash{\hb@xt@\dimexpr#1\relax{\cpge@tmpscore}\hss}}%
-			}{}%
-	\fi%
-	\csuse{deco@nolink\cpge@listctr}{\csuse{deco@\cpge@listctr @o}{#2}}%
+	\csuse{deco@\cpge@listctr @o}{#2}%
 	}	
-\def\outer@ques@link#1#2{%
-	\ifdef\cpge@tmpscore%
-		{%
-			\llap{\smash{\hb@xt@\dimexpr#1\relax{\cpge@tmpscore}\hss}}%
-		}{}%
+\def\outer@ques@link#1#2{%%
 	\ifcpge@withsol%
+		\hypersetup{linkcolor=white}%
 		\hypertarget%
 			{hyeno:\cpge@problem@id:#2}%
-			{\hyperlink{hysol:\cpge@problem@id:#2}{\csuse{deco@link\cpge@listctr}{\csuse{deco@\cpge@listctr @o}{#2}}}}%
-		\xappto\queslist{{#2},}%
+			{\hyperlink{hysol:\cpge@problem@id:#2}{\csuse{deco@\cpge@listctr @o}{#2}}}%
 	\else%
-		\csuse{deco@nolink\cpge@listctr}{\csuse{deco@\cpge@listctr @o}{#2}}%
+		\csuse{deco@\cpge@listctr @o}{#2}%
 	\fi%
 	}
+\def\outer@sol@deco#1{%
+	\hypertarget{hysol:\cpge@problem@id:#1}%
+		{\hyperlink{hyeno:\cpge@problem@id:#1}%
+			{\deco@link@sol{#1}}}%
+}
 \def\handtorightlink#1{%
 	\ifsolution%
 		\ifhmode\par\nobreak\noindent\fi%%
 		\hypertarget{hyeno:#1}{}
 		\ifcompact%
 			\hyperlink{hysol:#1}{%
-				\deco@linkenumi{\fontsize{12}{10}\normalfont\faHandORight}}%
+				\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
 			\hskip\labelsep%
 		\else
 			\vskip-\baselineskip%
 			\llap{%
 					\hyperlink{hysol:#1}{%
-						\deco@linkenumi{\fontsize{12}{10}\normalfont\faHandORight}}%
+						\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
 					\hskip\labelsep
 			}%
 		\fi%
@@ -2021,14 +2048,36 @@
 	\hypertarget{hysol:#1}%
 		{%
 			\hyperlink{hyeno:#1}{%
-				\deco@linksol{\fontsize{12}{12}\selectfont\faHandOLeft}}
+				\deco@link@sol{\fontsize{12}{12}\selectfont\faHandOLeft}}
 			\hskip\labelsep%
 		}%
 }
-\def\outer@sol@deco#1{%
-	\hypertarget{hysol:\cpge@problem@id:#1}%
-		{\hyperlink{hyeno:\cpge@problem@id:#1}%
-			{\deco@linksol{#1}}}%
+%%% Décorations des liens hypertextes (numéros des questions et des solutions)
+\def\score@placement#1{
+	\ifcase#1 
+			\or \Gm@littlemargin
+			 \or \Gm@littlemargin+\leftmargini
+			  \or \Gm@littlemargin+\leftmargini+\leftmarginii
+	\fi%
+}
+\def\set@solutionslinks{
+	\def\outerdeco@list{%
+		\ifcpge@withsol%
+			\@xp\deco@link@%
+		\else%
+			\@xp\deco@nolink@%
+		\fi%
+	}
+	\edef\score@width{\dimexpr\score@placement\@enumdepth\relax}%
+	\ifsolution 
+		\csdef{deco@\cpge@listctr}##1{%
+			\outer@ques@link{}{##1}%
+		}
+	\else
+		\csdef{deco@\cpge@listctr}##1{%
+			\outer@ques@nolink{}{##1}%
+		}
+	\fi 
 }
 
 %%%% \xref pour gestion des référence croisées.
@@ -2165,98 +2214,38 @@
 
 %%% Références croisées des équations. 
 
-%%% Décorations des liens hypertextes (numéros des questions et des solutions) 
-\def\setupsolutionslinks{\@bsphack%
-	\ifsolution
-		\newcommand{\deco@enumi@}[1]{%
-			\outer@ques@link
-				{\Gm@littlemargin}
-				{##1}%
-		}
-		\newcommand{\deco@enumii@}[1]{%
-			\outer@ques@link
-				{\Gm@littlemargin+\leftmargini}
-				{##1}%
-		}
-		\newcommand{\deco@enumiii@}[1]{%
-			\outer@ques@link
-				{\Gm@littlemargin+\leftmargini+\leftmarginii}
-				{##1}%
-		}
-	\else
-		\newcommand{\deco@enumi@}[1]{%
-			\outer@ques@nolink
-				{\Gm@littlemargin}
-				{##1}%
-		}
-		\newcommand{\deco@enumii@}[1]{%
-			\outer@ques@nolink%
-				{\Gm@littlemargin+\leftmargini}
-				{##1}%
-		}
-		\newcommand{\deco@enumiii@}[1]{%
-			\outer@ques@nolink%
-				{\Gm@littlemargin+\leftmargini+\leftmarginii}
-				{##1}%
-		}
-	\fi
-\@esphack%
-}
-\cpgesetdeco{linknum}{\textbf{#1}}
-\cpgesetdeco{linkenumi}{#1}
-\cpgesetdeco{linkenumii}{#1}
-\cpgesetdeco{nolinkenumi}{#1}
-\cpgesetdeco{nolinkenumii}{#1}
-\cpgesetdeco{linksol}{\bfseries #1.}
-\cpgesetdeco{indication}{\textbf{#1 :}\kern4pt}
-\AtBeginDocument{
-	\unless\ifdraft\unless\ifprint
-		\cpgesetdeco{linknum}
-			{\genboxcmd[collink,inner ysep=1pt]{#1}}
-		\cpgesetdeco{linkenumi}
-			{\genboxcmd[enodeco,collink,align=right]{#1}}
-		\cpgesetdeco{linkenumii}
-			{\genboxcmd[enodeco,collink,align=right]{#1}}
-		\cpgesetdeco{nolinkenumi}
-			{\genboxcmd[enodeco,align=center]{#1}}
-		\cpgesetdeco{nolinkenumii}
-			{\genboxcmd[enodeco,align=center]{#1}}
-		\cpgesetdeco{linksol}
-			{\genboxcmd[soldeco]{#1}}
-	\fi\fi
-}
 
 %%% \xsol la commande magique
 %%% pour numéroter les questions dans le fichier de solutions  
 \def\xsol@env{%
-	\insolutionstrue
+	\solutionlisttrue
 	\@itemdepth\@ne%
    	\list\relax%
         {%
          \listparindent\z@%
-		   \labelwidth\z@%
-		    \itemindent\labelsep%
+		  \labelwidth\z@%
+		   \itemindent\labelsep%
 			\itemsep\medskipamount%
 		     \leftmargin\z@%
 			  \let\makelabel\outer@sol@deco%
         }%
  }
-\def\endxsol{\ifinsolutions\endlist\fi}
+\def\endxsol{\ifsolutionlist\endlist\fi}
 \def\setup@xsol{\let\xsol\first@xsol}
 
-\def\terminate@questlist@pop#1\cpge@nil{
+\def\get@itemandlabel#1#2{\def\curr@item{#1}\def\curr@label{#2}}
+\def\queslist@pop#1\cpge@nil{
 	\in@{,}{#1}
 	\ifin@
-		\queslist@pop#1\cpge@nil%
+		\queslist@pop@#1\cpge@nil%
 	\else
-		\def\curr@item{#1}
+		\ifblank{#1}{\def\curr@item{FixMe}}{\get@itemandlabel#1}%
 	\fi%
 }
-\def\queslist@pop#1,#2\cpge@nil{%
-	\def\curr@item{#1}%
-	 \def\queslist{#2}%
-	}
-\def\tmp@queslist@pop#1{\terminate@questlist@pop#1\cpge@nil}
+\def\queslist@pop@#1,#2\cpge@nil{%
+	\get@itemandlabel#1%	
+	\def\queslist{#2}%
+}
 \def\first@xsol{%
 	\ifdefempty\queslist%
 		{\def\xsol{\alt@xsol}}
@@ -2279,17 +2268,25 @@
 \DeclareDocumentCommand\real@xsol{od()d<>}{%
 	\IfValueTF{#1}
 		{\def\curr@item{#1}}
-		{\@xp\tmp@queslist@pop\@xp{\queslist}}%
+		{\@xp\queslist@pop\queslist\cpge@nil}%
+	%\show\curr@item
 	\item[\curr@item]%
 	\begingroup%
 	\IfValueT{#2}{\def\@currentlabelname{#2}\deco@unitetitle{#2}\par\nobreak}%
-	\IfValueT{#3}{
+	\IfValueTF{#3}{
 		\def\@currentlabel{\curr@item}%
  		\phantomsection%
 		\MakeLinkTarget[solution]{Item}%
 		\ifblank{#3}
 			{\label{\cpge@labelprefix\curr@item}}
 			{\label{\cpge@labelprefix#3}}%
+	}{%
+		\ifdefvoid{\curr@label}{}{%
+			\def\@currentlabel{\curr@item}%
+ 			\phantomsection%
+			\MakeLinkTarget[solution]{Item}%
+			\label{\cpge@labelprefix\curr@label}%
+		}%
 	}%
 	\endgroup
 }

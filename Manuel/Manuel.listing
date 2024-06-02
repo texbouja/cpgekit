@@ -1,0 +1,5 @@
+\ifcompact
+     < texte si mode compact >
+\else
+     < texte si mode normal >
+\fi

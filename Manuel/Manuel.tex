@@ -1,0 +1,485 @@
+\documentclass[11pt,report,oneside,solution]{cpgedev}
+
+\cpgegeometry[hmargin={1.5cm,3cm}, left=3cm, right=1.5cm]{tablet}
+\cpgefont{fira}
+\usepackage{parskip}
+%\cpgeusetheme{newcg}
+
+% \setmonofont{Fira Code}[
+%   Contextuals=Alternate,  % Activate the calt feature
+%   Scale=MatchLowercase,
+% ]
+
+\usepackage{ltxdockit}
+\robustify\spotcolor
+
+\AtEndPreamble{\colorlet{spot}{coldcol}}
+\let\CMD\cmd 
+\renewcommand\cmd[1]{{\spotcolor\CMD{#1}}}
+\let\ENV\env
+\renewcommand\env[1]{{\spotcolor\ENV{#1}}}
+\let\LEN\len
+\renewcommand\len[1]{{\color{warmcol}\LEN{#1}}}
+\let\OPT\opt
+\renewcommand\opt[1]{{\spotcolor\OPT{#1}}}
+
+\newenvironment{simplebar}{%
+     \begin{lrmargin}{1pc}{}%
+      \sffamily%
+}
+{%
+     \end{lrmargin}%
+}
+%\PassOptionsToPackage{0.21}{listings}
+%\usepackage[inputencoding=utf8/latin1]{listingsutf8}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,listings,breakable}
+%\usepackage{lstfiracode} 
+ \lstset{%%
+% 	%preset=\rule{\linewidth}{.4pt},
+%      frame=lr,%
+      language=[LaTeX]TeX,%
+      morekeywords={cpegeometry, cpgetheme, Matiere, Document, Theme, Subtheme, Auteur, Centre, Classe, Periode, Duree, iginclude, titre, mini, endmini, exercice, probleme, corrige, xques, zques, exit, xsol, unite, theo, exem, proof, solution},
+%      float=p,
+%      basicstyle=\small\ttfamily,%
+%      keywordstyle=\bfseries\color{coldcol},%
+%      commentstyle=\itshape\color{neutralcol},%
+%      columns=flexible,
+%      tabsize=2,%
+%      showspaces=false,%
+%      showstringspaces=false,%
+%      breaklines=true,%
+%      backgroundcolor=\color{yellow!20},%
+%      fillcolor=\color{white},
+%      framesep=1pt,
+%      rulesep=2pt,
+%      breakautoindent=true,%
+%      xleftmargin=2em,%
+% %    xrightmargin=4pt%
+%      captionpos=t,
+%      belowskip=\baselineskip,aboveskip=6pt plus 1pt minus1pt,
+%      numberbychapter,
+%      numbers=left,
+%      numberstyle=\spotcolor\ttfamily\small,
+%      literate=
+%      {é}{{é}}{1}%
+%      {è}{{è}}{1}%
+%      {à}{{à}}{1}%
+%      {â}{{\^a}}{1}%%%
+%      {ç}{{\c{c}}}{1}%
+%      {œ}{{\oe}}{1}%
+%      {ù}{{ù}}{1}%
+%      {É}{{É}}{1}%
+%      {È}{{\`E}}{1}%
+%      {À}{{\`A}}{1}%
+%      {Ç}{{\c{C}}}{1}%
+%      {Œ}{{\OE}}{1}%
+%      {Ê}{{\^E}}{1}%
+%      {ê}{{\^e}}{1}%
+%      {î}{{\^i}}{1}%
+%      {ô}{{ô}}{1}%
+ }
+\newtcblisting[auto counter]{latex}[1][]
+     {skin=enhanced,
+     listing only,
+     listing style=tcblatex,
+     breakable,
+     underlay={\node [anchor=east,font=\footnotesize\ttfamily,
+     text=neutralcol]
+          at ([yshift=-5pt]frame.north east) 
+          {code \thetcbcounter};}, 
+     fonttitle=\ttfamily\footnotesize, 
+     bottomtitle=0pt,  
+     bottom=0pt, top=3pt, 
+     colframe=warmcol,
+     boxrule=.4pt,
+     %frame left margin=2pt,
+     #1}
+
+\hypersetup{
+               pdftitle={Manuel du kit LaTeX cpgekit},
+               pdfauthor={Sadik Boujaida},
+               pdfsubject={Pour le réseau Ibn Ghazi},
+               colorlinks,
+               linkcolor=linkcol,
+               %pdfhighlight=/O,
+               }
+
+\renewcommand{\nobreakspace}{\relax}
+
+\def\CMDitem#1{\cmditem{\spotcolor #1}\leavevmode\linebreak}
+
+\cpgenewlist*{optlist}
+     {\xopt}
+     {d*=\spotcolor\ttfamily#1, m=3.4pc}
+
+
+\def\main{\ding{42}}
+\def\ciseau{\ding{33}}
+\def\plume{\ding{50}}
+\def\quatre{\ding{70}}
+\def\cinq{\ding{72}}
+\def\oursin{\ding{88}}
+\def\disque{\ding{108}}
+\def\lignetab{\ding{110}}
+\def\losange{\ding{117}}
+\def\pointe{\ding{228}}
+\def\sensh{\ding{229}}
+\def\sensb{\ding{230}}
+\def\fleche{\ding{224}}
+\def\fflotante{\ding{235}}
+
+\Matiere{Documentation \LaTeX}
+\Document{cpgekit}
+\Theme{Manuel d'utilisation}
+\Auteur{Sadik Boujaida}
+\Periode{Mai 2024}
+\Classe{}
+
+\cpgesetuplists{enumi={n=|1|, d*=\bfseries#1.}}
+
+
+\begin{document}
+
+%\titre(|document| \par |theme| \\ |auteur|)
+
+%\tableofcontents
+
+\section{Présentation} 
+Le projet \nom{cpgekit} est un kit \LaTeX{} qui permet de mettre en forme tous les types de documents utilisés dans les \nom{cpge}. Essentiellement, il propose deux fichiers de classe (utilisables avec la commande \cmd{documentclass}). Le premier, \verb+cpgedoc.cls+, est dédié au traitement des documents de cours et des planches d'exercices. Le second, \verb+cpgedev.cls+, est dédié au traitement de tout type de devoir, avec possibilité d'y intégrer des quiz (en stade expérimental).
+
+\begin{nb} Couramment seul \verb+cpgedev.cls+ est utilisable. La classe \verb+cpgedoc.cls+ est en cours de test est contient encore beaucoup de bogues.
+\end{nb} 
+
+Les fichiers de style (extension \texttt{.sty}) du kit sont implicitement appelés par les deux fichiers de classe. Chacun s'occupe d'un aspect particulier dans le document. Certains sont utilisables avec la commande standard \cmd{usepackage} sans avoir besoin d'utiliser les classes officielles du projet. Une section de ce document leur sera dédiée. 
+
+Le kit est pensé pour faciliter la réutilisation des contenus déjà disponibles. Moyennant une mise en conformité initiale, il permettra d'en produire des documents avec des apparences différentes sans avoir besoin de les modifier. Il sera possible de produire des versions épurées et économiques pour l'impression mais aussi des versions dynamiques avec hyperliens avec un fond sombre pour la consultation sur écrans tout en prenant en compte les différents formats d'écrans disponibles sur le marché. Le kit permettra de produire indifféremment des documents courts aux thèmes précis (un chapitre ou un devoir) mais aussi des documents longs (tous les devoirs d'une année ou des annales de sujets concours par exemple). 
+
+La première section de ce document est un tutoriel dont le but est de présenter les fonctionnalités du kit. Les autres sections sont des manuels de référence pour les divers aspects gérés par \nom{cpgekit}.  
+
+\section{Pour les pressés}
+
+Quoique non nécessaire, il est vivement recommandé d'utiliser un fichier maître et un ou plusieurs fichiers de contenu qui seront inclus par des instructions spéciales dans le fichier maître. Les fichiers de contenu seront alors réutilisables dans plusieurs documents au cours du temps sans avoir besoin d'y apporter des modifications.   
+
+Typiquement, un fichier maître pour produire un document de cours commencera avec une instruction de la forme
+\begin{latex}[]
+\documentclass[11pt, proof]{cpgedoc}
+\end{latex}
+Le document produit contiendra alors les démonstrations des résultats qu'ils contient. Sans l'option \verb+proof+ celles-ci ne seront pas produites. 
+Tandis qu'un fichier qui servira à produire un devoir avec indications et solutions commencera par une instruction de la forme 
+\begin{latex}[]
+\documentclass[11pt, hint, solution]{cpgedev}
+\end{latex}
+\verb+hint+ indique ici de produire les indications et \verb+solution+ les solutions éventuelles. 
+
+Dans les deux cas cette instruction sera suivie des deux lignes 
+\begin{latex}[]
+\cpgegeometry{tablet}
+\cpgetheme{newcg} 
+\end{latex}
+La deuxième ligne indique le thème à utiliser. En son absence le thème par défaut est utilisé. 
+La première ligne indique la géométrie à utiliser. Elle est indispensable car elle est responsable d'autres aspects de la mise en forme. Ici \verb+tablet+ qui produit un document optimisé pour une consultation sur une tablette numérique aux proportions 4x3. Exemples d'autres valeurs possibles~:
+\xopt+[print] 
+pour  impression sur papier A4 ;
+\xopt[lsprint] pour impression sur papier A4 en mode paysage et en deux colonnes~;
+\xopt[2print] pour impression sur papier A4 en deux colonnes et en mod portrait ;
+\xopt[phone] pour consultation sur smartphone avec un écran en 16\,x\,9. 
+\exit
+     
+Viendra ensuite le tour du renseignement des métadonnées du document avec quelque chose comme 
+\begin{latex}[]
+\Matiere{Mathématique}
+\Document{Cours}
+\Theme{Séries de Fourier}
+\Auteur{Ahmed Boucheta} %% Si vous voulez passer à la postérité 
+\Classe{MP1} 
+\Periode{Janvier 2024} 
+\end{latex}
+ces informations seront utilisables dans la page de garde et les entêtes/pieds de pages. Le rédacteur pourra ensuite charger les packages dont il a besoin et qui ne sont pas déjà chargés par la classe.  Immédiatement après \lstinline+\begin{document}+, l'instruction 
+\begin{latex}[]
+\titre  
+\end{latex}
+s'occupera de la formation de la page de garde pour les documents destinés à une consultation sur écran ou bien (par souci d'économie) d'un simple titre en haut de la feuille pour les documents à imprimer. Le contenu du titre est paramétrable à l'aide d'un mécanisme intuitif qui est exposé dans ce document.
+Des commandes sont aussi prévues pour modifier le contenu des entête/pieds de page.
+
+Il est temps d'inclure les fichiers de contenus. Une commande s'occupera de manière transparente de l'application d'une stratégie spécifique d'inclusion des fichiers de contenus :
+\begin{latex}[]
+\cpgeinclude{SerFour}
+\end{latex}
+Avec cette instruction le fichier \verb+SerFour.tex+ sera chargé. Avec l'option \verb+proof+ fournie à la classe, les éventuelles démonstrations des résultats énoncés dans ce fichier seront collectées et insérées à la fin du document.  Chaque résultat disposant d'une démonstration disposera d'un hyperlien qui mènera vers sa preuve et inversement l'intitulé de la preuve est un hyperlien qui ramènera vers l'énoncé correspondant.  Pour produire un document sans démonstrations,on peut soit le faire globalement pour tout le document en supprimant l'option \verb+proof+ de la classe soit individuellement pour le fichier inclus avec 
+\begin{latex}[]
+\cpgeinclude[proof=false]{SerFour}
+\end{latex}
+Pour le traitement d'un devoir, une command similaire se chargera de l'inclusion 
+\begin{latex}[]
+\cpgeinclude{dm3}
+\end{latex} 
+Un mécanisme d'inclusion assez évolué est mis en oeuvre ici (voir détails plus loin). En gros :
+\xit*+
+\TeX{} commence par vérifier s'il y a des fichiers nommés \verb+dm3-eno.tex+ et \verb+dm3-cor.tex+, si oui il va les inclure ;
+\xit sinon il se contente d'inclure le fichier indiqué \verb+dm3.tex+
+\xit il est aussi possible de fournir le nom du fichier des solutions en option avec une syntaxe de la forme   
+\begin{latex}[]
+\cpgeinclude[solution file=dm3-corrige]{dm3}
+\end{latex}
+\exit 
+Dans tous les cas les fichiers inclus pourront contenir les énoncés et leurs éventuels corrigés dans des environnement \LaTeX{} spécifiques et \TeX{} sera capable de créer les liens hypertextes individuels entre questions et solutions quelque soit leurs positions dans les fichiers inclus. De plus un mécanisme de références croisés est mis en place pour augmenter l'usabilité des documents destinés à une lecture sur écran. 
+
+Il est possible de produire un document sans solutions en enlevant l'option \verb+solution+ de la classe ou bien en forçant sa désactivation pour le fichier en cours avec l'instruction
+\begin{latex}[]
+\cpgeinclude[solution=false]{dm3}
+\end{latex}
+
+Évidemment, rien de cela ne sera possible sans une mise en conformité des fichiers de contenus selon les directives du kit. Pour un devoir,  deux stratégies sont possibles, les questions et leurs solutions sont enchevêtrée dans le même environnement \LaTeX{} ou bien elles sont saisies dans des environnements séparés. Ces environnements  peuvent en outre résider dans des fichiers différents. Chaque sujet devra être saisi dans un environnement \LaTeX{}, \env{exercice} pour les exercices et \env{probleme} pour les problèmes. En cas de solutions séparées, elles doivent être saisi dans un environnement \verb+corrige+. Chacun de ces environnements exige un identifiant unique en argument. Cet argument sert de lien entre un énoncé et son corrigé. Le schema suivant est adopté :
+\xit*+ dans la première stratégie, on saisit les questions et leurs solutions dans le même environnement. Chaque question sera suivie immédiatement par un environnement qui contient  sa solution ; 
+\xit dans la seconde les questions sont mises dans un environnement \env{probleme}, par exemple, et son corrigé dans un environnement \env{corrige}. D'où la nécessité d'un identifiant commun pour les lier.
+\xit dans les deux une question qui possède une solution devra être précédé d'une commande \cmd{xques}, 
+une qui n'en possède pas (qui a des sous-questions par exemple) sera précédée d'une commande \cmd{zques}
+\xit pour les solutions enchevêtrées, chaque \cmd{xques} est suivi du texte de la solution dans un environnement \lstinline+\begin{solution}...\end{solution}+
+\xit pour les solutions séparées, il suffit de faire précéder une solution par une commande \cmd{xsol}. 
+\begin{mini}{}
+\TeX{} maintient une liste en interne qui contient tous les numéros des \cmd{xques} dans laquelle il va piocher à chaque \cmd{xsol} 
+\end{mini}
+\exit
+Le code suivant donne en exemple les deux façons de traiter un même contenu selon l'une ou l'autre des deux stratégies.
+\cpgesetdeco{linkenumi}{#1}
+\cpgesetdeco{linkenumii}{#1}
+\cpgesetdeco{nolinkenumi}{#1}
+\cpgesetdeco{nolinkenumii}{#1}
+\cpgesetdeco{linksol}{\bfseries #1.}
+
+\begin{latex}[text and listing]
+\cpgesetuplists{
+     enumi={n=|1|, d=\fbox, m=0pc},
+     enumii={n=|Q|.|a|, d*=\bfseries #1., m*=2pc}
+}
+\begin{exercice}{IDEXE}(Le titre de l'exercice)
+     <... presentation de l'exercice ...>
+\xques+ La première question. le + sert à initier un environnement de type enumerate. Cette question possède une réponse dans le fichier de corrigé.
+\begin{solution}
+     Réponse de la question 1, le texte de la solution sera enregistré dans un fichier séparé et sera ensuite inclu une fois l'énoncé terminé. 
+\end{solution}
+\zques Cette unité possède des sous-questions et donc ne pose pas 
+de question elle-même
+     \xques+ on augmente d'un niveau (2.a par exemple, le style de numérotation est facilement réglable)
+     \begin{solution}
+          Réponse de la question 2.a, sans avoir besoin d'indiquer son numéro 
+     \end{solution}
+     \xques toujours dans le deuxième niveau
+     \begin{solution}
+          Réponse de la question  2.b
+     \end{solution}
+\xques- On revient au premier niveau, avec une question avec réponse 
+\begin{solution}
+     Réponse de la question 3 
+\end{solution}
+\exit % On ferme tous les niveaux    
+\end{exercice}
+\end{latex} 
+
+\begin{latex}[]
+\begin{exercice}{IDEXE}(le titre de l'exercice)
+     <... presentation de l'exercice ...>
+\xques+ La première question. le + sert à initier un environnement de type enumerate. Cette question possède une réponse dans le fichier de corrigé.
+\zques Cette unité possède des sous-questions et donc ne pose pas de question elle-même
+     \xques+ on augmente d'un niveau (2.a par exemple, le style de numérotation est facilement réglable)
+     \xques toujours dans le deuxième niveau
+\xques- On revient au premier niveau, avec une question avec réponse 
+\exit % On ferme tous les niveaux    
+\end{exercice}
+
+\begin{corrige}{IDEXE}
+\xsol Réponse de la question 1, le numéro est pioché dans une pile 
+\xsol Réponse de la question 2.a, sans avoir besoin d'indiquer son numéro 
+\xsol Réponse de la question  2.b
+\xsol Réponse de la question 3 
+\end{corrige}
+\end{latex} 
+Dans ce deuxième exemple, il n'est pas nécessaire de mettre les environnements \env{exercice} et \env{corrige} dans le même fichier. C'est l'identifiant \verb+IDEXE+ qui fera le lien entre les deux. Il n'est même pas nécessaire d'inclure le fichier qui contient l'énoncé avant celui qui contient le corrigé. Le corrigé est systématiquement enregistré dans un fichier externe et c'est l'énoncé qui sera responsable de son inclusion ou non. Les deux méthodes se rejoignent dans le fait que même si les solutions sont enchevetrées, elles sont momentanémment écrite dans un fichier externe qui sera inclu suivant la même technique que dans l'autre stratégie. Ce qui fait qu'on peut mélanger sans souci entre des environnemnts qui utilisent chacun une stratégie différente.   
+
+La première méthode offre beaucoup de souplesse lorsqu'on veut réutiliser partiellement du contenu dans un nouveau document~: les questions vont avec leurs solutions sans se soucier de leurs bonne numérotation. La seconde convient mieux lorsqu'on dispose déjà de fichiers de sujets et de corrigés séparés qu'on veut rendre conforme aux spécificités du kit. 
+
+
+
+\section{Les devoirs}
+
+La creation de devoir se fait avec la classe \verb+cpgedev.cls+. Celle-ci possède plusieurs options pour produire ou non les indications et les solutions dans le document final.
+
+Il est préférable (mais pas obligatoire) d'utiliser un fichier maître qui inclura (au sens \LaTeX{}) plusieurs fichiers esclaves pour former le document final. En outre un mécanisme est mis en place pour permettre de compiler individuellement les fichiers esclaves en allant chercher le préambule dans le fichier maître. Cela permet de raccourcir le temps de compilation et de rester concentré sur le contenu en cours de rédaction. 
+
+Un document "devoir" peut contenir un ou plusieurs problèmes et execice. Chaque \env{exercice} ou \env{probleme} peut être jumelé avec son \env{corrige} à l'aide d'un identifiant qui devrait être unique. L'énoncé et son corrigé peuvent résider dans des fichiers séparés qui seront chargé dans le fichier maître grâce à la commande \cmd{iginclude}. Cette stratégie permettra de facilement recycler les documents déjà rédigés en des documents \nom{cpgedev}. 
+
+En outre le kit offre une deuxième stratégie. Elle consiste en la saisie des questions immédiatement suivis de leurs solutions. Quoique plus contraignante pour un éventuel recyclage d'anciens fichiers, cette dernière présente un avantage de taille : pour une réutilisation ultérieur du contenu, ou de seulement une partie de celui-ci, un simple copier/coller suffira. 
+
+On peut mixer les deux méthodes : dans un même fichier maître on peut inclure des fichiers avec des énoncés et des corrigés séparés et des fichiers qui mélangent les deux. C'est l'ordre d'inclusion des énoncés qui décidera de l'ordre d'apparition des sujets dans le document produit.   
+
+
+
+\partie(Options de la classe)
+Les options suivantes sont disponibles. 
+\xopt+[solution]
+     Chaque sujet est immédiatement suivi de son corrigé s'il est disponible. 
+     
+%      Une question qui possède une solution dans le fichier de corrigé doit être insérée avec la commande \cmd{xques}, \cmd{zques} sinon. Le fichier de corrigé se contente d'une commande \cmd{xsol} sans aucune autre indication pour la solution de la question.  Dans le cas où on désire saisir les solutions avec les questions on utilise plutôt l'environnement \env{ques} pour chaque question qui possède une solution (et toujours \cmd{zques} pour celles qui n'en ont pas). La syntaxe est de la forme 
+% \begin{latex}
+% \begin{ques}
+%      < ... texte de la question ... >
+% \solution
+%      < ... texte de la solution ... >
+% \end{ques}
+% \end{latex}   
+% On ne peut pas mélanger entre les deux techniques dans un même sujet. Soit on utilise \cmd{xques}, soit on utilise l'environnement \env{env} pour tout le sujet.  Mais dans un fichier maître on peut inclure indifféremment des fichiers qui utilisent chacun l'une des deux techniques.
+     
+\xopt[solution*]
+     Les corrigés sont collectés jusqu'à ce que le compilateur rencontre une commande \cmd{corriges}. Il insère alors tous les corrigés retenus. Éventuellement on peut recommencer d'autre séquences de collecte/insertion.  
+\xopt[hint]
+     produit les indications d'un sujet immédiatement après le sujet. 
+     %Les indications sont insérées question par question avec la commande \cmd{hint}. Un bouton au niveau de l'énoncé renvoie vers le texte de l'indication et le numéro de celui-ci ramène vers l'énoncé.   
+\xopt[hint*]
+       chaque indication est produite au niveau de l'énoncé, là où elle est insérée, mais reste invisible jusqu'à ce que l'utilisateur clique sur un bouton.
+      \begin{nb}\slshape
+          Les calques \nom{pdf} (\nom{ocg}) font partie du standard \nom{pdf} depuis sa version {1.5} mais ne sont gérés que par une poignée de  lecteurs. \nom{Adobe Reader} et \nom{Foxit PDF Reader} en sont des exemples mais malheureusement aucun lecteur \nom{pdf} pour appareils mobiles ne les gère à ce jour.
+      \end{nb}
+\xopt[draft] 
+     on entre dans un mode brouillon où le style reste basique et sans liens hypertexte. Le contenu apparaît là où il est inséré. La compilation s'en trouve plus rapide. 
+\xopt[straight]
+      Il produit les corrigés immédiatement là où il les rencontre sans création de fichiers intermédiaires. En outre c'est un vrai mode de production contrairement au mode précédent, avec liens hypertexte et possibilité d'appliquer un thème. 
+\exit 
+
+\partie(Instructions de mise en forme)
+Les commandes suivantes sont à utiliser dans le préambule. 
+\begin{ltxsyntax}
+     \CMDitem{cpgegeometry{}}
+          commande essentielle qui appliquera une géométrie de page spécifique selon l'argument utilisé. Elle est ignorée quand l'option \opt{draft} de la classe est utilisée. Les valeurs possibles de l'argument sont les suivantes :
+          \xopt+\op{m=6pc}[print] 
+               document A4 en mode portrait à une colonne ;
+          \xopt[2print] 
+               document A4 en mode portrait à deux colonne ;
+          \xopt[lsprint] 
+               document A4 en mode paysage à deux colonne ;
+          \xopt[tablet] 
+               document en mode portrait adapté à une tablette au format 4x3 (tous les iPad) ;
+          \xopt[lstablet] 
+               la même chose en mode paysage en deux colonnes;
+          \xopt[alttablet] 
+               document en mode portrait adapté à une tablette au format 16x9 (Samsung et d'autres) ;
+          \xopt[alttablet] 
+               la même chose en mode paysage en deux colonnes ;
+          \xopt[phone] 
+               pour petit écran au format 16x9 ;
+          \xopt[altphone] 
+               pour petit écran au format 19x9.
+          \exit 
+\cmd{cpgegeometry} gère en outre des paramètres de type  clé/valeur qu'on peut mettre entre \verb+[]+ avant l'argument obligatoire. Toute option gérée par la commande \cmd{geometry} du package \texttt{geometry} peut y être utilisé. Par exemple 
+\begin{latex}[]
+\cpgegeometry[left=2.4cm, right=1.8cm]{print}
+\end{latex}
+utilisera la géométrie \opt{print} tout en modifiant les marges latérales de la page.
+
+\cmd{cpgegeometry} a en plus ses propres paramètres optionnels à côté de ceux qu'on passe à \cmd{geometry}. 
+\xopt+[dark] 
+     ou \opt{dark=false} pour activer ou désactiver le mode sombre. Normalement, les versions pour petits écrans sont automatiquement produites avec un fond sombre et le texte en clair. On peut désactiver cette fonctionnalité avec \opt{dark=false} ou bien l'activer pour les autres types de géométrie avec \opt{dark=true} ou simplement \opt{dark}. 
+\xopt[force compact] ou \opt{force compact=false}
+     option qui n'a pas d'effet apparent. Son rôle est d'activer le commutateur \TeX{} \cmd{ifcompact}. Ce commutateur est activé automatiquement pour les versions pour petits écrans et pour les versions en deux colonnes. Dans le document on peut utiliser une instruction conditionnelle de la forme   
+\begin{latex}[]
+\ifcompact 
+     < texte si mode compact >
+\else 
+     < texte si mode normal >
+\fi 
+\end{latex}
+     si l'option \opt{compact} a été activée c'est le premier texte qui sera restitué, sinon c'est le second qui le sera. Bien utile quand on a une formule centrée qui déborde de la zone de texte dans les petites géométries. 
+\xopt[force geometry]
+     option qui va forcer le mode indiqué par \cmd{cpgegeometry} quand l'option \opt{draft} de la classe est active. 
+\exit   
+\end{ltxsyntax}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{ltxsyntax}
+     \cmditem{\spotcolor bprogram}%\mbox{}\\
+     commande pour insérer  un paragraphe du programme (volet de gauche).
+     Une commande \cmd{bprogram}  peut être suivie d'une autre commande \cmd{bprogram} si le paragraphe ne possède pas de commentaire.
+     \cmditem{\spotcolor bcomment}\linebreak
+     commande pour insérer un commentaire à droite d'un  paragraphe du programme. Le commentaire sera aligné verticalement avec le paragraphe du programme qui l'a précédé.
+     Une commande \cmd{bcomment}  peut être suivie d'une autre commande \cmd{bcomment} si le  commentaire suivant n'est associé à aucun paragraphe du programme.
+     
+     \simplebar\sffamily\small
+     Un environnement multi-colonnes ne devrait en aucun cas être initié au milieu d'un environnement de \emph{liste} (\env{itemize}, \env{enumerate}, \env{description}, ...).
+     Par contre un bloc \env{bprogram} ou \env{bcomment} peut  contenir une liste.
+     \endsimplebar
+     
+     \cmditem{\spotcolor eprogram*}\vspace*{-\parskip}
+     \cmditem{\spotcolor ecomment*}\linebreak
+     Ces deux commandes sont synonymes. Selon le dernier volet actif, elles serviront à fermer l'environnement multi-colonnes. On peut ensuite insérer   du texte en mono-colonne (qui s'étale sur toute la largeur de la zone de texte). Pour revenir en environnement multi-colonnes, il suffit d'utiliser à nouveau, selon le besoin, l'une des commandes \cmd{bprogram} ou \cmd{bcomment}. 
+     
+     %Il est inutile d'utiliser ces dernières commandes avant une commande de titre (\cmd{section}, \cmd{subsection}, ...). Le fichier style s'en occupe automatiquement.
+     \simplebar
+     \sffamily\small Deux commandes, \cmd{eprogram} et \cmd{ecomment}, sont disponibles. Normalement, elles servaient dans les anciennes versions à fermer individuellement un paragraphe du programme ou un commentaire. Elles ne sont maintenues que par souci de compatibilité avec les fichiers de base les utilisant  et ne font presque plus rien.
+     \endsimplebar
+     \cmditem{\spotcolor closecolumns}\mbox{}\\
+     Fait à peu près la même chose que les commandes \cmd{eprogram*} et \cmd{comment*} : fermer un environnement multi-colonnes.
+     
+     \simplebar\sffamily\small
+     Il est \emph{indispensable} de fermer l'environnement multi-colonnes pour insérer du texte en pleine largeur (un titre par exemple). Sinon utiliser le mécanisme décrit plus en avant dans ce manuel, et qui permet de saisir un texte court sur une seule colonne sans quitter le mode multi-colonnes. 
+     Prêter attention à bien fermer l'environnement en fin d'un fichier de base.
+     \endsimplebar  
+     
+     \end{ltxsyntax}
+  
+
+
+
+\end{document}
