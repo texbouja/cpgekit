@@ -1532,7 +1532,7 @@
 		\IfBooleanTF{#1}
 			{\def\cnt@name{#3}}
 			{\def\cnt@name{#3 \csuse{label@#2}}}%
-		\IfValueTF{#5}%
+		\IfValueTF{#5}% 
 			{\cpge@tmpswafalse%
 				\begingroup%
 					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}]{#5}}
