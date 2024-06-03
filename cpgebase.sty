@@ -1049,9 +1049,7 @@
 % }
 \cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
 
-\def\cpgesetuplists{\cpgesetup[lists]}
-
-\NewDocumentCommand\xenum{!e{\op}}{%
+\NewDocumentCommand\xenum{ e\op}{%
    \def\cpge@listenv{enum}
    \def\cpge@xlistenv{xenum}
    \ifnum \@enumdepth >2 \@toodeep\else%
@@ -1081,7 +1079,7 @@
    \fi%
  }
  \def\endxenum{\cpgelist@savecounter\endlist}
- \NewDocumentCommand\xitem{!e{\op}}{%
+ \NewDocumentCommand\xitem{ e\op }{%
   \def\cpge@listenv{item}
   \def\cpge@xlistenv{xitem}
   \ifnum \@itemdepth >2 \@toodeep\else%
@@ -1581,36 +1579,42 @@
    \expandafter#2#1\null
   \fi}
   
-\def\cpge@ref#1{\expandafter\cpge@setref\csname r@#1\endcsname\@firstoftwo{#1}}
+\def\cpgeref#1{\expandafter\cpge@setref\csname r@#1\endcsname\@firstoftwo{#1}}
 
-\def\cpge@pageref#1{\expandafter\cpge@setref\csname r@#1\endcsname
+\def\cpgepageref#1{\expandafter\cpge@setref\csname r@#1\endcsname
                                    \@secondoftwo{#1}}
 \def\cpge@newl@bel#1#2#3{{%
-%  \@ifundefined{#1@#2}%
-%    \relax
-%    {\gdef \cpge@multiplelabels {%
-%       \@latex@warning@no@line{There were multiply-defined labels}}%
-%     \@latex@warning@no@line{Label `#2' multiply defined}}%
+  \@ifundefined{#1@#2}%
+    \relax
+    {\gdef \cpge@multiplelabels {%
+       \@latex@warning@no@line{There were multiply-defined labels}}%
+     \@latex@warning@no@line{Label `#2' multiply defined}}%
   \global\@namedef{#1@#2}{#3}}}
-\def\cpge@newlabel{\cpge@newl@bel r}
+\def\cpgenewlabel{\cpge@newl@bel r}
 
 %\@onlypreamble\cpge@newl@bel
 \let\cpge@multiplelabels\relax
 
-\def\cpge@label#1{\@bsphack
-  \write\@auxout{}%
-         {\string\cpge@newlabel{#1}{{\cpge@currentlabel}{\thepage}}}%
+\def\cpgelabel#1{\@bsphack
+  \immediate\write\@auxout{\string\cpgenewlabel{#1}{{\cpge@currentlabel}{\thepage}}}%
   \@esphack}
 
 \def\cpge@currentcounter{}
 
-\def\cpge@refstepcounter#1{\stepcounter{#1}%
-    \edef\cpge@currentcounter{#1}%
-    \edef\cpge@currentlabel
+\def\cpgeref@setcounter#1#2{%
+   \setcounter{#1}{#2}%
+   \edef\cpge@currentcounter{#1}%
+   \edef\cpge@currentlabel
+       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
+}
+\def\cpgeref@stepcounter#1{%
+   \stepcounter{#1}%
+   \edef\cpge@currentcounter{#1}%
+   \edef\cpge@currentlabel
        {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
 }
 % commande ajoutée pour référencer un compteur en utilisant \addtocounter
-\def\cpge@refaddtocounter#1#2{%
+\def\cpgeref@addtocounter#1#2{%
     \addtocounter{#1}{#2}%
     \edef\cpge@currentcounter{#1}%
     \edef\cpge@currentlabel
@@ -1622,20 +1626,15 @@
 
 \def\cpge@currentlabel{}
 
-%%% code from glocalvals.sty
-
-\newcommand{\usevalue}[1]{\csuse{cpgeval@#1}}
-
-% cpgeval@#1 is defined in the .aux file to be used on the next run.
-% cpgeval@#1@defined is defined immediately to mark that cpgeval@#1 has already
-% been used and cannot be used again
+%%% code inspired by glocalvals.sty
+\newcommand{\usevalue}[1]{\csuse{cpge:#1}}
 \newcommand{\defvalue}[2]{%
-\ifcsname cpgeval@#1@defined\endcsname
+\ifcsname cpge:#1:defined\endcsname
   \PackageError{cpgebase}{Value "#1" already defined}{}%
 \else%
-  \write\@auxout{}{\string\csgdef{cpgeval@#1}{#2}}%
-  \csgdef{cpgeval@#1@defined}{}%
-  \csgdef{cpgeval@#1}{#2}%
+  \immediate\write\@auxout{\string\csgdef{cpge:#1}{#2}}%
+  \csgdef{cpge:#1:defined}{}%
+  \csgdef{cpge:#1}{#2}%
   \PackageInfo{cpgebase}{Defining new variable "#1" with value "#2"}%
 \fi%
 }
