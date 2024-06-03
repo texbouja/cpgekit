@@ -972,7 +972,6 @@
 \cpgedefcounter{bigques}{|I|}[partii](B)<question>
 \ifltxcounter{score}{}{\newcounter{score}[@devoir]}
 \ifltxcounter{score@tmp}{}{\cpgedefcounter{score@tmp}{}[problem]}
-\cpge@labelformat{score}{#1}
 \cpge@cnt@shortcut{*X}{current@counter}
 
 %%% Commandes utilitaires
@@ -1172,7 +1171,7 @@
 		{
 			\edef\cpge@tmpe{\usevalue{score:\cpge@problem@id}}%
 	 		\ifdefvoid{\cpge@tmpe}{}
-	 			{\mbox{}\\\normalsize\textit{(sur \cpge@tmpe{} points)}}
+	 			{\par\normalsize\textit{(sur \cpge@tmpe{} points)}}
 		}{}%
 }
 \cpgetitle@shape{display}{problem}[center]
@@ -1683,11 +1682,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Finalisation du barème %%%
 
-\NewDocumentCommand\setscore{O{0}}{%
-		\addtocounter{score}{#1}%
-		 \@expandtwoargs\defvalue{globalscore}{\thescore}%
- }
-\def\showscore{\usevalue{globalscore}}
+\def\addtoscore#1{\addtocounter{score}{#1}}
+\def\showscore{\usevalue{score:global}}
+\AtEndDocument{\defvalue{score:global}{\thescore}}
 
 
 
@@ -1826,11 +1823,15 @@
 			  \or \Gm@littlemargin+\leftmargini+\leftmarginii%
 	\fi%
 }
-\cpgesetdeco{quesscore}{%
-	\ttfamily\footnotesize\strut #1\smaller\;\vrule\kern\p@\textsubscript{pt}%
+\def\cpge@tab@row#1{#1\\}
+\def\cpge@tab@score#1{
+	\ttfamily\footnotesize%
+	\def\arraystretch{.6}
+	\tabular{@{}c@{}}\in@parser\cpge@tab@row{#1}\endtabular
 }
+\cpgesetdeco{quesscore}{#1\kern\p@\vrule\kern3\p@}
 \def\print@score#1{\ifscore%
-	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{#1}\kern3\p@}\hss}}}%
+	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{\cpge@tab@score{#1}}}\hss}}}%
 	\global\let\show@quesscore\relax%
 \fi}
 
@@ -1839,21 +1840,21 @@
 	preload/switchdeco/.code=\let\outeremptydeco@list\deco@emptylabel,
 	switchdeco/.code=\relax
 }
-\NewDocumentCommand\questions{t\r !E\op{}}{%
+\NewDocumentCommand\questions{!t\r E{\op}{{}}}{%
 	\IfBooleanTF{#1}%
 		{\xenum\op{switchdeco,r,#2}}%
 		{\xenum\op{switchdeco,#2}}%%
 	\set@solutionslinks%
 	}
 \let\endquestions\exit 
-\NewDocumentCommand\startques{!t\r !E\op{} }{%
+\NewDocumentCommand\startques{!t\r E{\op}{{}} }{%
 	\IfBooleanTF{#1}%
 		{\begin{xenum}\op{switchdeco,r,#2}}%
 		{\begin{xenum}\op{switchdeco,#2}}%
 	\set@solutionslinks%
 	%\csshow{prop@\cpge@listctr}
 }
-\NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  !E\op{} }{%
+\NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  E{\op}{{}} }{%
 	\IfBooleanTF{#5}%
         {\startques\r\op{#7}}%
         {\IfBooleanT{#6}{\startques\op{#7}}}%
@@ -1862,7 +1863,7 @@
 }
 \NewDocumentCommand\x@ques{o E{\sc\zp}{{}{@}} d() d<>}{%
 	\ifblank{#2}{}{%
-		\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
+		\global\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
 		\def\show@quesscore{\print@score{#2}}%
 	}%
 	\ifstrequal{#3}{@}{}%
@@ -1997,6 +1998,7 @@
 \cslet{endcorrige*}\endcorrige
 \cpgenewproblem*{scorrige}{}{\isasolutiontrue\setup@xsol}{}{}
 \def\queslist{}
+\csdef{cpgeval@mines24m2@defined}{}
 \def\close@problem#1{%
 	%\ifnum\c@score@tmp>\z@%
 		\defvalue{score:\cpge@problem@id}{\thescore@tmp}%
