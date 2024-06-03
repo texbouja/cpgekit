@@ -1370,46 +1370,12 @@
 
 %%% Boite tikz générique pour différentes déorations
 \NewDocumentCommand\genboxcmd{O{}m}{\fbox{#2}}
-\NewDocumentCommand\listbox{O{}m}{#2}
 \cpgesetdeco{indication}{\textbf{#1 :}\kern4pt}
-
-\unless\ifdraft\unless\ifprint
-	\tikzset{generic style/.style={fill=none, draw=maincol, inner sep = 3pt, rounded corners=3pt}}
+\unless\ifdraft
+\tikzset{generic style/.style={fill=none, draw=maincol, inner sep = 3pt, rounded corners=3pt}}
 	\RenewDocumentCommand\genboxcmd{O{} +m}{%
 		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
 	}
-	\RenewDocumentCommand\listbox{O{} +m}{%
-		\tikz [anchor=base, baseline, yshift=.25ex]  \node [generic style, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
-	}
-\fi\fi
-\unless\ifdraft\tikzset{%
-		collink/.style={%
-			fill=linkcol, 
-			draw=none, 
-			text=white},
-		enodeco/.style={%
-			minimum width=2em,
-			},
-		soldeco/.style={%
-			minimum width=2.4em,
-			}
-	}
-\fi%
-\let\show@quesscore\relax
-\cpgesetdeco{linknum}
-	{\listbox[collink]{#1}}
-\cpgesetdeco{link@}
-	{\show@quesscore\listbox[enodeco, collink, align=right]{#1}}
-\cpgesetdeco{nolink@}
-	{\show@quesscore\listbox[enodeco, align=center]{#1}}
-\cpgesetdeco{link@sol}
-	{\listbox[soldeco, collink, align=left]{#1}}
-
-\NewDocumentEnvironment{genbox}{O{} d() +b}{%
-	\par\IfValueT{#2}{\textbf{#2}\newline\nobreak}%
-	\genboxcmd[#1]{\parbox{\columnwidth}{#3}}
-}{}
-\unless\ifdraft
 	\cpgesetdeco{formula}{\genboxcmd{#1}}
 	\cpgesetdeco{result}{\genboxcmd[double distance=.6pt, line width=1.2pt, inner sep=4pt, fill=maincol!5!bgcol, draw=bgcol, double=maincol]{#1}}
 \fi 
@@ -1805,73 +1771,159 @@
 	\hyperlink{hint:\cpge@problem@id:\csuse{label@\hintctr}}{\hintradio}%
 	}
 
-% Adaptation de \xit pour les problèmes avec solutions
+%%%%%%%%%%%%% Le style des numeros de questions %%%%%%%%%%%%%
 
-
-\cpgesetuplists{
-	switchdeco/.code=\let\outerdeco@list\deco@nolink@
+\NewDocumentCommand\listbox{O{}m}{#2}
+\def\processed@maxlabelwidth{2em}
+\unless\ifdraft\unless\ifprint
+	\RenewDocumentCommand\listbox{O{} +m}{%
+		\tikz [anchor=base, baseline, yshift=.25ex]  \node [generic style, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
+	}
+	\tikzset{%
+		collink/.style={%
+			fill=linkcol, 
+			draw=none, 
+			text=white},
+		enodeco/.style={%
+			text width=\processed@maxlabelwidth,
+			}
+	}
+\fi\fi%
+\let\show@quesscore\relax
+\cpgesetdeco{link@}{%
+	\show@quesscore%
+	\ifcpge@withsol%
+		\hypersetup{linkcolor=white}%
+		\hypertarget%
+			{hyeno:\cpge@problem@id:\csuse{label@\cpge@listctr}}%
+			{\hyperlink{hysol:\cpge@problem@id:\csuse{label@\cpge@listctr}}{%
+				\listbox[enodeco, collink, align=right]{#1}}%
+			}%
+	\else%
+		\listbox[enodeco, align=center]{#1}%
+	\fi%
 }
-\NewDocumentCommand\questions{!E\op{}}{%
-	\xenum\op{switchdeco,#1}%
+\cpgesetdeco{nolink@}{%
+	\show@quesscore\listbox[enodeco, align=center]{#1}%
+}
+\cpgesetdeco{emptylabel}{\listbox{#1}}
+%%%%% hyperlien ou pas 
+\def\set@solutionslinks{
+	\edef\score@width{\dimexpr\score@placement\@enumdepth\relax}%
+	\def\outerdeco@list{%
+		\ifcpge@withsol%
+			\@xp\deco@link@%
+		\else%
+			\@xp\deco@nolink@%
+		\fi%
+	}
+}
+%%%% placement du barême 
+\def\score@placement#1{%
+	\ifcase#1%
+			\or \Gm@littlemargin%
+			 \or \Gm@littlemargin+\leftmargini%
+			  \or \Gm@littlemargin+\leftmargini+\leftmarginii%
+	\fi%
+}
+\cpgesetdeco{quesscore}{%
+	\ttfamily\footnotesize\strut #1\smaller\;\vrule\kern\p@\textsubscript{pt}%
+}
+\def\print@score#1{\ifscore%
+	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{#1}\kern3\p@}\hss}}}%
+	\global\let\show@quesscore\relax%
+\fi}
+
+%%%%% l'environnement et les commandes des questions
+\cpgesetuplists{
+	preload/switchdeco/.code=\let\outeremptydeco@list\deco@emptylabel,
+	switchdeco/.code=\relax
+}
+\NewDocumentCommand\questions{t\r !E\op{}}{%
+	\IfBooleanTF{#1}%
+		{\xenum\op{switchdeco,r,#2}}%
+		{\xenum\op{switchdeco,#2}}%%
 	\set@solutionslinks%
 	}
 \let\endquestions\exit 
-\NewDocumentCommand\startques{!t\r !E{\op}{{}}}{%
-	\IfBooleanTF{#1}
-		{\begin{xenum}\op{switchdeco,r,#2}}
+\NewDocumentCommand\startques{!t\r !E\op{} }{%
+	\IfBooleanTF{#1}%
+		{\begin{xenum}\op{switchdeco,r,#2}}%
 		{\begin{xenum}\op{switchdeco,#2}}%
 	\set@solutionslinks%
+	%\csshow{prop@\cpge@listctr}
 }
-\NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
+\NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  !E\op{} }{%
 	\IfBooleanTF{#5}%
-        {\startques\r\op{#7}}
+        {\startques\r\op{#7}}%
         {\IfBooleanT{#6}{\startques\op{#7}}}%
 	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
 	#1%
 }
-\cpgesetdeco{quesscore}{\ttfamily\footnotesize\strut #1\smaller\;\vrule\,\textsubscript{pt}}
-\def\print@score#1{%
-	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{#1}\kern3\p@}\hss}}}%
-	\global\let\show@quesscore\relax%
-}
 \NewDocumentCommand\x@ques{o E{\sc\zp}{{}{@}} d() d<>}{%
 	\ifblank{#2}{}{%
 		\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
-		\global\c@score=\numexpr\c@score+#2\relax%
 		\def\show@quesscore{\print@score{#2}}%
 	}%
-	\ifstrequal{#3}{@}{}
+	\ifstrequal{#3}{@}{}%
             {\addtocounter{\cpge@listctr}{#3}}%
-	\ifcpge@withsol%
-		\IfValueTF{#5}{\gdef\ques@label@{#5}}{\gdef\ques@label@{}}%
-	\fi%
-	\IfValueTF{#1}
+	\IfValueTF{#1}%
 		{\cpge@item[#1]%
-			\ifblank{#1}
-				{\stepcounter{\cpge@listctr}}
+			\ifblank{#1}%
+				{\stepcounter{\cpge@listctr}}%
 				{}%
 		}%
-		{\cpge@item}
+		{\cpge@item}%
 	\ifcpge@withsol%
+		\IfValueTF{#5}{\gdef\ques@label@{#5}}{\gdef\ques@label@{}}%
 		\xappto\queslist{{\csuse{label@\cpge@listctr}}{\ques@label@},}
 	\fi%
 	\begingroup%
 	\IfValueT{#4}{\def\@currentlabelname{#4}\deco@itemtitle{#4}}%
 	\IfValueT{#5}{%
 		\MakeLinkTarget[question]{Item}%
-		\ifblank{#5}
-			{\label{\cpge@labelprefix\csuse{label@\cpge@listctr}}}
+		\ifblank{#5}%
+			{\label{\cpge@labelprefix\csuse{label@\cpge@listctr}}}%
 			{\label{\cpge@labelprefix#5}}%
-	}
+	}%
 	\endgroup%
 }
+%%% Les commandes utilisateurs 
 \def\xques{\init@ques{\cpge@withsoltrue\x@ques}}
 \def\zques{\init@ques{\cpge@withsolfalse\x@ques}}
 \def\stopques{\exit}
 
-%%% mécanisme d'écriture des solutions dans un fichier
-%%% et de réinsertion immédiate ou différée
+%%%%%%%%%%%%%%%%%%% mécanisme d'écriture des solutions dans un fichier %%%%%%%%%%%
+%%% gestion d'une réinsertion immédiate ou différée
 %%% du contenu de ce fichier selon les options de la classe.
+
+
+\def\handtorightlink#1{%
+	\ifsolution%
+		\ifhmode\par\nobreak\noindent\fi%%
+		\hypertarget{hyeno:#1}{}
+		\ifcompact%
+			\hyperlink{hysol:#1}{%
+				\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
+			\hskip\labelsep%
+		\else
+			\vskip-\baselineskip%
+			\llap{%
+					\hyperlink{hysol:#1}{%
+						\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
+					\hskip\labelsep
+			}%
+		\fi%
+	\fi%
+	}
+\def\handtoleftlink#1{%
+	\hypertarget{hysol:#1}%
+		{%
+			\hyperlink{hyeno:#1}{%
+				\deco@link@sol{\fontsize{12}{12}\selectfont\faHandOLeft}}
+			\hskip\labelsep%
+		}%
+}
 
 \NewDocumentCommand\draft@save{!o!d()!d<>}{%
 	\ifsolution%
@@ -1944,15 +1996,17 @@
 \csdef{corrige*}{\corrige}
 \cslet{endcorrige*}\endcorrige
 \cpgenewproblem*{scorrige}{}{\isasolutiontrue\setup@xsol}{}{}
-
 \def\queslist{}
 \def\close@problem#1{%
-	\ifnum\c@score@tmp>\z@%
-		\@expandtwoargs\defvalue{score:\cpge@problem@id}{\thescore@tmp}%
-	\fi%
+	%\ifnum\c@score@tmp>\z@%
+		\defvalue{score:\cpge@problem@id}{\thescore@tmp}%
+		\global\c@score=\numexpr\c@score+\c@score@tmp\relax%
+	%\fi%
 	\ifstraight
 		\csxdef{\cpge@problem@id @list}{\queslist}%
 	\fi%
+	\csxdef{\cpge@problem@id @maxlabelwidth}{\the\curr@maxlabelwidth}%
+	\global\curr@maxlabelwidth\z@%
 	\long\edef\cpge@tmpe{\the\toks@hint}%
 	\ifdefempty\cpge@tmpe{}{\parti*{Indications}\cpge@tmpe}%
 	\unless\ifdraft%
@@ -2005,82 +2059,9 @@
 }
 \def\Dummy@Solution#1[#2](#3)#4#5{}
 
-%%% Style des numérotations pour les questions et les solutions  
-%%% selon disponibilité de la solution ou non.
-\def\outer@ques@nolink#1{%
-	\csuse{deco@\cpge@listctr @o}{#1}%
-	}	
-\def\outer@ques@link#1{%%
-	\ifcpge@withsol%
-		\hypersetup{linkcolor=white}%
-		\hypertarget%
-			{hyeno:\cpge@problem@id:#1}%
-			{\hyperlink{hysol:\cpge@problem@id:#1}{\csuse{deco@\cpge@listctr @o}{#1}}}%
-	\else%
-		\csuse{deco@\cpge@listctr @o}{#1}%
-	\fi%
-	}
-\def\outer@sol@deco#1{%
-	\hypertarget{hysol:\cpge@problem@id:#1}%
-		{\hyperlink{hyeno:\cpge@problem@id:#1}%
-			{\deco@link@sol{#1}}}%
-}
-\def\handtorightlink#1{%
-	\ifsolution%
-		\ifhmode\par\nobreak\noindent\fi%%
-		\hypertarget{hyeno:#1}{}
-		\ifcompact%
-			\hyperlink{hysol:#1}{%
-				\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
-			\hskip\labelsep%
-		\else
-			\vskip-\baselineskip%
-			\llap{%
-					\hyperlink{hysol:#1}{%
-						\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
-					\hskip\labelsep
-			}%
-		\fi%
-	\fi%
-	}
-\def\handtoleftlink#1{%
-	\hypertarget{hysol:#1}%
-		{%
-			\hyperlink{hyeno:#1}{%
-				\deco@link@sol{\fontsize{12}{12}\selectfont\faHandOLeft}}
-			\hskip\labelsep%
-		}%
-}
-%%% Décorations des liens hypertextes (numéros des questions et des solutions)
-\def\score@placement#1{
-	\ifcase#1 
-			\or \Gm@littlemargin
-			 \or \Gm@littlemargin+\leftmargini
-			  \or \Gm@littlemargin+\leftmargini+\leftmarginii
-	\fi%
-}
-\def\set@solutionslinks{
-	\def\outerdeco@list{%
-		\ifcpge@withsol%
-			\@xp\deco@link@%
-		\else%
-			\@xp\deco@nolink@%
-		\fi%
-	}
-	\csletcs{deco@\cpge@listctr @o}{deco@\cpge@listctr}
-	\edef\score@width{\dimexpr\score@placement\@enumdepth\relax}%
-	\ifsolution 
-		\csdef{deco@\cpge@listctr}##1{%
-			\outer@ques@link{##1}%
-		}
-	\else
-		\csdef{deco@\cpge@listctr}##1{%
-			\outer@ques@nolink{}{##1}%
-		}
-	\fi 
-}
 
-%%%% \xref pour gestion des référence croisées.
+%%%% Références croisées %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% \xref pour gestion des référence croisées des questions, parties, ....
 \cpgesetdeco{pageref}{\sffamily\smaller{}[p. #1]}
 \def\set@pageref{\@ifstar{\set@pageref@eno}{\set@pageref@cor}}
 \def\set@pageref@eno#1{%
@@ -2213,8 +2194,10 @@
 }
 
 %%% Références croisées des équations. 
+%%% transféré vers cpgemath.sty 
 
 
+%%%%%%%% Environnements pour le rendu des solutions %%%%%%%%%
 %%% \xsol la commande magique
 %%% pour numéroter les questions dans le fichier de solutions  
 \def\xsol@env{%
@@ -2300,21 +2283,37 @@
 		\fi
 		}
 	}	
-\AtBeginDocument{
-	\ifcompact
-		\cpgesetenum{1}{marge*}
-		\cpgesetenum{2}{marge*}
-	\else	
-		\cpgesetenum{1}{marge}
-		\cpgesetenum{2}{marge*}
-	\fi
+\def\outer@sol@deco#1{%
+	\hypertarget{hysol:\cpge@problem@id:#1}%
+		{\hyperlink{hyeno:\cpge@problem@id:#1}%
+			{\deco@link@sol{#1}}}%
 }
+\unless\ifdraft
+	\tikzset{soldeco/.style={collink, text width=\csuse{\cpge@problem@id @maxlabelwidth}}}
+\fi%
+\cpgesetdeco{link@sol}
+	{\listbox[soldeco, align=left]{#1}}
+
+
+
+
+%%%% Markup des questions par défaut  %%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% styles des compteurs par défaut 
 \cpgesetlabel{enumi}{|X|.|1|}
 \cpgesetlabel{enumii}{|X|.|Q|.|1|}
 \cpgesetlabel{enumiii}{|X|.|Q|.|q|.|1|}
 \cpgesetdeco{enumi}{\bfseries#1.}
 \cpgesetdeco{enumii}{\bfseries#1.}
 \cpgesetdeco{enumiii}{\bfseries#1.}
+\AtBeginDocument{
+	\ifcompact
+		\cpgesetenum*{1}{marge*}
+		\cpgesetenum*{2}{marge*}
+	\else	
+		\cpgesetenum*{1}{marge}
+		\cpgesetenum*{2}{marge*}
+	\fi
+}
 
 %%%% Décoration du label pour mini
 \ifcompact

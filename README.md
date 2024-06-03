@@ -39,4 +39,4 @@
   
   ### Remarques
   
-  Le comportement avec l'option `straight` est limpide et suffit pour des situations simples. En son absence, on dispose d'une solution très souple pour réutiliser plusieurs fichiers dans une sorte  
+  Le comportement avec l'option `straight` est limpide et suffit pour des situations simples. Dans le cas où elle n'est pas utilisé le système devient plus complexe mais en contre partie devient beaucoup plus souple.  
