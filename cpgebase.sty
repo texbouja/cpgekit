@@ -657,12 +657,12 @@
    \ifcsundef{marge@\cpge@listctr}% une fois exécutée, ignore les clés suivantes
       {\labelsep=.33em%
          \csname leftmargin\cpge@listlevel\endcsname=%
-            \dimexpr\wd\@tempboxa+\labelsep+#2\relax%
+            \dimexpr\processed@maxlabelwidth+\labelsep+#2\relax%
          \if#11\relax
          \ifdim\csname leftmargin\cpge@listlevel\endcsname>
             \listmaxwidth\relax%
                \csname leftmargin\cpge@listlevel\endcsname=
-                  \dimexpr.5\wd\@tempboxa+#2\relax%
+                  \dimexpr.5\processed@maxlabelwidth+#2\relax%
          \fi\fi%
          \csdef{marge@\cpge@listctr}{%une fois exécutée, ignore les clés suivantes
             \labelwidth\dimexpr
@@ -678,7 +678,8 @@
          \csname leftmargin\cpge@listlevel\endcsname=
             \dimexpr#1\relax%
          \csdef{marge@\cpge@listctr}{%
-               \labelwidth\z@\itemindent\labelsep}%
+               \labelwidth\z@\relax
+               \itemindent\labelsep\relax}%
       }{}%
 }
 \def\cpgelist@setsep#1{%
@@ -747,21 +748,23 @@
 \def\prop@itemi{marge=1pc}
 \def\prop@itemii{marge=1pc}
 \def\prop@itemiii{marge=1pc}                             
-\newdimen\curr@maxlabelwidth
+\newdimen\@maxlabelwidth
+\newdimen\processed@maxlabelwidth
 \def\cpgelist@setprop{%
    \ifcsdef{c@\cpge@listctr}
       {\csname c@\cpge@listctr\endcsname88\relax}%
       {}
    \setbox\@tempboxa\hbox{\color@begingroup%
-      \outeremptydeco@list{}% 
+      \outeremptydeco@list{}%
          \color@endgroup}
    \edef\curr@emtydecowidth{\the\wd\@tempboxa}
    \setbox\@tempboxa\hbox{\color@begingroup%
-   \outeremptydeco@list{\csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}}% 
+      \csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}% 
       \color@endgroup}%
-   \edef\processed@maxlabelwidth{\the\dimexpr\wd\@tempboxa-\curr@emtydecowidth}%
-   \ifdim\curr@maxlabelwidth<\processed@maxlabelwidth\relax%
-      \global\curr@maxlabelwidth=\processed@maxlabelwidth%
+   \edef\curr@textwidth{\the\wd\@tempboxa}
+   \processed@maxlabelwidth=\dimexpr\curr@textwidth+\curr@emtydecowidth\relax%
+   \ifdim\@maxlabelwidth<\processed@maxlabelwidth\relax%
+      \global\@maxlabelwidth=\processed@maxlabelwidth%
    \fi%
    \begingroup
    \edef\cpge@tempa{\endgroup%
@@ -817,7 +820,9 @@
 \def\outeremptydeco@list#1{#1}
 \def\cpgelist@outerr#1{
    \ifundef\cpge@listenv{
-      \cpgeb@error{#1 n'est pas directement utilisable avec \string\cpgesetuplists.}{utiliser l'une des familles enumi}
+      \cpgeb@error{#1 n'est pas directement utilisable 
+                     avec \string\cpgesetuplists.}
+                  {utiliser l'une des familles enumi}
    }{}
 }
 \ProvideDocumentCommand\cpgelist@addlocalprop{smm}{
@@ -878,7 +883,7 @@
    \cpgesetuplists{
       enum@#1/.is family,
       enum@#1/n/.code=\cpgesetlabel{enum#1}{##1},
-      enum@#1/n*/.code=\let\deco@enum#1\deco@fake
+      enum@#1/n*/.code=\cslet{deco@enum#1}\deco@fake
                        \cpgesetlabel{enum#1}{##1},
       enum@#1/d/.code=\cpgesetdeco{enum#1}{##1},
       enum@#1/d*/.code=\cpgesetdeco*{enum#1}{##1},
@@ -891,6 +896,7 @@
       enum@#1/m/.default=\z@,
       enum@#1/m+/.default=\z@,
       enum@#1/m*/.default=\z@,
+      enum@#1/s/.default=\z@,
       enum#1/.code=\pgfqkeys{/cpge/lists/enum@#1}{##1},
 }}
 \cpgesetup@enum{i}{1}
