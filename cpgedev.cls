@@ -1500,10 +1500,10 @@
 		\IfValueTF{#5}% 
 			{\cpge@tmpswafalse%
 				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}]{#5}}
+					\edef\cpge@tmpa{\endgroup\@nx\problem[{\@nx\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}}]{#5}}
 			}{\cpge@tmpswatrue%
 				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}]{}}}%
+					\edef\cpge@tmpa{\endgroup\@nx\problem[{\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}}]{}}}%
 		\LinkTargetOff\cpge@tmpa\LinkTargetOn%
 		\IfValueT{#6}{%
 			\IfValueTF{#5}
@@ -1522,9 +1522,9 @@
 		\def\cnt@name{#1}%
 		\IfValueTF{#3}%
 			{\cpge@tmpswafalse%
-				\problem[\textsc{\cnt@name}\IfValueTF{#2}{~:~#2}{~:~#3}]{#3}}
+				\problem[{\textsc{\cnt@name}\IfValueTF{#2}{~:~#2}{~:~#3}}]{#3}}
 			{\cpge@tmpswatrue%
-				\problem[\textsc{\cnt@name}\IfValueT{#2}{~:~#2}]{}}%
+				\problem[{\textsc{\cnt@name}\IfValueT{#2}{~:~#2}}]{}}%
 		\IfValueT{#4}{%
 			\IfValueTF{#3}
 				{\protected@edef\@currentlabelname{#3}}
@@ -1554,7 +1554,7 @@
 			{\csxdef{#2autorefname}{\MakeLowercase{#3}}}
 	\csgdef{dudela@#2}{#7}%
 	\IfBooleanT{#1}{%
-		\NewDocumentEnvironment{#2}{m +e\op o +d() d<>}
+		\NewDocumentEnvironment{#2}{m +e\op o d() d<>}
 			{%
 				\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 				\def\problemcounter@name{#2}%
@@ -1571,7 +1571,7 @@
 			}%
 	}
 	\IfBooleanT{#1}{%
-		\NewDocumentEnvironment{#2*}{m +e\op o +d() d<>}%
+		\NewDocumentEnvironment{#2*}{m +e\op o d() d<>}%
 			{%
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 				\def\problemcounter@name{#2}%
@@ -1588,7 +1588,7 @@
 			}%
 	}
 	\IfBooleanF{#1}{%
-		\NewDocumentEnvironment{#2}{m +E\op{{}} o +d() d<>}{%
+		\NewDocumentEnvironment{#2}{m +E{\op}{{}} o +d() d<>}{%
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 			\def\problemcounter@name{#2}%
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
@@ -1607,7 +1607,7 @@
 		}%
 	}
 	\IfBooleanF{#1}{%
-		\NewDocumentEnvironment{#2*}{m +E\op{{}} o +d() d<>}{%
+		\NewDocumentEnvironment{#2*}{m +E{\op}{{}} o +d() d<>}{%
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 			\def\problemcounter@name{#2}%
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
@@ -1771,10 +1771,18 @@
 %%%%%%%%%%%%% Le style des numeros de questions %%%%%%%%%%%%%
 
 \NewDocumentCommand\listbox{O{}m}{#2}
-\def\processed@maxlabelwidth{2em}
+\processed@maxlabelwidth=2em\relax
 \unless\ifdraft\unless\ifprint
-	\RenewDocumentCommand\listbox{O{} +m}{%
-		\tikz [anchor=base, baseline, yshift=.25ex]  \node [generic style, font=\sffamily\footnotesize\bfseries\strut, rounded corners=2.4\p@, inner xsep=4\p@, inner ysep=\p@,  #1] {#2};%
+	\RenewDocumentCommand\listbox{O{}m}{%
+		\tikz [anchor=base, baseline, yshift=.25ex]  
+			\node [
+					generic style, 
+					font=\sffamily\footnotesize\bfseries\strut, 
+					rounded corners=2.4\p@, 
+					inner xsep=4\p@, 
+					inner ysep=\p@,  
+					#1
+				] {#2};%
 	}
 	\tikzset{%
 		collink/.style={%
@@ -1782,7 +1790,7 @@
 			draw=none, 
 			text=white},
 		enodeco/.style={%
-			text width=\processed@maxlabelwidth,
+			text width=\curr@textwidth,
 			}
 	}
 \fi\fi%
@@ -1823,11 +1831,11 @@
 			  \or \Gm@littlemargin+\leftmargini+\leftmarginii%
 	\fi%
 }
-\def\cpge@tab@row#1{#1\\}
-\def\cpge@tab@score#1{
+\def\cpge@tab@row#1{\ifblank{#1}{}{#1\\}}
+\def\cpge@tab@score#1{%
 	\ttfamily\footnotesize%
-	\def\arraystretch{.6}
-	\tabular{@{}c@{}}\in@parser\cpge@tab@row{#1}\endtabular
+	\def\arraystretch{.55}%
+	\raisebox{\fntht 1}{\tabular[t]{@{}c@{}}\in@parser\cpge@tab@row{#1}\endtabular}%
 }
 \cpgesetdeco{quesscore}{#1\kern\p@\vrule\kern3\p@}
 \def\print@score#1{\ifscore%
@@ -2007,8 +2015,8 @@
 	\ifstraight
 		\csxdef{\cpge@problem@id @list}{\queslist}%
 	\fi%
-	\csxdef{\cpge@problem@id @maxlabelwidth}{\the\curr@maxlabelwidth}%
-	\global\curr@maxlabelwidth\z@%
+	\csxdef{\cpge@problem@id @maxlabelwidth}{\the\@maxlabelwidth}%
+	\global\@maxlabelwidth\z@%
 	\long\edef\cpge@tmpe{\the\toks@hint}%
 	\ifdefempty\cpge@tmpe{}{\parti*{Indications}\cpge@tmpe}%
 	\unless\ifdraft%
@@ -2307,6 +2315,14 @@
 \cpgesetdeco{enumi}{\bfseries#1.}
 \cpgesetdeco{enumii}{\bfseries#1.}
 \cpgesetdeco{enumiii}{\bfseries#1.}
+\unless\ifdraft
+	\unless\ifprint 
+		\cpgesetdeco{enumi}{\bfseries#1}
+		\cpgesetdeco{enumii}{\bfseries#1}
+		\cpgesetdeco{enumiii}{\bfseries#1}
+	\fi 
+\fi
+
 \AtBeginDocument{
 	\ifcompact
 		\cpgesetenum*{1}{marge*}
