@@ -657,18 +657,19 @@
    \ifcsundef{marge@\cpge@listctr}% une fois exécutée, ignore les clés suivantes
       {\labelsep=.33em%
          \csname leftmargin\cpge@listlevel\endcsname=%
-            \dimexpr\processed@maxlabelwidth+\labelsep+#2\relax%
+            \dimexpr\processed@labelwidth+\labelsep+#2\relax%
          \if#11\relax
-         \ifdim\csname leftmargin\cpge@listlevel\endcsname>
+         \ifdim\csname leftmargin\cpge@listlevel\endcsname >
             \listmaxwidth\relax%
                \csname leftmargin\cpge@listlevel\endcsname=
-                  \dimexpr.5\processed@maxlabelwidth+#2\relax%
+                  \dimexpr.5\processed@labelwidth+#2\relax%
          \fi\fi%
          \csdef{marge@\cpge@listctr}{%une fois exécutée, ignore les clés suivantes
             \labelwidth\dimexpr
                \csname leftmargin\cpge@listlevel\endcsname
                -\labelsep\relax%
             \itemindent\z@%
+            \listparindent\z@%
             }%
       }{}%
 }
@@ -679,7 +680,9 @@
             \dimexpr#1\relax%
          \csdef{marge@\cpge@listctr}{%
                \labelwidth\z@\relax
-               \itemindent\labelsep\relax}%
+               \itemindent\labelsep\relax
+               \listparindent\z@%
+            }%
       }{}%
 }
 \def\cpgelist@setsep#1{%
@@ -694,24 +697,24 @@
 \let\left@listfil\hfil
 \let\right@listfil\relax
 \def\cpgelist@setalign#1{%
-\ifcsundef{align@\cpge@listctr}{%
-   \if#1r 
-   \csdef{align@\cpge@listctr}{%b
-      \let\right@listfil\relax%
-      \let\left@listfil\hfil}%
-   \else
-      \if#1l 
-         \csdef{align@\cpge@listctr}{%
-            \let\right@listfil\hfil%
-            \let\left@listfil\relax}%
+   \ifcsundef{align@\cpge@listctr}{%
+      \if#1r 
+      \csdef{align@\cpge@listctr}{%b
+         \let\right@listfil\relax%
+         \let\left@listfil\hfil}%
       \else
-         \if#1c
+         \if#1l 
             \csdef{align@\cpge@listctr}{%
-               \let\left@listfil\hfil%
-               \let\right@listfil\hfil}%
+               \let\right@listfil\hfil%
+               \let\left@listfil\relax}%
+         \else
+            \if#1c
+               \csdef{align@\cpge@listctr}{%
+                  \let\left@listfil\hfil%
+                  \let\right@listfil\hfil}%
+            \fi%
          \fi%
       \fi%
-   \fi%
  }{}}
 
 \NewDocumentCommand\cpgelist@addprop{ s mm }{
@@ -749,10 +752,10 @@
 \def\prop@itemii{marge=1pc}
 \def\prop@itemiii{marge=1pc}                             
 \newdimen\@maxlabelwidth
-\newdimen\processed@maxlabelwidth
+\newdimen\processed@labelwidth
 \def\cpgelist@setprop{%
    \ifcsdef{c@\cpge@listctr}
-      {\csname c@\cpge@listctr\endcsname88\relax}%
+      {\csname c@\cpge@listctr\endcsname13\relax}%
       {}
    \setbox\@tempboxa\hbox{\color@begingroup%
       \outeremptydeco@list{}%
@@ -762,9 +765,9 @@
       \csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}% 
       \color@endgroup}%
    \edef\curr@textwidth{\the\wd\@tempboxa}
-   \processed@maxlabelwidth=\dimexpr\curr@textwidth+\curr@emtydecowidth\relax%
-   \ifdim\@maxlabelwidth<\processed@maxlabelwidth\relax%
-      \global\@maxlabelwidth=\processed@maxlabelwidth%
+   \processed@labelwidth=\dimexpr\curr@textwidth+\curr@emtydecowidth\relax%
+   \ifdim\@maxlabelwidth<\curr@textwidth\relax%
+      \global\@maxlabelwidth=\curr@textwidth%
    \fi%
    \begingroup
    \edef\cpge@tempa{\endgroup%
@@ -782,7 +785,6 @@
            \csuse{marge@\cpge@listctr}%
             \csuse{saut@\cpge@listctr}%
              \csuse{align@\cpge@listctr}%
-          \listparindent\parindent%
           \def\makelabel{\cpge@makelabel}%%
         }%
    }
@@ -797,7 +799,6 @@
           \csuse{marge@\cpge@listctr}%
            \csuse{saut@\cpge@listctr}%
             \csuse{align@\cpge@listctr}%
-         \listparindent\parindent%
          \let\makelabel\cpge@makelabel%
         }
    }
@@ -902,6 +903,7 @@
 \cpgesetup@enum{i}{1}
 \cpgesetup@enum{ii}{2}
 \cpgesetup@enum{iii}{3}
+\cpgesetup@enum{iv}{4}
 
 \def\cpgesetup@item#1#2{
    \cpgesetuplists{
@@ -924,135 +926,9 @@
 \cpgesetup@item{i}{1}
 \cpgesetup@item{ii}{2}
 \cpgesetup@item{iii}{3}
+\cpgesetup@item{iv}{4}
 
-% \cpgesetup[lists]{%
-%    preload/.is family,
-%    preload/restore/.is if=enum@restore,
-%    preload/resume/.is if=enum@resume,
-%    preload/r/.style={/cpge/lists/preload, resume, restore},
-%    preload/r*/.style={/cpge/lists/preload, resume=false, restore},
-%    preload/.unknown/.code=\relax,
-%    resume/.code=\relax,
-%    restore/.code=\relax,
-%    r/.code=\relax,
-%    r*/.code=\relax
 
-% }
-% \cpgesetup[lists]{%
-%    custom counter/.code={%
-%       \cpgelist@outerr{cc}%
-%       \ifltxcounter{#1}{}{\cpgedefcounter{#1}{}}%
-%       \def\cpge@listctr{#1}%
-%    },
-%    cc/.style={custom counter=#1},
-%    label prefix/.code=\def\cpge@enumlabelprefix{#1},
-%    p/.style={label prefix=#1},
-%    n/.code=\cpgelist@outerr{n}\cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n=#1},
-%    n*/.code=\cpgelist@outerr{n*}\cslet{deco@\cpge@listctr}\deco@fake%
-%              \cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n*=#1},
-%    d/.code=\cpgelist@outerr{d}\cpgesetdeco*{\cpge@listctr}{#1}\cpgelist@save{d=#1},
-%    d*/.code=\cpgelist@outerr{d*}\cpgesetdeco{\cpge@listctr}{#1}\cpgelist@save{d*=#1},
-%    m/.code=\cpgelist@addlocalprop{m}{marge=#1}\cpgelist@save{m=#1},
-%    m+/.code=\cpgelist@addlocalprop{m+}{marge+=#1}\cpgelist@save{m+=#1},
-%    m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
-%    s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1}, 
-%    a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
-%    m/.default=\z@,
-%    m+/.default=\z@,
-%    m*/.default=\z@,
-%    s/.default=\z@,
-%    a/.default=r,
-%    enum@i/.is family,
-%    enum@i/n/.code=\cpgesetlabel{enumi}{#1},
-%    enum@i/n*/.code=\let\deco@enumi\deco@fake
-%                     \cpgesetlabel{enumi}{#1},
-%    enum@i/d*/.code=\cpgesetdeco{enumi}{#1},
-%    enum@i/d/.code=\cpgesetdeco*{enumi}{#1},
-%    enum@i/m/.code=\cpgesetenum{1}{marge=#1},
-%    enum@i/m+/.code=\cpgesetenum{1}{marge+=#1},
-%    enum@i/m*/.code=\cpgesetenum{1}{marge*=#1},
-%    enum@i/s/.code=\cpgesetenum{1}{saut=#1},
-%    enum@i/a/.code=\cpgesetenum{1}{align=#1},
-%    enum@i/a/.default=r,
-%    enum@i/m/.default=\z@,
-%    enum@i/m+/.default=\z@,
-%    enum@i/m*/.default=\z@,
-%    enumi/.code=\pgfqkeys{/cpge/lists/enum@i}{#1},
-%    enum@ii/.is family,
-%    enum@ii/n/.code=\cpgesetlabel{enumii}{#1},
-%    enum@ii/n*/.code=\let\deco@enumii\deco@fake%
-%                      \cpgesetlabel{enumii}{#1},
-%    enum@ii/d*/.code=\cpgesetdeco{enumii}{#1},
-%    enum@ii/d/.code=\cpgesetdeco*{enumii}{#1},
-%    enum@ii/m/.code=\cpgesetenum{2}{marge=#1},
-%    enum@ii/m+/.code=\cpgesetenum{2}{marge+=#1},
-%    enum@ii/m*/.code=\cpgesetenum{2}{marge*=#1},
-%    enum@ii/s/.code=\cpgesetenum{2}{saut=#1},
-%    enum@ii/a/.code=\cpgesetenum{1}{align=#1},
-%    enum@ii/a/.default=r,
-%    enum@ii/m/.default=\z@,
-%    enum@ii/m+/.default=\z@,
-%    enum@ii/m*/.default=\z@,
-%    enumii/.code=\pgfqkeys{/cpge/lists/enum@ii}{#1},
-%    enum@iii/.is family,
-%    enum@iii/n/.code=\cpgesetlabel{enumiii}{#1},
-%    enum@iii/n*/.code=\let\deco@enumiii\deco@fake%
-%                       \cpgesetlabel{enumiii}{#1},
-%    enum@iii/d*/.code=\cpgesetdeco{enumiii}{#1},
-%    enum@iii/d/.code=\cpgesetdeco*{enumiii}{#1},
-%    enum@iii/m/.code=\cpgesetenum{3}{marge=#1},
-%    enum@iii/m+/.code=\cpgesetenum{3}{marge+=#1},
-%    enum@iii/m*/.code=\cpgesetenum{3}{marge*=#1},
-%    enum@iii/s/.code=\cpgesetenum{3}{saut=#1},
-%    enum@iii/a/.code=\cpgesetenum{1}{align=#1},
-%    enum@iii/a/.default=r,
-%    enum@iii/m/.default=\z@,
-%    enum@iii/m+/.default=\z@,
-%    enum@iii/m*/.default=\z@,
-%    enumiii/.code=\pgfqkeys{/cpge/lists/enum@iii}{#1},
-%    item@i/.is family,
-%    item@i/n/.store in=\label@itemi,
-%    item@i/n*/.code=\let\deco@itemi\deco@fake%
-%                     \cpgesetlabel{itemi}{#1},
-%    item@i/d*/.code=\cpgesetdeco{itemi}{#1},
-%    item@i/d/.code=\cpgesetdeco*{itemi}{#1},
-%    item@i/m/.code=\cpgesetitem{1}{marge=#1},
-%    item@i/m*/.code=\cpgesetitem{1}{marge*=#1},
-%    item@i/s/.code=\cpgesetitem{1}{saut=#1},
-%    item@i/a/.code=\cpgesetitem{1}{align=#1},
-%    item@i/a/.default=r,
-%    item@i/m/.default=\z@,
-%    item@i/m*/.default=\z@,
-%    itemi/.code=\pgfqkeys{/cpge/lists/item@i}{#1},
-%    item@ii/.is family,
-%    item@ii/n/.store in=\label@itemii,
-%    item@ii/n*/.code=\let\deco@itemii\deco@fake%
-%                          \cpgesetlabel{itemii}{#1},
-%    item@ii/d*/.code=\cpgesetdeco{itemii}{#1},
-%    item@ii/d/.code=\cpgesetdeco*{itemii}{#1},
-%    item@ii/m/.code=\cpgesetitem{2}{marge=#1},
-%    item@ii/m*/.code=\cpgesetitem{2}{marge*=#1},
-%    item@ii/s/.code=\cpgesetitem{2}{saut=#1},
-%    item@ii/a/.code=\cpgesetitem{1}{align=#1},
-%    item@ii/a/.default=r,
-%    item@ii/m/.default=\z@,
-%    item@ii/m*/.default=\z@,
-%    itemii/.code=\pgfqkeys{/cpge/lists/item@ii}{#1},
-%    item@iii/.is family,
-%    item@iii/n/.store in=\label@itemiii,
-%    item@iii/n*/.code=\let\deco@itemiii\deco@fake%
-%                       \cpgesetlabel{itemiii}{#1},
-%    item@iii/d*/.code=\cpgesetdeco{itemiii}{#1},
-%    item@iii/d/.code=\cpgesetdeco*{itemiii}{#1},
-%    item@iii/m/.code=\cpgesetitem{3}{marge=#1},
-%    item@iii/m*/.code=\cpgesetitem{3}{marge*=#1},
-%    item@iii/s/.code=\cpgesetitem{3}{saut=#1},
-%    item@iii/a/.code=\cpgesetitem{1}{align=#1},
-%    item@iii/a/.default=r,
-%    item@iii/m/.default=\z@,
-%    item@iii/m*/.default=\z@,
-%    itemiii/.code=\pgfqkeys{/cpge/lists/item@iii}{#1},
-% }
 \cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
 
 \NewDocumentCommand\xenum{ e\op}{%
@@ -1105,7 +981,7 @@
 	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
 	#2%
 }
-\cpgesetdeco{itemtitle}{\bfseries #1.\enskip}
+\cpgesetdeco{itemtitle}{\bfseries\boldmath #1.\enskip}
 \NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
       \ifstrequal{#2}{@}{}
             {\addtocounter{\cpge@listctr}{#2}}%

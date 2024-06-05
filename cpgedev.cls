@@ -18,6 +18,7 @@
 	\newif\ifstraight
 	\newif\ifnolinks
 	\newif\ifprint
+	\newif\ifserie
 	\newif\ifnocolors
 	\newif\ifdark
 	\newif\ifcompact
@@ -30,12 +31,14 @@
 }{}
 
 \newif\ifconvert
+\newif\iflocalscore
 
 \def\class@options{11pt}
 \pgfkeys{/IGD/.is family, /IGD/.cd,
 	web/.style={},
 	draft/.style={},
 	straight/.style={},	
+	serie/.style={},
 	compact/.style={},
 	dark/.style={},
 	nocolors/.style={},
@@ -44,13 +47,14 @@
 	hint/.style={},
 	hint*/.style={},
 	score/.style={},
-	book/.code=\def\cpge@class{book},
+	book/.code=\def\cpge@class{book}\csappto\class@options{oneside},
 	report/.code=\def\cpge@class{report},
 }
 \pgfkeys{/IGDS/.is family, /IGDS/.cd,
 	draft/.is if=draft,	
 	straight/.is if=straight,
 	compact/.is if=compact,
+	serie/.is if=serie,
 	dark/.is if=dark,
 	nocolors/.is if=nocolors, 
 	nolinks/.is if=nolinks,
@@ -92,7 +96,7 @@
 }
 \cpge@tmp
 
-
+\ifscore\localscoretrue\fi 
 \def\Solution{\Dummy@Solution}
 \def\setup@solutionmode{%
 	\ifsolutiondelayed\solutiontrue\fi
@@ -239,7 +243,7 @@
 % interface pgfkeys pour geometry
 \newif\ifforced@geometry
 \newif\ifactivated@geometry
-\def\geom@options{}
+\def\geom@options{reversemp}
 
 \cpgesetup[@geometry]{%
 	print/.code=%
@@ -453,6 +457,7 @@
 \cpgenewtitlekeyword{email}{\small\ttfamily}
 \cpgenewtitlekeyword{website}{\small\ttfamily}
 
+
 \NewDocumentCommand\renew@title@format{O{1}mm}{
 	\ifcase #1\relax	
 			\or \csdef{title@#2}{%
@@ -634,9 +639,15 @@
 		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
 		}%
 	\iftitlepage%
-			\titlepage@formats%
-			\csuse{hook@earlybeforetitlepage}%
-			\begin{titlepage}%
+		\if@twocolumn
+			\@restonecoltrue\onecolumn
+ 		\else
+			\@restonecolfalse\newpage
+ 		 \fi
+  		\thispagestyle{empty}%
+  		\setcounter{page}\@ne
+				\titlepage@formats%
+				\csuse{hook@earlybeforetitlepage}%
 				\ifbackground\def\back@code{}\fi%
             	\fil@inner@titlepage%
 				\csuse{hook@beforetitlepage}%
@@ -644,8 +655,11 @@
             		\csuse{cpgetitlepagecontents}%
 				\csuse{hook@titleaftertitlepage}%
            		\csuse{hook@aftertitlepage}%
-			\end{titlepage}%
-			\csuse{hook@lateaftertitlepage}\clearpage%
+			\csuse{hook@lateaftertitlepage}
+		\if@restonecol\twocolumn \else \newpage \fi
+     	\if@twoside\else
+        	\setcounter{page}\@ne
+     	\fi
 	\else%
 			\thispagestyle{plain}%
 			\begingroup\par%
@@ -940,7 +954,8 @@
 	title format/.code=\cpgesettitle{#1},
 	title format*/.code=\cpgesettitle*{#1},
 	scale title/.code=
-		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}} 
+		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
+	logo/.code=\def\cpge@logo{#1},
 }
 \cpgesetup[title]{%
 	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
@@ -1132,7 +1147,7 @@
 				\addtocounter{@devoir}{-1}%
 				\deco@@devoirlabelnumberless{}%
 			\else
-				\deco@@devoirlabel{\@devoir@name}{\label@@@devoir}
+				\deco@@devoirlabel{\@devoir@name}{\label@@devoir}
 			\fi
 		}
 		{\z@}
@@ -1143,8 +1158,8 @@
 		{\@devoirlabel@align%
 			\deco@@devoirlabelnumberless}
 		{\z@}
-		{\@devoir@align\deco@@devoir{##1}}
-		[\csundef@afterexec{hook@afterdevtitle}]
+		{\@devoir@align\deco@@devoir{##1 \\ \csundef@afterexec{hook@afterdevtitle}}}
+		%[\@devoirlabel@align]
 }
 \@devoir@format
 \cpgetitle@spacing{\@devoir}{\z@}{-1cm}{*6}
@@ -1167,14 +1182,19 @@
 %%%%% version interne des titres pour les sujets
 \def\after@problemtitle{%
 	\csundef@afterexec{hook@afterprobtitle}%
-	\ifdef{\problemcounter@name}
-		{
-			\edef\cpge@tmpe{\usevalue{score:\cpge@problem@id}}%
-	 		\ifdefvoid{\cpge@tmpe}{}
-	 			{\par\normalsize\textit{(sur \cpge@tmpe{} points)}}
-		}{}%
+	\iflocalscore%
+		\ifdef{\problemcounter@name}
+			{
+				\edef\cpge@tmpe{\usevalue{score:\cpge@problem@id}}%
+				\ifdefvoid{\cpge@tmpe}{}
+					{\par\normalsize\textit{(sur \cpge@tmpe\space points)}}%
+			}{}%
+	\fi%
 }
 \cpgetitle@shape{display}{problem}[center]
+\ifserie 
+	\cpgetitle@shape{hang}{problem}[right]
+\fi 
 \def\link@problemlabel#1{%
 	\edef\cpge@tmpa{#1}%
 	\unless\ifx\cpge@tmpa\space%
@@ -1333,20 +1353,20 @@
 \cpgeaddkeyword{title}{devoir}{{\LARGE\scshape\csuse{deco@devoir}{\csuse{cpge@devoir}}%
                   \global\cpge@dima\baselineskip}\baselineskip\cpge@dima}
 
-\def\deco@devoir#1#2{{\huge#1} \\ #2}
-\def\deco@devoirlabel#1#2{#1\ #2}
-\cpgesetdeco{devoirlabelnumberless}{}
+\def\deco@@devoir#1#2{{\huge#1} \\ #2}
+\def\deco@@devoirlabel#1#2{#1\ #2}
+\cpgesetdeco{@devoirlabelnumberless}{}
 
 \cpgesetup[@devoir]{%
-	name/.store in=\devoir@name,
+	name/.store in=\@devoir@name,
 	name=sujet,
 	number/.code=\setcounter{@devoir}{\numexpr#1-1},
 	after title/.code=\title@parser{\begingroup#1\endgroup}%
 		\@xp\def\@xp\hook@afterdevtitle\@xp{\title@contents},
 	before title/.code=\title@parser{\begingroup#1\endgroup\par}%
 		\@xp\def\@xp\hook@beforedevtitle\@xp{\title@contents},
-	title deco/.code=\cpgesetdeco{devoir}{#1},
-	label deco/.code=\cpgesetdeco{devoirlabel}{#1},
+	title deco/.code=\cpgesetdeco{@devoir}{#1},
+	label deco/.code=\cpgesetdeco{@devoirlabel}{#1},
 }
 
 \NewDocumentCommand\devoir{s E\op{{}} m o d() d<>}{%
@@ -1387,10 +1407,10 @@
 	}
 \cpgesetdeco{section}{\protect\boldmath\bfseries #1}
 \cpgesetlabel{parti}{|I|}
-\cpgesetdeco{partilabel}{\bfseries#1.\enkskip}
+\cpgesetdeco{partilabel}{\bfseries#1.\enskip}
 \cpgesetdeco{parti}{#1}
 \cpgesetlabel{partii}{|P|.|A|}
-\cpgesetdeco{partiilabel}{\bfseries#1.\enkskip}
+\cpgesetdeco{partiilabel}{\bfseries#1.\enskip}
 \cpgesetdeco{partii}{#1}
 \cpgesetdeco{bigques}{#1 --}
 
@@ -1406,18 +1426,21 @@
 	{\Large\scshape\bfseries%
 	\deco@lpattern\enskip#1\enskip\deco@rpattern}%
 }
+\ifserie 
+	\cpgesetdeco{problem}{\large\ifblank{#1}{\space:\space}{\space(#1)\space:\space}}
+	\cpgesetdeco{problemlabel}{{\large\scshape\bfseries#1}}%
+	\cpgetitle@spacing{\problem}{\z@}{*2}{*1}
+	\cpgetitle@setspacing{\problem}
+\fi 
 \cpgesetdeco*{lpattern}{\cpgesquare}
 \cpgesetdeco*{rpattern}{\cpgesquare}
-
 \cpgesetup[@problem]{%
 	solution/.code=\csuse{solution#1}\solutiondelayedfalse,
 	solution*/.is if=solutiondelayed,
 	hint/.is if=hint,
 	hint*/.is if=hintocg,
+	score/.is if=localscore,
 	solution/.default=true,
-	solution*/.default=true,
-	hint/.default=true,
-	hint*/.default=true,
 	current counter/.code=\letcs\thecurrent@counter{the#1},
 	before/.store in=\hook@beforeproblem,
 	after/.store in=\hook@afterproblem,
@@ -1457,19 +1480,17 @@
 					{\edef\queslist{\csuse{\cpge@problem@id @list}}}%
 			\fi% 
 			\def\xref{\xref@cor}%
-			\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
 		\else%
 			\ifcsdef{eno:\cpge@problem@id}
 				{\ClassError{cpgedev}{\problemcounter@name\space\arabic{\problemcounter@name}\space:\space
 				  Identifiant\space \cpge@problem@id\space déjà\space utilisé}{}}
 				{\csgdef{eno:\cpge@problem@id}{}%
 					\csxdef{label@@\cpge@problem@id}{%
-						\csuse{dudela@\problemcounter@name}\space
+						\null\space\csuse{dudela@\problemcounter@name}\space
 				  		 \csuse{label@\problemcounter@name}%
 					}%
 				}%
 			\def\xref{\xref@eno}%
-			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
 		\fi%
 }
 %%% commande responsable de la formation du titre dans un environnment 
@@ -1559,10 +1580,11 @@
 				\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 				\def\problemcounter@name{#2}%
 				\IfValueT{##2}{\cpgesetup[solution]{##2}}%
+				\edef\cpge@labelprefix{cor:\cpge@problem@id:}
 				\csuse{hook@precor@#2}%
 				\csuse{hook@beforeprobtitle}
-				\setup@id%
 				\@problemtitle{#2}{#3}[##3](##4)<##5>%
+				\setup@id%
 				\csuse{hook@afterprobtitle}
 				\csuse{hook@beforeproblem}%
 			}{%
@@ -1576,10 +1598,11 @@
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 				\def\problemcounter@name{#2}%
 				\IfValueT{##2}{\cpgesetup[solution]{##2}}%
+				\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
 				\csuse{hook@precor@#2}%
 				\csuse{hook@beforeprobtitle}
-				\setup@id%
 				\@problemtitle*{#2}{#3}[##3](##4)<##5>%
+				\setup@id%
 				\csuse{hook@afterprobtitle}
 				\csuse{hook@beforeproblem}%
 			}{%
@@ -1595,8 +1618,9 @@
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
 			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
-			\setup@id%
+			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
 			\@problemtitle{#2}{#3}[##3](##4)<##5>%
+			\setup@id%
 			\setup@sol%
 			\setup@hint%
 			\csuse{hook@beforeproblem}%
@@ -1614,8 +1638,9 @@
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
 			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
-			\setup@id%
+			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
 			\@problemtitle*{#2}{#3}[##3](##4)<##5>
+			\setup@id%
 			\setup@sol%
 			\setup@hint%
 			\csuse{hook@beforeproblem}%
@@ -1769,42 +1794,51 @@
 	}
 
 %%%%%%%%%%%%% Le style des numeros de questions %%%%%%%%%%%%%
-
-\NewDocumentCommand\listbox{O{}m}{#2}
-\processed@maxlabelwidth=2em\relax
-\unless\ifdraft\unless\ifprint
-	\RenewDocumentCommand\listbox{O{}m}{%
-		\tikz [anchor=base, baseline, yshift=.25ex]  
-			\node [
-					generic style, 
-					font=\sffamily\footnotesize\bfseries\strut, 
-					rounded corners=2.4\p@, 
-					inner xsep=4\p@, 
-					inner ysep=\p@,  
-					#1
-				] {#2};%
-	}
-	\tikzset{%
-		collink/.style={%
-			fill=linkcol, 
-			draw=none, 
-			text=white},
-		enodeco/.style={%
-			text width=\curr@textwidth,
-			}
-	}
-\fi\fi%
+\cpgesetup[listbox]{
+	enodeco/.code=\def\boxing@item##1{\hb@xt@\curr@textwidth{\left@listfil##1\right@listfil}},
+	soldeco/.code=\def\boxing@item##1{\bfseries ##1.\enskip},
+	.unknown/.code=\relax
+}
+\let\boxing@item\deco@fake 
+\NewDocumentCommand\listbox{O{}m}{%
+	\cpgesetup[listbox]{#1}%
+	\boxing@item{#2}%
+}
+\AtEndPreamble{
+	\unless\ifdraft\unless\ifprint
+		\RenewDocumentCommand\listbox{O{}m}{%
+			\tikz [anchor=base, baseline, yshift=.25ex]  
+				\node [
+						generic style, 
+						font=\sffamily\footnotesize\bfseries\strut, 
+						rounded corners=2.4\p@, 
+						inner xsep=4\p@, 
+						inner ysep=\p@,  
+						#1
+					] {#2};%
+		}
+		\tikzset{%
+			collink/.style={%
+				fill=linkcol, 
+				draw=none, 
+				text=white},
+			enodeco/.style={%
+				text width=\curr@textwidth,
+				}
+		}
+	\fi\fi%
+}
 \let\show@quesscore\relax
 \cpgesetdeco{link@}{%
 	\show@quesscore%
 	\ifcpge@withsol%
-		\hypersetup{linkcolor=white}%
+		\unless\ifprint\hypersetup{linkcolor=white}\fi%
 		\hypertarget%
 			{hyeno:\cpge@problem@id:\csuse{label@\cpge@listctr}}%
 			{\hyperlink{hysol:\cpge@problem@id:\csuse{label@\cpge@listctr}}{%
 				\listbox[enodeco, collink, align=right]{#1}}%
 			}%
-	\else%
+	\else% 
 		\listbox[enodeco, align=center]{#1}%
 	\fi%
 }
@@ -1812,7 +1846,9 @@
 	\show@quesscore\listbox[enodeco, align=center]{#1}%
 }
 \cpgesetdeco{emptylabel}{\listbox{#1}}
-%%%%% hyperlien ou pas 
+%%%%% hyperlien ou pas
+\cpgesetdeco{score}{#1\kern\p@\vrule}
+\def\score#1{\marginpar{\null\hfill\deco@score{\strut #1}\kern6\p@}}
 \def\set@solutionslinks{
 	\edef\score@width{\dimexpr\score@placement\@enumdepth\relax}%
 	\def\outerdeco@list{%
@@ -1834,11 +1870,11 @@
 \def\cpge@tab@row#1{\ifblank{#1}{}{#1\\}}
 \def\cpge@tab@score#1{%
 	\ttfamily\footnotesize%
-	\def\arraystretch{.55}%
+	\def\arraystretch{.58}%
 	\raisebox{\fntht 1}{\tabular[t]{@{}c@{}}\in@parser\cpge@tab@row{#1}\endtabular}%
 }
 \cpgesetdeco{quesscore}{#1\kern\p@\vrule\kern3\p@}
-\def\print@score#1{\ifscore%
+\def\print@eno@score#1{\ifscore%
 	\llap{\smash{\hb@xt@\score@width{\hb@xt@\Gm@littlemargin{\hss\deco@quesscore{\cpge@tab@score{#1}}}\hss}}}%
 	\global\let\show@quesscore\relax%
 \fi}
@@ -1870,9 +1906,10 @@
 	#1%
 }
 \NewDocumentCommand\x@ques{o E{\sc\zp}{{}{@}} d() d<>}{%
+	\def\ques@score@{#2}%
 	\ifblank{#2}{}{%
 		\global\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
-		\def\show@quesscore{\print@score{#2}}%
+		\def\show@quesscore{\print@eno@score{#2}}%
 	}%
 	\ifstrequal{#3}{@}{}%
             {\addtocounter{\cpge@listctr}{#3}}%
@@ -1885,7 +1922,7 @@
 		{\cpge@item}%
 	\ifcpge@withsol%
 		\IfValueTF{#5}{\gdef\ques@label@{#5}}{\gdef\ques@label@{}}%
-		\xappto\queslist{{\csuse{label@\cpge@listctr}}{\ques@label@},}
+		\xappto\queslist{{\csuse{label@\cpge@listctr}}{\ques@label@}{\ques@score@},}
 	\fi%
 	\begingroup%
 	\IfValueT{#4}{\def\@currentlabelname{#4}\deco@itemtitle{#4}}%
@@ -2077,7 +2114,7 @@
 \def\set@pageref@eno#1{%
 	\ifcsdef{r@eno:\problem@id:#1}%
 		{\def\pageref@eno{%
-			\ \deco@pageref{\pageref*{eno:\problem@id:#1}}}%
+			\space\deco@pageref{\pageref*{eno:\problem@id:#1}}}%
 		}{}%
 }
 \def\set@pageref@cor#1{%
@@ -2186,9 +2223,9 @@
 			}%
 }
 \def\poorref{\xref\r}
-\NewDocumentCommand\xref@numeno{t\n m}{%
-	\IfBooleanTF{#1}{\def\ques@arn{}}{\let\ques@arn\questionautorefname}%
-	\hyperlink{hyeno:\problem@id:#2}{\ques@arn\space#2}%
+\NewDocumentCommand\xref@numeno{t\n t\e t\c t\a m}{%
+	\IfBooleanTF{#1}{\let\ques@arn\relax}{\let\ques@arn\questionautorefname}%
+	\hyperlink{hyeno:\problem@id:#5}{\ques@arn\space#5}%
 }
 \NewDocumentCommand\xref@numcor{t\n t\e t\c t\a m}{%
 	\IfBooleanTF{#1}%
@@ -2215,7 +2252,7 @@
 	\@itemdepth\@ne%
    	\list\relax%
         {%
-         \listparindent\z@%
+         \listparindent\parindent%
 		  \labelwidth\z@%
 		   \itemindent\labelsep%
 			\itemsep\medskipamount%
@@ -2226,17 +2263,17 @@
 \def\endxsol{\ifsolutionlist\endlist\fi}
 \def\setup@xsol{\let\xsol\first@xsol}
 
-\def\get@itemandlabel#1#2{\def\curr@item{#1}\def\curr@label{#2}}
+\def\get@itemlabelscore#1#2#3{\def\curr@item{#1}\def\curr@label{#2}\def\curr@score{#3}}
 \def\queslist@pop#1\cpge@nil{
 	\in@{,}{#1}
 	\ifin@
 		\queslist@pop@#1\cpge@nil%
 	\else
-		\ifblank{#1}{\def\curr@item{FixMe}}{\get@itemandlabel#1}%
+		\ifblank{#1}{\def\curr@item{FixMe}}{\get@itemlabelscore#1}%
 	\fi%
 }
 \def\queslist@pop@#1,#2\cpge@nil{%
-	\get@itemandlabel#1%	
+	\get@itemlabelscore#1%	
 	\def\queslist{#2}%
 }
 \def\first@xsol{%
@@ -2260,8 +2297,9 @@
 }
 \DeclareDocumentCommand\real@xsol{od()d<>}{%
 	\IfValueTF{#1}
-		{\def\curr@item{#1}}
+		{\def\curr@item{#1}\def\curr@score{}}
 		{\@xp\queslist@pop\queslist\cpge@nil}%
+	\ifdefempty\curr@score{}{\let\show@quesscore\print@cor@score}%
 	%\show\curr@item
 	\item[\curr@item]%
 	\begingroup%
@@ -2283,6 +2321,11 @@
 	}%
 	\endgroup
 }
+\def\print@cor@score{%
+	\ifscore%
+		\llap{\smash{\hb@xt@\Gm@littlemargin{\@xp\hss\@xp\deco@quesscore\@xp{\@xp\cpge@tab@score\@xp{\curr@score}}}\hss}}%
+		\global\let\show@quesscore\relax%
+	\fi}
 \NewDocumentCommand\xzapsol{o}{%
 	\IfValueF{#1}{\@xp\tmp@queslist@pop\@xp{\queslist}}
 	\IfValueT{#1}{%
@@ -2294,6 +2337,8 @@
 		}
 	}	
 \def\outer@sol@deco#1{%
+	\show@quesscore%
+	\unless\ifprint\hypersetup{linkcolor=white}\fi%
 	\hypertarget{hysol:\cpge@problem@id:#1}%
 		{\hyperlink{hyeno:\cpge@problem@id:#1}%
 			{\deco@link@sol{#1}}}%
@@ -2315,22 +2360,28 @@
 \cpgesetdeco{enumi}{\bfseries#1.}
 \cpgesetdeco{enumii}{\bfseries#1.}
 \cpgesetdeco{enumiii}{\bfseries#1.}
-\unless\ifdraft
-	\unless\ifprint 
-		\cpgesetdeco{enumi}{\bfseries#1}
-		\cpgesetdeco{enumii}{\bfseries#1}
-		\cpgesetdeco{enumiii}{\bfseries#1}
-	\fi 
-\fi
-
-\AtBeginDocument{
+\AtEndPreamble{
+	\unless\ifdraft
+		\unless\ifprint 
+			\cpgesetdeco{enumi}{\bfseries#1}
+			\cpgesetdeco{enumii}{\bfseries#1}
+			\cpgesetdeco{enumiii}{\bfseries#1}
+		\fi 
+	\fi
+}
+\AtEndPreamble{
 	\ifcompact
 		\cpgesetenum*{1}{marge*}
 		\cpgesetenum*{2}{marge*}
+		\cpgesetenum*{3}{marge*}
 	\else	
 		\cpgesetenum*{1}{marge}
 		\cpgesetenum*{2}{marge*}
+		\cpgesetenum*{3}{marge=1pc}
 	\fi
+	\ifprint 
+		\cpgesetenum{0}{align=l}
+	\fi 
 }
 
 %%%% Décoration du label pour mini
