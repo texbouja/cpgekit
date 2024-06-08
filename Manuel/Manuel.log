@@ -161,8 +161,8 @@ Package: lastpage2e 2023/03/07 v2.0a Decide which 2e lastpage version to use (HM
  (/usr/local/texlive/2023/texmf-dist/tex/latex/lastpage/lastpagemodern.sty
 Package: lastpagemodern 2023-03-07 v2.0a Refers to last page's name (HMM; JPG)
 ) 
-))) (/home/mxbouja/texmf/tex/latex/cpgekit/cpgesubfile.sty
-Package: cpgesubfile 2020/11/14 v2.2 Multi-file projects (package)
+))) (/home/mxbouja/texmf/tex/latex/cpgekit/cpgesubdoc.sty
+Package: cpgesubdoc 2020/11/14 v2.2 Multi-file projects (package)
  (/usr/local/texlive/2023/texmf-dist/tex/latex/import/import.sty
 Package: import 2020/04/01  v 6.2
 )) (/home/mxbouja/texmf/tex/latex/cpgekit/cpgemath.sty

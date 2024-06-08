@@ -345,7 +345,7 @@
 \acro@@plural		{uc}{uniform\'ement continues}
 \acro@@				{bon}{base orthonorm\'ee}
 \acro@@plural		{bon}{bases orthonorm\'ees}
-\acro@@				{pgcd}{plus grand dviseur commun}
+\acro@@				{pgcd}{plus grand diviseur commun}
 \acro@@				{ppcm}{plus petit multiple commun}
 \acro@@				{de}{division euclidienne}
 \acro@@				{cvs}{converge simplement}
@@ -907,7 +907,8 @@
 	\fi%
 }
 \let\cpge@plural\relax
-\def\def@autorefname#1#2{\csdef{#1autorefname}~##1\null{#2\cpge@plural\space\deco@tag{##1}\null}}
+\def\def@autorefname#1#2{\csdef{#1autorefname}~##1\null
+	{#2\cpge@plural\space\deco@tag{##1}\null}}
 \def@autorefname{equation}{équation}
 \def@autorefname{formule}{formule}
 \def@autorefname{relation}{relation}
@@ -1823,34 +1824,34 @@
 %%%%%%%% Environnements basique pour théorèmes et Cie
 %%%%%%%% 
     \theoremstyle{plain}
-    \newtheorem{theo}{Th\'eor\`eme}
-    \newtheorem{theodef}{Th\'eor\`eme et d\'efinition}
-    \newtheorem{ppte}{Propri\'et\'es}
-    \newtheorem{prop}{Proposition}
-	\newtheorem{lemm}{Lemme}
-    \newtheorem*{theo*}{Th\'eor\`eme}
-    \newtheorem*{theodef*}{Th\'eor\`eme et d\'efinition}
-    \newtheorem*{ppte*}{Propri\'et\'es}
-    \newtheorem*{prop*}{Proposition}
-	\newtheorem*{lemm*}{Lemme}
+    \newtheorem{@theo}{Th\'eor\`eme}
+    \newtheorem{@theodef}{Th\'eor\`eme et d\'efinition}
+    \newtheorem{@ppte}{Propri\'et\'es}
+    \newtheorem{@prop}{Proposition}
+	\newtheorem{@lemm}{Lemme}
+    \newtheorem*{@theo*}{Th\'eor\`eme}
+    \newtheorem*{@theodef*}{Th\'eor\`eme et d\'efinition}
+    \newtheorem*{@ppte*}{Propri\'et\'es}
+    \newtheorem*{@prop*}{Proposition}
+	\newtheorem*{@lemm*}{Lemme}
     \theoremstyle{definition}
-    \newtheorem{defi}{D\'efinition}
-    \newtheorem*{defi*}{D\'efinition}
-	\newtheorem{voca}{Vocabulaire}
-    \newtheorem*{voca*}{Vocabulaire}
+    \newtheorem{@defi}{D\'efinition}
+    \newtheorem*{@defi*}{D\'efinition}
+	\newtheorem{@voca}{Vocabulaire}
+    \newtheorem*{@voca*}{Vocabulaire}
 	\theoremstyle{remark}
-	\newtheorem{rema}{Remarque}
-	\newtheorem*{rema*}{Remarque}
+	\newtheorem{@rema}{Remarque}
+	\newtheorem*{@rema*}{Remarque}
 %%%% Frame générique pour théorème et similaire
 \newdimen\xframe@gap
 \xframe@gap=\dimexpr2\fboxrule+2\fboxsep\relax
 \NewDocumentEnvironment{xframe}{m d() d<> +b}
 		{\deco@xframe{\parbox{\linewidth-\xframe@gap}{
 			\IfValueTF{#2}
-				{\IfValueTF{#3}{\begin{#1}[#2]\label{#3}}{\begin{#1}[#2]}}
-				{\IfValueTF{#3}{\begin{#1}\label{#3}}{\begin{#1}}}
+				{\IfValueTF{#3}{\begin{@#1}[#2]\label{#3}}{\begin{@#1}[#2]}}
+				{\IfValueTF{#3}{\begin{@#1}\label{#3}}{\begin{@#1}}}
 			#4
-			\end{#1}}
+			\end{@#1}}
 		}}
 		{}
 \cpgesetdeco{xframe}{\fbox{#1}}

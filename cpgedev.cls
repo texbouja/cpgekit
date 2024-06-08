@@ -62,9 +62,9 @@
 		\def\cpgecomment@list{exercice,probleme,#1},
 	web/.default={},
 	singleimage/.is if=singleimage,
-	thisfile/.is if=thisfile,
-	solution/.code=\solutiontrue\solutiondelayedfalse,%
-	solution*/.code=\solutiontrue\solutiondelayedtrue,%
+	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,%
+	solution/.default=true,
+	solution*/.is if=solutiondelayed,
 	hint/.code=\csuse{hint#1}\csuse{hintocg#1},
 	hint/.default=true,
 	hint*/.code=\csuse{hint#1}\hintocgfalse,
@@ -147,7 +147,7 @@
 
 %%%%% Packages du projet 
 \RequirePackage[customtitles]{cpgebase}
-\RequirePackage{cpgesubfile}
+\RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,7 +171,7 @@
 
 
 %%%% Strategie d'inclusion de fichier
-%%%%  une version modifiée de subfile.sty renommée en cpgesubfile.sty
+%%%%  une version modifiée de subfile.sty renommée en cpgesubdoc.sty
 %%%  
 
 \cpgesetup[include]{
@@ -407,6 +407,7 @@
 	\ifdefempty{\geom@options}{}{
 		\@xp\geometry\@xp{\geom@options}
 	}%
+	\setup@enumstyle%
 }
 \AtEndPreamble{%
 	\unless\ifactivated@geometry
@@ -897,6 +898,10 @@
 			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
 			\RequirePackage[scaled=.88]{FiraMono}
 			\RequirePackage[smallerops,upint]{newtxsf}
+			%\DeclareSymbolFont{AMSm}{U}{ntxsym}{m}{n}
+			%\SetSymbolFont{AMSm}{bold}{U}{ntxsym}{b}{n}
+			%\DeclareFontSubstitution{U}{ntxsym}{m}{n}
+			\DeclareSymbolFontAlphabet{\mathbb}{AMSm}
 			\firaoldstyle
 			\def\TitlingFont{\scshape}
 	}},
@@ -1200,11 +1205,11 @@
 	\unless\ifx\cpge@tmpa\space%
 		\ifsolution%
 			\ifisasolution% 
-				\hypertarget{\cpge@problem@id:cor}
-					{\hyperlink{\cpge@problem@id:eno}{\deco@problemlabel{#1}}}%
+				\Hy@raisedlink{\hypertarget{\cpge@problem@id:cor}{}}%
+				\hyperlink{\cpge@problem@id:eno}{\deco@problemlabel{#1}}%
 		\else%
-			\hypertarget{\cpge@problem@id:eno}
-				{\hyperlink{\cpge@problem@id:cor}{\deco@problemlabel{#1}}}%
+			\Hy@raisedlink{\hypertarget{\cpge@problem@id:eno}{}}%
+			\hyperlink{\cpge@problem@id:cor}{\deco@problemlabel{#1}}%
 		\fi%
 	\else%
 		\deco@problemlabel{#1}%
@@ -1518,14 +1523,13 @@
 		\IfBooleanTF{#1}
 			{\def\cnt@name{#3}}
 			{\def\cnt@name{#3 \csuse{label@#2}}}%
+		\LinkTargetOff
 		\IfValueTF{#5}% 
 			{\cpge@tmpswafalse%
-				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[{\@nx\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}}]{#5}}
+				\problem[{\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}}]{#5}%
 			}{\cpge@tmpswatrue%
-				\begingroup%
-					\edef\cpge@tmpa{\endgroup\@nx\problem[{\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}}]{}}}%
-		\LinkTargetOff\cpge@tmpa\LinkTargetOn%
+				\problem[{\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}}]{}}%
+		\LinkTargetOn%
 		\IfValueT{#6}{%
 			\IfValueTF{#5}
 				{\protected@edef\@currentlabelname{#5}}
@@ -1654,11 +1658,11 @@
 \cpgesetdeco{pattern}{}
 \cpgenewproblem{probleme}{Problème}[problème]{}{|1|}{du problème}(R)
 \cpgenewproblem{exercice}{Exercice}[exercice]{}{|1|}{de l'exercice}(E)
-\cpgenewproblem{cours}{Questions de cours}{}{|1|}{des questions de cours}(K)
+\cpgenewproblem{cours}{Questions de cours}[questions de cours]{}{|1|}{des questions de cours}(K)
 \cpgenewproblem{epreuve}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem{enonce}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem*{Corrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
-\def\label@Corrige{Corrigé\ignorespaces\csuse{label@@\cpge@problem@id}}
+\def\label@Corrige{\unskip Corrigé\ignorespaces\csuse{label@@\cpge@problem@id}}
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%% table des matières
@@ -1784,9 +1788,8 @@
 	\@xp\global\@xp\toks@hint\@xp{\cpge@tmpe}
 \@esphack}
 \def\xhint#1{%
-	\hypertarget{hint:\cpge@problem@id:#1}%
-		{\hyperlink{eno:\cpge@problem@id:#1}%
-			{\deco@link@sol{#1}\enskip}}%
+	\Hy@raisedlink{\hypertarget{hint:\cpge@problem@id:#1}{}}%
+	\hyperlink{eno:\cpge@problem@id:#1}{\deco@link@sol{#1}\enskip}%
 }
 \def\x@hint{%
 	\set@xhint%
@@ -1831,14 +1834,18 @@
 \let\show@quesscore\relax
 \cpgesetdeco{link@}{%
 	\show@quesscore%
-	\ifcpge@withsol%
-		\unless\ifprint\hypersetup{linkcolor=white}\fi%
-		\hypertarget%
-			{hyeno:\cpge@problem@id:\csuse{label@\cpge@listctr}}%
-			{\hyperlink{hysol:\cpge@problem@id:\csuse{label@\cpge@listctr}}{%
-				\listbox[enodeco, collink, align=right]{#1}}%
-			}%
-	\else% 
+	\ifsolution%
+		\ifcpge@withsol%
+			\unless\ifprint\hypersetup{linkcolor=white}\fi%
+			\Hy@raisedlink{\hypertarget%
+				{hyeno:\cpge@problem@id:\csuse{label@\cpge@listctr}}{}}%
+				\hyperlink{hysol:\cpge@problem@id:\csuse{label@\cpge@listctr}}{%
+					\listbox[enodeco, collink, align=right]{#1}%
+				}%
+		\else% 
+			\listbox[enodeco, align=center]{#1}%
+		\fi%
+	\else%
 		\listbox[enodeco, align=center]{#1}%
 	\fi%
 }
@@ -1890,7 +1897,7 @@
 		{\xenum\op{switchdeco,#2}}%%
 	\set@solutionslinks%
 	}
-\let\endquestions\exit 
+\let\endquestions\endxenum
 \NewDocumentCommand\startques{!t\r E{\op}{{}} }{%
 	\IfBooleanTF{#1}%
 		{\begin{xenum}\op{switchdeco,r,#2}}%
@@ -1947,7 +1954,7 @@
 \def\handtorightlink#1{%
 	\ifsolution%
 		\ifhmode\par\nobreak\noindent\fi%%
-		\hypertarget{hyeno:#1}{}
+		\Hy@raisedlink{\hypertarget{hyeno:#1}{}}
 		\ifcompact%
 			\hyperlink{hysol:#1}{%
 				\deco@link@{\fontsize{12}{10}\normalfont\faHandORight}}%
@@ -1963,12 +1970,10 @@
 	\fi%
 	}
 \def\handtoleftlink#1{%
-	\hypertarget{hysol:#1}%
-		{%
+	\Hy@raisedlink{\hypertarget{hysol:#1}{}}%
 			\hyperlink{hyeno:#1}{%
 				\deco@link@sol{\fontsize{12}{12}\selectfont\faHandOLeft}}
 			\hskip\labelsep%
-		}%
 }
 
 \NewDocumentCommand\draft@save{!o!d()!d<>}{%
@@ -2012,7 +2017,7 @@
 	\cslet{solution*}\draft@write
 	\open@solfile%
 }
-\long\def\writetosol#1{
+\long\def\writetosol#1{%
     \ifdraft
 		#1%
 	\else
@@ -2020,11 +2025,13 @@
     \fi
 }
 \def\open@solfile{%
-		\unless\ifdraft
+	\unless\ifdraft
+		\Ifcpge@FileEmpty{\aux@dir/\cpge@problem@id-cor.tex}{
 			\cpgeopenfile{solhandle}[\aux@dir/\cpge@problem@id-cor]%
 			\let\solution\real@save%
 			\cslet{solution*}\real@write%
-		\fi%
+		}{}%
+	\fi%
 }
 \NewDocumentEnvironment{cpgewrite}{mm !e\op o !d() !d<>}
 	{%
@@ -2041,7 +2048,7 @@
 	}
 \csdef{corrige*}{\corrige}
 \cslet{endcorrige*}\endcorrige
-\cpgenewproblem*{scorrige}{}{\isasolutiontrue\setup@xsol}{}{}
+\cpgenewproblem*{scorrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
 \def\queslist{}
 \csdef{cpgeval@mines24m2@defined}{}
 \def\close@problem#1{%
@@ -2088,10 +2095,12 @@
 	\unless\ifstraight%
 		\cpgestoprecording%
 		\csuse{before@solutions@hook}%
+		\let\Solution\Just@Solution%
 		\input{\jobname.rec}
 	\fi%
 }	
 \let\corriges\shipoutsolutions
+\let\solutions\shipoutsolutions
 \def\Real@Solution#1[#2](#3)#4#5{
 	\Ifcpge@FileEmpty{\aux@dir/#1-cor.tex}
 		{%
@@ -2103,6 +2112,13 @@
 				\input{\aux@dir/#1-cor}
 			\end{Corrige}%
 	}%
+}
+\def\Just@Solution#1[#2](#3)#4#5{
+			\begin{Corrige}{#1}\op{#4}[#2](#3)
+				\ifdefempty\queslist{\def\queslist{#5}}{}%
+				\ifdefempty\queslist{\noqueslistmessage}{}%
+				\input{\aux@dir/#1-cor}
+			\end{Corrige}%
 }
 \def\Dummy@Solution#1[#2](#3)#4#5{}
 
@@ -2339,9 +2355,8 @@
 \def\outer@sol@deco#1{%
 	\show@quesscore%
 	\unless\ifprint\hypersetup{linkcolor=white}\fi%
-	\hypertarget{hysol:\cpge@problem@id:#1}%
-		{\hyperlink{hyeno:\cpge@problem@id:#1}%
-			{\deco@link@sol{#1}}}%
+	\Hy@raisedlink{\hypertarget{hysol:\cpge@problem@id:#1}{}}%
+	\hyperlink{hyeno:\cpge@problem@id:#1}{\deco@link@sol{#1}}%
 }
 \unless\ifdraft
 	\tikzset{soldeco/.style={collink, text width=\csuse{\cpge@problem@id @maxlabelwidth}}}
@@ -2354,22 +2369,20 @@
 
 %%%% Markup des questions par défaut  %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% styles des compteurs par défaut 
+\def\setup@enumstyle{%
 \cpgesetlabel{enumi}{|X|.|1|}
 \cpgesetlabel{enumii}{|X|.|Q|.|1|}
 \cpgesetlabel{enumiii}{|X|.|Q|.|q|.|1|}
-\cpgesetdeco{enumi}{\bfseries#1.}
-\cpgesetdeco{enumii}{\bfseries#1.}
-\cpgesetdeco{enumiii}{\bfseries#1.}
-\AtEndPreamble{
+\cpgesetdeco{enumi}{\bfseries##1.}
+\cpgesetdeco{enumii}{\bfseries##1.}
+\cpgesetdeco{enumiii}{\bfseries##1.}
 	\unless\ifdraft
 		\unless\ifprint 
-			\cpgesetdeco{enumi}{\bfseries#1}
-			\cpgesetdeco{enumii}{\bfseries#1}
-			\cpgesetdeco{enumiii}{\bfseries#1}
+			\cpgesetdeco{enumi}{\bfseries##1}
+			\cpgesetdeco{enumii}{\bfseries##1}
+			\cpgesetdeco{enumiii}{\bfseries##1}
 		\fi 
 	\fi
-}
-\AtEndPreamble{
 	\ifcompact
 		\cpgesetenum*{1}{marge*}
 		\cpgesetenum*{2}{marge*}

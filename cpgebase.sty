@@ -1544,10 +1544,7 @@
 %%% trop loin des arguments, avalant des espaces et empêchant une lecture
 %%% verbatim correcte.  (prefixer les spec des arguments xparse par !)
 \RequirePackage{verbatim}
-\def\cpge@allocate@out{%
-  \newwrite\cpge@out%
-  \xdef\cpge@allocate@out{}%
-}
+
 \let\cpge@verbatim@begin@hook\@empty
 \let\cpge@verbatim@end@hook\@empty
 \let\cpge@verbatim@change@percent\@empty
@@ -1571,17 +1568,22 @@
   \@esphack%
 }
 
+%%%% Le système record
+\def\cpge@allocate@out{%
+  \newwrite\cpge@out%
+  \gdef\cpge@allocate@out{}%
+}
 \def\cpge@null#1{}
 \newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
-\newif\ifrecordfileopen
+\newif\ifcpgerecordfileopen
 \newcommand{\cpgestartrecording}[1][\jobname.rec]{%
   \let\cpgerecord\cpge@record%
   \edef\cpge@record@file{#1}%
-  \ifcpge@open{recordfile}{}
+  \ifcpge@open{cpgerecordfile}{}
       {
-            \global\recordfile@isopentrue%
+            \global\cpgerecordfileopentrue%
             \cpge@allocate@out%
-            \immediate\openout\cpge@out\cpge@record@file%
+            \@xp\immediate\@xp\openout\@xp\cpge@out\cpge@record@file%
       }%
 }
 
@@ -1740,14 +1742,14 @@
 %%%
 
 \def\Ifcpge@FileExists#1{%
-  \expandafter\ifx\expandafter&\pdffilesize{#1}&%
+  \expandafter\ifx\expandafter&\pdf@filesize{#1}&%
     \expandafter\@secondoftwo
   \else
     \expandafter\@firstoftwo
   \fi
 }
 \def\Ifcpge@FileEmpty#1{%
-\let\cpge@filesize\z@
+\def\cpge@filesize{0}%
 \IfFileExists{#1}{\edef\cpge@filesize{\pdf@filesize{#1}}}{}
   \ifnum0\cpge@filesize>\z@
     \expandafter\@secondoftwo%

@@ -2,7 +2,7 @@
 %% Tribute to Federico Garcia
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{cpgesubfile}[2020/11/14 v2.2 Multi-file projects (package)]
+\ProvidesPackage{cpgesubdoc}[2020/11/14 v2.2 Multi-file projects (package)]
 \ExplSyntaxOn
 \cs_new_eq:NN \cpgesub@StrIfEqTF \str_if_eq:nnTF
 \ExplSyntaxOff
@@ -144,14 +144,14 @@
   }{}{}
   \xapptocmd\includestandalone{\cpgesub@restoreEndFrom\cpgesub@end@}{}{}
 }{}
-\newcommand\ifSubfilesClassLoaded{%
-  \expandafter\ifx\csname ver@cpgesub.cls\endcsname\relax
+\newcommand\ifSubdocClassLoaded{%
+  \expandafter\ifx\csname ver@cpgesubdoc.cls\endcsname\relax
     \expandafter\@secondoftwo
   \else
     \expandafter\@firstoftwo
   \fi
 }
-\ifSubfilesClassLoaded{%
+\ifSubdocClassLoaded{%
   \cpgesub@handleMainDocument
 }{}
 \endinput

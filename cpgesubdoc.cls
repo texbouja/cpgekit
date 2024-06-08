@@ -2,15 +2,15 @@
 %% Adaption de subfile.cls
 %% Tribute to Federico Garcia
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{cpgesubfile}[2023/11/25 v0.1alpha Multi-file projects (class)]
+\ProvidesClass{cpgesubdoc}[2023/11/25 v0.1alpha Multi-file projects (class)]
 \RequirePackage{pgfopts}
 \RequirePackage{etoolbox}
 
 \newif\ifsubdoc
 
-\newif\ifcolle
 \newif\ifdraft
 \newif\ifweb
+\newif\ifserie
 \newif\ifsingleimage
 \newif\ifthisfile \thisfiletrue
 \newif\ifstraight
@@ -20,26 +20,31 @@
 \newif\ifcompact
 \newif\ifsolution
 \newif\ifsolutiondelayed
+\newif\ifproof
+\newif\ifproofdelayed
 \newif\ifhint
 \newif\ifhintocg
 \newif\ifstriptitle
+\newif\ifscore
 \def\class@options{}
 
 \pgfkeys{IGSD/.cd,
 	draft/.is if=draft,
 	straight/.is if=straight,
-	proof/.is if=proof,
 	compact/.is if=compact,
 	nocolor/.is if=nocolor,
 	dark/.is if=dark,
-	solution/.code=\solutiontrue\solutiondelayedfalse%
-			\justificationfalse,
-	solution*/.code=\solutiontrue\solutiondelayedtrue%
-			\justificationfalse,
-	hint/.code=\csuse{hint#1}\csuse{hintocg#1}\justificationfalse,
+	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,%
+	solution/.default=true,
+	solution*/.is if=solutiondelayed,
+	proof/.code=\csname proof#1\endcsname\proofdelayedfalse,%
+	proof/.default=true,
+	proof*/.is if=proofelayed,
+	hint/.code=\csuse{hint#1}\csuse{hintocg#1},
 	hint/.default=true,
-	hint*/.code=\csuse{hint#1}\hintocgfalse\justificationfalse,
+	hint*/.code=\csuse{hint#1}\hintocgfalse,
 	hint*/.default=true, 
+	serie/.is if=serie, 
 	article/.code={
 		\def\cpge@class{article}
 	},
@@ -67,8 +72,8 @@
 %   \let\preamble@file\CurrentOption
 % }
 %\ProcessOptions
-\ProcessPgfOptions{/IGSD}
 \subdoctrue
+\ProcessPgfOptions{/IGSD}
 \let\@classoptionslist\relax
 \RequirePackage{import}
 \let\cpgesub@documentclass\documentclass
