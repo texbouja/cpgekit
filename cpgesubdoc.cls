@@ -45,15 +45,6 @@
 	hint*/.code=\csuse{hint#1}\hintocgfalse,
 	hint*/.default=true, 
 	serie/.is if=serie, 
-	article/.code={
-		\def\cpge@class{article}
-	},
-	report/.code={
-		\def\cpge@class{report}
-	},
-	book/.code={
-			\def\cpge@class{book}
-	},
 	.unknown/.code={
 		\expandafter\appto\expandafter\class@options\expandafter		
 			{\pgfkeyscurrentname,}
@@ -61,12 +52,16 @@
   	master/.code={
     	\def\preamble@file{#1}
  	},
-	web/.code=\compacttrue\webtrue\def\convert@options{}
-		\def\cpgecomment@list{quiz,notations,#1},
- 	web/.default={},
+	web/.code=\compacttrue\webtrue%
+		\ifundef\convert@option{\def\convert@options{}}{}
+		\def\cpgecomment@list{#1},
+	web/.default={theo,exer,probleme,exercice},
+	convert/.code=\appto\convert@options{,#1},
 	singleimage/.is if=singleimage,	
 }
-
+\def\preamble@file{
+	\ClasseError{cpgesubdoc}{Utiliser l'option master= pour undiquer le fichier maitre}{}
+}
 % \DeclareOption*{%
 %   \typeout{Preamble taken from file `\CurrentOption'}%
 %   \let\preamble@file\CurrentOption
@@ -78,7 +73,7 @@
 \RequirePackage{import}
 \let\cpgesub@documentclass\documentclass
 \def\documentclass{%
-  \let\documentclass\cpgesub@documentclass
+  \let\documentclass\cpgesub@documentclass%
   \LoadClass
 }
 \filename@parse{\preamble@file}

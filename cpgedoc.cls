@@ -16,7 +16,6 @@
 	\newif\ifdraft
 	\newif\ifweb
 	\newif\ifsingleimage
-	\newif\ifsoutien 
 	\newif\ifdark
 	\newif\ifprint
 	\newif\ifnocolors
@@ -40,51 +39,61 @@
 	proof*/.is if=proofelayed,
 	compact/.is if=compact,
 	nocolor/.is if=nocolor, 
-	web/.code=\compacttrue\webtrue\def\convert@options{}
-		\def\cpgecomment@list{exer,theo,#1},
-	web/.default={},
+	web/.code=\compacttrue\webtrue%
+		\ifundef\convert@option{\def\convert@options{}}{}
+		\def\cpgecomment@list{#1},
+	web/.default={theo,exer},
+	convert/.code=\appto\convert@options{,#1},
 	singleimage/.is if=singleimage,
-	soutien/.code={
-		\soutientrue\courstrue
-		\ifundef{\cpge@class}{\def\cpge@class{article}}{}
-	},
-	report/.code={
-		\def\cpge@class{report}
-	},
-	book/.code={
-		\def\cpge@class{book}
-	},
 	.search also=/IGC,
 }
 \pgfkeys{IGC/.is family, IGC/.cd,
+	report/.code={\def\cpge@class{report}},
+	book/.code={\def\cpge@class{book}\cspreto\class@options{oneside}},
 	.unknown/.code={%
 		\expandafter\appto\expandafter\class@options\expandafter
 		{\pgfkeyscurrentname,}
 	},
-	convert/.code=\ifundef\cpgecomment@list{\pgfkeysalso{web}}{}\appto\convert@options{,convert={#1}},
-	convert/.default=true,
 	draft/.style={},
-	soutien/.style={},
 	compact/.style={},
 	solution/.style={},
 	solution*/.style={},
 	proof/.style={},
 	proof*/.style={},
-	article/.style={},
-	report/.style={},
-	book/.style={},
+	web/.style={},
+	convert/.style={},
 }
 \@ifundefined{ifsubdoc}
 	{\ProcessPgfOptions{/IGCS}}
 	{\ProcessPgfOptions{/IGC}}
 
-\ifundef\cpge@class{\def\cpge@class{article}}{}
-\ifdraft\appto\class@options{draft}\fi
+\ifundef\cpge@class{\def\cpge@class{report}}{}
+\def\class@options{11pt}
+\ifdraft\appto\class@options{,draft}\fi
 \begingroup
 \edef\cpge@tmpa{\endgroup%
 	\noexpand\LoadClass[\class@options]{\cpge@class}
 }
 \cpge@tmpa
+
+\ifundef\NewDocumentCommand
+	{\RequirePackage{xparse}}
+	{}
+
+
+%%%% Packages du projet 
+\RequirePackage{cpgebase}
+\RequirePackage{cpgesubdoc}
+\RequirePackage{cpgemath}
+\ifbool{web}{\endinput}{}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Basculement vers la conversion en images %%%%%%	
+\ifbool{web}
+	{\RequirePackage{cpgeweb}\endinput}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \ifdraft
 		\PassOptionsToPackage{draft}{pgf}
 		\PassOptionsToPackage{draft}{hyperref}
@@ -92,6 +101,7 @@
 \AtEndPreamble{%
 	\ifnocolors\selectcolormodel{gray}\fi
 }
+
 \newtoks\toks@sol
 \newtoks\toks@prv 
 \def\setup@solproofmode{%
@@ -127,24 +137,6 @@
 	\setup@solproofmode%
 }
 
-\ifundef\NewDocumentCommand
-	{\RequirePackage{xparse}}
-	{}
-
-
-%%%% Packages du projet 
-\RequirePackage{cpgebase}
-\RequirePackage{cpgesubdoc}
-\RequirePackage{cpgemath}
-\ifbool{web}{\endinput}{}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% Basculement vers la conversion en images %%%%%%	
-\ifbool{web}
-	{\RequirePackage{cpgeweb}\endinput}{}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %%%%% Other package initialisation
 %\RequirePackage{currfile}
@@ -176,8 +168,6 @@
 	proof section/.default={\section}{Démonstrations des résultats},
 	solution section, proof section 
 }
-
-
 \DeclareDocumentCommand\cpgeinclude{om}{%%
 	\begingroup%
 	\toks@sol{}%
@@ -274,506 +264,12 @@
 
 \def\cpgeincludeweb#1{} 
 
-%%%%% Geometrie du document
-
-\RequirePackage{geometry}
-\RequirePackage{cuted}
-
-
-% patch de la commande qui contrôle le format de papier
-\newdimen\Gm@littlemargin
-\Gm@littlemargin\z@
-\dimdef\compactlimit{127mm}
-\preto\Gm@adjustpaper{%
- 	\ifdim\linewidth<\compactlimit\relax
- 		\compacttrue%
- 	\fi}
-
-% ajout de formats, reconnaissables par la commande \goemetry
-\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(135,240){truemm}}
-\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}
-\@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(180,288){truemm}}
-\@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}
-\@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}
-%\define@key{Gm}{a4paper}[true]{\Gm@setpaper@ifpre{a4paper}}%
-\define@key{Gm}{sc16x9}[true]{\Gm@setpaper@ifpre{sc16x9}}
-\define@key{Gm}{sc19x9}[true]{\Gm@setpaper@ifpre{sc19x9}}
-\define@key{Gm}{sc16x10}[true]{\Gm@setpaper@ifpre{sc16x10}}
-\define@key{Gm}{sc4x3}[true]{\Gm@setpaper@ifpre{sc4x3}}
-\define@key{Gm}{sc4x3beamer}[true]{\Gm@setpaper@ifpre{sc4x3b}}
-% ajout de la cl\'e Gm@littlemargin
-\define@key{Gm}{littlemargin}{%
-        \Gm@setlength\Gm@littlemargin{#1}
-        \Gm@setlength\marginparwidth{#1}%
-        \Gm@setlength\marginparsep\z@%
-}
-\appto\Gm@save{\Gm@savelength{Gm@littlemargin}}
-%\appto\Gm@save{\Gm@saveboolean{compact}}
-
-% interface pgfkeys pour geometry
-\newif\ifforced@geometry
-\newif\ifactivated@geometry
-\def\geom@options{reversemp}
-
-\cpgesetup[@geometry]{%
-	print/.code=%
-		\printtrue%
-		\darkfalse%
-		\compactfalse%
-		\geometry{%
-			a4paper,
-			inner=3.6cm, outer=2.4cm,
-			vmargin={2.4cm,3.6cm}, 
-			littlemargin=4pc
-		}, 
-	2print/.code=%
-		\printtrue%
-		\darkfalse%
-		\compacttrue%
-		\striptitletrue
-		\geometry{%
-			a4paper,
-			twocolumn, columnsep=20truept,
-			%mag=830,
-			inner=1truecm, outer=1truecm,
-			vmargin={2.4truecm,2.4truecm},
-			littlemargin=3.2pc%
-		},
-	lsprint/.code=%
-		\printtrue%
-		\darkfalse%
-		\compactfalse%
-		\striptitlefalse%
-		\geometry{%
-			a4paper,
-			landscape,
-			twocolumn, columnsep=1truecm,
-			%mag=870,
-			inner=1.8truecm, outer=1.8truecm,
-			vmargin={1.5truecm,1.5truecm},
-			littlemargin=3.2pc
-		},
-	draft/.code=%
-		\printfalse%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			a5paper,
-			inner=1.5cm, outer=1.5cm,
-			vmargin={1.8cm,2.4cm},
-			littlemargin=4pc 
-		}, 
-	phone/.code=%
-		\printfalse%
-		\darktrue%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			sc16x9,
-			mag=1100,
-			hmargin={1cm,.5cm},
-			vmargin={1.2cm,1.4cm},
-			littlemargin=3.2pc,
-		},%
-	phone 19x9/.code=%
-		\printfalse%
-		\darktrue%
-		\compacttrue%
-		\titlepagetrue%
-		\geometry{%
-			sc19x9,
-			hmargin={1cm,.5cm},
-			vmargin={1.4cm,1.8cm},
-			littlemargin=2.4em
-		},%
-	beamer/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3beamer,
-			hmargin={1cm,.5cm},
-			vmargin={.4cm,1.2cm},
-			littlemargin=4pc
-		},%
-	tablet/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3,
-			hmargin={1.8cm,1.8cm},
-			vmargin={1.5cm,2cm},
-			%mag=1100,
-			littlemargin=4pc
-		},%
-	lstablet/.code=%
-		\printfalse%
-		\compacttrue%
-		\darkfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc4x3,
-			landscape,
-			twocolumn, columnsep=24pt,
-			hmargin={.5cm,.5cm},
-			vmargin={1.2cm,1.4cm},
-			%mag=880,
-			littlemargin=3.2pc
-		},%
-	tablet 16x10/.code=%
-		\printfalse%
-		\darkfalse%
-		\compactfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc16x10,
-			hmargin={1cm,1cm},
-			vmargin={1.5cm,2cm},
-			%mag=1100,
-			littlemargin=4pc
-		},%
-	lstablet 16x10/.code=%
-		\printfalse%
-		\compacttrue%
-		\darkfalse%
-		\titlepagetrue%
-		\geometry{%
-			sc16x10,
-			landscape,
-			twocolumn, columnsep=32pt,
-			hmargin={.8cm,.8cm},
-			vmargin={1.2cm,1.4cm},
-			%mag=880,
-			littlemargin=3.2pc
-		},%
-}
-\cpgesetup[geometry]{%
-	.unknown/.code=\edef\tmp@value{#1}\ifdefvoid{\tmp@value}{\eappto\geom@options{%
-		\pgfkeyscurrentname,}}{\eappto\geom@options{%
-		\pgfkeyscurrentname={\tmp@value},}}, 
-	force compact/.is if=compact,
-	force geometry/.is if=forced@geometry,
-	draft/.is if=draft,
-	dark/.is if=dark
-}
-\NewDocumentCommand\cpgegeometry{O{}m}{%
-	\unless\ifdraft%
-			\forced@geometrytrue%
-	\fi%
-	\cpgesetup[geometry]{#1}
-	\ifactivated@geometry\else%
-		\activated@geometrytrue%
-		\ifforced@geometry
-			\cpgesetup[@geometry]{#2}
-		\else
-			\ifdraft
-				\cpgesetup[@geometry]{draft}
-			\fi
-		\fi 
-	\fi
-	\ifdefempty{\geom@options}{}{
-		\@xp\geometry\@xp{\geom@options}
-	}%
-}
-\AtEndPreamble{%
-	\unless\ifactivated@geometry
-			\cpgesetup[@geometry]{draft}
-	\fi% 
-	\def\multicols#1{\relax}
-	\csdef{multicols*}#1{\relax}
-	\let\endumlticols\relax 
-	\cslet{endmulticols*}{\relax}
-	\unless\if@twocolumn
-		\unless\ifcompact\RequirePackage{multicol}\fi
-	\fi
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Titre du document %%%%%
-\AtEndPreamble{%
-	\ifdim\paperwidth>127mm\relax
-		\def\cpge@relsize{\relsize{2}}
-	\else
-		\def\cpge@relsize{\relsize{1}}%
-	\fi%
-}
-\newif\iftitlepage
-\newdimen\cpge@ttlw
-\cpge@ttlw=3cm
-%% Ajout des mots cles du titre
-\DeclareDocumentCommand\cpgenewtitlekeyword{mm}{%
-   \cpgeaddkeyword{title}{#1}{%
-      {#2\cpge@relsize\csuse{cpge@#1@format}%
-      \global\cpge@dima\baselineskip}%
-      \baselineskip\cpge@dima%
-   }
-}
-\cpgenewtitlekeyword{centre}{\normalsize\scshape}
-\cpgenewtitlekeyword{classe}{\normalsize\scshape}
-\cpgenewtitlekeyword{document}{\Large\scshape}
-\cpgenewtitlekeyword{epreuve}{\large\bfseries}
-\cpgenewtitlekeyword{theme}{\Large\scshape}
-\cpgenewtitlekeyword{subtheme}{\large\scshape\itshape}
-\cpgenewtitlekeyword{texte}{\tiny\sffamily\slshape} 
-\cpgenewtitlekeyword{periode}{\small\itshape}
-\cpgenewtitlekeyword{auteur}{\small\textit{\cpge@preauthor}~}
-\cpgenewtitlekeyword{email}{\small\ttfamily}
-\cpgenewtitlekeyword{website}{\small\ttfamily}
-
-
-\NewDocumentCommand\renew@title@format{O{1}mm}{
-	\ifcase #1\relax	
-			\or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{3\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-			 \or 
-			 \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{2\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-			  \or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{1.5\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-				 \or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-	\fi 
-} 
-\def\titlepage@formats{%
-		\renew@title@format[3]{matiere}{\bfseries}%
-		\renew@title@format[4]{document}{\scshape}%
-		\renew@title@format[3]{theme}{\scshape}%
-		\renew@title@format[2]{subtheme}{\scshape\itshape}%
-		\renew@title@format{periode}{\itshape}%
-		%\renew@title@format{\footnotesize\textit{\cpge@preauthor}\small~}{auteur}%
-		%\renew@title@format{\small\ttfamily}{email}%
-		%\renew@title@format{\small\ttfamily}{website}%
-}
-
-%% Commande \title@parser qui traduit les mots cles 
-%% pour le titre. Le resultat
-%% est stocke dans la macro \title@contents
-\long\def\title@change#1{%
-   \StrSubstitute{\title@contents}
-     {|#1|}{\csname title@#1\endcsname}[\title@string]%
-     \global\let\title@contents\title@string
- }
-\long\def\title@parser#1{\begingroup%
-    \gdef\title@contents{#1}%
-    \exploregroups\expandarg%
-    \forlistloop{\title@change}{\list@title}%
-    \endgroup%
-}
-
-%% Commande qui specifie le format du titre.
-%% Elle utilise \title@contents pour formater
-%% la macro \cpgetitlecontents (titre normal) 
-%% ou \cpgetitlepagecontents, si * (page de garde)
-\DeclareDocumentCommand\cpgesettitle{s+m}{%
-	\title@parser{#2}%
-	\IfBooleanTF{#1}
-		{%
-			\@xp\long\@xp\gdef
-				\@xp\cpgetitlepagecontents\@xp
-					{\title@contents}
-		}{%
-			\@xp\long\@xp\gdef
-				\@xp\cpgetitlecontents\@xp
-					{\title@contents}
-		}%
-}
-
-%% commande qui prend en charge
-%% une eventuelle description
-%% du format par l'utilisateur
-%% (argument entre () de la commande \titre)
-\DeclareDocumentCommand\cpge@localtitle{s+m}{%
-	\title@parser{#2}%
-	\IfBooleanTF{#1}
-		{%
-			\@xp\long\@xp\def
-				\@xp\cpgetitlepagecontents\@xp
-					{\title@contents}
-		}{%
-			\@xp\long\@xp\def
-				\@xp\cpgetitlecontents\@xp
-					{\title@contents}
-		}%
-}
-
-%% Formats par defaut
+%%%% Chargement des differents packages 
+\RequirePackage{cpgecommon}
+%% Formats par defaut des titres
 \cpgesettitle{|document| \\ |theme| \\ |periode|}
 \cpgesettitle*{|document| \\ |theme| \\ |periode|}
 
-%% Options du formatage 
-\def\cpgesetuptitle{\cpgesetup[title]}
-\cpgesetuptitle{
-	inner align/.is choice, %alignement interne 
-	inner align/l/.code=\let\fil@inner\raggedright, 
-	inner align/r/.code=\let\fil@inner\raggedleft,
-	inner align/c/.code=\let\fil@inner\centering,
-   	inner align*/.is choice, %alignement interne dans titlepage
-	inner align*/c/.code=\let\fil@inner@titlepage\centering,
-	inner align*/l/.code=\let\fil@inner@titlepage\raggedright, 
-	inner align*/r/.code=\let\fil@inner@titlepage\raggedleft,
-   	outer align/.is choice, % alignement externe
-	outer align/l/.code=\let\fil@outer\raggedright,
-	outer align/r/.code=\let\fil@outer\raggedleft,
-	outer align/c/.code=\let\fil@outer\centering,
-	before/.code=\def\hook@beforetitle{#1}, % hook avant titre normal 
-	after/.code=\def\hook@aftertitle{#1}, % hook apres titre normal 
-	before*/.code=\def\hook@beforetitlepage{#1}, % hook avant titre, titlepage
-	after*/.code=\def\hook@aftertitlepage{#1}, % hook apres titre, titlepage
-	before title/.code=\title@parser{#1}%
-               \@xp\def\@xp 
-		          \hook@titlebeforetitle\@xp
-                {\title@contents}, % prefix au format
-	after title/.code=\title@parser{#1}%
-               \@xp\def\@xp
-		         \hook@titleaftertitle\@xp
-               {\title@contents}, % postfix au format 
-	before title*/.code=\title@parser{#1}
-               \@xp\def\@xp 
-		         \hook@titlebeforetitlepage\@xp
-               {\title@contents}, % prefix au format
-	after title*/.code=\title@parser{#1}%
-               \@xp\def\@xp
-		         \hook@titleaftertitlepage\@xp
-               {\title@contents}, % postfix au format 
-	late after/.code=\def\hook@lateaftertitle{#1},
-	early before*/.code=\def\hook@earlybeforetitlepage{#1}, 
-	late after*/.code=\def\hook@lateaftertitlepage{#1},
-	width/.code=\dimdef\title@width{#1}, % largeur du titre 
-	format/.code=\cpgesettitle{#1}, % specification du format normal 
-	format*/.code=\cpgesettitle*{#1}, % specification du format titlepage 
-	afterskip/.code=\dimdef\aftertitleskip{\bigskipamount*#1}
-         % saut apres titre
-}
-\cpgesetuptitle{
-	inner align/.default=c,
-	inner align*/.default=l,
-	outer align/.default=c,
-	width/.default=\columnwidth,
-	afterskip/.default=3,
-	inner align, 
-	inner align*, 
-	outer align, 
-	width,
-	before=\minipage{\title@width},
-	after=\endminipage,
-	afterskip
-	}
-
-%% La commande utilisateur qui produit le titre
-%% titre normal sans *, page de garde avec *
-%% option [] pour \cpgesetup[title]{}, sinon option par defaut 
-%% option () pour le format, sinon format par defaut
-\NewDocumentCommand\titre{s+e\op+d()}{%
-   \IfBooleanT{#1}{\titlepagetrue}
-   \begingroup%
-	\IfValueT{#2}{\cpgesetup[title]{#2}}%
-	\IfValueT{#3}{%
-		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
-		}%
-	\iftitlepage%
-		\if@twocolumn
-			\@restonecoltrue\onecolumn
- 		\else
-			\@restonecolfalse\newpage
- 		 \fi
-  		\thispagestyle{empty}%
-  		\setcounter{page}\@ne
-				\titlepage@formats%
-				\csuse{hook@earlybeforetitlepage}%
-				\ifbackground\def\back@code{}\fi%
-            	\fil@inner@titlepage%
-				\csuse{hook@beforetitlepage}%
-				\csuse{hook@title@beforetitlepage}%
-            		\csuse{cpgetitlepagecontents}%
-				\csuse{hook@titleaftertitlepage}%
-           		\csuse{hook@aftertitlepage}%
-			\csuse{hook@lateaftertitlepage}
-		\if@restonecol\twocolumn \else \newpage \fi
-     	\if@twoside\else
-        	\setcounter{page}\@ne
-     	\fi
-	\else%
-			\thispagestyle{plain}%
-			\begingroup\par%
-				\fil@outer
-            	\csuse{hook@beforetitle}%
-				\fil@inner
-				\csuse{hook@titlebeforetitle}
-					\csuse{cpgetitlecontents}%
-				\csuse{hook@titleaftertitle}%
-				\csuse{hook@aftertitle}%
-			\endgroup%
-			\csuse{hook@lateaftertitle}
-			\par\addvspace{\aftertitleskip}%
-	\fi%
-   \endgroup%
-   \RenewDocumentCommand\titre{sod()}{}%
-}
-
-\AfterEndPreamble{%
-	\cpgesetup[title]{%
-		early before*={%
-				\null\vskip 1cm plus .1fill 
-				\begin{center}\minipage{.8\linewidth}%
-		},
-		late after*={%
-			\endminipage
-			\end{center}
-			\vskip \z@ plus 1fill\null
-			\pagecolor{pagecol}%
-		},
-	}%
-}
-
-%%%%% tikz et tcolorbox sont est utilis\'es pour les decorations
-
-\RequirePackage[svgnames]{xcolor}
-\ifundef\mathcolor{%
-	\def\mathcolor#1#{\@mathcolor{#1}}
-	\def\@mathcolor#1#2#3{%
-	\protect\leavevmode
-	\begingroup
-		\color#1{#2}#3%
-	\endgroup
-	}
-}{}
-% \unless\ifdraft
-% 	\RequirePackage{tikz} %%
-% 	\usetikzlibrary{calc}
-% \fi
-
-%%%% Chargement des differents packages 
 \RequirePackage{tcolorbox}
 \tcbuselibrary{skins,hooks,breakable,theorems,xparse}
 \usetikzlibrary{calc}
@@ -783,252 +279,6 @@
     }
 }
 \tcbset{maincol/.code=\colorlet{maincol}{#1}}
-% \RequirePackage[unicode,naturalnames]{hyperref}
-% \hypersetup{colorlinks,linkcolor=linkcol}
-% \pdfstringdefDisableCommands{%
-% 	\def\({}%
-% 	\def\){}%
-% }
-% \let\ToP\texorpdfstring
-
-%%% Gestions des couleurs
-%%%
-\pgfkeys{/handlers/.colorlet/.code=
-	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
-}
-\pgfkeys{/handlers/.colordef/.code=
-	\pgfkeysalso{\pgfkeyscurrentpath/.code=\preparecolor{#1}{named}{##1}}
-}
-\def\cpgeset@colors#1#2#3{%
-	\csdef{cpge@#1col}{\ifdark #3\else #2\fi}
-}
-\cpgesetup[colors]{
-	warm/.code 2 args=\cpgeset@colors{warm}{#1}{#2},
-	cold/.code 2 args=\cpgeset@colors{cold}{#1}{#2},
-	neutral/.code 2 args=\cpgeset@colors{neutral}{#1}{#2},
-	main/.code 2 args=\cpgeset@colors{main}{#1}{#2},
-	important/.code 2 args=\cpgeset@colors{important}{#1}{#2},
-	link/.code 2 args=\cpgeset@colors{link}{#1}{#2},
-	fg/.code 2 args=\cpgeset@colors{fg}{#1}{#2},
-	bg/.code 2 args=\cpgeset@colors{bg}{#1}{#2},
-	page/.code 2 args=\cpgeset@colors{page}{#1}{#2},
-	warmcol/.colorlet=warmcol,
-    coldcol/.colorlet=coldcol,
-    neutralcol/.colorlet=neutralcol,
-    linkcol/.colorlet=linkcol,
-	maincol/.colorlet=maincol, 
-	importantcol/.colorlet=importantcol, 
-    fgcol/.colorlet=fgcol,
-    bgcol/.colorlet=bgcol,
-    pagecol/.colorlet=pagecol,
-	default colors/.style={
-    	warmcol=\cpge@warmcol,
-    	coldcol=\cpge@coldcol,
-    	neutralcol=\cpge@neutralcol,
-		maincol=\cpge@maincol,
-		importantcol=\cpge@importantcol,
-    	linkcol=\cpge@linkcol,
-    	fgcol=\cpge@fgcol,
-    	bgcol=\cpge@bgcol,
-    	pagecol=\cpge@pagecol,
-	},
-	tcbtext/.code=\def\cpge@coltext{#1},
-	tcbback/.code=\def\cpge@colback{#1},
-	tcbframe/.code=\def\cpge@colframe{#1},
-	tcbtitle/.code=\def\cpge@coltitle{#1},
-	tcbbacktitle/.code=\def\cpge@colbacktitle{#1},
-	coltext/.colorlet=tcbcoltext,
-	colback/.colorlet=tcbcolback,
-	colframe/.colorlet=tcbcolframe,
-	coltitle/.colorlet=tcbcoltitle,
-	colbacktitle/.colorlet=tcbcolbacktitle,
-	default tcbcolors/.style={
-		coltext=\cpge@coltext,
-		colback=\cpge@colback,
-		colframe=\cpge@colframe,
-		coltitle=\cpge@coltitle,
-		colbacktitle=\cpge@colbacktitle
-	}
-   }
-
-\definecolor{cpgeblue}{HTML}{373A73}
-\definecolor{cpgealtblue}{HTML}{007AFF}
-\definecolor{cpgegreen}{HTML}{8CBA30}
-\definecolor{cpgeblack}{HTML}{1F1F1F}
-   
-\cpgesetup[colors]{    
-	   warm={cpgegreen!85!black}{cpgegreen},
-	   cold={cpgeblue}{cpgealtblue},
-	   main={cpgegreen!85!black}{cpgegreen},
-	   important={DarkRed}{DarkOrange},
-	   link={cpgeblue}{cpgealtblue},
-	   page={white}{cpgeblack},
-	   fg={black}{white},
-	   bg={white}{cpgeblack!90!black},
-	   neutral={gray}{gray},
-	   tcbtext=fgcol,
-	   tcbframe=warmcol,
-	   tcbback=bgcol,
-	   tcbtitle=white, 
-	   tcbbacktitle=warmcol,
-   }
-
-\AtEndPreamble{\ifnocolors\selectcolormodel{gray}\fi}
-\def\reloadcolors{
-	\AtEndPreamble{%
-		\cpgesetup[colors]{default colors}%
-		\cpgesetup[colors]{default tcbcolors}
-		\pagecolor{pagecol}%
-		\color{fgcol}%
-	}%
-	\AtBeginDocument{\color{fgcol}\pagecolor{pagecol}}%
-}%
-\reloadcolors
-
-
-%%%% Fonts loading. 
-\RequirePackage{ifxetex}
-\cpgesetup[font]{%
-	libertine/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[tt=false]{libertine}
-			\RequirePackage[%
-				libertine,smallerops,bigdelims,upint,vvarbb
-			]{newtxmath}
-			\RequirePackage[scaled=.85]{FiraMono}
-			\useosf
-			\def\TitlingFont{\sffamily\scshape}
-	}},
-	lmodern/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\usepackage{lmodern}
-		\RequirePackage[french]{babel}
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	utopia/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage[p,scaled=.98,space]{erewhon}
-		\usepackage[varqu,varl]{inconsolata} % typewriter
-		\usepackage[type1,scaled=.95]{cabin} % sans serif like Gill Sans
-		\usepackage[utopia,vvarbb]{newtxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	palatino/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage{newpxtext}
-		\usepackage[vvarbb]{newpxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	fira/.code={%
-		\def\load@thefonts{%
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
-			\RequirePackage[scaled=.88]{FiraMono}
-			\RequirePackage[smallerops,upint]{newtxsf}
-			\firaoldstyle
-			\def\TitlingFont{\scshape}
-	}},
-	load/.code={%
-		\def\load@thefonts{%
-			\RequirePackage[T1]{fontenc}
-			\RequirePackage[french]{babel}
-			\RequirePackage{#1}
-			\RequirePackage{microtype}
-	}},
-	none/.code={\def\load@thefonts{}},
-	titling font/.store in=\TitlingFont,
-}
-\DeclareDocumentCommand\cpgefont{m}{%
-	\cpgesetup[font]{#1}
-}
-\AtEndPreamble{
-	\ifundef\load@thefonts
-		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
-		{}%
-	\load@thefonts
-	\ifundef\hypersetup{}{%
-	\pdfstringdefDisableCommands{%
-		\def\({}%
-		\def\){}%
-	}
-	\let\ToP\texorpdfstring}
-	\def\label@itemi{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xdiamond$}
-	\def\label@itemii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xsquare$}
-	\def\label@itemiii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
-	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
-	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
-	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
-}
-\let\xdocument\document
-\let\endsxdocument\enddocument
-
-
-%%%% Gestion des themes
-\newdimen\cpge@ttlw
-\cpge@ttlw=3cm
-
-\cpgesetup[theme]{%
-	.search also={/cpge/colors,/cpge/tcb},
-	dark/.is if=dark,
-	draft/.is if=draft,
-	colors/.code=\pgfkeysalso{/cpge/colors/.cd,#1},
-	no colors/.is if=nocolors,
-	font/.code=\cpgefont{#1},
-	libertine/.style={font=libertine},
-	fira/.style={font=fira},
-	utopia/.style={font=utopia},
-	palatino/.style={font=palatino},
-	title page/.is if=titlepage,
-	title format/.code=\cpgesettitle{#1},
-	title format*/.code=\cpgesettitle*{#1},
-	scale title/.code=
-		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
-	logo/.code=\def\cpge@logo{#1},
-}
-\cpgesetup[title]{%
-	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
-}
 \DeclareDocumentCommand\cpgetheme{O{} m}{%
 	\unless\ifdraft
 		\cpgesetup[theme]{#1}
