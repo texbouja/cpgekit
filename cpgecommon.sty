@@ -1,3 +1,306 @@
+\def\filedate{2024/06/06}
+\def\fileversion{v0.1alpha}
+\def\fileauthor{Sadik Boujaida}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cpgecommon}[\filedate\space\fileversion]
+
+\newif\ifcustomtitles
+\DeclareOption{customtitles}{\customtitlestrue}
+%\DeclareOption*{\PassOptionsToPackage{\CurrentOption}{cpgetitle}}
+\ProcessOptions\relax
+
+\RequirePackage{calc}
+\RequirePackage{pgfkeys}
+\RequirePackage{etoolbox}
+\RequirePackage{xstring}
+\RequirePackage{relsize}
+\RequirePackage{array}
+\RequirePackage[svgnames]{xcolor}
+\@ifundefined{NewDocumentCommand}
+	{\RequirePackage{xparse}}
+	{}
+\ifcustomtitles
+   \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
+\else 
+   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
+\fi 
+\RequirePackage{titletoc}
+
+\ifundef\cpgesetup
+{
+	\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
+	\NewDocumentCommand\cpgesetup{o}{%
+      \IfValueT{#1}
+   	   {\pgfkeysifdefined{/cpge/#1/.is family}{}
+			   {\pgfkeys{/cpge/#1/.is family}}}%
+      \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
+   }
+   }{}
+
+\ifundef{\cpgeaddkeyword}{%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Commandes utilitaires multi-usage %%%%%
+\def\cslocal{%
+\let\lorg@cslet=\cslet%
+\let\lorg@csletcs=\csletcs%
+\let\lorg@def=\def%
+\let\lorg@edef=\edef%
+\let\lorg@csdef=\csdef%
+\let\lorg@csedef=\csedef%
+\let\lorg@listadd=\listadd%
+\let\lorg@listeadd=\listeadd%
+\let\lorg@listcsadd=\listcsadd%
+\let\lorg@listcseadd=\listcseadd%
+\let\lorg@csappto=\csappto%
+\let\lorg@cseappto=\cseappto%
+\let\lorg@appto=\appto%
+\let\lorg@eappto=\eappto%
+}
+\def\csglobal{%
+\begingroup\cpge@globaltrue%
+\def\lorg@cslet{\global\cslet}%
+\def\lorg@csletcs{\golbal\csletcs}%
+\let\lorg@def=\gdef%
+\let\lorg@edef=\xdef%
+\let\lorg@csdef=\csgdef%
+\let\lorg@csedef=\csxdef%
+\let\lorg@listadd=\listgadd%
+\let\lorg@listeadd=\listxadd%
+\let\lorg@listcsadd=\listcsgadd%
+\let\lorg@listcseadd=\listcsxadd%
+\let\lorg@csappto=\csgappto%
+\let\lorg@cseappto=\csxappto%
+\let\lorg@appto=\gappto%
+\let\lorg@eappto=\xappto%
+}
+\def\endcslorg{\ifcpge@global\endgroup\fi}
+\cslocal
+\def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
+\def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
+\def\cpge@removestar#1*{#1}
+\def\cpge@erasestar*#1+{#1}
+\newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
+\long\def\cpge@deco#1#2{%
+\long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
+\long\def\cpge@deco@#1#2{%
+\long\csdef{deco@#1}{#2}}
+\long\def\usedeco#1{\csuse{deco@#1}}
+\cpgesetdeco*{simple}{\fbox}
+\DeclareDocumentCommand\cpgename{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\lorg@csdef{name@#2}{#3}%
+\endcslorg
+}
+\DeclareDocumentCommand\cpgexname{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\lorg@csedef{name@#2}{#3}%
+\endcslorg%
+}
+\cpgesetup[decorations]{
+.unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
+}
+\def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% base de la gestion des mots clés entre ||  %%%%%
+%%%%% Commandes pour le parsing des elements
+\DeclareListParser*{\OutParser}{|}
+%% \OutParser{\cmd}{item1|item2|...} retourne la séquence
+%% \cmd{item1}\cmd{item2}...
+\DeclareListParser*{\in@parser}{+}
+%% \in@parser{\cmd}{item1+item2+...} retourne la séquence
+%% \cmd{item1}\cmd{item2}...
+\def\DoubleParser#1#2#3{%
+\def\tmp@parser##1{#1{\in@parser{#2}{##1}}}%
+\OutParser{\tmp@parser}{#3}%
+}
+%% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
+%% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
+\DeclareDocumentCommand\csvtolistcsadd{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\def\do{\forcsvlist{\lorg@listcsadd{#2}}}
+\expandafter\docsvlist\expandafter{#3}
+\endcslorg%
+}
+\DeclareDocumentCommand\csvtolistcseadd{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\def\do{\forcsvlist{\lorg@listcseadd{#2}}}
+\expandafter\docsvlist\expandafter{#3}
+\endcslorg%
+}
+\DeclareDocumentCommand\csvtolistadd{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\def\do{\forcsvlist{\lorg@listadd{#2}}}
+\expandafter\docsvlist\expandafter{#3}%
+\endcslorg%
+}
+\DeclareDocumentCommand\csvtolisteadd{smm}{%
+\IfBooleanT{#1}{\csglobal}%
+\def\do{\forcsvlist{\lorg@listeadd{#2}}}
+\expandafter\docsvlist\expandafter{#3}%
+\endcslorg%
+}
+%%% Gestion de listes CSV
+\newrobustcmd{\csvadd}[2]{%
+\ifblank{#2}{}{\appto#1{#2,}}}
+\newrobustcmd{\csveadd}[2]{%
+\begingroup
+\edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
+\cpgeb@tempa{}{\eappto#1{#2,}}}
+\newrobustcmd{\csvgadd}[2]{%
+\ifblank{#2}{}{\gappto#1{#2,}}}
+\newrobustcmd{\csvxadd}[2]{%
+\begingroup
+\edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
+\cpgeb@tempa{}{\xappto#1{#2,}}}
+\newrobustcmd{\csvcsadd}[1]{%
+\expandafter\csvadd\csname#1\endcsname}
+\newrobustcmd{\csvcseadd}[1]{%
+\expandafter\csveadd\csname#1\endcsname}
+\newrobustcmd{\csvcsgadd}[1]{%
+\expandafter\csvgadd\csname#1\endcsname}
+\newrobustcmd{\csvcsxadd}[1]{%
+\expandafter\csvxadd\csname#1\endcsname}
+\newrobustcmd{\csvremove}[2]{%
+\cpgeb@csvremove{#1}{#2}\def}
+\newrobustcmd{\csvgremove}[2]{%
+\cpgeb@csvremove{#1}{#2}\gdef}
+\long\def\cpgeb@csvremove#1#2#3{%
+\ifblank{#2}
+{}
+{\ifincsv{#2}{#1}{%
+ \begingroup
+ \def\cpgeb@tempa##1,#2,##2&{\endgroup
+   \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
+\expandafter\cpgeb@tempa\expandafter,#1&}{}}%
+}
+\newrobustcmd{\csvcsremove}[1]{%
+\expandafter\csvremove\csname#1\endcsname}
+\newrobustcmd{\csvcsgremove}[1]{%
+\expandafter\csvgremove\csname#1\endcsname}
+\newrobustcmd{\ifincsv}[2]{%
+\begingroup
+\def\cpgeb@tempa##1,#1,##2&{\endgroup
+\ifblank{##2}\@secondoftwo\@firstoftwo}%
+\expandafter\expandafter\expandafter\cpgeb@tempa
+\expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
+\newrobustcmd{\xifincsv}[1]{%
+\begingroup
+\edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
+\cpgeb@tempa}
+\newrobustcmd{\ifincsvcs}[2]{%
+\expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
+\long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
+\newrobustcmd{\xifincsvcs}[1]{%
+\begingroup
+\edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
+\cpgeb@tempa}
+%% ajoute les éléments de #2 (separe par des virgules)
+%% a la liste interne \list@#1
+\DeclareDocumentCommand\cpgeaddkeyword{st+m+m+m}{%
+\csvtolistcsadd{list@#3}{#4}%
+\IfBooleanT{#1}{\csglobal}%
+\IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
+\endcslorg%
+}
+}{}
+
+%%%%% Gestion des métadonnées 
+\newcommand\addmeta[4]{
+   \csdef{#1}##1{
+      \csgdef{cpge@#2}{##1}
+      \csgdef{cpge@#2@format}{{#3{##1}}}
+   }
+   \ifblank{#4}{}{\csuse{#1}{#4}}
+}
+\newcommand\meta[1]{\csuse{cpge@#1@format}}
+\def\ifdefmeta#1{\ifcsdef{cpge@#1}\iftrue\iffalse}
+
+\addmeta{Centre}{centre}{\scshape}{}
+\addmeta{Classe}{classe}{\scshape}{}
+\addmeta{Matiere}{matiere}{\scshape}{}
+
+\addmeta{Auteur}{auteur}{\scshape}{}
+\addmeta{Email}{email}{\ttfamily}{}
+\addmeta{Website}{website}{\ttfamily}{}
+\addmeta{Preauteur}{preauthor}{\itshape}{Rédigé par~}
+
+\addmeta{Document}{document}{}{}
+\addmeta{Devoir}{devoir}{}{}
+\addmeta{Theme}{theme}{}{}
+\addmeta{Subtheme}{subtheme}{}{}
+\addmeta{Periode}{periode}{}{\the\date}
+
+\addmeta{Concours}{concours}{}{}
+\addmeta{Epreuve}{epreuve}{}{}
+\addmeta{Session}{session}{}{}
+\addmeta{Duree}{duree}{\@duree}{}
+\def\@duree#1{Durée~:~#1~heures}
+\addmeta{Texte}{texte}{\@texte}{}
+\def\@texte#1{\parbox{.75\columnwidth}
+   {\centering #1}%
+}
+\cpgesetup[meta]{%
+   add/.code n args={4}{%
+      \addmeta{#1}{#2}{#3}{#4}%
+      \pgfqkeys{#1/.code=\csuse{#1}{##1}}%
+      },
+	Centre/.code=\Centre{#1},
+	Classe/.code=\Classe{#1},
+	Auteur/.code=\Auteur{#1},
+	Email/.code=\Email{#1},
+	Website/.code=\Website{#1},
+   Preauteur/.code=\Preauteur{#1},
+	Matiere/.code=\Matiere{#1},
+	Document/.code=\Document{#1},
+   Devoir/.code=\Devoir{#1},
+	Theme/.code=\Theme{#1},
+   Subtheme/.code=\Subtheme{#1},
+	Concours/.code=\Concours{#1},
+	Session/.code=\Session{#1},
+	Epreuve/.code=\Epreuve{#1},
+	Periode/.code=\Periode{#1},
+	Duree/.code=\Duree{#1},
+   Texte/.code=\Texte{#1},
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Décoration de l'arrière-plan %%%%%
+
+%%%% première application de la  commande \cpgesetup ci-dessus
+\cpgesetup[background]{
+	position/.is choice,
+	position/pb/.code=\def\back@pos{\AtPageLowerleft},
+	position/pt/.code=\def\back@pos{\AtPageupperleft},
+	position/pc/.code=\def\back@pos{\AtPageCenter},
+	position/tb/.code=\def\back@pos{\AtTextLowerleft},
+	position/tt/.code=\def\back@pos{\AtTextupperleft},
+	position/tc/.code=\def\back@pos{\AtTextCenter},
+	code/.code=\def\back@code{#1},
+}
+\cpgesetup[background]{position=pb, code=\relax}
+\AtEndPreamble{%
+	\ifbackground
+	  \RequirePackage{eso-pic}
+	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
+  \fi}
+
+% \AtBeginDocument{%
+%  \cpgesetup{background}
+%  \ifbackground%
+%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
+%   \fi%
+% }
+   % \titleformat\section
+   %    {\Large\sffamily\scshape}
+   %    {\deco@section{\label@section}}
+   %    {1.8pc}
+   %    {#1}
+   % \titleformat\subsection
+   %    {\large\sffamily\scshape
+   %    }{\deco@subsection{\label@subsection}}
+   %    {1.8pc}
+   %    {#1}
+
 %%%%% Geometrie du document
 
 \RequirePackage{geometry}
@@ -7,7 +310,7 @@
 % patch de la commande qui contrôle le format de papier
 \newdimen\Gm@littlemargin
 \Gm@littlemargin\z@
-\dimdef\compactlimit{127mm}
+\dimdef\compactlimit{123mm}
 \preto\Gm@adjustpaper{%
  	\ifdim\linewidth<\compactlimit\relax
  		\compacttrue%
@@ -46,7 +349,7 @@
 		\compactfalse%
 		\geometry{%
 			a4paper,
-			inner=3.6cm, outer=2.4cm,
+			inner=3cm, outer=2cm,
 			vmargin={2.4cm,3.6cm}, 
 			littlemargin=4pc
 		}, 
@@ -201,17 +504,31 @@
 	\ifdefempty{\geom@options}{}{
 		\@xp\geometry\@xp{\geom@options}
 	}%
+	\csuse{setup@enumstyle}%
 }
+\def\ttl@addstretch@origin{\advance\@tempskipa-\pagestretch}
 \AtEndPreamble{%
 	\unless\ifactivated@geometry
 			\cpgesetup[@geometry]{draft}
-	\fi% 
+	\fi%
+	\if@twocolumn% rétablir les conditions de l'option bottomtitles de titlesec.sty
+		\let\ttl@addstretch\ttl@addstretch@origin%
+		\def\bottomtitlespace{-\p@}%
+	\fi%
 	\def\multicols#1{\relax}
 	\csdef{multicols*}#1{\relax}
 	\let\endumlticols\relax 
 	\cslet{endmulticols*}{\relax}
 	\unless\if@twocolumn
-		\unless\ifcompact\RequirePackage{multicol}\fi
+		\unless\ifcompact%
+			\RequirePackage{multicol}
+			\appto\prepare@multicols{%
+				\compacttrue%
+				 \setup@enumstyle%
+				  \def\bottomtitlespace{-\p@}%
+				   \let\ttl@addstretch\ttl@addstretch@origin%
+				}
+		\fi
 	\fi
 }
 
@@ -235,14 +552,16 @@
       \baselineskip\cpge@dima%
    }
 }
-\cpgenewtitlekeyword{centre}{\normalsize\scshape}
-\cpgenewtitlekeyword{classe}{\normalsize\scshape}
-\cpgenewtitlekeyword{document}{\Large\scshape}
-\cpgenewtitlekeyword{epreuve}{\large\bfseries}
+\cpgenewtitlekeyword{centre}{\large\scshape}
+\cpgenewtitlekeyword{classe}{\large\scshape}
+\cpgenewtitlekeyword{document}{\Large\bfseries}
+\cpgenewtitlekeyword{concours}{\Large\bfseries}
+\cpgenewtitlekeyword{epreuve}{\Large\scshape}
 \cpgenewtitlekeyword{theme}{\Large\scshape}
 \cpgenewtitlekeyword{subtheme}{\large\scshape\itshape}
 \cpgenewtitlekeyword{texte}{\tiny\sffamily\slshape} 
 \cpgenewtitlekeyword{periode}{\small\itshape}
+\cpgenewtitlekeyword{duree}{\small\itshape}
 \cpgenewtitlekeyword{auteur}{\small\textit{\cpge@preauthor}~}
 \cpgenewtitlekeyword{email}{\small\ttfamily}
 \cpgenewtitlekeyword{website}{\small\ttfamily}
@@ -290,14 +609,18 @@
 	\fi 
 } 
 \def\titlepage@formats{%
+		\renew@title@format[2]{centre}{\scshape}%
+		\renew@title@format[2]{classe}{\scshape}%
 		\renew@title@format[3]{matiere}{\bfseries}%
 		\renew@title@format[4]{document}{\scshape}%
+		\renew@title@format[4]{devoir}{\scshape}%
 		\renew@title@format[3]{theme}{\scshape}%
 		\renew@title@format[2]{subtheme}{\scshape\itshape}%
 		\renew@title@format{periode}{\itshape}%
-		%\renew@title@format{\footnotesize\textit{\cpge@preauthor}\small~}{auteur}%
-		%\renew@title@format{\small\ttfamily}{email}%
-		%\renew@title@format{\small\ttfamily}{website}%
+		\renew@title@format{duree}{\itshape}%
+		\renew@title@format{auteur}{\footnotesize\textit{\cpge@preauthor}\small~}%
+		\renew@title@format{email}{\small\ttfamily}%
+		\renew@title@format{website}{\small\ttfamily}%
 }
 
 %% Commande \title@parser qui traduit les mots cles 
@@ -367,6 +690,10 @@
 	outer align/l/.code=\let\fil@outer\raggedright,
 	outer align/r/.code=\let\fil@outer\raggedleft,
 	outer align/c/.code=\let\fil@outer\centering,
+	outer align*/.is choice, % alignement externe
+	outer align*/l/.code=\let\fil@outer@titlepage\raggedright,
+	outer align*/r/.code=\let\fil@outer@titlepage\raggedleft,
+	outer align*/c/.code=\let\fil@outer@titlepage\centering,
 	before/.code=\def\hook@beforetitle{#1}, % hook avant titre normal 
 	after/.code=\def\hook@aftertitle{#1}, % hook apres titre normal 
 	before*/.code=\def\hook@beforetitlepage{#1}, % hook avant titre, titlepage
@@ -393,15 +720,15 @@
 	width/.code=\dimdef\title@width{#1}, % largeur du titre 
 	format/.code=\cpgesettitle{#1}, % specification du format normal 
 	format*/.code=\cpgesettitle*{#1}, % specification du format titlepage 
-	afterskip/.code=\dimdef\aftertitleskip{\bigskipamount*#1}
+	afterskip/.code=\def\aftertitleskip{#1}
          % saut apres titre
 }
 \cpgesetuptitle{
 	inner align/.default=c,
 	inner align*/.default=l,
 	outer align/.default=c,
-	width/.default=\columnwidth,
-	afterskip/.default=3,
+	width/.default=.75\columnwidth,
+	afterskip/.default=2.5,
 	inner align, 
 	inner align*, 
 	outer align, 
@@ -415,69 +742,68 @@
 %% titre normal sans *, page de garde avec *
 %% option [] pour \cpgesetup[title]{}, sinon option par defaut 
 %% option () pour le format, sinon format par defaut
-\NewDocumentCommand\titre{s+e\op+d()}{%
+\def\STRIP{}
+\let\endSTRIP\relax
+\NewDocumentCommand\titre{s e\op +d()}{%
    \IfBooleanT{#1}{\titlepagetrue}
-   \begingroup%
 	\IfValueT{#2}{\cpgesetup[title]{#2}}%
 	\IfValueT{#3}{%
 		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
 		}%
 	\iftitlepage%
-		\if@twocolumn
-			\@restonecoltrue\onecolumn
- 		\else
-			\@restonecolfalse\newpage
- 		 \fi
-  		\thispagestyle{empty}%
-  		\setcounter{page}\@ne
-				\titlepage@formats%
-				\csuse{hook@earlybeforetitlepage}%
-				\ifbackground\def\back@code{}\fi%
-            	\fil@inner@titlepage%
-				\csuse{hook@beforetitlepage}%
-				\csuse{hook@title@beforetitlepage}%
-            		\csuse{cpgetitlepagecontents}%
-				\csuse{hook@titleaftertitlepage}%
-           		\csuse{hook@aftertitlepage}%
+		\begin{titlepage}
+			\titlepage@formats%
+			\csuse{hook@earlybeforetitlepage}%
+			\ifbackground\def\back@code{}\fi%
+			\fil@outer@titlepage%
+			\csuse{hook@beforetitlepage}%
+			\csuse{hook@title@beforetitlepage}%
+				\fil@inner@titlepage%
+				\csuse{cpgetitlepagecontents}%
+			\csuse{hook@titleaftertitlepage}%
+			\csuse{hook@aftertitlepage}%
 			\csuse{hook@lateaftertitlepage}
-		\if@restonecol\twocolumn \else \newpage \fi
-     	\if@twoside\else
-        	\setcounter{page}\@ne
-     	\fi
+		\end{titlepage}
+		\pagecolor{pagecol}
 	\else%
-			\thispagestyle{plain}%
-			\begingroup\par%
-				\fil@outer
-            	\csuse{hook@beforetitle}%
-				\fil@inner
-				\csuse{hook@titlebeforetitle}
-					\csuse{cpgetitlecontents}%
+		\thispagestyle{plain}%
+		\ifstriptitle
+			\let\STRIP\strip%
+			\let\endSTRIP\endstrip%
+		\fi%
+		\begin{STRIP}%
+			\renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+			\def\@makefnmark{\rlap{\@textsuperscript{\normalfont\@thefnmark}}}%
+			\long\def\@makefntext##1{\parindent 1em\noindent
+				\hb@xt@1.8em{%
+				\hss\@textsuperscript{\normalfont\@thefnmark}}##1}%
+			\fil@outer
+			\csuse{hook@beforetitle}%
+			\fil@inner
+			\csuse{hook@titlebeforetitle}
+				\csuse{cpgetitlecontents}%
 				\csuse{hook@titleaftertitle}%
 				\csuse{hook@aftertitle}%
-			\endgroup%
-			\csuse{hook@lateaftertitle}
-			\par\addvspace{\aftertitleskip}%
+			\csuse{hook@lateaftertitle}%
+		\par\vspace{\bigskipamount*\real{\aftertitleskip}}%
+		\end{STRIP}%
 	\fi%
-   \endgroup%
-   \RenewDocumentCommand\titre{sod()}{}%
+   \global\let\titre\dummy@titre%
 }
+\NewDocumentCommand\dummy@titre{s e\op d()}{}
 
-\AfterEndPreamble{%
-	\cpgesetup[title]{%
-		early before*={%
-				\null\vskip 1cm plus .1fill 
-				\begin{center}\minipage{.8\linewidth}%
-		},
-		late after*={%
-			\endminipage
-			\end{center}
-			\vskip \z@ plus 1fill\null
-			\pagecolor{pagecol}%
-		},
-	}%
-}
+% \AfterEndPreamble{%
+% 	\cpgesetup[title]{%
+% 		early before*={%
+% 				\null\vskip 1cm plus .1fill 
+% 		},
+% 		late after*={%
+% 			\vskip \z@ plus 1fill\null
+% 		},
+% 	}%
+% }
 
-%%%%% tikz et tcolorbox sont est utilis\'es pour les decorations
+%%%%% Gestion des couleurs. Dans les nouvelles versions, xcolor possède une commande \mathcolor
 
 \RequirePackage[svgnames]{xcolor}
 \ifundef\mathcolor{%
@@ -487,21 +813,8 @@
 	\begingroup
 		\color#1{#2}#3%
 	\endgroup
-	}
+	}%
 }{}
-% \unless\ifdraft
-% 	\RequirePackage{tikz} %%
-% 	\usetikzlibrary{calc}
-% \fi
-
-
-% \RequirePackage[unicode,naturalnames]{hyperref}
-% \hypersetup{colorlinks,linkcolor=linkcol}
-% \pdfstringdefDisableCommands{%
-% 	\def\({}%
-% 	\def\){}%
-% }
-% \let\ToP\texorpdfstring
 
 %%% Gestions des couleurs
 %%%
@@ -585,7 +898,7 @@
 	   tcbbacktitle=warmcol,
    }
 
-\AtEndPreamble{\ifnocolors\selectcolormodel{gray}\fi}
+\AtBeginDocument{\ifnocolors\selectcolormodel{gray}\fi}
 \def\reloadcolors{
 	\AtEndPreamble{%
 		\cpgesetup[colors]{default colors}%
@@ -701,7 +1014,7 @@
 		{}%
 	\load@thefonts
 	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
-		\def\mathbb#1{\unexpanded{\varmathbb{#1}}}
+		\def\mathbb{\noexpand\varmathbb}
 	}
 	\ifundef\hypersetup{}{%
 	\pdfstringdefDisableCommands{%
@@ -741,7 +1054,224 @@
 	scale title/.code=
 		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
 	logo/.code=\def\cpge@logo{#1},
+	logo=all, 
 }
 \cpgesetup[title]{%
 	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
 }
+
+
+%%% Ajout 07/08/2021
+%%% interface pgfkeys pour contrôler les styles de page selon titlesec.sty %%%
+
+\newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{\csuse{deco@headrule}}
+   \renewcommand\makefootrule{\csuse{deco@footrule}}
+   \sethead{}{}{}
+   \setfoot{}{}{\hf@page}
+  }
+\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{}
+   \renewcommand\makefootrule{}
+   \sethead{}{}{}
+   \setfoot{}{page \thepage{}}{}
+ }
+
+%%%% Entetes et pieds de pages
+
+\csvtolistcsadd{list@hf}{%
+	centre,classe,periode,document,devoir,
+	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
+	
+\def\tmp@do#1{\csdef{hf@#1}{\csuse{cpge@#1}}}
+\forcsvlist\tmp@do{%
+	centre,classe,periode,document,devoir,
+	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
+
+\def\hf@change#1#2{%
+   \StrSubstitute{#1}
+     {|#2|}{\csname hf@#2\endcsname}[\tmp@string]%
+     \global\let#1\tmp@string
+ }
+\def\hf@parser#1#2#3{\begingroup
+    \csgdef{#1@\romannumeral#2}{#3}
+    \expandafter\def\expandafter\hf@change@\expandafter%
+         {\expandafter\hf@change\expandafter%
+           {\csname#1@\romannumeral#2\endcsname}}
+    \exploregroups\expandarg
+    \forlistloop{\hf@change@}{\list@hf}%
+    \endgroup
+}
+\NewDocumentCommand\cpgesethead{o O{} O{} D(){} D(){} D(){}}{%
+	\IfNoValueTF{#1}
+	{\hf@parser{head}{4}{#4}
+      \hf@parser{head}{5}{#5}
+       \hf@parser{head}{6}{#6}
+        \sethead{\head@iv}{\head@v}{\head@vi}
+    }
+	{\hf@parser{head}{1}{#1}
+     \hf@parser{head}{2}{#2}
+      \hf@parser{head}{3}{#3}
+       \hf@parser{head}{4}{#4}
+      	\hf@parser{head}{5}{#5}
+         \hf@parser{head}{6}{#6}
+          \sethead[\head@i][\head@ii][\head@iii]
+                            {\head@iv}{\head@v}{\head@vi}
+     }
+  }
+\NewDocumentCommand\cpgesetfoot{o O{} O{} D(){} D(){} D(){}}{%
+	\IfNoValueTF{#1}
+	{\hf@parser{foot}{4}{#4}
+      \hf@parser{foot}{5}{#5}
+       \hf@parser{foot}{6}{#6}
+       \setfoot{\foot@iv}{\foot@v}{\foot@vi}
+    }
+	{\hf@parser{foot}{1}{#1}
+     \hf@parser{foot}{2}{#2}
+      \hf@parser{foot}{3}{#3}
+       \hf@parser{foot}{4}{#4}
+      	\hf@parser{foot}{5}{#5}
+         \hf@parser{foot}{6}{#6}
+          \setfoot[\foot@i][\foot@ii][\foot@iii]
+             {\foot@iv}{\foot@v}{\foot@vi}
+     }
+  }
+\RequirePackage{lastpage}
+\DeclareDocumentCommand\cpgenewpagestylekeyword{mm}{%
+   \cpgeaddkeyword{hf}{#1}{{#2\csuse{cpge@#1}}
+   }%
+}
+\cpgenewpagestylekeyword{centre}{\scshape}
+\cpgenewpagestylekeyword{classe}{\scshape}
+\cpgenewpagestylekeyword{matiere}{\scshape}
+\cpgenewpagestylekeyword{document}{}
+\cpgenewpagestylekeyword{devoir}{}
+\cpgenewpagestylekeyword{theme}{\scshape}
+\cpgenewpagestylekeyword{concours}{\scshape}
+\cpgenewpagestylekeyword{epreuve}{\scshape}
+\cpgenewpagestylekeyword{session}{\itshape}
+\cpgenewpagestylekeyword{auteur}{\scshape}
+\cpgenewpagestylekeyword{siteweb}{\ttfamily}
+\cpgenewpagestylekeyword{email}{\ttfamily}
+
+\cpgeaddkeyword{hf}{chapter}{\chaptertitle}
+\cpgeaddkeyword{hf}{section}{\sectiontitle}
+\cpgeaddkeyword{hf}{C}{\ifnum\value{chapter}>\z@\thechapter\fi}
+\cpgeaddkeyword{hf}{S}{\ifnum\value{section}>\z@\thesection\fi}
+\cpgeaddkeyword{hf}{page}{\thepage}
+\cpgeaddkeyword{hf}{pages}{page\enskip\thepage{} / \pageref*{LastPage}}
+\cpgeaddkeyword{hf}{square}{\cpgesquare}
+\cpgeaddkeyword{hf}{tpsvp}{\quad\cpgesquare[1]\ %
+   \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
+      \cpgesquare[1]\ \cpgesquare[1]
+   \fi%
+}
+\def\hf@deco{\title@deco}
+
+
+%%% Entete/pied de page 
+\newpagestyle{cpgemain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{\csuse{head@rule}}
+   \renewcommand\makefootrule{\csuse{foot@rule}}
+   \sethead{}{}{}
+   \setfoot{}{}{\hf@page}
+  }
+\AtBeginDocument{\pagestyle{cpgemain}}
+
+%%% Acronymes
+
+\RequirePackage{acronym}
+%\RequirePackage{acro}
+% \acsetup{
+% 	list/display=used,
+% 	list/template=description,
+% 	pages/display=first,
+% 	format/short=\sffamily\scshape,
+% 	format/long=\sffamily,
+% }
+% \def\listofacronyms{\printacronyms}
+
+
+\renewcommand\acsfont[1]{\textsf{\scshape #1}}
+\renewcommand\acffont[1]{\textsf{#1}}
+\def\acro@@{\newacro}
+\def\acro@@plural{\newacroplural}
+
+\acro@@				{vap}{valeur propre}
+\acro@@plural		{vap}{valeurs propres}
+\acro@@				{vep}{vecteur propre}
+\acro@@plural		{vep}{vecteurs propres}
+\acro@@				{sep}{sous-espace propre}
+\acro@@plural		{sep}{sous-espaces propres}
+\acro@@				{sev}{sous-espace vectoriel}
+\acro@@plural		{sev}{sous-espaces vectoriels}
+\acro@@				{evn}{espace vectoriel norm\'e}
+\acro@@plural		{evn}{espaces vectoriels norm\'es}
+\acro@@				{cpa}{connexe par arcs}
+\acro@@plural		{cpa}{connexes par arcs}
+\acro@@				{uc}{uniform\'ement continue}
+\acro@@				{uce}[uc]{uniform\'ement continue}
+\acro@@plural		{uc}{uniform\'ement continues}
+\acro@@				{bon}{base orthonorm\'ee}
+\acro@@plural		{bon}{bases orthonorm\'ees}
+\acro@@				{pgcd}{plus grand diviseur commun}
+\acro@@				{ppcm}{plus petit multiple commun}
+\acro@@				{de}{division euclidienne}
+\acro@@				{cvs}{converge simplement}
+\acro@@				{cves}[cvs]{convergence simple}
+\acro@@				{cva}{converge absolument}
+\acro@@				{cvea}[cva]{convergence absolue}
+\acro@@				{cvu}{converge uniform\'ement}
+\acro@@				{cveu}[cvu]{convergence uniforme}
+\acro@@				{cvuc}{converge uniformément sur tout compact}
+\acro@@				{cveuc}[cvuc]{convergence uniforme sur tout compact}
+\acro@@				{cvn}{converge normalement}
+\acro@@				{cven}[cvn]{convergence normale}
+\acro@@				{dse}{d\'eveloppable en s\'erie enti\`ere}
+\acro@@				{rc}{rayon de convergence}
+\acro@@plural		{rc}{rayons de convergence}
+\acro@@				{cpm}{continue par morceaux}
+\acro@@plural		{cpm}{continues par morceaux}
+\acro@@				{cepm}{continuit\'e par morceaux}
+\acro@@				{va}{variable al\'eatoire}
+\acro@@				{var}{variable al\'eatoire r\'eelle}
+\acro@@				{vad}{variable al\'eatoire discrète}
+\acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
+\acro@@				{eaf}{\'egalit\'e des accroissements finis}
+\acro@@				{iaf}{in\'egalit\'e des accroissements finis}
+\acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
+\acro@@				{ipp}{int\'egration par parties}
+\acro@@				{itt}{int\'egration terme \`a terme}
+\acro@@				{dtt}{d\'erivation terme \`a terme}
+\acro@@				{il}{interversion de limites}
+\acro@@				{cvd}{convergence domin\'ee}
+\acro@@				{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
+\acro@@				{tch}{th\'eor\`eme de Cayley-Hamilton}
+\acro@@				{tsp}{th\'eor\`eme spectral}
+\acro@@				{tcd}{th\'eor\`eme de la convergence domin\'ee}
+\acro@@				{til}{th\'eor\`eme d'interversion de limites}
+\acro@@				{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
+\acro@@				{titt}{th\'eor\`eme d'int\'egration terme \`a terme}
+\acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
+\acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
+\acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
+
+
+\RequirePackage{xspace}
+\def\vap{\ac{vap}\xspace}
+\def\vep{\ac{vep}\xspace}
+\def\sev{\ac{sev}\xspace}
+\def\sep{\ac{sep}\xspace}
+\def\cvs{\ac{cvs}\xspace}
+\def\cvu{\ac{cvu}\xspace}
+\def\cvuc{\ac{cvuc}\xspace}
+\def\cvn{\ac{cvn}\xspace}
+\def\rc{\ac{rc}\xspace}
+\def\cpm{\ac{cpm}\xspace}
+\def\dse{\ac{dse}\xspace}
+\def\var{\ac{var}\xspace}
+\def\vad{\ac{vad}\xspace}
+\def\vadr{\ac{vadr}\xspace}
+%%%%%%
+
+\endinput

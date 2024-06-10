@@ -5,11 +5,6 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{cpgebase}[\filedate\space\fileversion]
 
-\newif\ifcustomtitles
-\DeclareOption{customtitles}{\customtitlestrue}
-%\DeclareOption*{\PassOptionsToPackage{\CurrentOption}{cpgetitle}}
-\ProcessOptions\relax
-
 \RequirePackage{calc}
 \RequirePackage{pgfkeys}
 \RequirePackage{etoolbox}
@@ -20,23 +15,6 @@
 \@ifundefined{NewDocumentCommand}
 	{\RequirePackage{xparse}}
 	{}
-\ifcustomtitles
-   \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
-\else 
-   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
-\fi 
-\RequirePackage{titletoc}
-   % \titleformat\section
-   %    {\Large\sffamily\scshape}
-   %    {\deco@section{\label@section}}
-   %    {1.8pc}
-   %    {#1}
-   % \titleformat\subsection
-   %    {\large\sffamily\scshape
-   %    }{\deco@subsection{\label@subsection}}
-   %    {1.8pc}
-   %    {#1}
-
 
 %%%%% Déclarations
 \newbox\cpge@boxa
@@ -73,11 +51,8 @@
 			   {\pgfkeys{/cpge/#1/.is family}}}%
       \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
    }
-   }{}
-%\pgfkeysdef{/handlers/.set}{\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
-\pgfkeys{/handlers/.set/.code=
-	   \pgfqkeys{\pgfkeyscurrentpath}{#1}##1%
-}
+}{}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% gestion des erreurs %%%%%
@@ -87,16 +62,8 @@
 	\PackageWarning{cpgebase}{#1}{#2}}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\ifundef\cpgeaddkeyword{%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Commandes utilitaires multi-usage %%%%%
-
-\def\cpge@expandtwoargs#1#2#3{\begingroup%
-	\edef\cpge@tempa{\endgroup\noexpand#1{#2}{#3}}\cpge@tempa}
-\def\cpge@expandfirstarg#1#2#3{\begingroup%
-	\edef\cpge@tempa{\endgroup\noexpand#1{#2}\unexpanded{#3}}\cpge@tempa}
-\def\cpge@expandsecondarg#1#2#3{\begingroup%
-	\edef\cpge@tempa{\endgroup\noexpand#1\unexpanded{#2}{#3}}\cpge@tempa}
-
 \def\cslocal{%
 	\let\lorg@cslet=\cslet%
 	\let\lorg@csletcs=\csletcs%
@@ -132,22 +99,17 @@
 }
 \def\endcslorg{\ifcpge@global\endgroup\fi}
 \cslocal
-
 \def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
 \def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
-
 \def\cpge@removestar#1*{#1}
 \def\cpge@erasestar*#1+{#1}
-
 \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
-
 \long\def\cpge@deco#1#2{%
    \long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
 \long\def\cpge@deco@#1#2{%
    \long\csdef{deco@#1}{#2}}
 \long\def\usedeco#1{\csuse{deco@#1}}
 \cpgesetdeco*{simple}{\fbox}
-
 \DeclareDocumentCommand\cpgename{smm}{%
 	\IfBooleanT{#1}{\csglobal}%
 	\lorg@csdef{name@#2}{#3}%
@@ -162,7 +124,6 @@
    .unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
 }
 \def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% base de la gestion des mots clés entre ||  %%%%%
 
@@ -204,7 +165,6 @@
    \expandafter\docsvlist\expandafter{#3}%
    \endcslorg%
 }
-
 %%% Gestion de listes CSV
 \newrobustcmd{\csvadd}[2]{%
   \ifblank{#2}{}{\appto#1{#2,}}}
@@ -218,7 +178,6 @@
   \begingroup
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
   \cpgeb@tempa{}{\xappto#1{#2,}}}
-
 \newrobustcmd{\csvcsadd}[1]{%
   \expandafter\csvadd\csname#1\endcsname}
 \newrobustcmd{\csvcseadd}[1]{%
@@ -227,12 +186,10 @@
   \expandafter\csvgadd\csname#1\endcsname}
 \newrobustcmd{\csvcsxadd}[1]{%
   \expandafter\csvxadd\csname#1\endcsname}
- 
 \newrobustcmd{\csvremove}[2]{%
   \cpgeb@csvremove{#1}{#2}\def}
 \newrobustcmd{\csvgremove}[2]{%
   \cpgeb@csvremove{#1}{#2}\gdef}
-
 \long\def\cpgeb@csvremove#1#2#3{%
   \ifblank{#2}
     {}
@@ -242,44 +199,35 @@
        \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
     \expandafter\cpgeb@tempa\expandafter,#1&}{}}%
 }
-
 \newrobustcmd{\csvcsremove}[1]{%
   \expandafter\csvremove\csname#1\endcsname}
 \newrobustcmd{\csvcsgremove}[1]{%
   \expandafter\csvgremove\csname#1\endcsname}
-
 \newrobustcmd{\ifincsv}[2]{%
   \begingroup
   \def\cpgeb@tempa##1,#1,##2&{\endgroup
     \ifblank{##2}\@secondoftwo\@firstoftwo}%
   \expandafter\expandafter\expandafter\cpgeb@tempa
   \expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
-
 \newrobustcmd{\xifincsv}[1]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
   \cpgeb@tempa}
-
 \newrobustcmd{\ifincsvcs}[2]{%
   \expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
 \long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
-
 \newrobustcmd{\xifincsvcs}[1]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
   \cpgeb@tempa}
-
-
-  	
 %% ajoute les éléments de #2 (separe par des virgules)
 %% a la liste interne \list@#1
-
 \DeclareDocumentCommand\cpgeaddkeyword{st+m+m+m}{%
 	\csvtolistcsadd{list@#3}{#4}%
 	\IfBooleanT{#1}{\csglobal}%
 	\IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
 	\endcslorg%
-}
+}}{}
 
 %% \cpgeaddkeyword{<name>}{<elt>}{<texte>}
 %% ajoute <elt> a la liste \list@name et affecte 
@@ -293,93 +241,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Gestion des metadonnées %%%%%
 
-\newcommand\addmeta[4]{
-   \csdef{#1}##1{
-      \csgdef{cpge@#2}{##1}
-      \csgdef{cpge@#2@format}{{#3{##1}}}
-   }
-   \ifblank{#4}{}{\csuse{#1}{#4}}
-}
-\newcommand\meta[1]{\csuse{cpge@#1@format}}
-\def\ifdefmeta#1{\ifcsdef{cpge@#1}\iftrue\iffalse}
 
-\addmeta{Centre}{centre}{\scshape}{}
-\addmeta{Classe}{classe}{\scshape}{}
-\addmeta{Matiere}{matiere}{\scshape}{}
-
-\addmeta{Auteur}{auteur}{\scshape}{}
-\addmeta{Email}{email}{\ttfamily}{}
-\addmeta{Website}{website}{\ttfamily}{}
-\addmeta{Preauteur}{preauthor}{\itshape}{Rédigé par~}
-
-\addmeta{Document}{document}{}{}
-\addmeta{Devoir}{devoir}{}{}
-\addmeta{Theme}{theme}{}{}
-\addmeta{Subtheme}{subtheme}{}{}
-\addmeta{Periode}{periode}{}{\the\date}
-
-\addmeta{Concours}{concours}{}{}
-\addmeta{Epreuve}{epreuve}{}{}
-\addmeta{Session}{session}{}{}
-\addmeta{Duree}{duree}{\@duree}{}
-\def\@duree#1{Durée~:~#1~heures}
-\addmeta{Texte}{texte}{\@texte}{}
-\def\@texte#1{\parbox{.75\columnwidth}
-   {\centering #1}%
-}
-
-\cpgesetup[meta]{%
-   add/.code n args={4}{%
-      \addmeta{#1}{#2}{#3}{#4}%
-      \pgfqkeys{#1/.code=\csuse{#1}{##1}}%
-      },
-	Centre/.code=\Centre{#1},
-	Classe/.code=\Classe{#1},
-	Auteur/.code=\Auteur{#1},
-	Email/.code=\Email{#1},
-	Website/.code=\Website{#1},
-   Preauteur/.code=\Preauteur{#1},
-	Matiere/.code=\Matiere{#1},
-	Document/.code=\Document{#1},
-   Devoir/.code=\Devoir{#1},
-	Theme/.code=\Theme{#1},
-   Subtheme/.code=\Subtheme{#1},
-	Concours/.code=\Concours{#1},
-	Session/.code=\Session{#1},
-	Epreuve/.code=\Epreuve{#1},
-	Periode/.code=\Periode{#1},
-	Duree/.code=\Duree{#1},
-   Texte/.code=\Texte{#1},
-}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Décoration de l'arrière-plan %%%%%
-
-%%%% première application de la  commande \cpgesetup ci-dessus
-\cpgesetup[background]{
-	position/.is choice,
-	position/pb/.code=\def\back@pos{\AtPageLowerleft},
-	position/pt/.code=\def\back@pos{\AtPageupperleft},
-	position/pc/.code=\def\back@pos{\AtPageCenter},
-	position/tb/.code=\def\back@pos{\AtTextLowerleft},
-	position/tt/.code=\def\back@pos{\AtTextupperleft},
-	position/tc/.code=\def\back@pos{\AtTextCenter},
-	code/.code=\def\back@code{#1},
-}
-\cpgesetup[background]{position=pb, code=\relax}
-\AtEndPreamble{%
-	\ifbackground
-	  \RequirePackage{eso-pic}
-	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
-  \fi}
-
-% \AtBeginDocument{%
-%  \cpgesetup{background}
-%  \ifbackground%
-%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
-%   \fi%
-% }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% utilitaires de gestion des compteurs façon cpgebase %%%%%
@@ -675,7 +537,7 @@
 }
 \def\cpgelist@setmargealt#1{%
    \ifcsundef{marge@\cpge@listctr}%une fois exécutée, ignore les clés suivantes
-      {\labelsep=.66em%
+      {\labelsep=.5em%
          \csname leftmargin\cpge@listlevel\endcsname=
             \dimexpr#1\relax%
          \csdef{marge@\cpge@listctr}{%
@@ -1760,122 +1622,7 @@
 
 
 
-%%% Ajout 07/08/2021
-%%% interface pgfkeys pour contrôler les styles de page selon titlesec.sty %%%
 
-\newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{\csuse{deco@headrule}}
-   \renewcommand\makefootrule{\csuse{deco@footrule}}
-   \sethead{}{}{}
-   \setfoot{}{}{\hf@page}
-  }
-\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{}
-   \renewcommand\makefootrule{}
-   \sethead{}{}{}
-   \setfoot{}{page \thepage{}}{}
- }
-
-%%%% Entetes et pieds de pages
-
-\csvtolistcsadd{list@hf}{%
-	centre,classe,periode,document,devoir,
-	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
-	
-\def\tmp@do#1{\csdef{hf@#1}{\csuse{cpge@#1}}}
-\forcsvlist\tmp@do{%
-	centre,classe,periode,document,devoir,
-	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
-
-\def\hf@change#1#2{%
-   \StrSubstitute{#1}
-     {|#2|}{\csname hf@#2\endcsname}[\tmp@string]%
-     \global\let#1\tmp@string
- }
-\def\hf@parser#1#2#3{\begingroup
-    \csgdef{#1@\romannumeral#2}{#3}
-    \expandafter\def\expandafter\hf@change@\expandafter%
-         {\expandafter\hf@change\expandafter%
-           {\csname#1@\romannumeral#2\endcsname}}
-    \exploregroups\expandarg
-    \forlistloop{\hf@change@}{\list@hf}%
-    \endgroup
-}
-\NewDocumentCommand\cpgesethead{o O{} O{} D(){} D(){} D(){}}{%
-	\IfNoValueTF{#1}
-	{\hf@parser{head}{4}{#4}
-      \hf@parser{head}{5}{#5}
-       \hf@parser{head}{6}{#6}
-        \sethead{\head@iv}{\head@v}{\head@vi}
-    }
-	{\hf@parser{head}{1}{#1}
-     \hf@parser{head}{2}{#2}
-      \hf@parser{head}{3}{#3}
-       \hf@parser{head}{4}{#4}
-      	\hf@parser{head}{5}{#5}
-         \hf@parser{head}{6}{#6}
-          \sethead[\head@i][\head@ii][\head@iii]
-                            {\head@iv}{\head@v}{\head@vi}
-     }
-  }
-\NewDocumentCommand\cpgesetfoot{o O{} O{} D(){} D(){} D(){}}{%
-	\IfNoValueTF{#1}
-	{\hf@parser{foot}{4}{#4}
-      \hf@parser{foot}{5}{#5}
-       \hf@parser{foot}{6}{#6}
-       \setfoot{\foot@iv}{\foot@v}{\foot@vi}
-    }
-	{\hf@parser{foot}{1}{#1}
-     \hf@parser{foot}{2}{#2}
-      \hf@parser{foot}{3}{#3}
-       \hf@parser{foot}{4}{#4}
-      	\hf@parser{foot}{5}{#5}
-         \hf@parser{foot}{6}{#6}
-          \setfoot[\foot@i][\foot@ii][\foot@iii]
-             {\foot@iv}{\foot@v}{\foot@vi}
-     }
-  }
-\RequirePackage{lastpage}
-\DeclareDocumentCommand\cpgenewpagestylekeyword{mm}{%
-   \cpgeaddkeyword{hf}{#1}{{#2\csuse{cpge@#1}}
-   }%
-}
-\cpgenewpagestylekeyword{centre}{\scshape}
-\cpgenewpagestylekeyword{classe}{\scshape}
-\cpgenewpagestylekeyword{matiere}{\scshape}
-\cpgenewpagestylekeyword{document}{}
-\cpgenewpagestylekeyword{devoir}{}
-\cpgenewpagestylekeyword{theme}{\scshape}
-\cpgenewpagestylekeyword{concours}{\scshape}
-\cpgenewpagestylekeyword{epreuve}{\scshape}
-\cpgenewpagestylekeyword{session}{\itshape}
-\cpgenewpagestylekeyword{auteur}{\scshape}
-\cpgenewpagestylekeyword{siteweb}{\ttfamily}
-\cpgenewpagestylekeyword{email}{\ttfamily}
-
-\cpgeaddkeyword{hf}{chapter}{\chaptertitle}
-\cpgeaddkeyword{hf}{section}{\sectiontitle}
-\cpgeaddkeyword{hf}{C}{\ifnum\value{chapter}>\z@\thechapter\fi}
-\cpgeaddkeyword{hf}{S}{\ifnum\value{section}>\z@\thesection\fi}
-\cpgeaddkeyword{hf}{page}{\thepage}
-\cpgeaddkeyword{hf}{pages}{page\enskip\thepage{} / \pageref*{LastPage}}
-\cpgeaddkeyword{hf}{square}{\cpgesquare}
-\cpgeaddkeyword{hf}{tpsvp}{\quad\cpgesquare[1]\ %
-   \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
-      \cpgesquare[1]\ \cpgesquare[1]
-   \fi%
-}
-\def\hf@deco{\title@deco}
-
-
-%%% Entete/pied de page 
-\newpagestyle{cpgemain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{\csuse{head@rule}}
-   \renewcommand\makefootrule{\csuse{foot@rule}}
-   \sethead{}{}{}
-   \setfoot{}{}{\hf@page}
-  }
-\AtBeginDocument{\pagestyle{cpgemain}}
 
 %%%%%%%
 %%%%%%%%%

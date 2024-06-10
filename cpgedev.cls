@@ -112,7 +112,7 @@
 
 
 %%%%% Packages du projet 
-\RequirePackage[customtitles]{cpgebase}
+\RequirePackage{cpgebase}
 \RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
 
@@ -185,11 +185,15 @@
 	before solutions/.code=\def\before@solutions@hook{#1},
 	solution file/.code=\def\solfilename{#1},
 	corrige/.store in=\corr@common@opt,
-	only/.code=\csvtolistadd\eno@list{#1}%
+	only/.code=\csvtolistadd\eno@list{#1},
+	before/.code=\appto\include@beforehook{#1},
+	after/.code=\preto\include@afterhook{#1}
 }
 \def\corr@common@opt{}
+\def\include@beforehook{}
+\def\include@afterhook{}
 \NewDocumentCommand\cpgeinclude{ om }{
-	\RenewDocumentCommand\titre{s+o+d()}{}%
+	\RenewDocumentCommand\titre{s e\op +d()}{}%
 	\begingroup
 		\IfFileExists{#2-cor.tex}{\def\solfilename{#2-cor}}{}
 		\IfValueT{#1}{\cpgesetup[include]{#1}}%
@@ -197,9 +201,11 @@
 		\unless\ifstraight\ifsolution
 			\ifundef\solfilename{}{\subdoc{\solfilename}}%
 		\fi\fi%
+		\include@beforehook%
 		\IfFileExists{#2-eno.tex}
 			{\subdoc{#2-eno}}
 			{\subdoc{#2}}
+		\include@afterhook%
 		\ifstraight\ifundef\solfilename{}{\subdoc{\solfilename}}\fi%
 	\endgroup%
 	\undef\eno@list%
@@ -208,7 +214,7 @@
 \def\cpgeincludeweb#1{} 
 
 
-\RequirePackage{cpgecommon}
+\RequirePackage[customtitles]{cpgecommon}
 %% Formats par defaut des titres 
 \cpgesettitle{|document| \\ |theme| \\ |periode|}
 \cpgesettitle*{|document| \\ |theme| \\ |periode|}
@@ -222,30 +228,6 @@
 
 
 %%%% Gestion des themes
-\newdimen\cpge@ttlw
-\cpge@ttlw=3cm
-
-\cpgesetup[theme]{%
-	.search also={/cpge/colors,/cpge/tcb},
-	dark/.is if=dark,
-	draft/.is if=draft,
-	colors/.code=\pgfkeysalso{/cpge/colors/.cd,#1},
-	no colors/.is if=nocolors,
-	font/.code=\cpgefont{#1},
-	libertine/.style={font=libertine},
-	fira/.style={font=fira},
-	utopia/.style={font=utopia},
-	palatino/.style={font=palatino},
-	title page/.is if=titlepage,
-	title format/.code=\cpgesettitle{#1},
-	title format*/.code=\cpgesettitle*{#1},
-	scale title/.code=
-		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
-	logo/.code=\def\cpge@logo{#1},
-}
-\cpgesetup[title]{%
-	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
-}
 \DeclareDocumentCommand\cpgetheme{O{} m}{%
 	\cpgesetup[theme]{#1}
 	\unless\ifdraft
@@ -254,7 +236,6 @@
 			{}%
 	\fi%
 }
-
 \DeclareDocumentCommand\cpgeconfig{m}{
 	\IfFileExists{cfg-#1.sty}{\RequirePackage{cfg-#1}}{}
 }
@@ -477,43 +458,51 @@
 			}{}%
 	\fi%
 }
-\cpgetitle@shape{display}{problem}[center]
 \ifserie 
 	\cpgetitle@shape{hang}{problem}[right]
+	\def\problem@font{\large}
+\else 
+	\cpgetitle@shape{display}{problem}[center]
+	\def\problem@font{\LARGE}
 \fi 
 \def\link@problemlabel#1{%
 	\edef\cpge@tmpa{#1}%
 	\unless\ifx\cpge@tmpa\space%
 		\ifsolution%
-			\ifisasolution% 
+			\ifisasolution%
+				\set@linkcol%
 				\Hy@raisedlink{\hypertarget{\cpge@problem@id:cor}{}}%
 				\hyperlink{\cpge@problem@id:eno}{\deco@problemlabel{#1}}%
+			\else%
+				\set@linkcol%
+				\Hy@raisedlink{\hypertarget{\cpge@problem@id:eno}{}}%
+				\hyperlink{\cpge@problem@id:cor}{\deco@problemlabel{#1}}%
+			\fi%
 		\else%
-			\Hy@raisedlink{\hypertarget{\cpge@problem@id:eno}{}}%
-			\hyperlink{\cpge@problem@id:cor}{\deco@problemlabel{#1}}%
+			\deco@problemlabel{#1}%
 		\fi%
-	\else%
-		\deco@problemlabel{#1}%
-	\fi%
-\fi}
-\def\problem@font{\LARGE}
+	\fi}%
 \def\problem@format{%
 	\cpgetitle@format{\problem}[\problem@shape]
-  		{\csuse{problem@font}}
+  		{\Large}
   		{\problemlabel@align
   			\link@problemlabel{\cnt@name}}
   		{\z@}
   		{\unless\ifcpge@tmpswa\problem@align\deco@problem{##1}\fi}
   		[\after@problemtitle]
 	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
-  		{\LARGE}
+  		{\Large}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
   		{\unless\ifcpge@tmpswa\problem@align\deco@problem{##1}\fi}
   		[\after@problemtitle]
 }
 \problem@format
-\cpgetitle@spacing{\problem}{\z@}{*3}{*3}
+\ifserie 
+	\cpgetitle@spacing{\problem}{\z@}{*2}{*1}
+\else
+	\cpgetitle@spacing{\problem}{\z@}{*3}{*3}
+\fi 
 \cpgetitle@setspacing{\problem}
 
 %%%%%%
@@ -713,9 +702,9 @@
 	\deco@lpattern\enskip#1\enskip\deco@rpattern}%
 }
 \ifserie 
-	\cpgesetdeco{problem}{\large\ifblank{#1}{\space:\space}{\space(#1)\space:\space}}
-	\cpgesetdeco{problemlabel}{{\large\scshape\bfseries#1}}%
-	\cpgetitle@spacing{\problem}{\z@}{*2}{*1}
+	\cpgesetdeco{problem}{\ifblank{#1}{~:\space}{(#1)~:\space}}
+	\cpgesetdeco{problemlabel}{{\scshape\bfseries#1\space}}%
+	\cpgetitle@spacing{\problem}{\z@}{*3}{*1}
 	\cpgetitle@setspacing{\problem}
 \fi 
 \cpgesetdeco*{lpattern}{\cpgesquare}
@@ -771,8 +760,11 @@
 				{\ClassError{cpgedev}{\problemcounter@name\space\arabic{\problemcounter@name}\space:\space
 				  Identifiant\space \cpge@problem@id\space déjà\space utilisé}{}}
 				{\csgdef{eno:\cpge@problem@id}{}%
-					\csxdef{label@@\cpge@problem@id}{%
+					\csxdef{prefixedname@@\cpge@problem@id}{%
 						\null\space\csuse{dudela@\problemcounter@name}\space
+				  		 \csuse{label@\problemcounter@name}%
+					}%
+					\csxdef{label@@\cpge@problem@id}{%
 				  		 \csuse{label@\problemcounter@name}%
 					}%
 				}%
@@ -814,7 +806,7 @@
 		\IfValueT{#6}{%
 			\IfValueTF{#5}
 				{\protected@edef\@currentlabelname{#5}}
-				{\IfValueTF{#4}{\protected@edef\@currentlabelname{#4}}}%
+				{\IfValueT{#4}{\protected@edef\@currentlabelname{#4}}}%
 			\MakeLinkTarget[#2]{problem}%
 			\label{\cpge@labelprefix#6}%
 		}%
@@ -943,7 +935,8 @@
 \cpgenewproblem{epreuve}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem{enonce}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
 \cpgenewproblem*{Corrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
-\def\label@Corrige{\unskip Corrigé\ignorespaces\csuse{label@@\cpge@problem@id}}
+\def\label@Corrige{\unskip\solutionname\ignorespaces\csuse{prefixedname@@\cpge@problem@id}}
+\def\solutionname{Corrigé}
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%% table des matières
@@ -1106,22 +1099,21 @@
 				fill=linkcol, 
 				draw=none, 
 				text=white},
-			enodeco/.style={%
-				text width=\curr@textwidth,
-				}
+			enodeco/.style={}
 		}
 	\fi\fi%
 }
+\def\set@linkcol{\unless\ifprint\hypersetup{linkcolor=white}\fi}
 \let\show@quesscore\relax
 \cpgesetdeco{link@}{%
 	\show@quesscore%
 	\ifsolution%
 		\ifcpge@withsol%
-			\unless\ifprint\hypersetup{linkcolor=white}\fi%
+			\set@linkcol%
 			\Hy@raisedlink{\hypertarget%
 				{hyeno:\cpge@problem@id:\csuse{label@\cpge@listctr}}{}}%
 				\hyperlink{hysol:\cpge@problem@id:\csuse{label@\cpge@listctr}}{%
-					\listbox[enodeco, collink, align=right]{#1}%
+					\listbox[enodeco, collink, text width=\curr@textwidth, align=right]{#1}%
 				}%
 		\else% 
 			\listbox[enodeco, align=center]{#1}%
@@ -1131,7 +1123,7 @@
 	\fi%
 }
 \cpgesetdeco{nolink@}{%
-	\show@quesscore\listbox[enodeco, align=center]{#1}%
+	\show@quesscore\listbox[enodeco, align=center, text width=\curr@textwidth,]{#1}%
 }
 \cpgesetdeco{emptylabel}{\listbox{#1}}
 %%%%% hyperlien ou pas
@@ -1235,6 +1227,7 @@
 \def\handtorightlink#1{%
 	\ifsolution%
 		\ifhmode\par\nobreak\noindent\fi%%
+		\set@linkcol%
 		\Hy@raisedlink{\hypertarget{hyeno:#1}{}}
 		\ifcompact%
 			\hyperlink{hysol:#1}{%
@@ -1251,6 +1244,7 @@
 	\fi%
 	}
 \def\handtoleftlink#1{%
+	\set@linkcol
 	\Hy@raisedlink{\hypertarget{hysol:#1}{}}%
 			\hyperlink{hyeno:#1}{%
 				\deco@link@sol{\fontsize{12}{12}\selectfont\faHandOLeft}}
@@ -1314,7 +1308,7 @@
 		}{}%
 	\fi%
 }
-\NewDocumentEnvironment{cpgewrite}{mm !e\op o !d() !d<>}
+\NewDocumentEnvironment{cpgewrite}{mm !e\op !o !d() !d<>}
 	{%
 		\IfValueT{#3}{\csgdef{#2@opts}{#3}}%
 		\IfValueT{#4}{\csgdef{#2@title}{[#4](#5)}}%
@@ -1347,7 +1341,7 @@
 	\unless\ifdraft%
 		\cpgeclosefile{solhandle}%
 		\ifsolutiondelayed
-				\ifdefempty{\queslist}{}{%
+				%\ifdefempty{\queslist}{}{%
 					\cpgerecord{%
 						\string\Solution
 							\cpge@problem@id % identifiant
@@ -1355,9 +1349,9 @@
 							{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
 							{\queslist}% liste des questions avec solutions
 					}%
-				}%
+				%}%
 			\else	
-				\ifdefempty\queslist{}{%
+				%\ifdefempty\queslist{}{%
 					\csxdef{\cpge@problem@id cor}{%
 						\@nx\Solution%
 							\cpge@problem@id % identifiant
@@ -1366,7 +1360,7 @@
 							{\queslist}% liste des questions avec solutions
 					}%
 					\@xp\aftergroup\csname\cpge@problem@id cor\endcsname%
-				}%
+				%}%
 			\fi%
 	\fi%
 	%\show\queslist%
@@ -1387,19 +1381,36 @@
 		{%
 			\csgdef{Solution@#1}{\Solution #1[#2](#3){#4}{#5}}
 		}{%
-			\begin{Corrige}{#1}\op{#4}[#2](#3)
+		\ifstrequal{#2}{-NoValue-}{
+			\ifstrequal{#3}{-NoValue-}
+				{\begin{Corrige}{#1}\op{#4}}%
+				{\begin{Corrige}{#1}\op{#4}(#3)}%
+			}{
+			\ifstrequal{#3}{-NoValue-}
+				{\begin{Corrige}{#1}\op{#4}[#2]}%
+				{\begin{Corrige}{#1}\op{#4}[#2](#3)}%
+			}
 				\ifdefempty\queslist{\def\queslist{#5}}{}%
 				\ifdefempty\queslist{\noqueslistmessage}{}%
+				\csxdef{the\problemcounter@name}{\csuse{label@@\cpge@problem@id}}
 				\input{\aux@dir/#1-cor}
 			\end{Corrige}%
 	}%
 }
 \def\Just@Solution#1[#2](#3)#4#5{
-			\begin{Corrige}{#1}\op{#4}[#2](#3)
-				\ifdefempty\queslist{\def\queslist{#5}}{}%
-				\ifdefempty\queslist{\noqueslistmessage}{}%
-				\input{\aux@dir/#1-cor}
-			\end{Corrige}%
+	\ifstrequal{#2}{-NoValue-}{
+		\ifstrequal{#3}{-NoValue-}
+			{\begin{Corrige}{#1}\op{#4}}%
+			{\begin{Corrige}{#1}\op{#4}(#3)}%
+		}{
+		\ifstrequal{#3}{-NoValue-}
+			{\begin{Corrige}{#1}\op{#4}[#2]}%
+			{\begin{Corrige}{#1}\op{#4}[#2](#3)}%
+		}
+			\ifdefempty\queslist{\def\queslist{#5}}{}%
+			\ifdefempty\queslist{\noqueslistmessage}{}%
+			\input{\aux@dir/#1-cor}
+		\end{Corrige}%
 }
 \def\Dummy@Solution#1[#2](#3)#4#5{}
 
@@ -1635,15 +1646,15 @@
 	}	
 \def\outer@sol@deco#1{%
 	\show@quesscore%
-	\unless\ifprint\hypersetup{linkcolor=white}\fi%
+	\set@linkcol%
 	\Hy@raisedlink{\hypertarget{hysol:\cpge@problem@id:#1}{}}%
 	\hyperlink{hyeno:\cpge@problem@id:#1}{\deco@link@sol{#1}}%
 }
 \unless\ifdraft
-	\tikzset{soldeco/.style={collink, text width=\csuse{\cpge@problem@id @maxlabelwidth}}}
+	\tikzset{soldeco/.style={}}
 \fi%
 \cpgesetdeco{link@sol}
-	{\listbox[soldeco, align=left]{#1}}
+	{\listbox[soldeco, collink, text width=\csuse{\cpge@problem@id @maxlabelwidth}, align=left]{#1}}
 
 
 
@@ -1666,12 +1677,12 @@
 	\fi
 	\ifcompact
 		\cpgesetenum*{1}{marge*}
-		\cpgesetenum*{2}{marge*}
-		\cpgesetenum*{3}{marge*}
+		\cpgesetenum*{2}{marge*=1pc}
+		\cpgesetenum*{3}{marge*=1pc}
 	\else	
-		\cpgesetenum*{1}{marge}
+		\cpgesetenum*{1}{marge+}
 		\cpgesetenum*{2}{marge*}
-		\cpgesetenum*{3}{marge=1pc}
+		\cpgesetenum*{3}{marge+}
 	\fi
 	\ifprint 
 		\cpgesetenum{0}{align=l}

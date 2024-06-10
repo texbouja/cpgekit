@@ -9,8 +9,6 @@
 \RequirePackage{pgfkeys}
 \RequirePackage{calc}
 \RequirePackage{xparse}
-\RequirePackage{xstring}
-
 \RequirePackage{mathtools}
 \RequirePackage{amsthm}
 \RequirePackage{varwidth}
@@ -93,13 +91,6 @@
 		}{}%
 }
 %%%%% Commandes utilitaires
-\def\cpge@expandtwoargs#1#2#3{\begingroup%
-	\edef\cpge@tmpa{\endgroup\noexpand#1{#2}{#3}}\cpge@tmpa}
-\def\cpge@expandfirstarg#1#2#3{\begingroup%
-	\edef\cpge@tmpa{\endgroup\noexpand#1{#2}\unexpanded{#3}}\cpge@tmpa}
-\def\cpge@expandsecondarg#1#2#3{\begingroup%
-	\edef\cpge@tmpa{\endgroup\noexpand#1\unexpanded{#2}{#3}}\cpge@tmpa}
-	
 \ifcsundef{cpgesetdeco}{
 	\def\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 	\long\def\@cpge@deco#1#2{
@@ -109,9 +100,7 @@
 	\long\def\cpge@deco#1#2{\forcsvlist{\@cpge@deco{#2}}{#1}}
 	\long\def\cpge@deco@#1#2{\forcsvlist{\@cpge@deco@{#2}}{#1}}
 }{}
-	
 \long\def\fake@cmd#1{#1}
-
 \newcommand\@ifisnumber[1]{%
         \begingroup
         \edef\temp@{#1}%
@@ -149,8 +138,7 @@
   \if!\ifnum9<1#1!\else_\fi
     #3\else#2\fi
   }
-
-
+  
 %%%%% Interface de configuration pgfkeys
 \ifundef\cpgesetup
     {
@@ -161,7 +149,6 @@
 				{\pgfkeys{/cpge/#1/.is family}}}%
     	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
     	}
-	\pgfkeysdef{/handlers/.set}{\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
 	}{}
 
 \cpgesetup{math/.is family}
@@ -309,101 +296,6 @@
 			\begin{pmatrix}\matrix@construct{#2}\end{pmatrix}%
 		\endgroup}
 }
-%%% Acronymes
-
-\RequirePackage{acronym}
-%\RequirePackage{acro}
-% \acsetup{
-% 	list/display=used,
-% 	list/template=description,
-% 	pages/display=first,
-% 	format/short=\sffamily\scshape,
-% 	format/long=\sffamily,
-% }
-% \def\listofacronyms{\printacronyms}
-
-
-\renewcommand\acsfont[1]{\textsf{\scshape #1}}
-\renewcommand\acffont[1]{\textsf{#1}}
-\def\acro@@{\newacro}
-\def\acro@@plural{\newacroplural}
-
-\acro@@				{vap}{valeur propre}
-\acro@@plural		{vap}{valeurs propres}
-\acro@@				{vep}{vecteur propre}
-\acro@@plural		{vep}{vecteurs propres}
-\acro@@				{sep}{sous-espace propre}
-\acro@@plural		{sep}{sous-espaces propres}
-\acro@@				{sev}{sous-espace vectoriel}
-\acro@@plural		{sev}{sous-espaces vectoriels}
-\acro@@				{evn}{espace vectoriel norm\'e}
-\acro@@plural		{evn}{espaces vectoriels norm\'es}
-\acro@@				{cpa}{connexe par arcs}
-\acro@@plural		{cpa}{connexes par arcs}
-\acro@@				{uc}{uniform\'ement continue}
-\acro@@				{uce}[uc]{uniform\'ement continue}
-\acro@@plural		{uc}{uniform\'ement continues}
-\acro@@				{bon}{base orthonorm\'ee}
-\acro@@plural		{bon}{bases orthonorm\'ees}
-\acro@@				{pgcd}{plus grand diviseur commun}
-\acro@@				{ppcm}{plus petit multiple commun}
-\acro@@				{de}{division euclidienne}
-\acro@@				{cvs}{converge simplement}
-\acro@@				{cves}[cvs]{convergence simple}
-\acro@@				{cva}{converge absolument}
-\acro@@				{cvea}[cva]{convergence absolue}
-\acro@@				{cvu}{converge uniform\'ement}
-\acro@@				{cveu}[cvu]{convergence uniforme}
-\acro@@				{cvuc}{converge uniformément sur tout compact}
-\acro@@				{cveuc}[cvuc]{convergence uniforme sur tout compact}
-\acro@@				{cvn}{converge normalement}
-\acro@@				{cven}[cvn]{convergence normale}
-\acro@@				{dse}{d\'eveloppable en s\'erie enti\`ere}
-\acro@@				{rc}{rayon de convergence}
-\acro@@plural		{rc}{rayons de convergence}
-\acro@@				{cpm}{continue par morceaux}
-\acro@@plural		{cpm}{continues par morceaux}
-\acro@@				{cepm}{continuit\'e par morceaux}
-\acro@@				{va}{variable al\'eatoire}
-\acro@@				{var}{variable al\'eatoire r\'eelle}
-\acro@@				{vad}{variable al\'eatoire discrète}
-\acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
-\acro@@				{eaf}{\'egalit\'e des accroissements finis}
-\acro@@				{iaf}{in\'egalit\'e des accroissements finis}
-\acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
-\acro@@				{ipp}{int\'egration par parties}
-\acro@@				{itt}{int\'egration terme \`a terme}
-\acro@@				{dtt}{d\'erivation terme \`a terme}
-\acro@@				{il}{interversion de limites}
-\acro@@				{cvd}{convergence domin\'ee}
-\acro@@				{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
-\acro@@				{tch}{th\'eor\`eme de Cayley-Hamilton}
-\acro@@				{tsp}{th\'eor\`eme spectral}
-\acro@@				{tcd}{th\'eor\`eme de la convergence domin\'ee}
-\acro@@				{til}{th\'eor\`eme d'interversion de limites}
-\acro@@				{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
-\acro@@				{titt}{th\'eor\`eme d'int\'egration terme \`a terme}
-\acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
-\acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
-\acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
-
-
-\RequirePackage{xspace}
-\def\vap{\ac{vap}\xspace}
-\def\vep{\ac{vep}\xspace}
-\def\sev{\ac{sev}\xspace}
-\def\sep{\ac{sep}\xspace}
-\def\cvs{\ac{cvs}\xspace}
-\def\cvu{\ac{cvu}\xspace}
-\def\cvuc{\ac{cvuc}\xspace}
-\def\cvn{\ac{cvn}\xspace}
-\def\rc{\ac{rc}\xspace}
-\def\cpm{\ac{cpm}\xspace}
-\def\dse{\ac{dse}\xspace}
-\def\var{\ac{var}\xspace}
-\def\vad{\ac{vad}\xspace}
-\def\vadr{\ac{vadr}\xspace}
-%%%%%%
 
 %%%%% Déclarations
 

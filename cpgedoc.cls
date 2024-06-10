@@ -173,7 +173,7 @@
 	\toks@sol{}%
 	\toks@prv{}%
 	\includedtrue
-		\RenewDocumentCommand\titre{sod()}{}%
+		\RenewDocumentCommand\titre{s e\op +d()}{}%
 		\ifdraft
 			\subdoc{#2}
 		\else
@@ -278,6 +278,8 @@
         execute at begin picture=\shorthandoff{;}
     }
 }
+
+%%% Gestion des thèmes
 \tcbset{maincol/.code=\colorlet{maincol}{#1}}
 \DeclareDocumentCommand\cpgetheme{O{} m}{%
 	\unless\ifdraft
@@ -974,28 +976,29 @@ math box style={}
 %%%%%%%% style d'enumerations dans les theorem %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\let\thecurrent@counter\@gobble
-\cpgesetenum{1}{marge}
-\cpgesetenum{2}{marge*}
-\cpgesetlabel{unite}{|X|.|1|}%
-\cpgesetlabel{enumi}{|X|.|1|}%
-\cpgesetdeco{enumi}{\deco@simple{#1}}%
-\cpgesetlabel{enumii}{|Q|\itshape|a|}
-\cpgesetdeco{enumii}{\bfseries #1.}
-\cpgesetlabel{equation}{|1|}
-\cpgesetdeco{itemtitle}{{\scshape\sffamily#1~:~}}
-\cpgesetdeco{unitetitle}{\textcolor{maincol}{\sffamily\scshape\small#1~:~}}
-\makethetolabel{equation}
+\def\setup@enumstyle{%
+	\let\thecurrent@counter\@gobble
+	\cpgesetenum{1}{marge}
+	\cpgesetenum{2}{marge*}
+	\cpgesetlabel{unite}{|X|.|1|}%
+	\cpgesetlabel{enumi}{|X|.|1|}%
+	\cpgesetlabel{enumii}{|Q|.|a|}
+	\cpgesetdeco{unite}{\textcolor{maincol}{\sffamily\small\scshape\bfseries##1.}}
+	\cpgesetdeco{enumi}{\bfseries ##1.}%
+	\cpgesetdeco{enumii}{\bfseries ##1.}
+	\cpgesetdeco{itemtitle}{{\scshape\sffamily##1~:~}}
+	\cpgesetdeco{unitetitle}{\textcolor{maincol}{\sffamily\scshape\small##1~:~}}
+	\cpgesetlabel{equation}{|C|.|1|}
+	\makethetolabel{equation}
+}
 \tcbset{%
 	current counter/.code=\def\thecurrent@counter{#1}
-	}	
+}	
 \tcbset{%
 	titled items/.code={%
 		\tcbset{after upper pre=\closeunite}%
 		\set@defaultforlistsinsideunite%
 }}
-\cpgesetdeco{unite}{\textcolor{maincol}{\sffamily\small\scshape\bfseries#1.}}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% exemples d'environement pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
