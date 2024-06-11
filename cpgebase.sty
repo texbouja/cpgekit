@@ -1274,7 +1274,7 @@
    s
 }
 \def\cpgesetuptabenum{\cpgesetup[tabenum]}
-\NewDocumentCommand\tabenum{E\op{}}{%
+\NewDocumentCommand\tabenum{E{\op}{{}}}{%
    \advance\@enumdepth\@ne%
    \edef\cpge@listdepth{\the\@enumdepth}
    \edef\cpge@listlevel{\romannumeral\@enumdepth}%
@@ -1288,6 +1288,7 @@
    \setup@tabenum%
    \csname c@\tab@enum\endcsname=\z@%
    \trivlist\item[]%
+   \let\item\tabitem
 }
 \def\endtabenum{%
    \ifin@field\add@field%
