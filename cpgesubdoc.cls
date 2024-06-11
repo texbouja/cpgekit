@@ -12,8 +12,7 @@
 \newif\ifweb
 \newif\ifserie
 \newif\ifsingleimage
-\newif\ifthisfile \thisfiletrue
-\newif\ifstraight
+\newif\ifstraight	\straighttrue
 \newif\ifprint
 \newif\ifnocolors
 \newif\ifdark

@@ -552,13 +552,13 @@
       \baselineskip\cpge@dima%
    }
 }
-\cpgenewtitlekeyword{centre}{\large\scshape}
-\cpgenewtitlekeyword{classe}{\large\scshape}
 \cpgenewtitlekeyword{document}{\Large\bfseries}
 \cpgenewtitlekeyword{concours}{\Large\bfseries}
 \cpgenewtitlekeyword{epreuve}{\Large\scshape}
 \cpgenewtitlekeyword{theme}{\Large\scshape}
 \cpgenewtitlekeyword{subtheme}{\large\scshape\itshape}
+\cpgenewtitlekeyword{centre}{\large\scshape}
+\cpgenewtitlekeyword{classe}{\large\scshape}
 \cpgenewtitlekeyword{texte}{\tiny\sffamily\slshape} 
 \cpgenewtitlekeyword{periode}{\small\itshape}
 \cpgenewtitlekeyword{duree}{\small\itshape}
@@ -569,43 +569,42 @@
 
 \NewDocumentCommand\renew@title@format{O{1}mm}{
 	\ifcase #1\relax	
-			\or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{3\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
+		\or \csdef{title@#2}{%
+			\resizebox{\hsize}{!}{%
+				\parbox{3\cpge@ttlw}{%
+					\fil@inner@titlepage\linespread{.8}%
+					#3\csuse{cpge@#2@format}\strut%
 				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-			 \or 
-			 \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{2\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
+				}%
+			}\baselineskip1.2\cpge@dima%
+		}
+		\or \csdef{title@#2}{%
+			\resizebox{\hsize}{!}{%
+				\parbox{2\cpge@ttlw}{%
+					\fil@inner@titlepage\linespread{.8}%
+					#3\csuse{cpge@#2@format}\strut%
 				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-			  \or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{1.5\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
-				 \or \csdef{title@#2}{%
-		\resizebox{\hsize}{!}{%
-			\parbox{\cpge@ttlw}{%
-				\fil@inner@titlepage\linespread{.8}%
-				#3\csuse{cpge@#2@format}\strut%
-				\global\cpge@dima\baselineskip%
-			}%
-		}\baselineskip1.2\cpge@dima%
-	}
+				}%
+			}\baselineskip1.2\cpge@dima%
+		}
+		\or \csdef{title@#2}{%
+			\resizebox{\hsize}{!}{%
+				\parbox{1.5\cpge@ttlw}{%
+					\fil@inner@titlepage\linespread{.8}%
+					#3\csuse{cpge@#2@format}\strut%
+					\global\cpge@dima\baselineskip%
+				}%
+			}\baselineskip1.2\cpge@dima%
+		}
+		\or \csdef{title@#2}{%
+			\resizebox{\hsize}{!}{%
+				\parbox{\cpge@ttlw}{%
+					\fil@inner@titlepage\linespread{.8}%
+					#3\csuse{cpge@#2@format}\strut%
+					\global\cpge@dima\baselineskip%
+				}%
+			}\baselineskip1.2\cpge@dima%
+		}
 	\fi 
 } 
 \def\titlepage@formats{%
@@ -727,10 +726,12 @@
 	inner align/.default=c,
 	inner align*/.default=l,
 	outer align/.default=c,
+	outer align*/.default=c,
 	width/.default=.75\columnwidth,
 	afterskip/.default=2.5,
 	inner align, 
 	inner align*, 
+	outer align,
 	outer align, 
 	width,
 	before=\minipage{\title@width},
@@ -1167,7 +1168,6 @@
    \fi%
 }
 \def\hf@deco{\title@deco}
-
 
 %%% Entete/pied de page 
 \newpagestyle{cpgemain}[\fontsize{8}{8}\sffamily\scshape\itshape]{

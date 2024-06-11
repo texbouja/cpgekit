@@ -24,27 +24,37 @@
 - tutoriaux LaTeX incluant les mécanismes mis en places ;
 - Guide de référence du kit.
 
-# Stratégie d'inclusion/compilation dans un fichier de devoir
-- un fichier de devoir devrait utiliser la  classe `cpgedev`
+---
 
+
+
+# Stratégie d'inclusion/compilation dans un fichier de devoir
+
+- un fichier de devoir devrait utiliser la  classe `cpgedev`
+  
   ```latex
   \documentclass[<options>]{cpgedev}
   ```
-- La commande `\cpgeinclude` prend en charge l'inclusion de fichiers sources dans un document maitre.
+
 - dans un fichier de contenu, un énoncé doit être saisi dans l'un des environnements prévus pour traiter les énoncés en précisant un identifiant unique et son corrigé dans l'environnement commun `corrige` avec le même identifiant. Pour traiter les énoncés plusieurs environnement sont utilisables : `epreuve`, `enonce`, `probleme`, `exercice`... et il est possible d'en créer facilement d'autres.
-  ```latex
+
+- ```latex
     \begin{enonce}{<identifiant>} 
       ... contenu de l'énoncé ...
     \end{enonce} 
   ```
+  
   et ensuite 
+  
   ```latex
   \begin{corrige}{<identifiant>} 
     <solution de l'énoncé de même identifiant> 
   \end{corrige}
   ```
+  
   Les questions sont saisies dans un environnement de liste spécifique qui s'utilise comme  `enumerate` et qui porte le nom de `questions`. À la place de la commande `\item`, il faudra utiliser `\xques`pour les questions qui possèdent des solutions et `\zques`pour celles qui n'en ont pas. 
   Il est aussi possible de mixer questions et solutions dans l'environnement  de l'énoncé en faisant suivre chaque question d'un environnement `solution`qui contient la solution. Ces solutions seront collectées pour un usage ultérieur. Mais quand on rédige les solution dans un environnement `corrige` il suffit de mettre la commande `\xsol` avant chaque réponse sans besoin d'utiliser un environnement particulier pour cela. Dans ce deuxième cas, l'environnement de l'énoncé aura crée une liste interne de toute les questions `\xques` et l'environnement de corrigé va piocher dans cette liste à chaque `\xsol`. 
+  
   ```latex
   \begin{enonce}{ID} 
       ... texte d'introduction ...
@@ -65,7 +75,9 @@
       \xsol ... solution de la question 3 ...
   \end{corrige}
   ```
+  
   ou bien 
+  
   ```latex
   \begin{enonce}{ID} 
       ... texte d'introduction ... 
@@ -92,7 +104,9 @@
       \end{questions}
   \end{enonce} 
   ```
+
 - Si l'option `straight` de la classe est active (`\straighttrue`) la définition de l'environnement `corrige` est changée pour que son contenu soit compilé et immédiatement intégré au fichier PDF ;
+
 - Si l'option `straight` de la classe n'est pas active (`\straightfalse`) alors :
   
   - l'environnement `corrige` se contente d'écrire son contenu dans un fichier dont le nom est `<identifiant>-cor` ;
@@ -100,6 +114,17 @@
     - avec l'option `solution` de la classe, dès que l'environnement `enonce` a fini de traiter son contenu, il vérifie si un fichier de corrigé qui a le même identifiant existe et a une taille non nulle. Le cas échéant il fait appel à la commande `\Solution` pour intégrer le contenu de ce dernier fichier dans le PDF. Si ce fichier n'a pas été rendu disponible auparavant, `\Solution` se contente de s'enregistrer elle même dans une autre commande avec un nom `\Solution@<identifiant>`. Si plus tard le compilateur rencontre un environnement `corrige` avec un même identifiant que l'énoncé, celui-ci écrit son contenu dans un fichier et fait appelle à la commande `\Solution@<identifiant>` pour insérer son contenu dans le PDF ;
     - avec l'option `solution*` de la classe, chaque environnement `enonce` ou similaire (`epreuve`,`probleme`, `exercice`...) enregistre une entrée `\Solution` qui lui est spécifique dans un fichier spécial (`\jobname.rec`). Plus tard c'est la commande `\corriges` insérée à un endroit arbitraire choisi par le rédacteur qui inclus le contenu de `\jobname.rec` et le vide pour une éventuelle nouvelle séquence.
     - sans l'une des deux options `solution` ou `solution*` l'opération d'inclusion des fichiers de corrigés est ignorée. 
+      
+      
+
+- La commande `\cpgeinclude` prend en charge l'inclusion de fichiers sources dans un document maitre.
   
+  ```latex
+  \cpgeinclude{<nom.fichier>}
+  ```
+  
+  `<nom.fichier>` est le nom de base du fichier à inclure. $\TeX$ vérifie si `nom.fichier-eno.tex`et`nom.fichier-cor.tex`sont disponibles auquel cas il va les inclure dans l'odre inverse en mode non straight (le corrigé avant l'énoncé) et dans l'ordre normal en mode straight (l'énoncé avant le corrigé). Si ces fichiers ne sont pas disponible alors il cherchera simplement un fichier `nom-fichier.tex` pour l'inclure.  La séparation entre fichier d'énoncé et fichier des solutions n'est cependant pas obligatoire.  
+
 ### Remarques
+
 Le comportement avec l'option `straight` est limpide et suffit pour des situations simples. Dans le cas où elle n'est pas utilisé le système devient plus complexe mais devient beaucoup plus souple en contre partie.  

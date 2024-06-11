@@ -1087,6 +1087,16 @@ math box style={}
 	{}
 	{remark}
 	{titled items}
+\cpgenewtheorem[use counter from=exem]{appl}
+	{Application}
+	{}
+	{remark}
+	{}
+\cpgenewtheorem[use counter from=exem]{appls}
+	{Application}
+	{}
+	{remark}
+	{titled items}
 \cpgenewtheorem[no counter]{demo}
 	{D\'emonstration}
 	{}

@@ -488,13 +488,13 @@
   		{\problemlabel@align
   			\link@problemlabel{\cnt@name}}
   		{\z@}
-  		{\unless\ifcpge@tmpswa\problem@align\deco@problem{##1}\fi}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
   		[\after@problemtitle]
 	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
   		{\Large}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
-  		{\unless\ifcpge@tmpswa\problem@align\deco@problem{##1}\fi}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
   		[\after@problemtitle]
 }
 \problem@format
@@ -785,7 +785,7 @@
 		m % #2 counter name
 		m % #3 printed name
 		o % #4 alternative title
-		d() % #5 optional title
+		D(){} % #5 optional title
 		d<> % #6 optional label for referencing
 	}{%
 		\IfBooleanF{#1}{%
@@ -797,16 +797,17 @@
 			{\def\cnt@name{#3}}
 			{\def\cnt@name{#3 \csuse{label@#2}}}%
 		\LinkTargetOff
-		\IfValueTF{#5}% 
+		\ifblank{#5}% 
+			{\cpge@tmpswatrue%
+				\problem[{\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}}]{}}%
 			{\cpge@tmpswafalse%
 				\problem[{\textsc{\cnt@name}\IfValueTF{#4}{:\space#4}{:\space#5}}]{#5}%
-			}{\cpge@tmpswatrue%
-				\problem[{\@nx\textsc{\cnt@name}\IfValueT{#4}{:\space#4}}]{}}%
+			}%
 		\LinkTargetOn%
 		\IfValueT{#6}{%
-			\IfValueTF{#5}
-				{\protected@edef\@currentlabelname{#5}}
+			\ifblank{#5}
 				{\IfValueT{#4}{\protected@edef\@currentlabelname{#4}}}%
+				{\protected@edef\@currentlabelname{#5}}
 			\MakeLinkTarget[#2]{problem}%
 			\label{\cpge@labelprefix#6}%
 		}%
@@ -1301,7 +1302,7 @@
 }
 \def\open@solfile{%
 	\unless\ifdraft
-		\Ifcpge@FileEmpty{\aux@dir/\cpge@problem@id-cor.tex}{
+		\IfFileEmpty{\aux@dir/\cpge@problem@id-cor.tex}{
 			\cpgeopenfile{solhandle}[\aux@dir/\cpge@problem@id-cor]%
 			\let\solution\real@save%
 			\cslet{solution*}\real@write%
@@ -1340,44 +1341,39 @@
 	\ifdefempty\cpge@tmpe{}{\parti*{Indications}\cpge@tmpe}%
 	\unless\ifdraft%
 		\cpgeclosefile{solhandle}%
-		\ifsolutiondelayed
-				%\ifdefempty{\queslist}{}{%
-					\cpgerecord{%
-						\string\Solution
-							\cpge@problem@id % identifiant
-							\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
-							{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
-							{\queslist}% liste des questions avec solutions
-					}%
-				%}%
+			\ifsolutiondelayed
+				\cpgerecord{%
+					\string\Solution
+						\cpge@problem@id % identifiant
+						\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
+						{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
+						{\queslist}% liste des questions avec solutions
+				}
 			\else	
-				%\ifdefempty\queslist{}{%
-					\csxdef{\cpge@problem@id cor}{%
-						\@nx\Solution%
-							\cpge@problem@id % identifiant
-							\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
-							{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
-							{\queslist}% liste des questions avec solutions
-					}%
-					\@xp\aftergroup\csname\cpge@problem@id cor\endcsname%
-				%}%
+				\xdef\current@corrige{%
+					\@nx\Solution%
+						\cpge@problem@id % identifiant
+						\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
+						{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
+						{\queslist}% liste des questions avec solutions
+				}%
+				\aftergroup\current@corrige%
 			\fi%
 	\fi%
-	%\show\queslist%
 	\gdef\queslist{}%
 }
 \def\shipoutsolutions{%
 	\unless\ifstraight%
 		\cpgestoprecording%
 		\csuse{before@solutions@hook}%
-		\let\Solution\Just@Solution%
+		\let\Solution\Real@Solution%
 		\input{\jobname.rec}
 	\fi%
 }	
 \let\corriges\shipoutsolutions
 \let\solutions\shipoutsolutions
 \def\Real@Solution#1[#2](#3)#4#5{
-	\Ifcpge@FileEmpty{\aux@dir/#1-cor.tex}
+	\IfFileEmpty{\aux@dir/#1-cor.tex}
 		{%
 			\csgdef{Solution@#1}{\Solution #1[#2](#3){#4}{#5}}
 		}{%
@@ -1586,7 +1582,11 @@
 }
 \def\first@xsol{%
 	\ifdefempty\queslist%
-		{\def\xsol{\alt@xsol}}
+		{
+			\setbox\z@\hbox{\scshape fixme}
+			\csdimdef{\cpge@problem@id @maxlabelwidth}{\the\wd\z@}
+			\def\xsol{\alt@xsol}
+		}
 		{\def\xsol{\real@xsol}}%
 	\xsol@env\xsol%
 }

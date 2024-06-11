@@ -736,6 +736,7 @@
    m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
    s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1}, 
    a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
+   col/.style={},
    m/.default=\z@,
    m+/.default=\z@,
    m*/.default=\z@,
@@ -841,7 +842,7 @@
         {\begin{#1}\op{r,#8}}
         {\IfBooleanT{#7}{\begin{#1}\op{#8}}}%
 	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
-	#2%
+	\let\xit#2\xit%
 }
 \cpgesetdeco{itemtitle}{\bfseries\boldmath #1.\enskip}
 \NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
@@ -868,7 +869,18 @@
    }
 }
 \def\xititem{\init@xlist{xitem}\xit@item}
-\def\xit{\@ifstar\xititem\xitenum}
+
+\NewDocumentCommand\xit@tab{!o !E{\zap}{{@}} !d() !d<>}{%
+   \tabitem%
+   \IfValueT{#4}{\label{\cpge@enumlabelprefix#4}}%
+}
+\def\xittab{\init@xlist{tabenum}\xit@tab}
+
+\NewDocumentCommand\xit{t\i t\t}{
+   \IfBooleanTF{#1}%
+      {\xititem}%
+      {\IfBooleanTF{#2}{\xittab}{\xitenum}}%
+}
 \def\cpge@enumlabelprefix{}
 \def\end@xlist{%
 	\ifundef\cpge@listenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
@@ -1205,6 +1217,91 @@
    s/.default=3pt,
    f/.is if=ccvline
 }
+
+%%%% Ajout 11/02/24
+%%%% Item sur un tableau
+%%%%% tabenum
+\newdimen\tablabelwidth
+\newdimen\line@width
+\newdimen\tabenum@width
+\newif\ifin@field
+
+\def\add@field{%
+    \@stopfield%
+    \ifdim\line@width>\dimexpr\wd\@curfield+\wd\@curline\else%
+      \output@curline\fi%
+    \cpge@dima\z@%
+    \@whiledim\cpge@dima<\wd\@curfield%
+      \do{\advance\cpge@dima\tabenum@width}%
+    \addto@curline%     
+     }
+\def\output@curline{%
+    \setbox\@curline\hbox{\strut\unhbox\@curline\unskip\unskip\unskip}%
+    \noindent\box\@curline%
+     \par%
+   }
+\def\addto@curline{%
+   \setbox\@curline\hbox{%
+      \box\@curline%
+      \copy\@curfield%
+      \hskip\dimexpr\cpge@dima-\wd\@curfield}%
+   }
+\def\new@field{%
+   \ifin@field\add@field\fi%
+   \@startfield\in@fieldtrue%
+  }
+\def\setup@tabenum{%
+   \settowidth\tablabelwidth{\csname c@\tab@enum\endcsname=13\relax%
+    	\csuse{deco@tabenum}{\csuse{label@\tab@enum}}}%
+    \line@width\dimexpr\columnwidth-\@totalleftmargin\relax%
+  	\tabenum@width\dimexpr\line@width/\num@tab\relax%
+  	\line@width\dimexpr\tabenum@width*\num@tab\relax%
+  }
+\def\tabitem{%
+ \refstepcounter{\tab@enum}\new@field%
+ \hb@xt@\tablabelwidth{\csuse{deco@tabenum}{\csname label@\tab@enum\endcsname}\hss}\hskip\labelsep\relax%
+}
+\cpgesetdeco{tabenum}{\bfseries #1.}
+\cpgesetup[lists]{
+   tabenum/.is family, tabenum,
+   s/.code={\parskip=#1},
+   s/.default=\z@,
+   n/.code=\cpgesetlabel{\tab@enum}{#1},
+   d/.code=\cpgesetdeco*{tabenum}{#1}, d*/.style={},
+   r/.style={},m/.style={},m*/.style={},m+/.style={}, a/.style={},
+   col/.code 2 args=\edef\num@tab{\ifcompact#1\else#2\fi},
+   col/.default=23,
+   s
+}
+\def\cpgesetuptabenum{\cpgesetup[tabenum]}
+\NewDocumentCommand\tabenum{E\op{}}{%
+   \advance\@enumdepth\@ne%
+   \edef\cpge@listdepth{\the\@enumdepth}
+   \edef\cpge@listlevel{\romannumeral\@enumdepth}%
+   \edef\cpge@listctr{enum\cpge@listlevel}%
+   \edef\tab@enum{enum\cpge@listlevel}%
+   \def\cpge@listenv{enum}
+   \def\cpge@xlistenv{tabenum}
+   \partopsep\z@\topsep\z@\labelsep.33em%
+   \def\\{\intertab{}}%
+   \cpgesetuplists{tabenum,col,#1}%
+   \setup@tabenum%
+   \csname c@\tab@enum\endcsname=\z@%
+   \trivlist\item[]%
+}
+\def\endtabenum{%
+   \ifin@field\add@field%
+   \noindent\unhbox\@curline\fi\endtrivlist%
+} 
+\long\def\intertab#1{%
+    \add@field%
+    \ifdim\wd\@curline=\z@\else%
+       \output@curline%
+     \fi%
+     \noindent#1%
+     \par\vskip-\parskip%
+   }
+\def\tabtest{\rule{\tabenum@width-\tablabelwidth-2\labelsep}{2pt}}
 
 %%%%%% lrmargin and mini environments %%%%
 %%%%%% Borrowed from adjustwidth.sty
@@ -1599,30 +1696,14 @@
 %%% charger pdftexcmd.sty qui définit certaines 
 %%% primitives pdftex qui ne sont pas disponibles dans lualatex
 \RequirePackage{ifluatex}
-   \ifluatex\RequirePackage{pdftexcmds}
-\fi 
-%%%
-
-\def\Ifcpge@FileExists#1{%
-  \expandafter\ifx\expandafter&\pdf@filesize{#1}&%
-    \expandafter\@secondoftwo
-  \else
-    \expandafter\@firstoftwo
-  \fi
+\ifluatex\RequirePackage{pdftexcmds}\fi 
+\def\IfFileEmpty#1{%
+   \ifnum0\pdf@filesize{#1}>0
+      \expandafter\@secondoftwo
+   \else
+      \expandafter\@firstoftwo
+   \fi
 }
-\def\Ifcpge@FileEmpty#1{%
-\def\cpge@filesize{0}%
-\IfFileExists{#1}{\edef\cpge@filesize{\pdf@filesize{#1}}}{}
-  \ifnum0\cpge@filesize>\z@
-    \expandafter\@secondoftwo%
-  \else
-    \expandafter\@firstoftwo%
-  \fi%
-}
-
-
-
-
 
 %%%%%%%
 %%%%%%%%%
