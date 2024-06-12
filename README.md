@@ -38,7 +38,7 @@
 
 - dans un fichier de contenu, un énoncé doit être saisi dans l'un des environnements prévus pour traiter les énoncés en précisant un identifiant unique et son corrigé dans l'environnement commun `corrige` avec le même identifiant. Pour traiter les énoncés plusieurs environnement sont utilisables : `epreuve`, `enonce`, `probleme`, `exercice`... et il est possible d'en créer facilement d'autres.
 
-- ```latex
+  ```latex
     \begin{enonce}{<identifiant>} 
       ... contenu de l'énoncé ...
     \end{enonce} 
@@ -105,15 +105,15 @@
   \end{enonce} 
   ```
 
-- Si l'option `straight` de la classe est active (`\straighttrue`) la définition de l'environnement `corrige` est changée pour que son contenu soit compilé et immédiatement intégré au fichier PDF ;
+- Si l'option `straight` de la classe est active la définition de l'environnement `corrige` est changée pour que son contenu soit compilé et immédiatement intégré au fichier PDF ;
 
-- Si l'option `straight` de la classe n'est pas active (`\straightfalse`) alors :
+- Si l'option `straight` de la classe n'est pas active alors :
   
   - l'environnement `corrige` se contente d'écrire son contenu dans un fichier dont le nom est `<identifiant>-cor` ;
   - c'est l'environnement `enonce` qui est responsable de l'inclusion ou non du fichier de corrigé avec le même identifiant selon les options de la classe ;
-    - avec l'option `solution` de la classe, dès que l'environnement `enonce` a fini de traiter son contenu, il vérifie si un fichier de corrigé qui a le même identifiant existe et a une taille non nulle. Le cas échéant il fait appel à la commande `\Solution` pour intégrer le contenu de ce dernier fichier dans le PDF. Si ce fichier n'a pas été rendu disponible auparavant, `\Solution` se contente de s'enregistrer elle même dans une autre commande avec un nom `\Solution@<identifiant>`. Si plus tard le compilateur rencontre un environnement `corrige` avec un même identifiant que l'énoncé, celui-ci écrit son contenu dans un fichier et fait appelle à la commande `\Solution@<identifiant>` pour insérer son contenu dans le PDF ;
-    - avec l'option `solution*` de la classe, chaque environnement `enonce` ou similaire (`epreuve`,`probleme`, `exercice`...) enregistre une entrée `\Solution` qui lui est spécifique dans un fichier spécial (`\jobname.rec`). Plus tard c'est la commande `\corriges` insérée à un endroit arbitraire choisi par le rédacteur qui inclus le contenu de `\jobname.rec` et le vide pour une éventuelle nouvelle séquence.
-    - sans l'une des deux options `solution` ou `solution*` l'opération d'inclusion des fichiers de corrigés est ignorée. 
+    - avec l'option `solution` de la classe, dès que l'environnement `enonce` a fini de traiter son contenu, il vérifie si un fichier de corrigé qui a le même identifiant existe et a une taille non nulle. Le cas échéant le contenu de celui-ci est inclu dans le PDF. Sinon une macro est enregistrée avec l'identifiant utilisé et les informations collectées (notamment la liste des questions). Si jamais le processus de compilation rencontre plus tard un corrigé avec le même identifiant son contenu est écrit dans un fichier séparé et ensuit inclus dans le PDF par la macro préalablement définie.   
+    - avec l'option `solution*` de la classe, chaque environnement `enonce` ou similaire (`epreuve`,`probleme`, `exercice`...) entrée dans un fichier d'enregistrement  (`\jobname.rec`). Plus tard c'est la commande `\corriges` ou `\solutions` insérée à un endroit arbitraire choisi par le rédacteur qui inclus le contenu de `\jobname.rec` et le vide pour une éventuelle nouvelle séquence.
+    - sans l'une des deux options `solution` ou `solution*` l'opération d'écriture des corrigés dans fichiers individuels se déroule normalement mais aucun inclusion n'est effectuée. 
       
       
 
@@ -122,8 +122,17 @@
   ```latex
   \cpgeinclude{<nom.fichier>}
   ```
-  
-  `<nom.fichier>` est le nom de base du fichier à inclure. $\TeX$ vérifie si `nom.fichier-eno.tex`et`nom.fichier-cor.tex`sont disponibles auquel cas il va les inclure dans l'odre inverse en mode non straight (le corrigé avant l'énoncé) et dans l'ordre normal en mode straight (l'énoncé avant le corrigé). Si ces fichiers ne sont pas disponible alors il cherchera simplement un fichier `nom-fichier.tex` pour l'inclure.  La séparation entre fichier d'énoncé et fichier des solutions n'est cependant pas obligatoire.  
+  `<nom.fichier>` est le nom de base du fichier à inclure. Il est possible aussi d'indiquer en option le nom d'un fichier annexe qui en principe devrait être une collection de corrigés avec une instruction de la forme :
+
+  ```latex
+  \cpgeinclude[solution filename=<nom.fichier-corrige>]{<nom.fichier>}
+  ```
+  Si cette option n'est pas utilisée, `\cpgeinclude` vérifie s'il n'existe pas un fichier nommé `nom.fichier-cor.tex` auquel cas il va l'utiliser dans le processus de compilation.
+
+  La commande `\cpgeinclude` instaure l'ordre de déroulement de la compilation selon les options de la classe :
+    - si l'option `straight`est active :  le fichier inclu sera traité en premier et un éventuel fichier de corrigé ensuite.
+    - sans l'option `straight, c'est le fichier de corrigé qui sera analysée en premier de manière à ce que les fichiers individuels des corrigés (éventuels) soient près lorsque le processus atteindra le traitement des énoncés.
+  Ce processus permettra d'optimiser le déroulement de la compilation mais il n'est pas obligatoire. Avec l'inclusion d'un unique fichier, on peut mélanger des énoncés et des corrigés et pas forcément dans le bon ordre. C'est l'ordre d'apparition des énoncés qui prévaudra dans le PDF produit. 
 
 ### Remarques
 
