@@ -736,7 +736,7 @@
    m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
    s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1}, 
    a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
-   col/.style={},
+   c/.style={},
    m/.default=\z@,
    m+/.default=\z@,
    m*/.default=\z@,
@@ -1269,8 +1269,9 @@
    n/.code=\cpgesetlabel{\tab@enum}{#1},
    d/.code=\cpgesetdeco*{tabenum}{#1}, d*/.style={},
    r/.style={},m/.style={},m*/.style={},m+/.style={}, a/.style={},
-   col/.code 2 args=\edef\num@tab{\ifcompact#1\else#2\fi},
-   col/.default=23,
+   columns/.code 2 args=\edef\num@tab{\ifcompact#1\else#2\fi},
+   c/.style={columns=#1},
+   columns/.default=23,
    s
 }
 \def\cpgesetuptabenum{\cpgesetup[tabenum]}
@@ -1284,7 +1285,7 @@
    \def\cpge@xlistenv{tabenum}
    \partopsep\z@\topsep\z@\labelsep.33em%
    \def\\{\intertab{}}%
-   \cpgesetuplists{tabenum,col,#1}%
+   \cpgesetuplists{tabenum,columns,#1}%
    \setup@tabenum%
    \csname c@\tab@enum\endcsname=\z@%
    \trivlist\item[]%
