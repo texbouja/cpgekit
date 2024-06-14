@@ -508,16 +508,24 @@
 	\fi
 \@esphack%
 }
+\def\if@staratend#1{%
+	\def\in@@{\in@{*!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\x@arg{\cpge@removestar #1}\expandafter\@firstoftwo%
+	\else%
+		\def\x@arg{#1}\expandafter\@secondoftwo%
+	\fi%
+}
 \long\def\eqn@preparemidbox#1#2{%
 \@bsphack
-	\def\in@@{\in@{*!}}
-	\@xp\in@@\@xp{#1!}
-	\ifin@
+	\if@staratend{%
 		\edef\num@pt{\cpge@removestar #1}
 		\def\@renderer{varwidth}
-	\else
+	}{%
 		\def\num@pt{#1}
 		\def\@renderer{minipage}
+	}
 	\fi
 	\ifnum\num@pt<50\relax
 		\ifnum\num@pt=0\relax

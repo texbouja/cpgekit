@@ -80,9 +80,9 @@
 	{\RequirePackage{xparse}}
 	{}
 
-
 %%%% Packages du projet 
 \RequirePackage{cpgebase}
+\RequirePackage{cpgecommon}
 \RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
 \ifbool{web}{\endinput}{}
@@ -142,13 +142,7 @@
 %\RequirePackage{currfile}
 \RequirePackage{lastpage}
 \RequirePackage{fontawesome}
-\RequirePackage[pdfencoding=auto,psdextra]{hyperref}
-\hypersetup{colorlinks,linkcolor=linkcol,breaklinks,raiselinks}
-\pdfstringdefDisableCommands{%
-	\def\({}%
-	\def\){}%
-}
-\let\ToP\texorpdfstring
+
 %\RequirePackage{bookmark}
 
 
@@ -173,7 +167,7 @@
 	\toks@sol{}%
 	\toks@prv{}%
 	\includedtrue
-		\RenewDocumentCommand\titre{s e\op +d()}{}%
+		%\RenewDocumentCommand\titre{s e\op +d()}{}%
 		\ifdraft
 			\subdoc{#2}
 		\else
@@ -227,6 +221,9 @@
 		\fi
 	\fi 
 }
+\unless\ifincluded
+	\AtEndDocument{\processproofs\processsolutions}
+\fi 
 \def\typeout@solutions{%
 	\clearpage%
 	\sol@section{\sol@title}%
@@ -264,12 +261,11 @@
 
 \def\cpgeincludeweb#1{} 
 
-%%%% Chargement des differents packages 
-\RequirePackage{cpgecommon}
 %% Formats par defaut des titres
 \cpgesettitle{|document| \\ |theme| \\ |periode|}
 \cpgesettitle*{|document| \\ |theme| \\ |periode|}
 
+%%%% Chargement des differents packages 
 \RequirePackage{tcolorbox}
 \tcbuselibrary{skins,hooks,breakable,theorems,xparse}
 \usetikzlibrary{calc}
@@ -458,7 +454,36 @@ math box style={}
 \cpgesetdeco{formula}{\rslt@box{#1}}
 \cpgesetdeco{result}{\rslt@box{#1}}
 
+\def\tcb@restore@footnote{%
+  \def\@mpfn{footnote}%
+  \def\thempfn{\arabic{footnote}}%
+  \let\@footnotetext\tcb@footnote@collect
+}
 
+% collect footnote text
+\long\def\tcb@footnote@collect#1{%
+  \expandafter\gappto\expandafter\tcb@footnote@acc\expandafter{%
+    \expandafter\footnotetext\expandafter[\@thefnmark]{#1}%
+  }%
+}
+
+\def\tcb@footnote@use{%
+  \tcb@footnote@acc
+  \global\let\tcb@footnote@acc\@empty
+}
+\global\let\tcb@footnote@acc\@empty
+
+
+\tcbset{
+  every box/.style={
+    before title pre=\tcb@restore@footnote,
+    before upper pre=\tcb@restore@footnote,
+    before lower pre=\tcb@restore@footnote,
+  },
+  every box on layer 1/.append style={
+    after pre=\tcb@footnote@use
+  }
+}
 \tcbset{%
 	primary box/.style={%
 		breakable,
@@ -467,7 +492,7 @@ math box style={}
 		title style if break,
 		fonttitle=\TitlingFont\footnotesize\vphantom{(},
 		description font=\scshape\footnotesize\vphantom{(},
-		colback=bgcol,coltext=fgcol
+		colback=bgcol,coltext=fgcol,
 	},
 	secondary box/.style={%
 		reset, blank,
@@ -477,10 +502,10 @@ math box style={}
 	}
 }
 \tcbset{%
-	every box on layer 1/.style={primary box},
-	every box on layer 2/.style={secondary box},
-	every box on layer 3/.style={secondary box},
-	every box on layer 4/.style={secondary box}
+	every box on layer 1/.append style={primary box},
+	every box on layer 2/.prefix style={secondary box},
+	every box on layer 3/.prefix style={secondary box},
+	every box on layer 4/.prefix style={secondary box}
 }
 %\tcbsetmanagedlayers{2}
 
@@ -680,6 +705,7 @@ math box style={}
 \NewDocumentCommand{\solution@push}{mmmmm}{%
 	\@titledemolink{#1}{#2}{#3}{solution}{solution}{#4}
   	\begingroup%
+		\edef\thecurrent@counter{#2}
 		\set@defaultforlistsinsideunite
  		\input{#5}%
 		\closeunite%
@@ -688,6 +714,7 @@ math box style={}
 \NewDocumentCommand{\proof@push}{mmmmm}{%
 	\@titledemolink{#1}{#2}{#3}{proof}{d\'emonstration}{#4}
   	\begingroup%
+		\edef\thecurrent@counter{#2}%
 		\set@defaultforlistsinsideunite
  		\input{#5}%
 		\closeunite%

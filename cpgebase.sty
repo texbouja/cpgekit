@@ -102,7 +102,26 @@
 \def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
 \def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
 \def\cpge@removestar#1*{#1}
+\def\cpge@removeplus#1+{#1}
 \def\cpge@erasestar*#1+{#1}
+\def\if@staratend#1{
+	\def\in@@{\in@{*!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\x@arg{\cpge@removestar#1}\expandafter\@firstoftwo%
+	\else%
+		\def\x@arg{#1}\expandafter\@secondoftwo%
+	\fi%
+}
+\def\if@plusatend#1{
+	\def\in@@{\in@{+!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\x@arg{\cpge@removeplus#1}\expandafter\@firstoftwo%
+	\else%
+		\def\x@arg{#1}\expandafter\@secondoftwo%
+	\fi%
+}
 \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 \long\def\cpge@deco#1#2{%
    \long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
@@ -845,16 +864,19 @@
 	\let\xit#2\xit%
 }
 \cpgesetdeco{itemtitle}{\bfseries\boldmath #1.\enskip}
-\NewDocumentCommand\xit@enum{!o !E{\zap}{{@}} !d() !d<>}{%
-      \ifstrequal{#2}{@}{}
-            {\addtocounter{\cpge@listctr}{#2}}%
+\NewDocumentCommand\xit@enum{!o !d() !d<>}{%
       \IfValueTF{#1}
-         {\item[#1]}
+         {\if@staratend{#1}%
+            {\cpgeref@setcounter{\cpge@listctr}{\x@arg-1}\item}%
+            {\if@plusatend{#1}%
+               {\cpgeref@addtocounter{\cpge@listctr}{\x@arg-1}\item}%
+               {\item[#1]}%
+            }}
          {\item}%
+      \IfValueT{#2}
+         {\deco@itemtitle{#2}\protected@edef\@currentlabelname{#2}}%
       \IfValueT{#3}
-         {\deco@itemtitle{#3}\protected@edef\@currentlabelname{#3}}%
-      \IfValueT{#4}
-         {\label{\cpge@enumlabelprefix#4}}%
+         {\label{\cpge@enumlabelprefix#3}}%
  }
 \def\xitenum{\init@xlist{xenum}\xit@enum}
 \NewDocumentCommand\xit@item{!o !E{\zap}{{@}} !d() !d<>}{%
@@ -931,7 +953,7 @@
 
 \cpgesetdeco{enumi}{\bfseries #1.}
 \cpgesetdeco{enumii}{\bfseries #1.}
-\cpgesetdeco{enumii}{(#1)}
+\cpgesetdeco{enumiii}{(#1)}
 \cpgesetdeco{section}{#1}
 \cpgesetdeco{subsection}{#1}
 %%%% Chargement de polices pour des symboles à utiliser avec {xitem}
@@ -1037,7 +1059,7 @@
 		   \labelwidth\z@%
 		    \itemindent\labelsep%
 		     \leftmargin\z@%
-			  \let\makelabel\lab@unite%
+			   \let\makelabel\lab@unite%
         }%
  }
  \def\lab@unite#1{\ifblank{#1}{}{\deco@unite{#1}}}
@@ -1056,7 +1078,14 @@
 	\unite@env\unite%
  }
  \DeclareDocumentCommand\unite@{od()d<>}{%
-	\IfValueTF{#1}{\item[#1]}{\item}%
+	\IfValueTF{#1}
+      {\if@staratend{#1}%
+         {\cpgeref@setcounter{unite}{\x@arg-1}\item}%
+         {\if@plusatend{#1}%
+            {\cpgeref@addtocounter{unite}{\x@arg-1}\item}%
+            {\item[#1]}%
+      }}
+      {\item}%
 	\IfValueT{#2}{\deco@unitetitle{#2}}%
 	\IfValueT{#3}{\IfValueF{#1}{\label{#3}}}%
 }
@@ -1326,8 +1355,8 @@
 	\fi%
    \let\makelabel\lrmargin@label%
     }%
-    \item[#1]\ignorespaces}
- {\endlist}
+    \item[#1]\ignorespaces\set@defaultforlistsinsideunite}
+ {\closeunite\endlist}
 \def\lrmargin@label#1{%
 	\ifblank{#1}{\relax}
 				 {\csuse{deco@lrmargin}{#1}}%
@@ -1402,310 +1431,12 @@
 		\hbox to #1{\xleaders\copy\cpge@boxb\hskip 0pt plus 1fill\hbox{}}%
 }
 
-%%% Ajout 05/08/2021
-%%% gestion des références croisées VANILLA du noyaux LaTeX
-%%% les commandes ne sont pas utilisables dans les documents finaux.
 
-\def\cpgeG@refundefinedtrue{%
-  \gdef\cpge@refundefined{%
-    \@latex@warning@no@line{There were undefined references}}}
-    
-\let\cpge@refundefined\relax
-
-\def\cpge@setref#1#2#3{%
-  \ifx#1\relax
-   \protect\cpgeG@refundefinedtrue
-   \nfss@text{\reset@font\bfseries ??}%
-   \@latex@warning{Reference `#3' on page \thepage \space
-             undefined}%
-  \else
-   \expandafter#2#1\null
-  \fi}
-  
-\def\cpgeref#1{\expandafter\cpge@setref\csname r@#1\endcsname\@firstoftwo{#1}}
-
-\def\cpgepageref#1{\expandafter\cpge@setref\csname r@#1\endcsname
-                                   \@secondoftwo{#1}}
-\def\cpge@newl@bel#1#2#3{{%
-  \@ifundefined{#1@#2}%
-    \relax
-    {\gdef \cpge@multiplelabels {%
-       \@latex@warning@no@line{There were multiply-defined labels}}%
-     \@latex@warning@no@line{Label `#2' multiply defined}}%
-  \global\@namedef{#1@#2}{#3}}}
-\def\cpgenewlabel{\cpge@newl@bel r}
-
-%\@onlypreamble\cpge@newl@bel
-\let\cpge@multiplelabels\relax
-
-\def\cpgelabel#1{\@bsphack
-  \immediate\write\@auxout{\string\cpgenewlabel{#1}{{\cpge@currentlabel}{\thepage}}}%
-  \@esphack}
-
-\def\cpge@currentcounter{}
-
-\def\cpgeref@setcounter#1#2{%
-   \setcounter{#1}{#2}%
-   \edef\cpge@currentcounter{#1}%
-   \edef\cpge@currentlabel
-       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
-}
-\def\cpgeref@stepcounter#1{%
-   \stepcounter{#1}%
-   \edef\cpge@currentcounter{#1}%
-   \edef\cpge@currentlabel
-       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
-}
-% commande ajoutée pour référencer un compteur en utilisant \addtocounter
-\def\cpgeref@addtocounter#1#2{%
-    \addtocounter{#1}{#2}%
-    \edef\cpge@currentcounter{#1}%
-    \edef\cpge@currentlabel
-    {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}% 
- }
-\def\cpge@labelformat#1{\expandafter\def\csname p@#1\endcsname##1}
-\DeclareRobustCommand\cpgeRef[1]{\edef\@tempa{\cpgeref{#1}}%
-   \expandafter\Makeuppercase\@tempa}
-
-\def\cpge@currentlabel{}
-
-%%% code inspired by glocalvals.sty
-\newcommand{\usevalue}[1]{\csuse{cpge:#1}}
-\newcommand{\defvalue}[2]{%
-\ifcsname cpge:#1:defined\endcsname
-  \PackageError{cpgebase}{Value "#1" already defined}{}%
-\else%
-  \immediate\write\@auxout{\string\csgdef{cpge:#1}{#2}}%
-  \csgdef{cpge:#1:defined}{}%
-  \csgdef{cpge:#1}{#2}%
-  \PackageInfo{cpgebase}{Defining new variable "#1" with value "#2"}%
-\fi%
-}
 
 \def\fntht{\fontcharht\font`}
 \def\fntdp{\fontchardp\font`}
 \def\fntwd{\fontcharwd\font`}
 \newcommand\cpgesquare[1][x]{\rule{\fntht#1}{\fntht#1}}
-  
-%%%% Ajout 09/10/2023
-%%%% emprunté à answers.sty et tcolorbox.sty avec adaptation 
-%%%% Pemet d'écrire les solutions dans un fichier séparé.
-%%%% L'écriture ne se produit que si \ifsolution est initialisé en true.  
-%%%% \ifsolution doit être déclaré par la classe avant le chargement de cpgebase.sty.
-%%%% Sa création ici provoquera sa réinitialisation en false. 
-\ifundef{\ifsolution}{\newif\ifsolution}{}
-
-
-%%% tcolorbox.sty : 
-%%% environnement : {cpgewriteonce}, #1 est le nom d'un fichier physique
-%%% crée le fichier #1, l'associe au stream cpgeoutonce, y écrit et le ferme.
-%%% si \cpgewriteonce est utilisé dans un environnement avec un/des arguments
-%%% optionnels, veiller à ce que les arguments suivent le nom de l'environnement
-%%% sur la même ligne et sans espaces entre eux pour empêcher TeX d'aller chercher 
-%%% trop loin des arguments, avalant des espaces et empêchant une lecture
-%%% verbatim correcte.  (prefixer les spec des arguments xparse par !)
-\RequirePackage{verbatim}
-
-\let\cpge@verbatim@begin@hook\@empty
-\let\cpge@verbatim@end@hook\@empty
-\let\cpge@verbatim@change@percent\@empty
-\let\cpge@set@verbatim@finish\@empty
-\def\cpgewriteonce#1{%
-  \@bsphack
-  \cpge@set@verbatim@finish%
-  %\cpge@allocate@out%
-  \cpgeopenfile{solhandle}
-  \immediate\openout\solhandle@file #1.tex
-  \cpge@verbatim@begin@hook%
-  \let\do\@makeother\dospecials
-  \cpge@verbatim@change@percent\catcode`\^^M\active \catcode`\^^I=12
-  \def\verbatim@processline{%
-    \immediate\write\solhandle@file
-      {\the\verbatim@line}}%
-  \verbatim@start}%'
-\def\endcpgewriteonce{%
-  \cpge@verbatim@end@hook%
-  \immediate\closeout\solhandle@file
-  \@esphack%
-}
-
-%%%% Le système record
-\def\cpge@allocate@out{%
-  \newwrite\cpge@out%
-  \gdef\cpge@allocate@out{}%
-}
-\def\cpge@null#1{}
-\newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
-\newif\ifcpgerecordfileopen
-\newcommand{\cpgestartrecording}[1][\jobname.rec]{%
-  \let\cpgerecord\cpge@record%
-  \edef\cpge@record@file{#1}%
-  \ifcpge@open{cpgerecordfile}{}
-      {
-            \global\cpgerecordfileopentrue%
-            \cpge@allocate@out%
-            \@xp\immediate\@xp\openout\@xp\cpge@out\cpge@record@file%
-      }%
-}
-
-\newcommand{\cpgestoprecording}{%
-  \immediate\closeout\cpge@out%
-  \let\cpgerecord\cpge@null%
-}
-
-%%% answers.sty : 
-%%% environnement : {cpgefilesave}, #1 est le nom d'un stream. 
-%%% \cpgeopenfile{#1}[#2] crée le stream #1 et l'associe à au fichier physique #2, 
-%%% sans #2 un fichier physique de nom #1 est crée.
-%%% \cpgeclosefile{#1} ferme le stream #1, 
-%%% \cpgereadfile{#1} ouvre le fichier associé au stream #1 s'il existe, 
-%%% \cpgereadfile est remplaçable par un \input direct sur le fichier physique.
-%%% plusieurs écritures possibles entre fermeture et ouverture du stream.
-%%% possible de changer de fichier physique associé au stream, 
-%%% aucune écriture si \solutionfalse : 
-%%% fichier physique créé par \cpgeopenfile mais reste vide.
-
-\long\def\cpgeprotected@iwrite#1#2#3{%
-  \begingroup
-    \let\thepage\relax
-    #2%
-    \let\protect\@unexpandable@protect
-    \edef\reserved@a{\immediate\write#1{#3}}%
-    \reserved@a
-  \endgroup
-  \if@nobreak
-    \ifvmode
-      \nobreak
-    \fi
-  \fi
-}
-
-\newenvironment{cpgefilesave}[1]{%
-   \@bsphack
-   \def\verbatim@processline{}%
-   \ifcpge@fileundefined{#1}{}{%
-      \ifcpge@open{#1}{%
-         \def\verbatim@processline{%
-            \ifcpge@solution{%
-               \immediate\write\@nameuse{#1@file}%
-                  {\the\verbatim@line}%
-            }{}%
-         }%
-      }{}%
-   }%
-   \let\do\@makeother\dospecials
-   \catcode`\^^M\active \catcode`\^^I=12\relax
-   \verbatim@start
-}{\@esphack}
-
-\newcommand{\cpgewritetofile}[2]{%
-   \@bsphack
-   \ifcpge@fileundefined{#1}{}{%
-      \ifcpge@open{#1}{%
-         {%
-            \let\protect\string
-            \ifcpge@solution{%
-               \cpgeprotected@iwrite{\@nameuse{#1@file}}{}{#2}%
-            }{}%
-         }%
-      }{}%
-   }%
-   \@esphack%
-}
-
-\newcommand{\ifcpge@open}[3]{%
-   \csname if#1open\endcsname#2\else#3\fi}%
-   
-\newcommand{\ifcpge@fileundefined}[3]{%
-   \csname ifx\expandafter\endcsname
-      \csname #1@file\endcsname\relax
-      #2\else#3\fi}
-      
-\newcommand{\ifcpge@solution}[2]{%
-   \ifsolution #1\else #2\fi}
-   
-\def\cpgeopenfile#1{%
-	\expandafter\ifx\csname #1opentrue\endcsname\relax
-      \expandafter\newif\csname if#1open\endcsname
-   \fi
-   \@ifnextchar[{\cpgedefine@filename{#1}}%
-      {\cpgedefine@filename{#1}[#1]}}%
-      
-\def\cpgedefine@filename#1[#2]{%
-   \global\@namedef{#1@filename}{#2.tex}%
-   \ifcpge@solution{%
-      \typeout{Output from handle #1 going
-         to #2.tex}%
-   }{}%
-   \ifcpge@fileundefined{#1}{%
-      \expandafter\newwrite\csname #1@file\endcsname
-      \csname newif\expandafter\endcsname
-         \csname if#1open\endcsname
-      \global\csname #1openfalse\endcsname
-      \expandafter\ifx\csname Open#1hook\endcsname\relax
-         \global\@namedef{Open#1hook}##1{}%
-      \fi
-      \expandafter\ifx\csname Close#1hook\endcsname\relax
-         \global\@namedef{Close#1hook}##1{}%
-      \fi
-   }{}%
-   \let\Tmp\relax
-   \ifcpge@open{#1}{\typeout{File #1 already open}}{%
-      \ifcpge@solution{%
-         \immediate\openout\@nameuse{#1@file}=%
-         \@nameuse{#1@filename}%
-      }{}%
-      \global\csname#1opentrue\endcsname
-      \def\Tmp{\@nameuse{Open#1hook}{#1}}%
-   }%
-   \Tmp
-}
-
-\def\cpgeclosefile#1{%
-   \let\Tmp\relax
-   \ifcpge@fileundefined{#1}{}{%
-      \ifcpge@open{#1}{%
-         \ifcpge@solution{%
-            \immediate\closeout\@nameuse{#1@file}%
-         }{}%
-         \global\csname #1openfalse\endcsname
-         \def\Tmp{\@nameuse{Close#1hook}{#1}}%
-      }{}%
-   }%
-   \Tmp
-}
-
-\def\cpgereadfile#1{%
-   \ifcpge@solution{%
-      \ifcpge@fileundefined{#1}{}{%
-         \ifcpge@open{#1}{%
-            \typeout{WARNING: attempt to read open file #1}%
-         }{%
-            \edef\Tmp{%
-               \noexpand\InputIfFileExists
-                  {\@nameuse{#1@filename}}{}%
-               {\noexpand\message{File
-                  \@nameuse{#1@filename}%
-                     \space not found}}%
-            }%
-            \Tmp
-         }%
-      }%
-   }{}%
-}
-
-%%% Si le moteur de compilation est luatex
-%%% charger pdftexcmd.sty qui définit certaines 
-%%% primitives pdftex qui ne sont pas disponibles dans lualatex
-\RequirePackage{ifluatex}
-\ifluatex\RequirePackage{pdftexcmds}\fi 
-\def\IfFileEmpty#1{%
-   \ifnum0\pdf@filesize{#1}>0
-      \expandafter\@secondoftwo
-   \else
-      \expandafter\@firstoftwo
-   \fi
-}
 
 %%%%%%%
 %%%%%%%%%

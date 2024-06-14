@@ -12,7 +12,7 @@
 \newif\ifweb
 \newif\ifserie
 \newif\ifsingleimage
-\newif\ifstraight	\straighttrue
+\newif\ifstraight
 \newif\ifprint
 \newif\ifnocolors
 \newif\ifdark

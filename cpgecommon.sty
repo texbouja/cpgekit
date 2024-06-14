@@ -38,6 +38,291 @@
    }
    }{}
 
+%%%% Structure de bas niveau d'inclusion de fichiers  
+%%%% Ajout 09/10/2023
+%%%% emprunté à answers.sty et tcolorbox.sty avec adaptation 
+%%%% Pemet d'écrire les solutions dans un fichier séparé.
+%%%% L'écriture ne se produit que si \ifsolution est initialisé en true.  
+%%%% \ifsolution doit être déclaré par la classe avant le chargement de cpgebase.sty.
+%%%% Sa création ici provoquera sa réinitialisation en false. 
+
+
+%%% tcolorbox.sty : 
+%%% environnement : {cpgewriteonce}, #1 est le nom d'un fichier physique
+%%% crée le fichier #1, l'associe au stream cpgeoutonce, y écrit et le ferme.
+%%% si \cpgewriteonce est utilisé dans un environnement avec un/des arguments
+%%% optionnels, veiller à ce que les arguments suivent le nom de l'environnement
+%%% sur la même ligne et sans espaces entre eux pour empêcher TeX d'aller chercher 
+%%% trop loin des arguments, avalant des espaces et empêchant une lecture
+%%% verbatim correcte.  (prefixer les spec des arguments xparse par !)
+\RequirePackage{verbatim}
+
+\let\cpge@verbatim@begin@hook\@empty
+\let\cpge@verbatim@end@hook\@empty
+\let\cpge@verbatim@change@percent\@empty
+\let\cpge@set@verbatim@finish\@empty
+\def\cpgewriteonce#1{%
+  \@bsphack
+  \cpge@set@verbatim@finish%
+  \cpgeopenfile{solhandle}
+  \immediate\openout\solhandle@file #1.tex
+  \cpge@verbatim@begin@hook%
+  \let\do\@makeother\dospecials
+  \cpge@verbatim@change@percent\catcode`\^^M\active \catcode`\^^I=12
+  \def\verbatim@processline{%
+    \immediate\write\solhandle@file
+      {\the\verbatim@line}}%
+  \verbatim@start}%'
+\def\endcpgewriteonce{%
+  \cpge@verbatim@end@hook%
+  \immediate\closeout\solhandle@file
+  \@esphack%
+}
+
+%%%% Le système record
+\def\cpge@allocate@out{\newwrite\cpge@out}
+\def\cpge@null#1{}
+\newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
+\newif\ifcpgerecordfileopen
+\newcommand{\cpgestartrecording}[1][\jobname]{%
+   \unless\ifcpgerecordfileopen%
+      \let\cpgerecord\cpge@record%
+      \xdef\cpge@recordfile{#1.rec}%
+      \global\cpgerecordfileopentrue%
+      \cpge@allocate@out%
+      \@xp\immediate\@xp\openout\@xp\cpge@out\cpge@recordfile%
+   \fi%
+}
+
+\newcommand{\cpgestoprecording}{%
+   \ifcpgerecordfileopen%
+      \immediate\closeout\cpge@out%
+      \global\cpgerecordfileopenfalse%
+      \let\cpgerecord\cpge@null%
+   \fi%
+}
+
+%%% answers.sty : 
+%%% environnement : {cpgefilesave}, #1 est le nom d'un stream. 
+%%% \cpgeopenfile{#1}[#2] crée le stream #1 et l'associe à au fichier physique #2, 
+%%% sans #2 un fichier physique de nom #1 est crée.
+%%% \cpgeclosefile{#1} ferme le stream #1, 
+%%% \cpgereadfile{#1} ouvre le fichier associé au stream #1 s'il existe, 
+%%% \cpgereadfile est remplaçable par un \input direct sur le fichier physique.
+%%% plusieurs écritures possibles entre fermeture et ouverture du stream.
+%%% possible de changer de fichier physique associé au stream, 
+%%% aucune écriture si \solutionfalse : 
+%%% fichier physique créé par \cpgeopenfile mais reste vide.
+
+\long\def\cpgeprotected@iwrite#1#2#3{%
+  \begingroup
+    \let\thepage\relax
+    #2%
+    \let\protect\@unexpandable@protect
+    \edef\reserved@a{\immediate\write#1{#3}}%
+    \reserved@a
+  \endgroup
+  \if@nobreak
+    \ifvmode
+      \nobreak
+    \fi
+  \fi
+}
+
+\newenvironment{cpgefilesave}[1]{%
+   \@bsphack
+   \def\verbatim@processline{}%
+   \ifcpge@fileundefined{#1}{}{%
+      \ifcpge@open{#1}{%
+         \def\verbatim@processline{%
+               \immediate\write\@nameuse{#1@file}%
+                  {\the\verbatim@line}%
+         }%
+      }{}%
+   }%
+   \let\do\@makeother\dospecials
+   \catcode`\^^M\active \catcode`\^^I=12\relax
+   \verbatim@start
+}{\@esphack}
+
+\newcommand{\cpgewritetofile}[2]{%
+   \@bsphack
+   \ifcpge@fileundefined{#1}{}{%
+      \ifcpge@open{#1}{%
+         {%
+            \let\protect\string
+               \cpgeprotected@iwrite{\@nameuse{#1@file}}{}{#2}%
+         }%
+      }{}%
+   }%
+   \@esphack%
+}
+
+\newcommand{\ifcpge@open}[3]{%
+   \csname if#1open\endcsname#2\else#3\fi}%
+   
+\newcommand{\ifcpge@fileundefined}[3]{%
+   \csname ifx\expandafter\endcsname
+      \csname #1@file\endcsname\relax
+      #2\else#3\fi}
+      
+\newcommand{\ifcpge@solution}[2]{%
+   \ifsolution #1\else #2\fi}
+   
+\def\cpgeopenfile#1{%
+	\expandafter\ifx\csname #1opentrue\endcsname\relax
+      \expandafter\newif\csname if#1open\endcsname
+   \fi
+   \@ifnextchar[{\cpgedefine@filename{#1}}%
+      {\cpgedefine@filename{#1}[#1]}}%
+      
+\def\cpgedefine@filename#1[#2]{%
+   \global\@namedef{#1@filename}{#2.tex}%
+      \typeout{Écriture de #1 dans
+        #2.tex}%
+   \ifcpge@fileundefined{#1}{%
+      \expandafter\newwrite\csname #1@file\endcsname
+      \csname newif\expandafter\endcsname
+         \csname if#1open\endcsname
+      \global\csname #1openfalse\endcsname
+      \expandafter\ifx\csname Open#1hook\endcsname\relax
+         \global\@namedef{Open#1hook}##1{}%
+      \fi
+      \expandafter\ifx\csname Close#1hook\endcsname\relax
+         \global\@namedef{Close#1hook}##1{}%
+      \fi
+   }{}%
+   \let\Tmp\relax
+   \ifcpge@open{#1}{\typeout{Fichier #1 déjà ouvert}}{%
+         \immediate\openout\@nameuse{#1@file}=%
+         \@nameuse{#1@filename}%
+      \global\csname#1opentrue\endcsname
+      \def\Tmp{\@nameuse{Open#1hook}{#1}}%
+   }%
+   \Tmp
+}
+
+\def\cpgeclosefile#1{%
+   \let\Tmp\relax
+   \ifcpge@fileundefined{#1}{}{%
+      \ifcpge@open{#1}{%
+            \immediate\closeout\@nameuse{#1@file}%
+         \global\csname #1openfalse\endcsname
+         \def\Tmp{\@nameuse{Close#1hook}{#1}}%
+      }{}%
+   }%
+   \Tmp
+}
+
+\def\cpgereadfile#1{%
+      \ifcpge@fileundefined{#1}{}{%
+         \ifcpge@open{#1}{%
+            \typeout{WARNING: tentative de lire le fichier ouvert #1}%
+         }{%
+            \edef\Tmp{%
+               \noexpand\InputIfFileExists
+                  {\@nameuse{#1@filename}}{}%
+               {\noexpand\message{Fichier
+                  \@nameuse{#1@filename}%
+                     \space non trouvé}}%
+            }%
+            \Tmp
+         }%
+      }%
+}
+
+%%% Si le moteur de compilation est luatex
+%%% charger pdftexcmd.sty qui définit certaines 
+%%% primitives pdftex qui ne sont pas disponibles dans lualatex
+\RequirePackage{ifluatex}
+\ifluatex\RequirePackage{pdftexcmds}\fi 
+\def\IfFileEmpty#1{%
+   \ifnum0\pdf@filesize{#1}>0
+      \expandafter\@secondoftwo
+   \else
+      \expandafter\@firstoftwo
+   \fi
+}
+
+%%% Ajout 05/08/2021
+%%% gestion des références croisées VANILLA du noyaux LaTeX
+%%% les commandes ne sont pas utilisables dans les documents finaux.
+
+\def\cpgeG@refundefinedtrue{%
+  \gdef\cpge@refundefined{%
+    \@latex@warning@no@line{There were undefined references}}}
+    
+\let\cpge@refundefined\relax
+
+\def\cpge@setref#1#2#3{%
+  \ifx#1\relax
+   \protect\cpgeG@refundefinedtrue
+   \nfss@text{\reset@font\bfseries ??}%
+   \@latex@warning{Reference `#3' on page \thepage \space
+             undefined}%
+  \else
+   \expandafter#2#1\null
+  \fi}
+  
+\def\cpgeref#1{\expandafter\cpge@setref\csname r@#1\endcsname\@firstoftwo{#1}}
+
+\def\cpgepageref#1{\expandafter\cpge@setref\csname r@#1\endcsname
+                                   \@secondoftwo{#1}}
+\def\cpge@newl@bel#1#2#3{{%
+  \@ifundefined{#1@#2}%
+    \relax
+    {\gdef \cpge@multiplelabels {%
+       \@latex@warning@no@line{There were multiply-defined labels}}%
+     \@latex@warning@no@line{Label `#2' multiply defined}}%
+  \global\@namedef{#1@#2}{#3}}}
+\def\cpgenewlabel{\cpge@newl@bel r}
+
+%\@onlypreamble\cpge@newl@bel
+\let\cpge@multiplelabels\relax
+
+\def\cpgelabel#1{\@bsphack
+  \immediate\write\@auxout{\string\cpgenewlabel{#1}{{\@currentlabel}{\thepage}}}%
+  \@esphack}
+
+
+\def\cpgeref@setcounter#1#2{%
+   \setcounter{#1}{#2}%
+   \edef\@currentcounter{#1}%
+   \edef\@currentlabel
+       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
+}
+\def\cpgeref@stepcounter#1{%
+   \stepcounter{#1}%
+   \edef\@currentcounter{#1}%
+   \edef\@currentlabel
+       {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}%
+}
+% commande ajoutée pour référencer un compteur en utilisant \addtocounter
+\def\cpgeref@addtocounter#1#2{%
+    \addtocounter{#1}{#2}%
+    \edef\@currentcounter{#1}%
+    \edef\@currentlabel
+    {\csname p@#1\expandafter\endcsname\csname the#1\endcsname}% 
+ }
+\def\cpge@labelformat#1{\expandafter\def\csname p@#1\endcsname##1}
+\DeclareRobustCommand\cpgeRef[1]{\edef\@tempa{\cpgeref{#1}}%
+   \expandafter\Makeuppercase\@tempa}
+
+
+%%% code inspired by glocalvals.sty
+\newcommand{\usevalue}[1]{\csuse{cpge:#1}}
+\newcommand{\defvalue}[2]{%
+\ifcsname cpge:#1:defined\endcsname
+  \PackageError{cpgecommon}{Value "#1" already defined}{}%
+\else%
+  \immediate\write\@auxout{\string\csgdef{cpge:#1}{#2}}%
+  \csgdef{cpge:#1:defined}{}%
+  \csgdef{cpge:#1}{#2}%
+  \PackageInfo{cpgecommon}{Defining new variable "#1" with value "#2"}%
+\fi%
+}
+
+%%%%% Si jamais cpgebase.sty n'est pas chargé 
 \ifundef{\cpgeaddkeyword}{%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Commandes utilitaires multi-usage %%%%%
@@ -79,7 +364,26 @@
 \def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
 \def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
 \def\cpge@removestar#1*{#1}
+\def\cpge@removeplus#1+{#1}
 \def\cpge@erasestar*#1+{#1}
+\def\if@staratend#1{
+	\def\in@@{\in@{*!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\x@arg{\cpge@removestar#1}\expandafter\@firstoftwo%
+	\else%
+		\def\x@arg{#1}\expandafter\@secondoftwo%
+	\fi%
+}
+\def\if@plusatend#1{
+	\def\in@@{\in@{+!}}%
+	\@xp\in@@\@xp{#1!}%
+	\ifin@%
+		\edef\x@arg{\cpge@removeplus#1}\expandafter\@firstoftwo%
+	\else%
+		\def\x@arg{#1}\expandafter\@secondoftwo%
+	\fi%
+}
 \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 \long\def\cpge@deco#1#2{%
 \long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
@@ -229,7 +533,7 @@
 \addmeta{Devoir}{devoir}{}{}
 \addmeta{Theme}{theme}{}{}
 \addmeta{Subtheme}{subtheme}{}{}
-\addmeta{Periode}{periode}{}{\the\date}
+\addmeta{Periode}{periode}{}{}
 
 \addmeta{Concours}{concours}{}{}
 \addmeta{Epreuve}{epreuve}{}{}
@@ -305,6 +609,7 @@
 
 \RequirePackage{geometry}
 \RequirePackage{cuted}
+\newif\iflandscape
 
 
 % patch de la commande qui contrôle le format de papier
@@ -317,12 +622,16 @@
  	\fi}
 
 % ajout de formats, reconnaissables par la commande \goemetry
-\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(135,240){truemm}}
-\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}
-\@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(180,288){truemm}}
-\@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}
-\@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}
+\@namedef{Gm@bk17x24}#1{\Gm@setsize{#1}(170,240){truemm}}	%livre 17x24
+\@namedef{Gm@bk19x24}#1{\Gm@setsize{#1}(190,240){truemm}}	%livre 19x24
+\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(135,240){truemm}}	%smartphone 16x9 (Apple)
+\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}	%smarthone 19x9	(Samsung)
+\@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}		%tablette 4x3 (Apple)
+\@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(180,288){truemm}}	%tablette 16x10 (Samsung)
+\@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}		%beamer
 %\define@key{Gm}{a4paper}[true]{\Gm@setpaper@ifpre{a4paper}}%
+\define@key{Gm}{bk17x24}[true]{\Gm@setpaper@ifpre{bk17x24}}
+\define@key{Gm}{bk19x24}[true]{\Gm@setpaper@ifpre{bk19x24}}
 \define@key{Gm}{sc16x9}[true]{\Gm@setpaper@ifpre{sc16x9}}
 \define@key{Gm}{sc19x9}[true]{\Gm@setpaper@ifpre{sc19x9}}
 \define@key{Gm}{sc16x10}[true]{\Gm@setpaper@ifpre{sc16x10}}
@@ -370,6 +679,7 @@
 		\printtrue%
 		\darkfalse%
 		\compactfalse%
+		\landscapetrue%
 		\striptitlefalse%
 		\geometry{%
 			a4paper,
@@ -380,6 +690,24 @@
 			vmargin={1.5truecm,1.5truecm},
 			littlemargin=3.2pc
 		},
+	book/.code=%
+		\darkfalse%
+		\compactfalse%
+		\geometry{%
+			bk17x24,
+			inner=2.4cm, outer=1.8cm,
+			vmargin={2cm,3cm}, 
+			littlemargin=4pc
+		}, 
+	altbook/.code=%
+		\darkfalse%
+		\compactfalse%
+		\geometry{%
+			bk19x24,
+			inner=3cm, outer=2cm,
+			vmargin={2cm,3cm}, 
+			littlemargin=6pc
+		}, 
 	draft/.code=%
 		\printfalse%
 		\compacttrue%
@@ -387,7 +715,7 @@
 		\geometry{%
 			a5paper,
 			inner=1.5cm, outer=1.5cm,
-			vmargin={1.8cm,2.4cm},
+			vmargin={1.2cm,1.8cm},
 			littlemargin=4pc 
 		}, 
 	phone/.code=%
@@ -402,7 +730,7 @@
 			vmargin={1.2cm,1.4cm},
 			littlemargin=3.2pc,
 		},%
-	phone 19x9/.code=%
+	altphone/.code=%
 		\printfalse%
 		\darktrue%
 		\compacttrue%
@@ -440,6 +768,7 @@
 		\printfalse%
 		\compacttrue%
 		\darkfalse%
+		\landscapetrue%
 		\titlepagetrue%
 		\geometry{%
 			sc4x3,
@@ -450,7 +779,7 @@
 			%mag=880,
 			littlemargin=3.2pc
 		},%
-	tablet 16x10/.code=%
+	alttablet/.code=%
 		\printfalse%
 		\darkfalse%
 		\compactfalse%
@@ -462,7 +791,7 @@
 			%mag=1100,
 			littlemargin=4pc
 		},%
-	lstablet 16x10/.code=%
+	lsalttablet/.code=%
 		\printfalse%
 		\compacttrue%
 		\darkfalse%
@@ -732,7 +1061,7 @@
 	inner align, 
 	inner align*, 
 	outer align,
-	outer align, 
+	outer align*, 
 	width,
 	before=\minipage{\title@width},
 	after=\endminipage,
@@ -764,8 +1093,9 @@
 			\csuse{hook@titleaftertitlepage}%
 			\csuse{hook@aftertitlepage}%
 			\csuse{hook@lateaftertitlepage}
-		\end{titlepage}
-		\pagecolor{pagecol}
+		\end{titlepage}%
+		\pagecolor{pagecol}%
+		\restoregeometry%
 	\else%
 		\thispagestyle{plain}%
 		\ifstriptitle
@@ -898,8 +1228,8 @@
 	   tcbtitle=white, 
 	   tcbbacktitle=warmcol,
    }
-
-\AtBeginDocument{\ifnocolors\selectcolormodel{gray}\fi}
+\def\cpgesetcolors#1{\ifcase#1\selectcolormodel{gray}\or\selectcolormodel{rgb}\fi}
+\AtBeginDocument{\ifnocolors\cpgesetcolors0\fi}
 \def\reloadcolors{
 	\AtEndPreamble{%
 		\cpgesetup[colors]{default colors}%
@@ -911,6 +1241,14 @@
 }%
 \reloadcolors
 
+%%%%% HYPERREF, Absolument indispensable.
+\RequirePackage[pdfencoding=auto,psdextra]{hyperref}
+\hypersetup{colorlinks,linkcolor=linkcol,breaklinks,raiselinks}
+\pdfstringdefDisableCommands{%
+	\def\({}%
+	\def\){}%
+}
+\let\ToP\texorpdfstring
 
 %%%% Fonts loading. 
 \RequirePackage{ifxetex}
@@ -1015,7 +1353,7 @@
 		{}%
 	\load@thefonts
 	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
-		\def\mathbb{\noexpand\varmathbb}
+		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}{\unexpanded{\varmathbb{#1}}}
 	}
 	\ifundef\hypersetup{}{%
 	\pdfstringdefDisableCommands{%

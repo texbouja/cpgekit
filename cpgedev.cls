@@ -101,18 +101,11 @@
 \cpge@tmp
 
 
-%%%%% Mécanisme de chargement des packages
-\newif\ifload@tikz
-\newif\ifload@hyperref
-\newif\ifload@math
-\newif\ifload@fonts 
-
-\def\cpgeloadpackage{}
-
 
 
 %%%%% Packages du projet 
 \RequirePackage{cpgebase}
+\RequirePackage[customtitles]{cpgecommon}
 \RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
 
@@ -124,9 +117,11 @@
 
 %% Declarations 
 \newcounter{tmpdo}
-
+\def\aux@dir{tmp}
 \newif\ifsolutionlist
 \newif\ifcpge@withsol % vrai si le numero de la question courante doit être un hyperlien 
+\newif\ifincluded%
+\newif\ifisasolution%
 \newif\ifcpge@tmpswa
 \newif\ifcpge@tmpswb
 
@@ -136,51 +131,54 @@
 \ifscore\localscoretrue\fi 
 \def\Solution{\Dummy@Solution}
 \def\setup@solutionmode{%
-	\ifsolutiondelayed\solutiontrue\fi
-	\ifsolution\hinttrue\fi%
-	\ifsolution
-		\def\Solution{\Real@Solution}
-	\fi%
-	\ifsolutiondelayed
-		\cpgestartrecording
-	\fi
-}
-\def\setup@straightmode{%
-	\ifstraight
-		\ifsolution
-			\def\corrige{\Corrige}%
-			\let\endcorrige\endCorrige%
+	\unless\ifdraft
+		\ifsolutiondelayed\solutiontrue\fi%
+		\ifsolution\hinttrue\fi%
+		\ifsolution%
+			\def\Solution{\Real@Solution}%
+		\fi%
+		\ifsolutiondelayed%
+			\cpgestartrecording%
 		\fi%
 	\fi%
 }
+\def\setup@straightmode{%
+	\ifstraight
+		\solutiondelayedfalse%
+		\solutiontrue%
+		\def\corrige{\Corrige}%
+		\let\endcorrige\endCorrige%
+	\fi%
+}
+\def\setup@draftmode{%
+	\ifdraft\straighttrue\setup@straightmode\fi%
+}
 \AtBeginDocument{%
-	\ifdraft\straighttrue\fi%
 	\setup@solutionmode%
 	\setup@straightmode%
+	\setup@draftmode%
+}
+\def\c@rrige{
+	\ifsolution\@xp\Corrige\else\@xp\comment\fi%
+}
+\def\endc@rrige{%
+	\ifsolution\@xp\endCorrige\else\@xp\endcomment\fi%
 }
 
 %%%%% Other package initialisation
 \RequirePackage{currfile}
 \RequirePackage{lastpage}
 \RequirePackage{fontawesome}
-\RequirePackage[pdfencoding=auto,psdextra]{hyperref}
-\hypersetup{colorlinks,linkcolor=linkcol,breaklinks,raiselinks}
-\pdfstringdefDisableCommands{%
-	\def\({}%
-	\def\){}%
-}
-\let\ToP\texorpdfstring
 %\RequirePackage{bookmark}
 
 
 %%%% Strategie d'inclusion de fichier
 %%%%  une version modifiée de subfile.sty renommée en cpgesubdoc.sty
 %%%  
-
 \cpgesetup[include]{
 	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,
 	solution*/.code=\csname solutiondelayed#1\endcsname,
-	straight/.code=\csname straight#1\endcsname,
+	draft/.is if=draft,
 	hint/.is if=hint,
 	before solutions/.code=\def\before@solutions@hook{#1},
 	solution file/.code=\def\solfilename{#1},
@@ -192,29 +190,60 @@
 \def\corr@common@opt{}
 \def\include@beforehook{}
 \def\include@afterhook{}
-\NewDocumentCommand\cpgeinclude{ om }{
-	\RenewDocumentCommand\titre{s e\op +d()}{}%
+\NewDocumentCommand\cpgeinclude{ om }{%
+	%\RenewDocumentCommand\titre{s e\op +d()}{}%
 	\begingroup
+		\includedtrue%
+		\let\shipoutsolutions\relax
 		\IfFileExists{#2-cor.tex}{\def\solfilename{#2-cor}}{}
 		\IfValueT{#1}{\cpgesetup[include]{#1}}%
-		\setup@solutionmode\setup@straightmode%
-		\unless\ifstraight\ifsolution
-			\ifundef\solfilename{}{\subdoc{\solfilename}}%
-		\fi\fi%
+		\setup@solutionmode\setup@draftmode%
+		\unless\ifstraight
+			\ifundef\solfilename{}
+			{%
+				\typeout{====================================^^J%
+					^^J%
+					Inclusion en amont du fichier de solutions \solfilename.tex^^J%
+					^^J%
+					====================================}
+				\subdoc{\solfilename}%
+			}%
+		\fi% 
 		\include@beforehook%
 		\IfFileExists{#2-eno.tex}
-			{\subdoc{#2-eno}}
-			{\subdoc{#2}}
+			{%
+				\subdoc{#2-eno}%
+				\typeout{====================================^^J%
+				^^J%
+				Inclusion du fichier #2-eno.tex^^J%
+				^^J%
+				====================================}%
+			}{%
+				\subdoc{#2}%
+				\typeout{====================================^^J%
+				^^J%
+				Inclusion du fichier #2.tex^^J%
+				^^J%
+				====================================}%
+			}
 		\include@afterhook%
-		\ifstraight\ifundef\solfilename{}{\subdoc{\solfilename}}\fi%
+		\ifstraight
+			\ifundef\solfilename{}
+			{%
+				\typeout{====================================^^J%
+					^^J%
+					Inclusion en aval du fichier de solutions \solfilename.tex^^J%
+					^^J%
+					====================================}
+				\subdoc{\solfilename}%
+			}%
+		\fi%
 	\endgroup%
 	\undef\eno@list%
 }
 
 \def\cpgeincludeweb#1{} 
 
-
-\RequirePackage[customtitles]{cpgecommon}
 %% Formats par defaut des titres 
 \cpgesettitle{|document| \\ |theme| \\ |periode|}
 \cpgesettitle*{|document| \\ |theme| \\ |periode|}
@@ -448,7 +477,7 @@
 
 %%%%% version interne des titres pour les sujets
 \def\after@problemtitle{%
-	\csundef@afterexec{hook@afterprobtitle}%
+	\csundef@afterexec{hook@afterproblemtitle}%
 	\iflocalscore%
 		\ifdef{\problemcounter@name}
 			{
@@ -547,21 +576,21 @@
 %%% Variantes de \parti et \partii pour ecrire en plus
 %%% les titres dans le ficheir de corrigé
 \NewDocumentCommand\wparti{om}{
-    \unless\ifdraft
+    \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
             {\string\parti\IfValueT{#1}{\unexpanded{[#1]}}\unexpanded{{#2}}}
     \fi
     \IfValueTF{#1}{\parti[#1]{#2}}{\parti{#2}}
 }
 \NewDocumentCommand\wpartii{om}{
-    \unless\ifdraft
+    \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
             {\string\partii\IfValueT{#1}{\unexpanded{[#1]}}\unexpanded{{#2}}}
     \fi
     \IfValueTF{#1}{\partii[#1]{#2}}{\partii{#2}}
 }
 \NewDocumentCommand\wbigques{om}{%
-    \unless\ifdraft
+    \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
             {\string\bigques\IfValueT{#1}{\unexpanded{[#1]}}\unexpanded{{#2}}}%
     \fi%
@@ -582,8 +611,8 @@
 			{\def\cpge@tmpb{\parti{\unexpanded{#5}}}}%
 	}%
 	\cpge@tmpb%
-	\IfValueF{#1}{\IfValueT{#6}{\label{\cpge@labelprefix#6}}}%
-	\unless\ifdraft
+	\IfValueF{#1}{\IfValueT{#6}{\label{eno:\cpge@problem@id:#6}}}%
+	\unless\ifstraight
 		\IfBooleanT{#2}{
 			\IfValueT{#3}{
 				\tokcyclexpress{\cpgesetupsectiontitle{parti={#3}}}
@@ -605,8 +634,8 @@
 			{\def\cpge@tmpb{\partii{\unexpanded{#5}}}}%
 	}%
 	\cpge@tmpb%
-	\IfValueF{#1}{\IfValueT{#6}{\label{\cpge@labelprefix#6}}}%
-	\unless\ifdraft
+	\IfValueF{#1}{\IfValueT{#6}{\label{eno:\cpge@problem@id:#6}}}%
+	\unless\ifstraight
 		\IfBooleanT{#2}{
 			\IfValueT{#3}{
 				\tokcyclexpress{\cpgesetupsectiontitle{partii={#3}}}
@@ -695,7 +724,6 @@
 \def\solutionautorefname{solution}
 
 %%%%%%%
-\newif\ifisasolution
 \cpgesetdeco{problem}{{#1 }}
 \cpgesetdeco{problemlabel}{%
 	{\Large\scshape\bfseries%
@@ -721,9 +749,9 @@
 	after/.store in=\hook@afterproblem,
 	before title/.code=\title@parser{#1}%
 		\@xp\long\@xp\def\@xp
-		 \hook@beforeprobtitle\@xp{\title@contents},
+		 \hook@beforeproblemtitle\@xp{\title@contents},
 	after title/.code=\title@parser{#1}%
-		\@xp\long\@xp\def\@xp\hook@afterprobtitle
+		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
 	label/.code=\@xp\cpgesetlabel\@xp{\problemcounter@name}{#1},
 	title deco/.code=\cpgesetdeco{problem}{#1},
@@ -735,18 +763,21 @@
 	after/.store in=\hook@afterproblem,
 	before title/.code=\title@parser{#1}%
 		\@xp\long\@xp\def\@xp
-		 \hook@beforeprobtitle\@xp{\title@contents},
+		 \hook@beforeproblemtitle\@xp{\title@contents},
 	after title/.code=\title@parser{#1}%
-		\@xp\long\@xp\def\@xp\hook@afterprobtitle
+		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
 	questions list/.store in=\queslist,
 	.unknown/.code={},
 }
 \def\noqueslistmessage{%
-	\begin{lrmargin}{3em}{3em}%
-		\itshape\Large\color{DarkRed}%
-		Aucune liste de numéros de questions n'est disponible (voir la documentation).
-	\end{lrmargin}
+	\typeout{%
+		====================================^^J%
+		^^J%
+		 	\problemcounter@name\space\arabic{\problemcounter@name} :
+			Aucune liste de questions n'a été préparée ^^J%
+		^^J%
+		====================================}
 }
 \def\setup@id{%
 		\ifisasolution%
@@ -754,13 +785,16 @@
 				\ifcsundef{\cpge@problem@id @list}{}
 					{\edef\queslist{\csuse{\cpge@problem@id @list}}}%
 			\fi% 
+			\csgdef{cor@\cpge@problem@id}%
 			\def\xref{\xref@cor}%
 		\else%
-			\ifcsdef{eno:\cpge@problem@id}
-				{\ClassError{cpgedev}{\problemcounter@name\space\arabic{\problemcounter@name}\space:\space
-				  Identifiant\space \cpge@problem@id\space déjà\space utilisé}{}}
-				{\csgdef{eno:\cpge@problem@id}{}%
-					\csxdef{prefixedname@@\cpge@problem@id}{%
+			\ifcsdef{eno@\cpge@problem@id}
+				{\ClassError{cpgedev}{\problemcounter@name\space
+					\arabic{\problemcounter@name}\space:\space
+				  	Identifiant \cpge@problem@id\space 
+					déjà utilisé}{}}
+				{\csgdef{eno@\cpge@problem@id}{}%
+					\csxdef{prefixedname@\cpge@problem@id}{%
 						\null\space\csuse{dudela@\problemcounter@name}\space
 				  		 \csuse{label@\problemcounter@name}%
 					}%
@@ -835,69 +869,90 @@
 	}
 \def\cpge@problem@id{Unnamed}
 \DeclareDocumentCommand\cpgenewproblem{%
-		s %* corrige or enonce
+		s %1 corrige or enonce
 		m %2 counter name
 		m %3 printed name
-		o %4
-		m %5 before hook for the solution title
-		m %6 counter label format
-		m %7 solution title prefix
-		d() %8 counter shortcut
+		o %4 autorefname to be used (hyperref)
+		m %5 counter label format
+		m %6 solution title prefix
+		d() %7 counter shortcut
 		}{%
-	\csdef{hook@precor@#2}{#5}
-	\IfValueTF{#8}
-		{\cpgedefcounter{#2}{#6}[@devoir](#8)}
-		{\cpgedefcounter{#2}{#6}[@devoir]}%
-		\IfValueTF{#4}
-			{\csgdef{#2autorefname}{#4}}
-			{\csxdef{#2autorefname}{\MakeLowercase{#3}}}
-	\csgdef{dudela@#2}{#7}%
+	\IfValueTF{#7}
+		{\cpgedefcounter{#2}{#5}[@devoir](#7)}
+		{\cpgedefcounter{#2}{#5}[@devoir]}%
+	\IfValueTF{#4}
+		{\csgdef{#2autorefname}{#4}}
+		{\csxdef{#2autorefname}{\MakeLowercase{#3}}}
+	\csgdef{dudela@#2}{#6}%
 	\IfBooleanT{#1}{%
-		\NewDocumentEnvironment{#2}{m +e\op o d() d<>}
+		\NewDocumentEnvironment{#2}{m +e{\op} o d() d<> +b}
 			{%
-				\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
-				\def\problemcounter@name{#2}%
-				\IfValueT{##2}{\cpgesetup[solution]{##2}}%
-				\edef\cpge@labelprefix{cor:\cpge@problem@id:}
-				\csuse{hook@precor@#2}%
-				\csuse{hook@beforeprobtitle}
-				\@problemtitle{#2}{#3}[##3](##4)<##5>%
-				\setup@id%
-				\csuse{hook@afterprobtitle}
-				\csuse{hook@beforeproblem}%
-			}{%
-				\endxsol%
-				\csuse{hook@afterproblem}%
-			}%
-	}
+				\ifcsdef{cor@\cpge@problem@id}{}{%
+					\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
+					\def\problemcounter@name{#2}%
+					\IfValueT{##2}{\cpgesetup[solution]{##2}}%
+					\csdef{label@#2}{%
+						\unskip\solutionname%
+						\ignorespaces\csuse{prefixedname@\cpge@problem@id}%
+					}%
+					\isasolutiontrue%
+					\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
+					\csuse{hook@beforeproblemtitle}%
+					\@problemtitle{#2}{#3}[##3](##4)<##5>%
+					\csuse{hook@afterproblemtitle}%
+					\setup@id%
+					\setup@xsol%
+					\csuse{hook@beforeproblem}%
+						##6
+					\endxsol%
+					\csuse{hook@afterproblem}%
+				}%
+			}{}}%
 	\IfBooleanT{#1}{%
-		\NewDocumentEnvironment{#2*}{m +e\op o d() d<>}%
+		\NewDocumentEnvironment{#2*}{m +e{\op} o d() d<> +b}%
 			{%
-			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
-				\def\problemcounter@name{#2}%
-				\IfValueT{##2}{\cpgesetup[solution]{##2}}%
-				\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
-				\csuse{hook@precor@#2}%
-				\csuse{hook@beforeprobtitle}
-				\@problemtitle*{#2}{#3}[##3](##4)<##5>%
-				\setup@id%
-				\csuse{hook@afterprobtitle}
-				\csuse{hook@beforeproblem}%
-			}{%
-				\endxsol%
-				\csuse{hook@afterproblem}%
-			}%
-	}
+				\ifcsdef{cor@\cpge@problem@id}{}{%
+					\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
+					\def\problemcounter@name{#2}%
+					\IfValueT{##2}{\cpgesetup[solution]{##2}}%
+					\csdef{label@#2}{%
+						\unskip\solutionname\ignorespaces%
+						\csuse{prefixedname@\cpge@problem@id}%
+					}%
+					\isasolutiontrue%
+					\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
+					\csuse{hook@beforeproblemtitle}%
+					\@problemtitle*{#2}{#3}[##3](##4)<##5>%
+					\csuse{hook@afterproblemtitle}%
+					\setup@id%
+					\setup@xsol%
+					\csuse{hook@beforeproblem}%
+						##6
+					\endxsol%
+					\csuse{hook@afterproblem}%
+				}%
+			}{}}%
 	\IfBooleanF{#1}{%
-		\NewDocumentEnvironment{#2}{m +E{\op}{{}} o +d() d<>}{%
+		\NewDocumentEnvironment{#2}{m +E{\op}{{}} o d() d<>}{%
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 			\def\problemcounter@name{#2}%
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
-			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
+			\ifcsundef{##1@title}{%
+				\IfValueTF{##4}
+					{\IfValueTF{##3}
+						{\csdef{##1@title}{[##3](##4)}}
+						{\csdef{##1@title}{(##4)}}%
+					}{\IfValueTF{##3}
+						{\csdef{##1@title}{[##3]}}
+						{\csdef{##1@title}{}}%
+					}%
+			}{}%
 			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
+			\csuse{hook@beforeproblemtitle}%
 			\@problemtitle{#2}{#3}[##3](##4)<##5>%
+			\csuse{hook@afterproblemtitle}%
 			\setup@id%
 			\setup@sol%
 			\setup@hint%
@@ -909,15 +964,26 @@
 		}%
 	}
 	\IfBooleanF{#1}{%
-		\NewDocumentEnvironment{#2*}{m +E{\op}{{}} o +d() d<>}{%
+		\NewDocumentEnvironment{#2*}{m +E{\op}{{}} o d() d<>}{%
 			\ifblank{##1}{}{\def\cpge@problem@id{##1}}%
 			\def\problemcounter@name{#2}%
 			\csepreto{\cpge@problem@id @opts}{\@xo\corr@common@opt,}%
 			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifsolutiondelayed\solutiontrue\fi%
-			\ifcsundef{##1@title}{\csdef{##1@title}{[##3](##4)}}{}%
+			\ifcsundef{##1@title}{%
+				\IfValueTF{##4}
+					{\IfValueTF{##3}
+						{\csdef{##1@title}{[##3](##4)}}
+						{\csdef{##1@title}{(##4)}}%
+					}{\IfValueTF{##3}
+						{\csdef{##1@title}{[##3]}}
+						{\csdef{##1@title}{}}%
+					}%
+			}{}%
 			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
-			\@problemtitle*{#2}{#3}[##3](##4)<##5>
+			\csuse{hook@beforeproblemtitle}%
+			\@problemtitle*{#2}{#3}[##3](##4)<##5>%
+			\csuse{hook@afterproblemtitle}%
 			\setup@id%
 			\setup@sol%
 			\setup@hint%
@@ -930,13 +996,40 @@
 	}
 }
 \cpgesetdeco{pattern}{}
-\cpgenewproblem{probleme}{Problème}[problème]{}{|1|}{du problème}(R)
-\cpgenewproblem{exercice}{Exercice}[exercice]{}{|1|}{de l'exercice}(E)
-\cpgenewproblem{cours}{Questions de cours}[questions de cours]{}{|1|}{des questions de cours}(K)
-\cpgenewproblem{epreuve}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
-\cpgenewproblem{enonce}{\ifsolution Énoncé\fi}[sujet]{}{*}{}
-\cpgenewproblem*{Corrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
-\def\label@Corrige{\unskip\solutionname\ignorespaces\csuse{prefixedname@@\cpge@problem@id}}
+\cpgenewproblem{probleme}
+	{Problème}
+	[problème]
+	{|1|}
+	{du problème}
+	(R)
+\cpgenewproblem{exercice}
+	{Exercice}
+	[exercice]
+	{|1|}
+	{de l'exercice}
+	(E)
+\cpgenewproblem{cours}
+	{Questions de cours}
+	[q. de cours]
+	{|1|}
+	{des questions de cours}
+	(K)
+\cpgenewproblem{epreuve}
+	{\ifsolution Énoncé\fi}
+	[sujet]
+	{}
+	{}
+\cpgenewproblem{enonce}
+	{\ifsolution Énoncé\fi}
+	[sujet]
+	{}
+	{}
+\cpgenewproblem*{Corrige}
+	{}
+	[corrigé]
+	{}
+	{}
+
 \def\solutionname{Corrigé}
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -998,7 +1091,7 @@
 \long\def\hint@draft#1{\mini(ind)#1\endmini}%
 \def\setup@hint{%
 	\long\def\hint##1{}%
-	\ifdraft
+	\ifstraight
 		\let\hint\hint@draft%
 	\else%
 		\ifhint%
@@ -1011,7 +1104,7 @@
 		\fi%
 	\fi%
 }
-\unless\ifdraft\ifhintocg
+\unless\ifstraight\ifhintocg
 	\RequirePackage[tikz]{ocgx2}
 	\tikzset{
 		hintbox/.style={rounded corners=2pt,
@@ -1177,7 +1270,6 @@
 		{\begin{xenum}\op{switchdeco,r,#2}}%
 		{\begin{xenum}\op{switchdeco,#2}}%
 	\set@solutionslinks%
-	%\csshow{prop@\cpge@listctr}
 }
 \NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  E{\op}{{}} }{%
 	\IfBooleanTF{#5}%
@@ -1186,32 +1278,35 @@
 	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
 	#1%
 }
-\NewDocumentCommand\x@ques{o E{\sc\zp}{{}{@}} d() d<>}{%
+\NewDocumentCommand\x@ques{o E{\sc}{{}} d() d<>}{%
 	\def\ques@score@{#2}%
 	\ifblank{#2}{}{%
 		\global\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
 		\def\show@quesscore{\print@eno@score{#2}}%
 	}%
-	\ifstrequal{#3}{@}{}%
-            {\addtocounter{\cpge@listctr}{#3}}%
 	\IfValueTF{#1}%
-		{\cpge@item[#1]%
+		{\if@staratend{#1}
+		   {\cpgeref@setcounter{\cpge@listctr}{\x@arg-1}\cpge@item}
+		   {\if@plusatend{#1}
+			  {\cpgeref@addtocounter{\cpge@listctr}{\x@arg-1}\pcge@item}
+			  {\cpge@item[#1]}%
+		   }
 			\ifblank{#1}%
 				{\stepcounter{\cpge@listctr}}%
 				{}%
 		}%
 		{\cpge@item}%
 	\ifcpge@withsol%
-		\IfValueTF{#5}{\gdef\ques@label@{#5}}{\gdef\ques@label@{}}%
+		\IfValueTF{#4}{\gdef\ques@label@{#4}}{\gdef\ques@label@{}}%
 		\xappto\queslist{{\csuse{label@\cpge@listctr}}{\ques@label@}{\ques@score@},}
 	\fi%
 	\begingroup%
-	\IfValueT{#4}{\def\@currentlabelname{#4}\deco@itemtitle{#4}}%
-	\IfValueT{#5}{%
+	\IfValueT{#3}{\def\@currentlabelname{#4}\deco@itemtitle{#3}}%
+	\IfValueT{#4}{%
 		\MakeLinkTarget[question]{Item}%
-		\ifblank{#5}%
-			{\label{\cpge@labelprefix\csuse{label@\cpge@listctr}}}%
-			{\label{\cpge@labelprefix#5}}%
+		\ifblank{#4}%
+			{\label{eno:\cpge@problem@id:\csuse{label@\cpge@listctr}}}%
+			{\label{eno:\cpge@problem@id:#4}}%
 	}%
 	\endgroup%
 }
@@ -1253,14 +1348,8 @@
 }
 
 \NewDocumentCommand\draft@save{!o!d()!d<>}{%
-	\ifsolution%
-		\par\medskip\let\start@sol\relax%
-		\def\endsolution{\par\medskip}%
-	\else%
-		\let\start@sol\comment%
-		\let\endsolution\endcomment
-	\fi%
-	\start@sol%
+	\par\medskip\let
+	\def\endsolution{\par\medskip}%
 	\strut\textbf{\scshape solution~:~}%
 	\isasolutiontrue%
 	\def\xref{\xref@cor}%
@@ -1284,54 +1373,65 @@
 		}%
 	\cpgefilesave{solhandle}%
 }
-\NewDocumentCommand\draft@write{o}{\slshape\csdef{endsolution*}{\aftergroup\par}}
-\NewDocumentCommand\real@write{!o}{\cslet{endsolution*}\endcpgefilesave\cpgefilesave{solhandle}}
-\def\aux@dir{tmp}
-\def\setup@sol{%
-	\ifsolution\hinttrue\fi%
-	\let\solution\draft@save%
-	\cslet{solution*}\draft@write
-	\open@solfile%
+\NewDocumentCommand\draft@write{o}{%
+	\slshape%
+	\csdef{endsolution*}{\aftergroup\par}%
+}
+\NewDocumentCommand\real@write{!o}{%
+	\cslet{endsolution*}\endcpgefilesave%
+	\cpgefilesave{solhandle}
 }
 \long\def\writetosol#1{%
-    \ifdraft
+    \ifstraight
 		#1%
 	\else
         \cpgeprotected@iwrite\solhandle@file{}{\unexpanded{Commande #1}}
     \fi
 }
+\def\setup@sol{%
+	\ifdraft%
+		\let\solution\draft@save%
+		\cslet{solution*}\draft@write%
+	\else%
+		\open@solfile%
+	\fi%
+}
 \def\open@solfile{%
-	\unless\ifdraft
 		\IfFileEmpty{\aux@dir/\cpge@problem@id-cor.tex}{
 			\cpgeopenfile{solhandle}[\aux@dir/\cpge@problem@id-cor]%
 			\let\solution\real@save%
 			\cslet{solution*}\real@write%
 		}{}%
-	\fi%
 }
-\NewDocumentEnvironment{cpgewrite}{mm !e\op !o !d() !d<>}
+\NewDocumentEnvironment{cpgewrite}{mm !e{\op} !o !d() !d<>}
 	{%
 		\IfValueT{#3}{\csgdef{#2@opts}{#3}}%
-		\IfValueT{#4}{\csgdef{#2@title}{[#4](#5)}}%
-		\IfValueT{#5}{\csgdef{#2@label}{#6}}%
+		\IfValueTF{#5}
+			{\IfValueTF{#4}
+				{\csgdef{#2@title}{[#4](#5)}}%
+				{\csgdef{#2@title}{(#5)}}
+			}{\IfValueTF{#4}
+				{\csgdef{#2@title}{[#4]}}%
+				{\csgdef{#2@title}{}}
+			}%
+		\IfValueT{#6}{\csgdef{#2@label}{#6}}%
 		\cpgewriteonce{\aux@dir/#2-#1}%
 	}
 	{\endcpgewriteonce}
-\def\corrige#1{\def\cpge@problem@id{#1}\begingroup\cpgewrite{cor}{#1}}
+\def\corrige#1{\cpgewrite{cor}{#1}}
 \def\endcorrige{%
-	\endcpgewrite\endgroup%
+	\endcpgewrite%
 	\csuse{Solution@\cpge@problem@id}%
 	}
 \csdef{corrige*}{\corrige}
 \cslet{endcorrige*}\endcorrige
-\cpgenewproblem*{scorrige}{}[corrigé]{\isasolutiontrue\setup@xsol}{}{}
+\cpgenewproblem*{scorrige}{}[corrigé]{}{}
 \def\queslist{}
-\csdef{cpgeval@mines24m2@defined}{}
 \def\close@problem#1{%
-	%\ifnum\c@score@tmp>\z@%
+	\ifnum\c@score@tmp>\z@%
 		\defvalue{score:\cpge@problem@id}{\thescore@tmp}%
 		\global\c@score=\numexpr\c@score+\c@score@tmp\relax%
-	%\fi%
+	\fi%
 	\ifstraight
 		\csxdef{\cpge@problem@id @list}{\queslist}%
 	\fi%
@@ -1339,12 +1439,12 @@
 	\global\@maxlabelwidth\z@%
 	\long\edef\cpge@tmpe{\the\toks@hint}%
 	\ifdefempty\cpge@tmpe{}{\parti*{Indications}\cpge@tmpe}%
-	\unless\ifdraft%
+	\unless\ifstraight%
 		\cpgeclosefile{solhandle}%
 			\ifsolutiondelayed
 				\cpgerecord{%
 					\string\Solution
-						\cpge@problem@id % identifiant
+						{\cpge@problem@id} % identifiant
 						\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
 						{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
 						{\queslist}% liste des questions avec solutions
@@ -1352,7 +1452,7 @@
 			\else	
 				\xdef\current@corrige{%
 					\@nx\Solution%
-						\cpge@problem@id % identifiant
+						{\cpge@problem@id}% identifiant
 						\@xp\@xo\csname \cpge@problem@id @title\endcsname % titre (de l'énoncé) 
 						{\@xp\@xo\csname \cpge@problem@id @opts\endcsname} % options passées avec "corrige=..."
 						{\queslist}% liste des questions avec solutions
@@ -1363,52 +1463,36 @@
 	\gdef\queslist{}%
 }
 \def\shipoutsolutions{%
-	\unless\ifstraight%
+	\ifsolutiondelayed%
 		\cpgestoprecording%
 		\csuse{before@solutions@hook}%
-		\let\Solution\Real@Solution%
-		\input{\jobname.rec}
-	\fi%
+		\InputIfFileExists{\cpge@recordfile}{}{}%
+	\fi% 
 }	
-\let\corriges\shipoutsolutions
-\let\solutions\shipoutsolutions
-\def\Real@Solution#1[#2](#3)#4#5{
+\def\corriges{\shipoutsolutions}
+\def\solutions{\shipoutsolutions}
+\DeclareDocumentCommand\Real@Solution{m o d() mm }{%
 	\IfFileEmpty{\aux@dir/#1-cor.tex}
 		{%
-			\csgdef{Solution@#1}{\Solution #1[#2](#3){#4}{#5}}
+			\IfValueTF{#3}
+				{\IfValueTF{#2}
+					{\csgdef{Solution@#1}{\Solution{#1}[#2](#3){#4}{#5}}}
+					{\csgdef{Solution@#1}{\Solution{#1}(#3){#4}{#5}}}%
+				}{\IfValueTF{#2}
+					{\csgdef{Solution@#1}{\Solution{#1}[#2]{#4}{#5}}}
+					{\csgdef{Solution@#1}{\Solution{#1}{#4}{#5}}}%
+				}%
 		}{%
-		\ifstrequal{#2}{-NoValue-}{
-			\ifstrequal{#3}{-NoValue-}
-				{\begin{Corrige}{#1}\op{#4}}%
-				{\begin{Corrige}{#1}\op{#4}(#3)}%
-			}{
-			\ifstrequal{#3}{-NoValue-}
-				{\begin{Corrige}{#1}\op{#4}[#2]}%
-				{\begin{Corrige}{#1}\op{#4}[#2](#3)}%
-			}
+			\begin{Corrige}{#1}\op{#4}[#2](#3)
 				\ifdefempty\queslist{\def\queslist{#5}}{}%
 				\ifdefempty\queslist{\noqueslistmessage}{}%
-				\csxdef{the\problemcounter@name}{\csuse{label@@\cpge@problem@id}}
-				\input{\aux@dir/#1-cor}
+				\csedef{the\problemcounter@name}{\csuse{label@@\cpge@problem@id}}
+				\input{\aux@dir/#1-cor}%
 			\end{Corrige}%
 	}%
 }
-\def\Just@Solution#1[#2](#3)#4#5{
-	\ifstrequal{#2}{-NoValue-}{
-		\ifstrequal{#3}{-NoValue-}
-			{\begin{Corrige}{#1}\op{#4}}%
-			{\begin{Corrige}{#1}\op{#4}(#3)}%
-		}{
-		\ifstrequal{#3}{-NoValue-}
-			{\begin{Corrige}{#1}\op{#4}[#2]}%
-			{\begin{Corrige}{#1}\op{#4}[#2](#3)}%
-		}
-			\ifdefempty\queslist{\def\queslist{#5}}{}%
-			\ifdefempty\queslist{\noqueslistmessage}{}%
-			\input{\aux@dir/#1-cor}
-		\end{Corrige}%
-}
-\def\Dummy@Solution#1[#2](#3)#4#5{}
+
+\DeclareDocumentCommand\Dummy@Solution{m o d() mm }{}
 
 
 %%%% Références croisées %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1552,8 +1636,7 @@
 %%% \xsol la commande magique
 %%% pour numéroter les questions dans le fichier de solutions  
 \def\xsol@env{%
-	\solutionlisttrue
-	\@itemdepth\@ne%
+	\begingroup\@listdepth\z@
    	\list\relax%
         {%
          \listparindent\parindent%
@@ -1563,8 +1646,9 @@
 		     \leftmargin\z@%
 			  \let\makelabel\outer@sol@deco%
         }%
+	\solutionlisttrue
  }
-\def\endxsol{\ifsolutionlist\endlist\fi}
+\def\endxsol{\ifsolutionlist\endlist\endgroup\fi}
 \def\setup@xsol{\let\xsol\first@xsol}
 
 \def\get@itemlabelscore#1#2#3{\def\curr@item{#1}\def\curr@label{#2}\def\curr@score{#3}}
@@ -1599,7 +1683,7 @@
 	\IfValueT{#3}{%
 		\MakeLinkTarget[solution]{Item}%	
 		\def\@currentlabel{#1}%
- 		\phantomsection\label{\cpge@labelprefix#3}%
+ 		\phantomsection\label{cor:\cpge@problem@id:#3}%
 	}%
 	\endgroup%
 }
@@ -1608,7 +1692,6 @@
 		{\def\curr@item{#1}\def\curr@score{}}
 		{\@xp\queslist@pop\queslist\cpge@nil}%
 	\ifdefempty\curr@score{}{\let\show@quesscore\print@cor@score}%
-	%\show\curr@item
 	\item[\curr@item]%
 	\begingroup%
 	\IfValueT{#2}{\def\@currentlabelname{#2}\deco@unitetitle{#2}\par\nobreak}%
@@ -1617,14 +1700,14 @@
  		\phantomsection%
 		\MakeLinkTarget[solution]{Item}%
 		\ifblank{#3}
-			{\label{\cpge@labelprefix\curr@item}}
-			{\label{\cpge@labelprefix#3}}%
+			{\label{cor:\cpge@problem@id:\curr@item}}
+			{\label{cor:\cpge@problem@id:#3}}%
 	}{%
 		\ifdefvoid{\curr@label}{}{%
 			\def\@currentlabel{\curr@item}%
  			\phantomsection%
 			\MakeLinkTarget[solution]{Item}%
-			\label{\cpge@labelprefix\curr@label}%
+			\label{cor:\cpge@problem@id:\curr@label}%
 		}%
 	}%
 	\endgroup

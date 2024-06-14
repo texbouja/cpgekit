@@ -1255,8 +1255,8 @@
     \def\csv@header{"Quiz", "Title image", "Title text"}
     \question@do%
     \let\cpgecsvrecord\cpgecsv@record%
-    \edef\cpge@record@file{\jobname.csv}%
-    \immediate\openout\cpge@out\cpge@record@file%
+    \edef\cpge@recordfile{\jobname.csv}%
+    \immediate\openout\cpge@out\cpge@recordfile%
     \cpgecsvrecord{\csv@header}
 }
 
