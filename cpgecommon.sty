@@ -16,14 +16,14 @@
 \RequirePackage{xstring}
 \RequirePackage{relsize}
 \RequirePackage{array}
-\RequirePackage[svgnames]{xcolor}
 \@ifundefined{NewDocumentCommand}
 	{\RequirePackage{xparse}}
 	{}
 \ifcustomtitles
    \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
 \else 
-   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
+   \RequirePackage[explicit,nobottomtitles\RequirePackage[svgnames]{xcolor}
+   *,pagestyles]{titlesec}
 \fi 
 \RequirePackage{titletoc}
 
@@ -135,8 +135,10 @@
    \ifcpge@fileundefined{#1}{}{%
       \ifcpge@open{#1}{%
          \def\verbatim@processline{%
+            \ifcpge@solution{%
                \immediate\write\@nameuse{#1@file}%
                   {\the\verbatim@line}%
+            }{}%
          }%
       }{}%
    }%
@@ -151,7 +153,9 @@
       \ifcpge@open{#1}{%
          {%
             \let\protect\string
+            \ifcpge@solution{%
                \cpgeprotected@iwrite{\@nameuse{#1@file}}{}{#2}%
+            }{}%
          }%
       }{}%
    }%
@@ -178,8 +182,10 @@
       
 \def\cpgedefine@filename#1[#2]{%
    \global\@namedef{#1@filename}{#2.tex}%
+   \ifcpge@solution{%
       \typeout{Écriture de #1 dans
         #2.tex}%
+   }{}%
    \ifcpge@fileundefined{#1}{%
       \expandafter\newwrite\csname #1@file\endcsname
       \csname newif\expandafter\endcsname
@@ -194,8 +200,10 @@
    }{}%
    \let\Tmp\relax
    \ifcpge@open{#1}{\typeout{Fichier #1 déjà ouvert}}{%
+      \ifcpge@solution{%
          \immediate\openout\@nameuse{#1@file}=%
          \@nameuse{#1@filename}%
+      }{}%
       \global\csname#1opentrue\endcsname
       \def\Tmp{\@nameuse{Open#1hook}{#1}}%
    }%
@@ -206,7 +214,9 @@
    \let\Tmp\relax
    \ifcpge@fileundefined{#1}{}{%
       \ifcpge@open{#1}{%
+         \ifcpge@solution{%
             \immediate\closeout\@nameuse{#1@file}%
+         }{}%
          \global\csname #1openfalse\endcsname
          \def\Tmp{\@nameuse{Close#1hook}{#1}}%
       }{}%
@@ -215,6 +225,7 @@
 }
 
 \def\cpgereadfile#1{%
+   \ifcpge@solution{%
       \ifcpge@fileundefined{#1}{}{%
          \ifcpge@open{#1}{%
             \typeout{WARNING: tentative de lire le fichier ouvert #1}%
@@ -229,6 +240,7 @@
             \Tmp
          }%
       }%
+   }{}%
 }
 
 %%% Si le moteur de compilation est luatex
@@ -526,7 +538,7 @@
 
 \addmeta{Auteur}{auteur}{\scshape}{}
 \addmeta{Email}{email}{\ttfamily}{}
-\addmeta{Website}{website}{\ttfamily}{}
+\addmeta{Website}{website}{\ttfamily\url}{}
 \addmeta{Preauteur}{preauthor}{\itshape}{Rédigé par~}
 
 \addmeta{Document}{document}{}{}
@@ -537,7 +549,7 @@
 
 \addmeta{Concours}{concours}{}{}
 \addmeta{Epreuve}{epreuve}{}{}
-\addmeta{Session}{session}{}{}
+\addmeta{Session}{session}{\itshape Session\space}{}
 \addmeta{Duree}{duree}{\@duree}{}
 \def\@duree#1{Durée~:~#1~heures}
 \addmeta{Texte}{texte}{\@texte}{}
@@ -660,7 +672,7 @@
 			a4paper,
 			inner=3cm, outer=2cm,
 			vmargin={2.4cm,3.6cm}, 
-			littlemargin=4pc
+			littlemargin=6pc
 		}, 
 	2print/.code=%
 		\printtrue%
@@ -669,11 +681,11 @@
 		\striptitletrue
 		\geometry{%
 			a4paper,
-			twocolumn, columnsep=20truept,
+			twocolumn, columnsep=24truept,
 			%mag=830,
 			inner=1truecm, outer=1truecm,
 			vmargin={2.4truecm,2.4truecm},
-			littlemargin=3.2pc%
+			littlemargin=4.5pc%
 		},
 	lsprint/.code=%
 		\printtrue%
@@ -684,11 +696,11 @@
 		\geometry{%
 			a4paper,
 			landscape,
-			twocolumn, columnsep=1truecm,
+			twocolumn, columnsep=36truept,
 			%mag=870,
 			inner=1.8truecm, outer=1.8truecm,
 			vmargin={1.5truecm,1.5truecm},
-			littlemargin=3.2pc
+			littlemargin=4.5pc
 		},
 	book/.code=%
 		\darkfalse%
@@ -697,7 +709,7 @@
 			bk17x24,
 			inner=2.4cm, outer=1.8cm,
 			vmargin={2cm,3cm}, 
-			littlemargin=4pc
+			littlemargin=6pc
 		}, 
 	altbook/.code=%
 		\darkfalse%
@@ -706,7 +718,7 @@
 			bk19x24,
 			inner=3cm, outer=2cm,
 			vmargin={2cm,3cm}, 
-			littlemargin=6pc
+			littlemargin=8pc
 		}, 
 	draft/.code=%
 		\printfalse%
@@ -714,9 +726,9 @@
 		\titlepagetrue%
 		\geometry{%
 			a5paper,
-			inner=1.5cm, outer=1.5cm,
+			inner=1.25cm, outer=1.25cm,
 			vmargin={1.2cm,1.8cm},
-			littlemargin=4pc 
+			littlemargin=4.5pc 
 		}, 
 	phone/.code=%
 		\printfalse%
@@ -728,7 +740,7 @@
 			mag=1100,
 			hmargin={1cm,.5cm},
 			vmargin={1.2cm,1.4cm},
-			littlemargin=3.2pc,
+			littlemargin=4.5pc,
 		},%
 	altphone/.code=%
 		\printfalse%
@@ -739,7 +751,7 @@
 			sc19x9,
 			hmargin={1cm,.5cm},
 			vmargin={1.4cm,1.8cm},
-			littlemargin=2.4em
+			littlemargin=4.5pc
 		},%
 	beamer/.code=%
 		\printfalse%
@@ -750,7 +762,7 @@
 			sc4x3beamer,
 			hmargin={1cm,.5cm},
 			vmargin={.4cm,1.2cm},
-			littlemargin=4pc
+			littlemargin=4.5pc
 		},%
 	tablet/.code=%
 		\printfalse%
@@ -762,7 +774,7 @@
 			hmargin={1.8cm,1.8cm},
 			vmargin={1.5cm,2cm},
 			%mag=1100,
-			littlemargin=4pc
+			littlemargin=4.5pc
 		},%
 	lstablet/.code=%
 		\printfalse%
@@ -773,11 +785,11 @@
 		\geometry{%
 			sc4x3,
 			landscape,
-			twocolumn, columnsep=24pt,
-			hmargin={.5cm,.5cm},
-			vmargin={1.2cm,1.4cm},
+			twocolumn, columnsep=36truept,
+			hmargin={.75cm,.75cm},
+			vmargin={1.2cm,1.8cm},
 			%mag=880,
-			littlemargin=3.2pc
+			littlemargin=4.5pc
 		},%
 	alttablet/.code=%
 		\printfalse%
@@ -786,10 +798,10 @@
 		\titlepagetrue%
 		\geometry{%
 			sc16x10,
-			hmargin={1cm,1cm},
-			vmargin={1.5cm,2cm},
+			hmargin={1.2cm,1.2cm},
+			vmargin={2cm,3cm},
 			%mag=1100,
-			littlemargin=4pc
+			littlemargin=4.5pc
 		},%
 	lsalttablet/.code=%
 		\printfalse%
@@ -799,11 +811,11 @@
 		\geometry{%
 			sc16x10,
 			landscape,
-			twocolumn, columnsep=32pt,
-			hmargin={.8cm,.8cm},
-			vmargin={1.2cm,1.4cm},
+			twocolumn, columnsep=40pt,
+			hmargin={1cm,1cm},
+			vmargin={1.2cm,1.2cm},
 			%mag=880,
-			littlemargin=3.2pc
+			littlemargin=6pc
 		},%
 }
 \cpgesetup[geometry]{%
@@ -872,7 +884,7 @@
 }
 \newif\iftitlepage
 \newdimen\cpge@ttlw
-\cpge@ttlw=3cm
+\AtBeginDocument{\cpge@ttlw=\iflandscape4.23\else3\fi cm\relax}
 %% Ajout des mots cles du titre
 \DeclareDocumentCommand\cpgenewtitlekeyword{mm}{%
    \cpgeaddkeyword{title}{#1}{%
@@ -890,6 +902,7 @@
 \cpgenewtitlekeyword{classe}{\large\scshape}
 \cpgenewtitlekeyword{texte}{\tiny\sffamily\slshape} 
 \cpgenewtitlekeyword{periode}{\small\itshape}
+\cpgenewtitlekeyword{session}{\itshape}
 \cpgenewtitlekeyword{duree}{\small\itshape}
 \cpgenewtitlekeyword{auteur}{\small\textit{\cpge@preauthor}~}
 \cpgenewtitlekeyword{email}{\small\ttfamily}
@@ -905,7 +918,7 @@
 					#3\csuse{cpge@#2@format}\strut%
 				\global\cpge@dima\baselineskip%
 				}%
-			}\baselineskip1.2\cpge@dima%
+			}\par\baselineskip1.56\cpge@dima%
 		}
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
@@ -914,7 +927,7 @@
 					#3\csuse{cpge@#2@format}\strut%
 				\global\cpge@dima\baselineskip%
 				}%
-			}\baselineskip1.2\cpge@dima%
+			}\par\baselineskip1.56\cpge@dima%
 		}
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
@@ -923,7 +936,7 @@
 					#3\csuse{cpge@#2@format}\strut%
 					\global\cpge@dima\baselineskip%
 				}%
-			}\baselineskip1.2\cpge@dima%
+			}\par\baselineskip1.56\cpge@dima%
 		}
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
@@ -932,7 +945,7 @@
 					#3\csuse{cpge@#2@format}\strut%
 					\global\cpge@dima\baselineskip%
 				}%
-			}\baselineskip1.2\cpge@dima%
+			}\par\baselineskip1.56\cpge@dima%
 		}
 	\fi 
 } 
@@ -944,11 +957,13 @@
 		\renew@title@format[4]{devoir}{\scshape}%
 		\renew@title@format[3]{theme}{\scshape}%
 		\renew@title@format[2]{subtheme}{\scshape\itshape}%
+		\renew@title@format[3]{epreuve}{\scshape}%
+		\renew@title@format[2]{session}{\itshape}%
 		\renew@title@format{periode}{\itshape}%
 		\renew@title@format{duree}{\itshape}%
 		\renew@title@format{auteur}{\footnotesize\textit{\cpge@preauthor}\small~}%
-		\renew@title@format{email}{\small\ttfamily}%
-		\renew@title@format{website}{\small\ttfamily}%
+		\renew@title@format{email}{\hphantom{\footnotesize\textit{\cpge@preauthor}~}\footnotesize\ttfamily}%
+		\renew@title@format{website}{\null\hphantom{\footnotesize\textit{\cpge@preauthor}~}\footnotesize\ttfamily}%
 }
 
 %% Commande \title@parser qui traduit les mots cles 
@@ -1242,13 +1257,6 @@
 \reloadcolors
 
 %%%%% HYPERREF, Absolument indispensable.
-\RequirePackage[pdfencoding=auto,psdextra]{hyperref}
-\hypersetup{colorlinks,linkcolor=linkcol,breaklinks,raiselinks}
-\pdfstringdefDisableCommands{%
-	\def\({}%
-	\def\){}%
-}
-\let\ToP\texorpdfstring
 
 %%%% Fonts loading. 
 \RequirePackage{ifxetex}
@@ -1264,10 +1272,12 @@
 			\fi
 			\RequirePackage[french]{babel}
 			\RequirePackage[tt=false]{libertine}
-			\RequirePackage[%
-				libertine,smallerops,bigdelims,upint,vvarbb
-			]{newtxmath}
-			\RequirePackage[scaled=.85]{FiraMono}
+			 \RequirePackage[%
+			 	libertine,smallerops,bigdelims,upint,vvarbb
+			 ]{newtxmath}
+			%\usepackage[amsthm,sansmath]{libertinust1math}
+			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
+			\RequirePackage[scaled=.8]{FiraMono}
 			\useosf
 			\def\TitlingFont{\sffamily\scshape}
 	}},
@@ -1296,7 +1306,7 @@
 		\RequirePackage[french]{babel}
 		\usepackage[p,scaled=.98,space]{erewhon}
 		\usepackage[varqu,varl]{inconsolata} % typewriter
-		\usepackage[type1,scaled=.95]{cabin} % sans serif like Gill Sans
+		\usepackage[scaled=.85]{berasans} % sans serif like Gill Sans
 		\usepackage[utopia,vvarbb]{newtxmath}
 		\useosf
 		\def\TitlingFont{\sffamily\scshape}
@@ -1373,8 +1383,6 @@
 
 
 %%%% Gestion des themes
-\newdimen\cpge@ttlw
-\cpge@ttlw=3cm
 
 \cpgesetup[theme]{%
 	.search also={/cpge/colors,/cpge/tcb},

@@ -508,27 +508,35 @@
 	\fi
 \@esphack%
 }
-\def\if@staratend#1{%
-	\def\in@@{\in@{*!}}%
-	\@xp\in@@\@xp{#1!}%
-	\ifin@%
-		\edef\x@arg{\cpge@removestar #1}\expandafter\@firstoftwo%
-	\else%
-		\def\x@arg{#1}\expandafter\@secondoftwo%
-	\fi%
+\ifundef\cpge@removestar{
+	\def\cpge@removestar#1*{#1}
+	\def\cpge@removeplus#1+{#1}
+	\def\cpge@erasestar*#1+{#1}
+	\def\if@staratend#1{
+		\def\in@@{\in@{*!}}%
+		\@xp\in@@\@xp{#1!}%
+		\ifin@%
+			\edef\x@arg{\cpge@removestar#1}\expandafter\@firstoftwo%
+		\else%
+			\def\x@arg{#1}\expandafter\@secondoftwo%
+		\fi%
+	}
+	\def\if@plusatend#1{
+		\def\in@@{\in@{+!}}%
+		\@xp\in@@\@xp{#1!}%
+		\ifin@%
+			\edef\x@arg{\cpge@removeplus#1}\expandafter\@firstoftwo%
+		\else%
+			\def\x@arg{#1}\expandafter\@secondoftwo%
+		\fi%
+	}
 }
 \long\def\eqn@preparemidbox#1#2{%
 \@bsphack
-	\if@staratend{%
-		\edef\num@pt{\cpge@removestar #1}
-		\def\@renderer{varwidth}
-	}{%
-		\def\num@pt{#1}
-		\def\@renderer{minipage}
-	}
-	\fi
-	\ifnum\num@pt<50\relax
-		\ifnum\num@pt=0\relax
+	\if@staratend{#1}{\def\@renderer{varwidth}}{\def\@renderer{minipage}}
+	\edef\num@pt{\x@arg}
+	\ifnum\numexpr\num@pt<50\relax
+		\ifnum\numexpr\num@pt=0\relax
 			\midwidth\hsize
 		\else
 			\midwidth.5\hsize
@@ -3594,6 +3602,7 @@
 
 %%%%%%%% raccourcis très utilisés, 
 %%%%%%%% conservé pour compatibilté
+\def\set@usual@shorthcuts{%
 \let\ds\displaystyle
 \let\ts\textstyle
 \let\leq\leqslant
@@ -3610,7 +3619,8 @@
 \newcommand\bi{\begin{xitem}}
 \newcommand\ei{\end{xitem}}
 \newcommand\bca{\begin{dcases}}
-\newcommand\eca{\end{dcases}}
+\newcommand\eca{\end{dcases}}}
+\AtBeginDocument{\set@usual@shorthcuts}
 \makeatletter
 	\def\dt{{\operator@font d}}
 	\def\d{{\operator@font d}}

@@ -9,15 +9,15 @@
     \ifdefmeta{concours}
         |concours| \\
     \fi
-    \ifdefmeta{session}
-        |session|  \\
-    \fi 
     \ifdefmeta{epreuve}
         |epreuve|  
     \fi
+    \ifdefmeta{session}
+        |session|  \\
+    \fi 
     \ifdefmeta{auteur}
         \ifsolution
-            \par \vskip\dimexpr\bigskipamount*3
+            \par \vskip\dimexpr\bigskipamount*2
             |auteur| 
         \fi
     \fi
@@ -25,22 +25,28 @@
 \cpgesettitle*{
     |document| \par
     \bigskip\hrule\bigskip
-    |concours| \\
-    |session|  \\
-    |epreuve|  \par \vskip \z@ plus .2fill 
-    \ifsolution |auteur|   \fi
+    \ifdefmeta{concours}
+        |concours| \\ 
+    \fi
+    \ifdefmeta{epreuve} 
+        |epreuve|  \\ 
+    \fi
+    |session|  \par \vskip \z@ plus .2fill 
+    \ifsolution 
+        |auteur|   
+    \fi
 }
-\cpgesetuptitle{
-    late after* =   \tableofcontents,
-    late after  =   \vskip \z@ plus .5fill
-                     \tableofcontents 
-                      \vskip \z@ plus 1fill
-}
+% \cpgesetuptitle{
+%     late after* =   \tableofcontents,
+%     late after  =   \vskip \z@ plus .5fill
+%                      \tableofcontents 
+%                       \vskip \z@ plus 1fill
+% }
 \def\problembreak{\clearpage}
 \cpgesetuplists{
     enumi={
         n=|1|, 
-        d*={\normalfont\ifsolution\bfseries#1\ifdraft.\fi%
+        d={\normalfont\ifsolution\bfseries#1\ifdraft.\fi%
         \else\textlf{\bfseries#1}
             \Large$\,\triangleright\,$\fi}, 
         m, 
@@ -89,3 +95,4 @@
     }
 }
 \@esphack}
+

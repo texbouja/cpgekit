@@ -144,6 +144,16 @@
   }{}{}
   \xapptocmd\includestandalone{\cpgesub@restoreEndFrom\cpgesub@end@}{}{}
 }{}
+\@ifpackageloaded{cpgeweb}{
+  \RequirePackage{xpatch}
+  \xpretocmd\includestandalone{%
+    \cpgesub@saveEndTo\cpgesub@end@
+    \ifcsname cpgesub@end\endcsname
+      \cpgesub@restoreEndFrom\cpgesub@end
+    \fi
+  }{}{}
+  \xapptocmd\includestandalone{\cpgesub@restoreEndFrom\cpgesub@end@}{}{}
+}{}
 \newcommand\ifSubdocClassLoaded{%
   \expandafter\ifx\csname ver@cpgesubdoc.cls\endcsname\relax
     \expandafter\@secondoftwo
