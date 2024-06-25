@@ -8,7 +8,7 @@
 %%% Initiation Code
 \RequirePackage{pgfopts}
 \RequirePackage{etoolbox}
-\def\cpgecurrentclass{cpgedoc}
+\def\cpgecurrentclass{doc}
 
 \newif\ifconvert
 
@@ -82,25 +82,67 @@
 
 %%%% Packages du projet 
 \RequirePackage{cpgebase}
-\RequirePackage{cpgecommon}
 \RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
-\ifbool{web}{\endinput}{}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% Basculement vers la conversion en images %%%%%%	
 \ifbool{web}
 	{\RequirePackage{cpgeweb}\endinput}{}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\RequirePackage{cpgecommon}
+\cpgeloadpackage[skins, breakable, hooks, theorems, xparse]{tcolorbox}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% style d'enumerations dans les theorem %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\setup@enumstyle{%
+	\let\thecurrent@counter\@gobble
+	\cpgesetenum{1}{marge}
+	\cpgesetenum{2}{marge*}
+	\cpgesetlabel{unite}{|X|.|1|}%
+	\cpgesetlabel{enumi}{|X|.|1|}%
+	\cpgesetlabel{enumii}{|Q|.|a|}
+	\cpgesetdeco{unite}{\textcolor{maincol}{\sffamily\small\scshape\bfseries##1.}}
+	\cpgesetdeco{enumi}{\bfseries ##1.}%
+	\cpgesetdeco{enumii}{\bfseries ##1.}
+	\cpgesetdeco{itemtitle}{{\scshape\sffamily##1~:~}}
+	\cpgesetdeco{unitetitle}{\textcolor{maincol}{\sffamily\scshape\small##1~:~}}
+	\cpgesetlabel{equation}{|C|.|1|}
+	\makethetolabel{equation}
+}
+\def\setup@enumspaces{
+	\ifcompact
+		\cpgesetenum*{1}{marge*}
+		\cpgesetenum*{2}{marge*=1pc}
+		\cpgesetenum*{3}{marge*=1pc}
+	\else	
+		\cpgesetenum*{1}{marge+}
+		\cpgesetenum*{2}{marge*}
+		\cpgesetenum*{3}{marge+}
+	\fi
+	\ifprint 
+		\cpgesetenum{0}{align=l}
+	\fi 
+}
+\cpgesetupdeco{%
+	current counter/.code=\def\thecurrent@counter{#1}
+}	
+\cpgesetupdeco{%
+	titled items/.code={%
+		\cpgesetupdeco{after upper pre=\closeunite}%
+		\set@defaultforlistsinsideunite%
+}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \ifdraft
 		\PassOptionsToPackage{draft}{pgf}
 		\PassOptionsToPackage{draft}{hyperref}
 \fi
-\AtEndPreamble{%
-	\ifnocolors\selectcolormodel{gray}\fi
-}
+
 
 \newtoks\toks@sol
 \newtoks\toks@prv 
@@ -276,49 +318,7 @@
 }
 
 %%% Gestion des thèmes
-\tcbset{maincol/.code=\colorlet{maincol}{#1}}
-\DeclareDocumentCommand\cpgetheme{O{} m}{%
-	\unless\ifdraft
-		\cpgesetup[theme]{#1}
-		\IfFileExists{#2doc.sty}
-			{\AtEndPreamble{\RequirePackage{#2doc}}\reloadcolors}
-			{}%
-	\fi%
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\cpgesetupdeco{maincol/.code=\colorlet{maincol}{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% styles pour les titres de sections %%%%%%%%
@@ -329,16 +329,16 @@
 \cpgesetlabel{section}{|I|}
 \cpgesetlabel{subsection}{|S|.|1|}	   
 	   
-\tcbset{chapter style/.style={}}
+\cpgesetupdeco{chapter style/.style={}}
 \tikzset{chapter label style/.style={}}
-\tcbset{section style/.style={}}
+\cpgesetupdeco{section style/.style={}}
 \tikzset{section label style/.style={}}
 
 \cpgesetup{sections/.is family, sections,
-	chapter style/.code={\tcbset{chapter style/.style={#1}}},
+	chapter style/.code={\cpgesetupdeco{chapter style/.style={#1}}},
 	chapter label style/.code={\tikzset{chapter label style/.style={#1}}},
 	chapter label decoration/.store in=\chapter@label@deco,
-	section style/.code={\tcbset{section style/.style={#1}}},
+	section style/.code={\cpgesetupdeco{section style/.style={#1}}},
 	section label style/.code={\tikzset{section label style/.style={#1}}},
 	subsection label style/.code={\tikzset{subsection label style/.style={#1}}},
 	after section hook/.store in=\aftersection@hook,
@@ -429,7 +429,7 @@ subsection label style={}
 	{3pt}
 	{\itshape#1}
 
-\def\fakebox#1{#1}
+\let\fakebox\@iden
 %%%% Decoration des maths. La base est definie dans cpgemath.sty  
 \fadjwidth=6pt 
 \cpgesetup{%
@@ -454,37 +454,22 @@ math box style={}
 \cpgesetdeco{formula}{\rslt@box{#1}}
 \cpgesetdeco{result}{\rslt@box{#1}}
 
-\def\tcb@restore@footnote{%
-  \def\@mpfn{footnote}%
-  \def\thempfn{\arabic{footnote}}%
-  \let\@footnotetext\tcb@footnote@collect
-}
 
-% collect footnote text
-\long\def\tcb@footnote@collect#1{%
-  \expandafter\gappto\expandafter\tcb@footnote@acc\expandafter{%
-    \expandafter\footnotetext\expandafter[\@thefnmark]{#1}%
-  }%
-}
-
-\def\tcb@footnote@use{%
-  \tcb@footnote@acc
-  \global\let\tcb@footnote@acc\@empty
-}
-\global\let\tcb@footnote@acc\@empty
-
-
-\tcbset{
+\cpgesetupdeco{
   every box/.style={
-    before title pre=\tcb@restore@footnote,
-    before upper pre=\tcb@restore@footnote,
-    before lower pre=\tcb@restore@footnote,
+    before title pre=\cpge@footnote@restore,
+    before upper pre=\cpge@footnote@restore,
+    before lower pre=\cpge@footnote@restore,
   },
   every box on layer 1/.append style={
-    after pre=\tcb@footnote@use
+    after pre=\cpge@footnote@use
   }
 }
-\tcbset{%
+% Fin du hack
+
+
+%%%% Initialisation de la machinerie tcolorbox
+\cpgesetupdeco{%
 	primary box/.style={%
 		breakable,
 		lines before break=1,
@@ -501,13 +486,14 @@ math box style={}
 		coltext=fgcol
 	}
 }
-\tcbset{%
+\cpgesetupdeco{%
 	every box on layer 1/.append style={primary box},
 	every box on layer 2/.prefix style={secondary box},
 	every box on layer 3/.prefix style={secondary box},
 	every box on layer 4/.prefix style={secondary box}
 }
-%\tcbsetmanagedlayers{2}
+%%%%%
+
 
 \cpgesetup{simple deco/.code={%
 			\cpgesetdeco{simple}{\simple@label@font#1}%
@@ -541,7 +527,7 @@ math box style={}
 	 theorem type/remark/.code={\rem@typetrue},
 	 theorem type/proof/.code={\rem@typetrue}
  }
-\tcbset{theorem type/.is choice,
+\cpgesetupdeco{theorem type/.is choice,
 	 theorem type/exercise/.code={\exo@typetrue},
 	 theorem type/theorem/.code={\theo@typetrue},
 	 theorem type/definition/.code={\def@typetrue},
@@ -551,19 +537,19 @@ math box style={}
 \cpge@cnt@shortcut{*X}{current@counter}
 \cpgesetup[theorems]{%
 	theorem style/.code=%
-		\tcbset{theorem style/.style={%
+		\cpgesetupdeco{theorem style/.style={%
 			maincol=warmcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
 	definition style/.code=%
-		\tcbset{definition style/.style={%
+		\cpgesetupdeco{definition style/.style={%
 			maincol=coldcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
 	remark style/.code=%
-		\tcbset{remark style/.style={%
+		\cpgesetupdeco{remark style/.style={%
 			maincol=neutralcol, colbacktitle=maincol,#1,current counter=\thetcbcounter}},
 	}
 
 \cpgesetup[theorems]{
 	exercise style/.code=%
-		\tcbset{exercise style/.style={maincol=importantcol, colbacktitle=maincol,#1}}
+		\cpgesetupdeco{exercise style/.style={maincol=importantcol, colbacktitle=maincol,#1}}
 }
 \def\cpgesetuptheoremstyle{\pgfqkeys{/cpge/theorems}}
 
@@ -592,7 +578,7 @@ math box style={}
 	\tcbsubtitle[basic subtitle]{D\'emonstration}%
 	\set@defaultforlistsinsideunite%
 }
-\tcbset{basic subtitle/.style={%
+\cpgesetupdeco{basic subtitle/.style={%
 		spartan,
 		coltext=white,
 		colback=maincol,
@@ -608,13 +594,13 @@ math box style={}
 		{\immediate\write18{md  "\aux@dir"}}%
 
 %% Styles des hyperliens demo/solution
-\AtBeginDocument{
+\appto\endpreamble@hook{
 	\ifprint
-	\tcbset{demolink/.style n args={3}{% 
+	\cpgesetupdeco{demolink/.style n args={3}{% 
 		size=#1, arc=#2, boxrule=2pt,
 		colframe=bgcol, coltext=linkcol!75!black, colback=bgcol, #3}}
 	\else
-	\tcbset{demolink/.style n args={3}{%
+	\cpgesetupdeco{demolink/.style n args={3}{%
 		size=#1, arc=#2, boxrule=2pt,
 		colframe=bgcol, coltext=white, colback=linkcol!75!black, #3
 		}}
@@ -674,14 +660,14 @@ math box style={}
 	\ifdraft
 		\let\solution\draft@solution
 		\let\proof\draft@proof
-		\tcbset{%
+		\cpgesetupdeco{%
 			with@solu/.style={},
 			with@proof/.style={},
 		}
 	\else 
 		\def\proof@link{\ifproof\@demolink{proof}{d\'emonstration}\fi}
 		\def\solution@link{\ifsolution\@demolink{solution}{solution}\fi}
-		\tcbset{%
+		\cpgesetupdeco{%
 			with@solu/.style={%
 				lowerbox=ignored,
 				before upper app=\def\solution{\@recsol\solution@link\tcblower},
@@ -695,10 +681,10 @@ math box style={}
 		}
 	\fi 
 }
-\tcbset{%
+\cpgesetupdeco{%
 	proof or solution/.code=%
-		\ifexo@type\tcbset{with@solu}\fi
-		\iftheo@type\tcbset{with@proof}\fi
+		\ifexo@type\cpgesetupdeco{with@solu}\fi
+		\iftheo@type\cpgesetupdeco{with@proof}\fi
 	}
 
 %%%%% Boites pour les demo/solutions	
@@ -731,12 +717,12 @@ math box style={}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% macros et cles principales de creation de theorem
-\tcbset{%
+\cpgesetupdeco{%
 	font app/.code 2 args={\csappto{kvtcb@font#1}{#2}},
 	font reset/.code 2 args={\csdef{kvtcb@font#1}{#2}}
 }
 \def\kvtbc@titlewho{\ifdefempty{\kvtcb@title}{\tcbtitletext}{\kvtcb@title}}
-\tcbset{title style if break/.style={%%
+\cpgesetupdeco{title style if break/.style={%%
 	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
 	extras title after break={%
 		halign title=right,
@@ -753,14 +739,14 @@ math box style={}
 	titlerule=0pt
 }}
 
-\tcbset{%
+\cpgesetupdeco{%
 		@theoprefix/.store in=\cpge@theorem@prefix,
 		@theoname/.store in=\cpge@theorem@name,
 		du@theoname/.store in=\cpgedu@@theorem@name,
 		@demoname/.store in=\cpge@demo@name
 	}
 \ifdraft
-\tcbset{description path/.style={
+\cpgesetupdeco{description path/.style={
 		after title={\enskip\mdseries\scshape\itshape\small (#1)},
 	}}
 \else
@@ -770,7 +756,7 @@ math box style={}
 				font=\smaller{-2}\vphantom{(},
 				text=tcbcoltitle,
 				#1}}
-\tcbset{description path/.style={%
+\cpgesetupdeco{description path/.style={%
 	overlay unbroken and first={%
     	\path let \p1=(title.north east), \p2=([xshift=-12pt]frame.north east) in
 			node (description) [%
@@ -785,7 +771,7 @@ math box style={}
 \fi 
 
 \def\important@message{\ifexo@type exercice \else r\'esultat\fi{} important}
-\tcbset{
+\cpgesetupdeco{
 	important/.style={%
 		maincol=importantcol,
 		bottom=10pt,
@@ -810,7 +796,7 @@ math box style={}
 \def\cpge@theo@form@namenumber#1#2{\hbox{#1~#2}}
 \def\cpge@theo@form@numbername#1#2{\hbox{#2~#1}}
 \def\cpge@theo@form@name#1#2{\hbox{#1}}
-\tcbset{%
+\cpgesetupdeco{%
 	theorem name and number/.code={\let\tcb@theo@form=\cpge@theo@form@namenumber},
 	theorem number and name/.code={\let\tcb@theo@form=\cpge@theo@form@numbername},
 	theorem name/.code={\let\tcb@theo@form=\cpge@theo@form@name},
@@ -883,7 +869,7 @@ math box style={}
 	theorem name,
 	titled items,
 	#2}
-\tcbset{marge/.style={left=#1,right=#1}}	
+\cpgesetupdeco{marge/.style={left=#1,right=#1}}	
 	
 %%%%%%%% Tables des th\'eor\`emes 
 \def\cpge@tcb@theo@title#1#2{%
@@ -915,22 +901,22 @@ math box style={}
 %%%%%%%% jeu de styles tcolorbox %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\tcbset{minimal/.style=blanker}
+\cpgesetupdeco{minimal/.style=blanker}
 
-\tcbset{simple/.style={%
+\cpgesetupdeco{simple/.style={%
 	colframe=maincol,
 	boxrule=.4pt,
 	top=3pt,bottom=3pt,
 	left=5pt,right=5pt
 	}}
 	
-\tcbset{basic/.style={%
+\cpgesetupdeco{basic/.style={%
 	spartan,
   	top=3pt,bottom=3pt,
 	left=5pt,right=5pt,
 	boxrule=.4pt, 
 }}
-\tcbset{
+\cpgesetupdeco{
 	basicthm/.style={%
 		empty, 
 		basic, 
@@ -942,7 +928,7 @@ math box style={}
 		}
 	}
 }
-\tcbset{%
+\cpgesetupdeco{%
 	basicrmk/.style={
 		blankest, 
 		coltitle=maincol,
@@ -951,13 +937,13 @@ math box style={}
 		borderline west={.6pt}{.6pt}{maincol}
 	}
 }
-\tcbset{rounded/.style={
+\cpgesetupdeco{rounded/.style={
 	arc=5pt,
     colframe=maincol,
     boxrule=-1pt,
 	left=8pt,right=8pt
  }}
-\tcbset{roundedthm/.style={%
+\cpgesetupdeco{roundedthm/.style={%
 	rounded,
     attach boxed title to top left={yshift=-\tcboxedtitleheight/2-1pt,xshift=3pt},
     boxed title style={%
@@ -969,13 +955,13 @@ math box style={}
         },
         bottomrule=.8pt
 }}
-\tcbset{uphill/.style={
+\cpgesetupdeco{uphill/.style={
     	colframe=maincol,
 		left=5pt,right=5pt,
     	arc=.2cm,
     	sharp corners=uphill
  }}
-\tcbset{uphillthm/.style={%
+\cpgesetupdeco{uphillthm/.style={%
 	uphill,
     attach boxed title to top left={yshift=-\tcboxedtitleheight},
     boxed title style={%
@@ -999,33 +985,6 @@ math box style={}
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% style d'enumerations dans les theorem %%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\def\setup@enumstyle{%
-	\let\thecurrent@counter\@gobble
-	\cpgesetenum{1}{marge}
-	\cpgesetenum{2}{marge*}
-	\cpgesetlabel{unite}{|X|.|1|}%
-	\cpgesetlabel{enumi}{|X|.|1|}%
-	\cpgesetlabel{enumii}{|Q|.|a|}
-	\cpgesetdeco{unite}{\textcolor{maincol}{\sffamily\small\scshape\bfseries##1.}}
-	\cpgesetdeco{enumi}{\bfseries ##1.}%
-	\cpgesetdeco{enumii}{\bfseries ##1.}
-	\cpgesetdeco{itemtitle}{{\scshape\sffamily##1~:~}}
-	\cpgesetdeco{unitetitle}{\textcolor{maincol}{\sffamily\scshape\small##1~:~}}
-	\cpgesetlabel{equation}{|C|.|1|}
-	\makethetolabel{equation}
-}
-\tcbset{%
-	current counter/.code=\def\thecurrent@counter{#1}
-}	
-\tcbset{%
-	titled items/.code={%
-		\tcbset{after upper pre=\closeunite}%
-		\set@defaultforlistsinsideunite%
-}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% exemples d'environement pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1134,7 +1093,7 @@ math box style={}
 	{}
 	{remark}
 	{float, halign title=flush center}
-\tcbset{floatplacement=tbp}
+\cpgesetupdeco{floatplacement=tbp}
 
 \cpgenewtheorem[number within=chapter,@labelformat={tcb@cnt@exer}{l'exercice}]{exer}
 	{Exercice}

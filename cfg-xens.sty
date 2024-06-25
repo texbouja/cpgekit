@@ -1,12 +1,20 @@
-\cpgefont{utopia}
+\RequirePackage{parskip}
+\cpgefont{lmodern} 
+
+%%% X-ENS utilise une version plus noire de la police standard Computer Modern
+%%% On imite cet effet avec le package pdfrender et la police Latin Modern.
+\RequirePackage{pdfrender}
+\let\normalrender\PdfRender@NormalColorHook
+\let\PdfRender@NormalColorHook\@empty
+\newcommand*{\textnormalrender}[1]{%
+  \begingroup\normalrender#1\endgroup
+}
+\pdfrender{StrokeColor=black,TextRenderingMode=2,LineWidth=0.1pt}%
 
 \Preauteur{Corrigé proposé par~}
-\cpgesetuptitle{before=\null, after=\null, afterskip=0}
 \AtBeginDocument{\@bsphack
 \cpgesettitle{
-    \vskip \z@ plus .5fill
-    \ifdefmeta{document}
-        {|document| \par \vskip\dimexpr\bigskipamount*4}{}
+        |document| \par \vskip\dimexpr\bigskipamount*3
     \ifdefmeta{concours}
         {|concours| \\}{}
     \ifdefmeta{epreuve}
@@ -15,19 +23,18 @@
         {|session|  \\}{}
     \ifdefmeta{auteur}
         {\ifsolution
-            \par \vskip2\bigskipamount plus .25fill
+            \par \vskip\dimexpr\bigskipamount*2
             |auteur| \\ 
             \ifdefmeta{email}{|email| \\}{}
             \ifdefmeta{website}{|website| \\}{}
         \fi}{}
-    \vskip\z@ plus .5fill
 }
 \cpgesettitle*{
     |document| 
     \bigskip\hrule\bigskip
         |concours|
         |epreuve|
-        |session|  \par \vskip \bigskipamount plus .2fill 
+        |session|  \par \vskip 2\bigskipamount plus .2fill 
     \ifsolution 
         |auteur| |email| |website|   
     \fi
@@ -41,39 +48,41 @@
 \let\listbox\default@listbox
 \cpgesetdeco*{formula}{\fbox}
 \cpgesetdeco*{result}{\fboxsep=5pt\fbox}
-
-\ifundef\columnbreak{\let\just@break\pagebreak}{\let\just@break\columnbreak}
-\def\problembreak{\just@break}
+%\def\problembreak{\clearpage}
 \cpgesetuplists{
     enumi={
         n=|1|, 
-        d={\normalfont\ifsolution\bfseries#1.%
-        \else\textlf{\bfseries#1}
-            \Large$\,\triangleright\,$\fi}, 
-        m, 
+        d=\bfseries #1.,
         a=l,
+        m*, 
         s=8pt plus 2pt minus 4pt,
+    },
+    enumii={
+        n=|Q||a|,
+        d=\bfseries #1.,
+        a=l,
+        m*
     },
     itemi = {d={}--{} , m = 2em, s = 6pt }
 }
 \cpgesetupsectiontitle{
-    problem={
-        font = \Large\sffamily\bfseries,
-        label deco = \ifisasolution#1\fi,
-        deco = \ifisasolution 
-                    #1 
-                \else 
-                    \large\mdseries#1\par\bigskip\titlerule
-                \fi,
-        fill = center, 
-        spacing = {\z@}{\z@}{*4}
-    },
+    % problem={
+    %     font = \Large\sffamily\bfseries,
+    %     label deco = \ifisasolution#1\fi,
+    %     deco = \ifisasolution 
+    %                 #1 
+    %             \else 
+    %                 \large\mdseries#1\par\bigskip\titlerule
+    %             \fi,
+    %     fill = center, 
+    %     spacing = {\z@}{\z@}{*4}
+    % },
     parti={
-            font=\Large\itshape\bfseries,
-            label=|I|,
-            label deco=\bfseries Partie #1\enskip-\enskip,
+            font=\large\bfseries,
+            label=|F| partie,
+            label deco=#1,
             fill=center,
-            spacing={\z@}{*5}{*3}
+            spacing={\z@}{*6}{*3}
         },
     partii={
             font=\large\itshape\bfseries,
@@ -86,14 +95,14 @@
 } 
 \cpgesetupmath{
     symbol={
-        C=\mathbf C,
-        R=\mathbf R, 
-        Q=\mathbf Q,
-        Z=\mathbf Z,
-        N=\mathbf N,
-        P=\mathbf P,
-        E=\mathbf E,
-        V=\mathbf V
+        C=\mathbb C,
+        R=\mathbb R, 
+        Q=\mathbb Q,
+        Z=\mathbb Z,
+        N=\mathbb N,
+        P=\mathbb P,
+        E=\mathbb E,
+        V=\mathbb V
     }
 }
 \@esphack}
@@ -103,10 +112,9 @@
    \sethead{}{}{}
    \setfoot{}{page \thepage{}}{}
  }
-\renewpagestyle{main}[\fontsize{8}{8}\sffamily\itshape\scshape]{%
+\renewpagestyle{main}[\fontsize{8}{8}\sffamily\scshape]{%
    \renewcommand\makeheadrule{\csuse{head@rule}}
    \renewcommand\makefootrule{\csuse{foot@rule}}
    \sethead{}{}{}
    \setfoot{}{}{\hf@page}
   }
-

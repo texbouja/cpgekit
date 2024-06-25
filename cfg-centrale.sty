@@ -1,35 +1,36 @@
-\cpgefont{utopia}
+\cpgefont{lmodern}
+\RequirePackage{parskip}
+\RequirePackage{tikz}
 
 \Preauteur{Corrigé proposé par~}
-\cpgesetuptitle{before=\null, after=\null, afterskip=0}
 \AtBeginDocument{\@bsphack
 \cpgesettitle{
-    \vskip \z@ plus .5fill
     \ifdefmeta{document}
-        {|document| \par \vskip\dimexpr\bigskipamount*4}{}
+        {|document| \par \vskip\dimexpr\bigskipamount*3}{}
     \ifdefmeta{concours}
         {|concours| \\}{}
     \ifdefmeta{epreuve}
         {|epreuve| \\}{}
     \ifdefmeta{session}
         {|session|  \\}{}
-    \ifdefmeta{auteur}
-        {\ifsolution
-            \par \vskip2\bigskipamount plus .25fill
+    \ifsolution
+        \ifdefmeta{auteur}
+            {\par \vskip\glueexpr\bigskipamount*2
             |auteur| \\ 
             \ifdefmeta{email}{|email| \\}{}
             \ifdefmeta{website}{|website| \\}{}
-        \fi}{}
-    \vskip\z@ plus .5fill
+        }{}
+    \fi 
 }
 \cpgesettitle*{
+    \null\vskip\z@ plus .5fill
     |document| 
     \bigskip\hrule\bigskip
         |concours|
         |epreuve|
-        |session|  \par \vskip \bigskipamount plus .2fill 
+        |session|  \par \vskip \glueexpr 2\bigskipamount plus 1fill 
     \ifsolution 
-        |auteur| |email| |website|   
+        \ifdefmeta{auteur}{|auteur| |email| |website|}{} 
     \fi
 }
 % \cpgesetuptitle{
@@ -38,20 +39,21 @@
 %                      \tableofcontents 
 %                       \vskip \z@ plus 1fill
 % }
+\long\def\centralebox#1{%
+    \tikz \node [draw, rounded corners=5pt, inner sep=8pt] {#1};%
+}
+\long\def\genboxcmd#1{%
+    \tikz [baseline, anchor=base] \node [draw, rounded corners=3pt, inner sep=3pt, inner xsep=5pt] {#1};%
+}
 \let\listbox\default@listbox
-\cpgesetdeco*{formula}{\fbox}
-\cpgesetdeco*{result}{\fboxsep=5pt\fbox}
-
-\ifundef\columnbreak{\let\just@break\pagebreak}{\let\just@break\columnbreak}
-\def\problembreak{\just@break}
+\cpgesetdeco*{formula}{\centralebox}
+\cpgesetdeco*{result}{\centralebox}
 \cpgesetuplists{
     enumi={
-        n=|1|, 
-        d={\normalfont\ifsolution\bfseries#1.%
-        \else\textlf{\bfseries#1}
-            \Large$\,\triangleright\,$\fi}, 
-        m, 
+        n=Q|1|, 
+        d={\bfseries#1.},
         a=l,
+        m*, 
         s=8pt plus 2pt minus 4pt,
     },
     itemi = {d={}--{} , m = 2em, s = 6pt }
@@ -60,40 +62,43 @@
     problem={
         font = \Large\sffamily\bfseries,
         label deco = \ifisasolution#1\fi,
-        deco = \ifisasolution 
-                    #1 
-                \else 
-                    \large\mdseries#1\par\bigskip\titlerule
-                \fi,
+        deco = \Large\bfseries\itshape #1,
         fill = center, 
-        spacing = {\z@}{\z@}{*4}
+        spacing = {\z@}{\z@}{*6}
     },
     parti={
-            font=\Large\itshape\bfseries,
+            font=\Large\bfseries,
             label=|I|,
-            label deco=\bfseries Partie #1\enskip-\enskip,
-            fill=center,
+            label deco=\bfseries #1\enskip,
+            fill=right,
             spacing={\z@}{*5}{*3}
         },
     partii={
-            font=\large\itshape\bfseries,
+            font=\large\bfseries,
             label=|A|,
-            label deco=\bfseries\itshape Section #1\ - \ ,
-            deco = \bfseries\slshape #1,
+            label deco=\bfseries\itshape #1\ - \ ,
+            deco = \bfseries\slshape #1\enskip,
             fill=right,
             spacing={\z@}{*3}{*1.5}
-        }
+        },
+    bigques={
+        shape=block,
+        fill=r,
+        font=\bfseries\itshape\boldmath,
+        label=|P|.|A|,
+        spacing={\z@}{*3}{*1}
+    }
 } 
 \cpgesetupmath{
     symbol={
-        C=\mathbf C,
-        R=\mathbf R, 
-        Q=\mathbf Q,
-        Z=\mathbf Z,
-        N=\mathbf N,
-        P=\mathbf P,
-        E=\mathbf E,
-        V=\mathbf V
+        C=\mathbb C,
+        R=\mathbb R, 
+        Q=\mathbb Q,
+        Z=\mathbb Z,
+        N=\mathbb N,
+        P=\mathbb P,
+        E=\mathbb E,
+        V=\mathbb V
     }
 }
 \@esphack}
@@ -103,10 +108,9 @@
    \sethead{}{}{}
    \setfoot{}{page \thepage{}}{}
  }
-\renewpagestyle{main}[\fontsize{8}{8}\sffamily\itshape\scshape]{%
+\renewpagestyle{main}[\fontsize{8}{8}\sffamily\scshape]{%
    \renewcommand\makeheadrule{\csuse{head@rule}}
    \renewcommand\makefootrule{\csuse{foot@rule}}
    \sethead{}{}{}
    \setfoot{}{}{\hf@page}
   }
-

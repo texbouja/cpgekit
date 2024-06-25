@@ -1,12 +1,10 @@
-\cpgefont{utopia}
+\cpgefont{palatino}
 
 \Preauteur{Corrigé proposé par~}
-\cpgesetuptitle{before=\null, after=\null, afterskip=0}
 \AtBeginDocument{\@bsphack
 \cpgesettitle{
-    \vskip \z@ plus .5fill
     \ifdefmeta{document}
-        {|document| \par \vskip\dimexpr\bigskipamount*4}{}
+        {|document| \par \vskip\dimexpr\bigskipamount*3}{}
     \ifdefmeta{concours}
         {|concours| \\}{}
     \ifdefmeta{epreuve}
@@ -15,12 +13,11 @@
         {|session|  \\}{}
     \ifdefmeta{auteur}
         {\ifsolution
-            \par \vskip2\bigskipamount plus .25fill
+            \par \vskip\dimexpr\bigskipamount*2
             |auteur| \\ 
             \ifdefmeta{email}{|email| \\}{}
             \ifdefmeta{website}{|website| \\}{}
         \fi}{}
-    \vskip\z@ plus .5fill
 }
 \cpgesettitle*{
     |document| 
@@ -41,9 +38,7 @@
 \let\listbox\default@listbox
 \cpgesetdeco*{formula}{\fbox}
 \cpgesetdeco*{result}{\fboxsep=5pt\fbox}
-
-\ifundef\columnbreak{\let\just@break\pagebreak}{\let\just@break\columnbreak}
-\def\problembreak{\just@break}
+\def\problembreak{\clearpage}
 \cpgesetuplists{
     enumi={
         n=|1|, 
@@ -69,16 +64,17 @@
         spacing = {\z@}{\z@}{*4}
     },
     parti={
-            font=\Large\itshape\bfseries,
-            label=|I|,
-            label deco=\bfseries Partie #1\enskip-\enskip,
+            shape=display,
+            font=\Large\bfseries,
+            label=|F|,
+            label deco=\large\scshape\mdseries\lsstyle #1 partie,
             fill=center,
             spacing={\z@}{*5}{*3}
         },
     partii={
             font=\large\itshape\bfseries,
             label=|A|,
-            label deco=\bfseries\itshape Section #1\ - \ ,
+            label deco=\itshape\scshape\lsstyle  #1\ - \ ,
             deco = \bfseries\slshape #1,
             fill=right,
             spacing={\z@}{*3}{*1.5}
@@ -86,14 +82,14 @@
 } 
 \cpgesetupmath{
     symbol={
-        C=\mathbf C,
-        R=\mathbf R, 
-        Q=\mathbf Q,
-        Z=\mathbf Z,
-        N=\mathbf N,
-        P=\mathbf P,
-        E=\mathbf E,
-        V=\mathbf V
+        C=\mathbb C,
+        R=\mathbb R, 
+        Q=\mathbb Q,
+        Z=\mathbb Z,
+        N=\mathbb N,
+        P=\mathbb P,
+        E=\mathbb E,
+        V=\mathbb V
     }
 }
 \@esphack}

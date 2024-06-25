@@ -10,20 +10,19 @@
 %\DeclareOption*{\PassOptionsToPackage{\CurrentOption}{cpgetitle}}
 \ProcessOptions\relax
 
-\RequirePackage{calc}
-\RequirePackage{pgfkeys}
-\RequirePackage{etoolbox}
-\RequirePackage{xstring}
-\RequirePackage{relsize}
-\RequirePackage{array}
+% \RequirePackage{calc}
+% \RequirePackage{pgfkeys}
+% \RequirePackage{etoolbox}
+% \RequirePackage{xstring}
+% \RequirePackage{relsize}
+% \RequirePackage{array}
 \@ifundefined{NewDocumentCommand}
 	{\RequirePackage{xparse}}
 	{}
 \ifcustomtitles
    \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
 \else 
-   \RequirePackage[explicit,nobottomtitles\RequirePackage[svgnames]{xcolor}
-   *,pagestyles]{titlesec}
+   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
 \fi 
 \RequirePackage{titletoc}
 
@@ -37,6 +36,35 @@
       \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
    }
    }{}
+%%% hyperref, aboslument indispensable
+\RequirePackage[pdfencoding=auto,psdextra]{hyperref}
+\hypersetup{colorlinks,linkcolor=linkcol,urlcolor=linkcol,breaklinks,raiselinks}
+\pdfstringdefDisableCommands{%
+	\def\({}%
+	\def\){}%
+}
+\let\ToP\texorpdfstring
+\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
+\ProvideDocumentCommand\LinkTargetOn{}{}
+\ProvideDocumentCommand\LinkTargetOff{}{}
+\ProvideDocumentCommand\NextLinkTarget{m}{}
+
+
+%%%% Mécanisme pour charger certains packages avec les bonnes versions
+
+\NewDocumentCommand\cpgeloadpackage{O{}m}{%
+	\ifstrequal{#2}{tcolorbox}{
+		\RequirePackage{tcolorbox}[2022/01/07]
+		\forcsvlist\tcbuselibrary{#1}
+		\def\cpgesetupdeco{\pgfqkeys{/tcb}}
+		\let\cpgebox\tcbox 
+		\let\newcpgebox\newtcbox
+		\let\renewcpgebox\renewtcbox
+		\def\boxedenv{\tcolorbox} 
+		\let\endboxedenv\endtcolorbox
+		\ifdef\tcbraster{\let\raster\tcbraster\let\endraster\endtcbraster}{}
+	}{}
+}
 
 %%%% Structure de bas niveau d'inclusion de fichiers  
 %%%% Ajout 09/10/2023
@@ -396,9 +424,11 @@
 		\def\x@arg{#1}\expandafter\@secondoftwo%
 	\fi%
 }
+%\NewDocumentCommand\cpgesetdeco{ s mom}{%
+%}
 \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 \long\def\cpge@deco#1#2{%
-\long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
+\long\csdef{deco@#1}##1{\color@begingroup#2\color@endgroup}}
 \long\def\cpge@deco@#1#2{%
 \long\csdef{deco@#1}{#2}}
 \long\def\usedeco#1{\csuse{deco@#1}}
@@ -522,15 +552,15 @@
 }{}
 
 %%%%% Gestion des métadonnées 
-\newcommand\addmeta[4]{
+\newcommand\addmeta[4]{%
    \csdef{#1}##1{
       \csgdef{cpge@#2}{##1}
       \csgdef{cpge@#2@format}{{#3{##1}}}
    }
    \ifblank{#4}{}{\csuse{#1}{#4}}
 }
-\newcommand\meta[1]{\csuse{cpge@#1@format}}
-\def\ifdefmeta#1{\ifcsdef{cpge@#1}\iftrue\iffalse}
+\newcommand\usemeta[1]{\csuse{cpge@#1@format}}
+\def\ifdefmeta#1{\ifcsdef{cpge@#1}}
 
 \addmeta{Centre}{centre}{\scshape}{}
 \addmeta{Classe}{classe}{\scshape}{}
@@ -566,18 +596,18 @@
 	Auteur/.code=\Auteur{#1},
 	Email/.code=\Email{#1},
 	Website/.code=\Website{#1},
-   Preauteur/.code=\Preauteur{#1},
+   	Preauteur/.code=\Preauteur{#1},
 	Matiere/.code=\Matiere{#1},
 	Document/.code=\Document{#1},
-   Devoir/.code=\Devoir{#1},
+   	Devoir/.code=\Devoir{#1},
 	Theme/.code=\Theme{#1},
-   Subtheme/.code=\Subtheme{#1},
+   	Subtheme/.code=\Subtheme{#1},
 	Concours/.code=\Concours{#1},
 	Session/.code=\Session{#1},
 	Epreuve/.code=\Epreuve{#1},
 	Periode/.code=\Periode{#1},
 	Duree/.code=\Duree{#1},
-   Texte/.code=\Texte{#1},
+   	Texte/.code=\Texte{#1},
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Décoration de l'arrière-plan %%%%%
@@ -594,11 +624,6 @@
 	code/.code=\def\back@code{#1},
 }
 \cpgesetup[background]{position=pb, code=\relax}
-\AtEndPreamble{%
-	\ifbackground
-	  \RequirePackage{eso-pic}
-	  \newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
-  \fi}
 
 % \AtBeginDocument{%
 %  \cpgesetup{background}
@@ -620,7 +645,7 @@
 %%%%% Geometrie du document
 
 \RequirePackage{geometry}
-\RequirePackage{cuted}
+\RequirePackage{cuted,flushend}
 \newif\iflandscape
 
 
@@ -661,7 +686,7 @@
 % interface pgfkeys pour geometry
 \newif\ifforced@geometry
 \newif\ifactivated@geometry
-\def\geom@options{reversemp}
+\def\geom@options{reversemp,}
 
 \cpgesetup[@geometry]{%
 	print/.code=%
@@ -671,20 +696,22 @@
 		\geometry{%
 			a4paper,
 			inner=3cm, outer=2cm,
-			vmargin={2.4cm,3.6cm}, 
+			vmargin={2.4cm,3cm}, 
+			footskip=2cm,
 			littlemargin=6pc
 		}, 
 	2print/.code=%
 		\printtrue%
 		\darkfalse%
 		\compacttrue%
-		\striptitletrue
+		\striptitletrue%
 		\geometry{%
 			a4paper,
 			twocolumn, columnsep=24truept,
 			%mag=830,
 			inner=1truecm, outer=1truecm,
 			vmargin={2.4truecm,2.4truecm},
+			footskip=1.6cm,
 			littlemargin=4.5pc%
 		},
 	lsprint/.code=%
@@ -692,7 +719,6 @@
 		\darkfalse%
 		\compactfalse%
 		\landscapetrue%
-		\striptitlefalse%
 		\geometry{%
 			a4paper,
 			landscape,
@@ -700,6 +726,7 @@
 			%mag=870,
 			inner=1.8truecm, outer=1.8truecm,
 			vmargin={1.5truecm,1.5truecm},
+			footskip=1cm,
 			littlemargin=4.5pc
 		},
 	book/.code=%
@@ -845,13 +872,22 @@
 	\ifdefempty{\geom@options}{}{
 		\@xp\geometry\@xp{\geom@options}
 	}%
-	\csuse{setup@enumstyle}%
+	\setup@enumspaces%
 }
 \def\ttl@addstretch@origin{\advance\@tempskipa-\pagestretch}
 \AtEndPreamble{%
 	\unless\ifactivated@geometry
 			\cpgesetup[@geometry]{draft}
 	\fi%
+	\ifdim\paperwidth>127mm\relax
+		\def\cpge@relsize{\relsize{2}}
+	\else
+		\def\cpge@relsize{\relsize{1}}%
+	\fi%
+	\ifbackground
+		\RequirePackage{eso-pic}
+		\newcommand{\LocalClearShipoutPictureBG}{\let\ESO@HookIBG\@empty}
+	\fi
 	\if@twocolumn% rétablir les conditions de l'option bottomtitles de titlesec.sty
 		\let\ttl@addstretch\ttl@addstretch@origin%
 		\def\bottomtitlespace{-\p@}%
@@ -865,7 +901,7 @@
 			\RequirePackage{multicol}
 			\appto\prepare@multicols{%
 				\compacttrue%
-				 \setup@enumstyle%
+				 \setup@enumspaces%
 				  \def\bottomtitlespace{-\p@}%
 				   \let\ttl@addstretch\ttl@addstretch@origin%
 				}
@@ -875,13 +911,6 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Titre du document %%%%%
-\AtEndPreamble{%
-	\ifdim\paperwidth>127mm\relax
-		\def\cpge@relsize{\relsize{2}}
-	\else
-		\def\cpge@relsize{\relsize{1}}%
-	\fi%
-}
 \newif\iftitlepage
 \newdimen\cpge@ttlw
 \AtBeginDocument{\cpge@ttlw=\iflandscape4.23\else3\fi cm\relax}
@@ -893,17 +922,17 @@
       \baselineskip\cpge@dima%
    }
 }
-\cpgenewtitlekeyword{document}{\Large\bfseries}
-\cpgenewtitlekeyword{concours}{\Large\bfseries}
+\cpgenewtitlekeyword{document}{\LARGE\bfseries}
+\cpgenewtitlekeyword{concours}{\LARGE\bfseries}
 \cpgenewtitlekeyword{epreuve}{\Large\scshape}
 \cpgenewtitlekeyword{theme}{\Large\scshape}
 \cpgenewtitlekeyword{subtheme}{\large\scshape\itshape}
-\cpgenewtitlekeyword{centre}{\large\scshape}
+\cpgenewtitlekeyword{centre}{\Large\scshape}
 \cpgenewtitlekeyword{classe}{\large\scshape}
-\cpgenewtitlekeyword{texte}{\tiny\sffamily\slshape} 
-\cpgenewtitlekeyword{periode}{\small\itshape}
+\cpgenewtitlekeyword{texte}{\sffamily\slshape} 
+\cpgenewtitlekeyword{periode}{\itshape}
 \cpgenewtitlekeyword{session}{\itshape}
-\cpgenewtitlekeyword{duree}{\small\itshape}
+\cpgenewtitlekeyword{duree}{\itshape}
 \cpgenewtitlekeyword{auteur}{\small\textit{\cpge@preauthor}~}
 \cpgenewtitlekeyword{email}{\small\ttfamily}
 \cpgenewtitlekeyword{website}{\small\ttfamily}
@@ -953,17 +982,18 @@
 		\renew@title@format[2]{centre}{\scshape}%
 		\renew@title@format[2]{classe}{\scshape}%
 		\renew@title@format[3]{matiere}{\bfseries}%
-		\renew@title@format[4]{document}{\scshape}%
-		\renew@title@format[4]{devoir}{\scshape}%
+		\renew@title@format[4]{document}{\bfseries}%
+		\renew@title@format[4]{devoir}{\bfseries}%
+		\renew@title@format[4]{concours}{\bfseries}%
 		\renew@title@format[3]{theme}{\scshape}%
 		\renew@title@format[2]{subtheme}{\scshape\itshape}%
 		\renew@title@format[3]{epreuve}{\scshape}%
 		\renew@title@format[2]{session}{\itshape}%
-		\renew@title@format{periode}{\itshape}%
-		\renew@title@format{duree}{\itshape}%
+		\renew@title@format{periode}{\small\itshape}%
+		\renew@title@format{duree}{\small\itshape}%
 		\renew@title@format{auteur}{\footnotesize\textit{\cpge@preauthor}\small~}%
-		\renew@title@format{email}{\hphantom{\footnotesize\textit{\cpge@preauthor}~}\footnotesize\ttfamily}%
-		\renew@title@format{website}{\null\hphantom{\footnotesize\textit{\cpge@preauthor}~}\footnotesize\ttfamily}%
+		\renew@title@format{email}{\footnotesize\ttfamily}%
+		\renew@title@format{website}{\footnotesize\ttfamily}%
 }
 
 %% Commande \title@parser qui traduit les mots cles 
@@ -1089,8 +1119,8 @@
 %% option () pour le format, sinon format par defaut
 \def\STRIP{}
 \let\endSTRIP\relax
-\NewDocumentCommand\titre{s e\op +d()}{%
-   \IfBooleanT{#1}{\titlepagetrue}
+\NewDocumentCommand\titre{s e{\op} +d()}{%
+   	\IfBooleanT{#1}{\titlepagetrue}
 	\IfValueT{#2}{\cpgesetup[title]{#2}}%
 	\IfValueT{#3}{%
 		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
@@ -1110,11 +1140,12 @@
 			\csuse{hook@lateaftertitlepage}
 		\end{titlepage}%
 		\pagecolor{pagecol}%
+		\color{fgcol}%
 		\restoregeometry%
 	\else%
 		\thispagestyle{plain}%
 		\ifstriptitle
-			\let\STRIP\strip%
+			\def\STRIP{\strip}%
 			\let\endSTRIP\endstrip%
 		\fi%
 		\begin{STRIP}%
@@ -1131,7 +1162,7 @@
 				\csuse{hook@titleaftertitle}%
 				\csuse{hook@aftertitle}%
 			\csuse{hook@lateaftertitle}%
-		\par\vspace{\bigskipamount*\real{\aftertitleskip}}%
+			\par\vspace{\bigskipamount*\real{\aftertitleskip}}%
 		\end{STRIP}%
 	\fi%
    \global\let\titre\dummy@titre%
@@ -1203,17 +1234,17 @@
     	bgcol=\cpge@bgcol,
     	pagecol=\cpge@pagecol,
 	},
-	tcbtext/.code=\def\cpge@coltext{#1},
-	tcbback/.code=\def\cpge@colback{#1},
-	tcbframe/.code=\def\cpge@colframe{#1},
-	tcbtitle/.code=\def\cpge@coltitle{#1},
-	tcbbacktitle/.code=\def\cpge@colbacktitle{#1},
-	coltext/.colorlet=tcbcoltext,
-	colback/.colorlet=tcbcolback,
-	colframe/.colorlet=tcbcolframe,
-	coltitle/.colorlet=tcbcoltitle,
-	colbacktitle/.colorlet=tcbcolbacktitle,
-	default tcbcolors/.style={
+	cpgetext/.estore in=\cpge@coltext,
+	cpgeback/.estore in=\cpge@colback,
+	cpgeframe/.estore in=\cpge@colframe,
+	cpgetitle/.estore in=\cpge@coltitle,
+	cpgebacktitle/.estore in=\cpge@colbacktitle,
+	coltext/.colorlet=coltext,
+	colback/.colorlet=colback,
+	colframe/.colorlet=colframe,
+	coltitle/.colorlet=coltitle,
+	colbacktitle/.colorlet=colbacktitle,
+	default cpgecolors/.style={
 		coltext=\cpge@coltext,
 		colback=\cpge@colback,
 		colframe=\cpge@colframe,
@@ -1237,192 +1268,21 @@
 	   fg={black}{white},
 	   bg={white}{cpgeblack!90!black},
 	   neutral={gray}{gray},
-	   tcbtext=fgcol,
-	   tcbframe=warmcol,
-	   tcbback=bgcol,
-	   tcbtitle=white, 
-	   tcbbacktitle=warmcol,
+	   cpgetext=fgcol,
+	   cpgeframe=warmcol,
+	   cpgeback=bgcol,
+	   cpgetitle=white, 
+	   cpgebacktitle=warmcol,
    }
 \def\cpgesetcolors#1{\ifcase#1\selectcolormodel{gray}\or\selectcolormodel{rgb}\fi}
-\AtBeginDocument{\ifnocolors\cpgesetcolors0\fi}
-\def\reloadcolors{
-	\AtEndPreamble{%
-		\cpgesetup[colors]{default colors}%
-		\cpgesetup[colors]{default tcbcolors}
-		\pagecolor{pagecol}%
-		\color{fgcol}%
-	}%
-	\AtBeginDocument{\color{fgcol}\pagecolor{pagecol}}%
+\def\reload@thecolors{
+	\cpgesetup[colors]{default colors}%
+	\cpgesetup[colors]{default cpgecolors}
+	\pagecolor{pagecol}%
+	\color{fgcol}%
+	\AtBeginDocument{\ifnocolors\cpgesetcolors0\fi\color{fgcol}\pagecolor{pagecol}}%
 }%
-\reloadcolors
 
-%%%%% HYPERREF, Absolument indispensable.
-
-%%%% Fonts loading. 
-\RequirePackage{ifxetex}
-\cpgesetup[font]{%
-	libertine/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[tt=false]{libertine}
-			 \RequirePackage[%
-			 	libertine,smallerops,bigdelims,upint,vvarbb
-			 ]{newtxmath}
-			%\usepackage[amsthm,sansmath]{libertinust1math}
-			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
-			\RequirePackage[scaled=.8]{FiraMono}
-			\useosf
-			\def\TitlingFont{\sffamily\scshape}
-	}},
-	lmodern/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\usepackage{lmodern}
-		\RequirePackage[french]{babel}
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	utopia/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage[p,scaled=.98,space]{erewhon}
-		\usepackage[varqu,varl]{inconsolata} % typewriter
-		\usepackage[scaled=.85]{berasans} % sans serif like Gill Sans
-		\usepackage[utopia,vvarbb]{newtxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	palatino/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage{newpxtext}
-		\usepackage[vvarbb]{newpxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	fira/.code={%
-		\def\load@thefonts{%
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
-			\RequirePackage[scaled=.88]{FiraMono}
-			\RequirePackage[smallerops,upint]{newtxsf}
-			\def\fira@loaded{}%
-			\firaoldstyle
-			\def\TitlingFont{\scshape}
-	}},
-	load/.code={%
-		\def\load@thefonts{%
-			\RequirePackage[T1]{fontenc}
-			\RequirePackage[french]{babel}
-			\RequirePackage{#1}
-			\RequirePackage{microtype}
-	}},
-	none/.code={\def\load@thefonts{}},
-	titling font/.store in=\TitlingFont,
-}
-\DeclareDocumentCommand\cpgefont{m}{%
-	\cpgesetup[font]{#1}
-}
-\AtEndPreamble{
-	\ifundef\load@thefonts
-		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
-		{}%
-	\load@thefonts
-	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
-		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}{\unexpanded{\varmathbb{#1}}}
-	}
-	\ifundef\hypersetup{}{%
-	\pdfstringdefDisableCommands{%
-		\def\({}%
-		\def\){}%
-	}
-	\let\ToP\texorpdfstring}
-	\def\label@itemi{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xdiamond$}
-	\def\label@itemii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xsquare$}
-	\def\label@itemiii{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
-	\def\ccsi{\textcolor{tcbcolbacktitle}\xheadarrowright}
-	\def\ccalors{\textcolor{tcbcolbacktitle}\xheadarrowleft}	
-	\def\ccneutre{\relsize{-2}$\mathcolor{tcbcolbacktitle}\xbullet$}
-}
-\let\xdocument\document
-\let\endsxdocument\enddocument
-
-
-%%%% Gestion des themes
-
-\cpgesetup[theme]{%
-	.search also={/cpge/colors,/cpge/tcb},
-	dark/.is if=dark,
-	draft/.is if=draft,
-	colors/.code=\pgfkeysalso{/cpge/colors/.cd,#1},
-	no colors/.is if=nocolors,
-	font/.code=\cpgefont{#1},
-	libertine/.style={font=libertine},
-	fira/.style={font=fira},
-	utopia/.style={font=utopia},
-	palatino/.style={font=palatino},
-	title page/.is if=titlepage,
-	title format/.code=\cpgesettitle{#1},
-	title format*/.code=\cpgesettitle*{#1},
-	scale title/.code=
-		\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
-	logo/.code=\def\cpge@logo{#1},
-	logo=all, 
-}
-\cpgesetup[title]{%
-	scale/.code=\AtEndPreamble{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
-}
-
-
-%%% Ajout 07/08/2021
-%%% interface pgfkeys pour contrôler les styles de page selon titlesec.sty %%%
-
-\newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{\csuse{deco@headrule}}
-   \renewcommand\makefootrule{\csuse{deco@footrule}}
-   \sethead{}{}{}
-   \setfoot{}{}{\hf@page}
-  }
-\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{}
-   \renewcommand\makefootrule{}
-   \sethead{}{}{}
-   \setfoot{}{page \thepage{}}{}
- }
 
 %%%% Entetes et pieds de pages
 
@@ -1516,13 +1376,223 @@
 \def\hf@deco{\title@deco}
 
 %%% Entete/pied de page 
-\newpagestyle{cpgemain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
-   \renewcommand\makeheadrule{\csuse{head@rule}}
-   \renewcommand\makefootrule{\csuse{foot@rule}}
+\newpagestyle{main}[\fontsize{8}{8}\sffamily\scshape]{
+   \renewcommand\makeheadrule{\csuse{deco@headrule}}
+   \renewcommand\makefootrule{\csuse{deco@footrule}}
    \sethead{}{}{}
-   \setfoot{}{}{\hf@page}
+   \setfoot{}{\hf@page}{}
   }
-\AtBeginDocument{\pagestyle{cpgemain}}
+\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{
+   \renewcommand\makeheadrule{}
+   \renewcommand\makefootrule{}
+   \sethead{}{}{}
+   \setfoot{}{page \thepage{}}{}
+ }
+
+
+%%%%% HYPERREF, Absolument indispensable.
+
+%%%% Fonts loading. 
+\RequirePackage{ifxetex} 
+\cpgesetup[font]{%
+	libertine/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+			\RequirePackage[french]{babel}
+			\RequirePackage[tt=false]{libertine}
+			 \RequirePackage[%
+			 	libertine,smallerops,bigdelims,upint,vvarbb
+			 ]{newtxmath}
+			%\usepackage[amsthm,sansmath]{libertinust1math}
+			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
+			\RequirePackage[scaled=.8]{FiraMono}
+			\useosf
+			\def\TitlingFont{\sffamily\scshape}
+	}},
+	lmodern/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\usepackage{mlmodern}
+		\RequirePackage[french]{babel}
+		\def\TitlingFont{\scshape}
+	}},
+	utopia/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\RequirePackage[french]{babel}
+		\usepackage[p,scaled=.98,space]{erewhon}
+		\usepackage[scaled=1.05]{biolinum} % sans serif like Gill Sans
+		\usepackage[varqu,varl]{inconsolata} % typewriter
+		\usepackage[utopia,vvarbb]{newtxmath}
+		\useosf
+		\def\TitlingFont{\sffamily\scshape}
+	}},
+	palatino/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\RequirePackage[french]{babel}
+		\usepackage[nohelv]{newpxtext}
+		\usepackage[scaled=1.05]{biolinum}
+		\usepackage[vvarbb,smallerops]{newpxmath}
+		\useosf
+		\def\TitlingFont{\sffamily\scshape}
+	}},
+	fira/.code={%
+		\def\load@thefonts{%
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+
+			\fi
+			\RequirePackage[french]{babel}
+			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
+			\RequirePackage[scaled=.88]{FiraMono}
+			\RequirePackage[smallerops,upint]{newtxsf}
+			\def\fira@loaded{}%
+			\firaoldstyle
+			\def\TitlingFont{\scshape}
+	}},
+	load/.code={%
+		\def\load@thefonts{%
+			\RequirePackage[T1]{fontenc}
+			\RequirePackage[french]{babel}
+			\RequirePackage{#1}
+			\RequirePackage{microtype}
+	}},
+	none/.code={\def\load@thefonts{}},
+	titling font/.store in=\TitlingFont,
+}
+\DeclareDocumentCommand\cpgefont{m}{%
+	\cpgesetup[font]{#1}
+}
+\def\reload@thefonts{
+	\load@thefonts%
+	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
+		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}
+			{\unexpanded{\varmathbb{##1}}}
+		}
+}
+%%%% Gestion des themes
+%%%% Gestion des themes
+
+\cpgesetup[theme]{%
+	.search also={/cpge/colors},
+	dark/.is if=dark,
+	draft/.is if=draft,
+	colors/.code=\pgfkeysalso{/cpge/colors,#1},
+	no colors/.is if=nocolors,
+	font/.code=\cpgefont{#1},
+	libertine/.style={font=libertine},
+	fira/.style={font=fira},
+	utopia/.style={font=utopia},
+	palatino/.style={font=palatino},
+	lmodern/.style={font=lmodern},
+	title page/.is if=titlepage,
+	title format/.code=\cpgesettitle{#1},
+	title format*/.code=\cpgesettitle*{#1},
+	scale title/.code=
+		\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
+	logo/.store in=\cpge@logo,
+	logo=all, 
+}
+\cpgesetup[title]{%
+	scale/.code=\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
+}
+\DeclareDocumentCommand\cpgetheme{O{} m}{%
+	\unless\ifdraft
+		\IfFileExists{#2\cpgecurrentclass.sty}
+			{%
+				\cpgesetup[theme]{#1}
+				\def\load@thetheme{\RequirePackage{#2\cpgecurrentclass}}
+			}{}%
+	\fi%
+	\setup@enumstyle%
+}
+\DeclareDocumentCommand\cpgeconfig{O{}m}{%
+	\IfFileExists{cfg-#2.sty}
+		{%	
+			\let\load@thetheme\relax%
+			\cpgesetup[theme]{#1}%
+			\def\load@theconfig{\RequirePackage{cfg-#2}}
+		}{}
+}
+\def\load@thetheme{}
+\def\load@theconfig{}
+\AtEndPreamble{
+	\load@theconfig%
+	\load@thetheme%
+	\ifundef\load@thefonts
+		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
+		{}%
+	\reload@thefonts%
+	\reload@thecolors%
+	\endpreamble@hook%
+	\pagestyle{main}%
+}
+\AtEndPreamble{
+	\def\label@itemi{\relsize{-2}$\mathcolor{colbacktitle}\xdiamond$}
+	\def\label@itemii{\relsize{-2}$\mathcolor{colbacktitle}\xsquare$}
+	\def\label@itemiii{\relsize{-2}$\mathcolor{colbacktitle}\xbullet$}
+	\def\ccsi{\textcolor{colbacktitle}\xheadarrowright}
+	\def\ccalors{\textcolor{colbacktitle}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{colbacktitle}\xbullet$}
+}
+\let\xdocument\document
+\let\endsxdocument\enddocument
+
+
+
+%%%% Hack pour que les footnote soient collectées et restituées en dehohs 
+%%%% des environnement qui utilisent minipage (tcolorbox, tikz, ...)
+%%%% mettre \cpge@footnote@restore à l'intérieur de l'environnement 
+%%%% et \cpge@footnote@use juste après qu'il soit fermé (par exemple avec \aftergroup)
+\def\cpge@footnote@restore{%
+  \def\@mpfn{footnote}%
+  \def\thempfn{\arabic{footnote}}%
+  \let\@footnotetext\cpge@footnote@collect
+}
+
+% collect footnote text
+\long\def\cpge@footnote@collect#1{%
+  \expandafter\gappto\expandafter\cpge@footnote@acc\expandafter{%
+    \expandafter\footnotetext\expandafter[\@thefnmark]{#1}%
+  }%
+}
+\def\cpge@footnote@use{%
+  \cpge@footnote@acc
+  \global\let\cpge@footnote@acc\@empty
+}
+\global\let\cpge@footnote@acc\@empty
+
+
+
 
 %%% Acronymes
 
@@ -1538,8 +1608,8 @@
 % \def\listofacronyms{\printacronyms}
 
 
-\renewcommand\acsfont[1]{\textsf{\scshape #1}}
-\renewcommand\acffont[1]{\textsf{#1}}
+\renewcommand\acsfont[1]{\textsc{#1}}
+\renewcommand\acffont[1]{\emph{#1}}
 \def\acro@@{\newacro}
 \def\acro@@plural{\newacroplural}
 

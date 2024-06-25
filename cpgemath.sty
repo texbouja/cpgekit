@@ -10,7 +10,6 @@
 \RequirePackage{calc}
 \RequirePackage{xparse}
 \RequirePackage{mathtools}
-\RequirePackage{amsthm}
 \RequirePackage{varwidth}
 \RequirePackage{mleftright}
 
@@ -100,7 +99,7 @@
 	\long\def\cpge@deco#1#2{\forcsvlist{\@cpge@deco{#2}}{#1}}
 	\long\def\cpge@deco@#1#2{\forcsvlist{\@cpge@deco@{#2}}{#1}}
 }{}
-\long\def\fake@cmd#1{#1}
+\let\fake@cmd\@iden
 \newcommand\@ifisnumber[1]{%
         \begingroup
         \edef\temp@{#1}%
@@ -165,8 +164,8 @@
 	@interval/separator/.code		= \def\IntSep{#1},
 	@interval/space/.code 			= \def\IntSpace{#1},
 	@inner product/.is family,
-	@inner product/space/.code		= \def\SprodSep{#1},
-	@inner product/separator/.code	= \def\SprodSpace{#1},
+	@inner product/space/.code		= \def\SprodSpace{#1},
+	@inner product/separator/.code	= \def\SprodSep{#1},
 	@given/.is family,
 	@given/separator/.code			= \def\GivenSep{#1},
 	@given/space/.code				= \def\GivSpace{#1},			
@@ -471,7 +470,7 @@
 %% \@center@ s'occupe du placement des éléments, 
 %% esp. vert. et pénalités de rupture de page
 
-\long\def\eqn@fakecmd#1{#1}
+\let\eqn@fakecmd\@iden
 \let\eqnframecmd\eqn@fakecmd
 \def\cpgeframe@err#1{\cpgemath@err
 			{Aucune décoration #1 trouvée. 
@@ -773,12 +772,10 @@
 \long\def\<{\xmath@single\<}
 
 %%% Système des références croisées pour les équations
-\ifundef\MakeLinkTarget{
-	\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
-	\ProvideDocumentCommand\LinkTargetOn{}{}
-	\ProvideDocumentCommand\LinkTargetOff{}{}
-	\ProvideDocumentCommand\NextLinkTarget{m}{}
-}{}
+\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
+\ProvideDocumentCommand\LinkTargetOn{}{}
+\ProvideDocumentCommand\LinkTargetOff{}{}
+\ProvideDocumentCommand\NextLinkTarget{m}{}
 \def\set@label@#1#2{
 	\def\cpge@tmplb{#2}%
 	\ifstrequal{#1}{f}
@@ -827,7 +824,7 @@
 \def\label@parts@#1&#2\cpge@nil{\set@label@{#1}{#2}}%
 \def\cpge@problem@id{Unnamed}
 \NewDocumentCommand\xeqref{s t\n t\s t\p O{@} m}{%
-		\IfBooleanT{#3}{\def\cpge@plural{s\let\cpge@plural\relax}}%
+		\IfBooleanT{#3}{\def\cpge@plural{s\global\let\cpge@plural\relax}}%
 		\ifstrequal{#5}{@}
 			{\let\problem@id\cpge@problem@id}
 			{\ifblank{#5}{\def\problem@id{Unnamed}}{\def\problem@id{#5}}}%
@@ -839,6 +836,14 @@
 			{\eq@ref{eq:\problem@id:#6}}%
 		\IfBooleanT{#4}
 			{\deco@pageref{\pageref*{eq:\problem@id:#6}}}%
+}
+\NewDocumentCommand\xeqpageref{s O{@} m}{
+	\ifstrequal{#2}{@}
+			{\let\problem@id\cpge@problem@id}
+			{\ifblank{#2}{\def\problem@id{Unnamed}}{\def\problem@id{#2}}}%
+	\IfBooleanTF{#1}
+			{\pageref*{eq:\problem@id:#3}}
+			{\pageref{eq:\problem@id:#3}}
 }
 \cpgesetdeco{pageref}{\sffamily\smaller{}[p. #1]}
 
@@ -1729,40 +1734,7 @@
 
 %%% AMSmath end %%%%%%%
 
-%%%%%%%% Environnements basique pour théorèmes et Cie
-%%%%%%%% 
-    \theoremstyle{plain}
-    \newtheorem{@theo}{Th\'eor\`eme}
-    \newtheorem{@theodef}{Th\'eor\`eme et d\'efinition}
-    \newtheorem{@ppte}{Propri\'et\'es}
-    \newtheorem{@prop}{Proposition}
-	\newtheorem{@lemm}{Lemme}
-    \newtheorem*{@theo*}{Th\'eor\`eme}
-    \newtheorem*{@theodef*}{Th\'eor\`eme et d\'efinition}
-    \newtheorem*{@ppte*}{Propri\'et\'es}
-    \newtheorem*{@prop*}{Proposition}
-	\newtheorem*{@lemm*}{Lemme}
-    \theoremstyle{definition}
-    \newtheorem{@defi}{D\'efinition}
-    \newtheorem*{@defi*}{D\'efinition}
-	\newtheorem{@voca}{Vocabulaire}
-    \newtheorem*{@voca*}{Vocabulaire}
-	\theoremstyle{remark}
-	\newtheorem{@rema}{Remarque}
-	\newtheorem*{@rema*}{Remarque}
-%%%% Frame générique pour théorème et similaire
-\newdimen\xframe@gap
-\xframe@gap=\dimexpr2\fboxrule+2\fboxsep\relax
-\NewDocumentEnvironment{xframe}{m d() d<> +b}
-		{\deco@xframe{\parbox{\linewidth-\xframe@gap}{
-			\IfValueTF{#2}
-				{\IfValueTF{#3}{\begin{@#1}[#2]\label{#3}}{\begin{@#1}[#2]}}
-				{\IfValueTF{#3}{\begin{@#1}\label{#3}}{\begin{@#1}}}
-			#4
-			\end{@#1}}
-		}}
-		{}
-\cpgesetdeco{xframe}{\fbox{#1}}
+
     
 %%% Quantificateurs 
 \cpgesetupmath{%
@@ -1901,7 +1873,7 @@
 
 %% Sub/Sup Stacking and Cramping
 
-\def\mathnlap#1{#1}
+\let\mathnlap\@iden
 \newenvironment{xsubarray}[1]{%
 	\vcenter\bgroup
 		\Let@ \restore@math@cr \default@tag
@@ -2286,7 +2258,7 @@
 %% des délimiteurs.
 
 \def\dlm@last@arg{}
-\def\dlm@mid@func#1{#1}
+\let\dlm@mid@func\@iden
 \def\after@xsubsup#1{\endgroup#1\endgroup}
 \def\midProc#1{%
 	\def\ProcessedArgument{\mid@lefthook#1\mid@righthook}
@@ -3573,10 +3545,10 @@
 \DeclareRobustCommand\llim{\lim\limits}
 \DeclareRobustCommand\sim{\mathop{\mathchar"3218}}
 \DeclareRobustCommand\lsim{\sim\limits}
-\let\@longleftarrow\longleftarrow
-\DeclareRobustCommand\longleftarrow{\mathop{\@longleftarrow}}
-\let\@longrightarrow\longrightarrow
-\DeclareRobustCommand\longrightarrow{\mathop{\@longrightarrow}}
+% \let\@longleftarrow\longleftarrow
+% \DeclareRobustCommand\longleftarrow{\mathop{\@longleftarrow}}
+% \let\@longrightarrow\longrightarrow
+% \DeclareRobustCommand\longrightarrow{\mathop{\@longrightarrow}}
 
 %% algèbre et arithmétique
 \def\sgpe#1{\langle #1\rangle}
@@ -3602,40 +3574,40 @@
 
 %%%%%%%% raccourcis très utilisés, 
 %%%%%%%% conservé pour compatibilté
-\def\set@usual@shorthcuts{%
-\let\ds\displaystyle
-\let\ts\textstyle
-\let\leq\leqslant
-\let\geq\geqslant
-\DeclareRobustCommand\setminus{\mathbin{\smallsetminus}}
-\let\ssi\Longleftrightarrow
-\let\lra\longrightarrow
-\let\Lra\Longrightarrow
-\let\Llra\Longleftrightarrow
-\let\cqfd\qed
-\let\nom\textsc
-\newcommand\be{\begin{xenum}}
-\newcommand\ee{\end{xenum}}
-\newcommand\bi{\begin{xitem}}
-\newcommand\ei{\end{xitem}}
-\newcommand\bca{\begin{dcases}}
-\newcommand\eca{\end{dcases}}}
-\AtBeginDocument{\set@usual@shorthcuts}
-\makeatletter
+\def\set@legacyshorthcuts{%
+	\DeclareRobustCommand\nom{\textsc}
+	\let\ds\displaystyle
+	\let\ts\textstyle
+	\let\leq\leqslant
+	\let\geq\geqslant
+	\DeclareRobustCommand\setminus{\mathbin{\smallsetminus}}
+	\let\ssi\Longleftrightarrow
+	\let\lra\longrightarrow
+	\let\Lra\Longrightarrow
+	\let\Llra\Longleftrightarrow
+	\let\cqfd\qed
+	\newcommand\be{\begin{xenum}}
+	\newcommand\ee{\end{xenum}}
+	\newcommand\bi{\begin{xitem}}
+	\newcommand\ei{\end{xitem}}
+	\newcommand\bca{\begin{dcases}}
+	\newcommand\eca{\end{dcases}}
 	\def\dt{{\operator@font d}}
 	\def\d{{\operator@font d}}
-\makeatother
-\def\dd#1#2{
-	\frac{\partial#1}{\partial#2}
-  }
-\def\ddeux#1#2#3{
-	\def\a{#2}\def\b{#3} 
-	\ifx\a\b \frac{\partial^{2}#1}{\partial\a^{2}}
-	\else \frac{\partial^{2}#1}{\partial\a\partial\b}
-	\fi
+	\def\dd##1##2{
+		\frac{\partial##1}{\partial##2}
+	}
+	\def\ddeux##1##2##3{
+		\def\a{##2}\def\b{##3} 
+		\ifx\a\b \frac{\partial^{2}##1}{\partial\a^{2}}
+		\else \frac{\partial^{2}##1}{\partial\a\partial\b}
+		\fi
+	}
+	\DeclareRobustCommand\Mn[2][\K]{\mathcal M_{##2}(##1)}
+	\def\Pmatrix##1{\begin{pmatrix}##1\end{pmatrix}}
 }
-\newcommand\Mn[2][\K]{\mathcal M_{#2}(#1)}
-\def\Pmatrix#1{\begin{pmatrix}#1\end{pmatrix}}
+\AtBeginDocument{\set@legacyshorthcuts}
+
 
 
 %%%%%% Alternatives plus modernes 

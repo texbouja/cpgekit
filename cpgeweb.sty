@@ -896,7 +896,7 @@
             \cpgeusefont{sf}
             \IfFileExists{#2web.sty}
             {\AtEndPreamble{\RequirePackage{#2web}}}{}%
-            \reloadcolors%
+            \reload@thecolors%
         }
         \DeclareDocumentCommand\cpgegeometry{om}{}
 
@@ -1265,8 +1265,8 @@
     \let\cpgecsvrecord\cpge@null%
 }
 
-\ifdefstring\cpgecurrentclass{cpgedev}{\AtBeginDocument{\startcsvrecording}}{}
-\ifdefstring\cpgecurrentclass{cpgedev}{\AtEndDocument{\stopcsvrecording}}{}
+\ifdefstring\cpgecurrentclass{dev}{\AtBeginDocument{\startcsvrecording}}{}
+\ifdefstring\cpgecurrentclass{dev}{\AtEndDocument{\stopcsvrecording}}{}
 
 
 %%% Traitement des quiz en deux passes

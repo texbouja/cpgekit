@@ -62,7 +62,6 @@
 	\PackageWarning{cpgebase}{#1}{#2}}
 
 
-\ifundef\cpgeaddkeyword{%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Commandes utilitaires multi-usage %%%%%
 \def\cslocal{%
 	\let\lorg@cslet=\cslet%
@@ -246,7 +245,7 @@
 	\IfBooleanT{#1}{\csglobal}%
 	\IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
 	\endcslorg%
-}}{}
+}
 
 %% \cpgeaddkeyword{<name>}{<elt>}{<texte>}
 %% ajoute <elt> a la liste \list@name et affecte 
@@ -364,30 +363,34 @@
 \fi}
  
 % {} = name, [] = within list, () = shortcut, <> = label numbering format
+\def\cpgest@r{*}
 \DeclareDocumentCommand\cpgedefcounter{mm o d() d<>}{%
 \@bsphack\begingroup
    \def\cpge@tmpa{#2}
-   \ifx\cpge@tmpa*
+   \IfValueT{#4}{\cpge@cnt@shortcut{#4}{#1}}
+   \ifcpgein@\else
+      \ifltxcounter{#1}{}{\newcounter{#1}}
+      \ifblank{#2}{\cpgesetlabel*{#1}{|1|}}{\cpgesetlabel*{#1}{#2}}
+      \IfValueT{#3}
+         {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
+      \IfValueT{#5}{\csgdef{p@#1}{#5}}
+   \fi%
+   \ifx\cpge@tmpa\cpgest@r
       \global\cslet{label@#1}\relax
-   \else 
-      \IfValueT{#4}{\cpge@cnt@shortcut{#4}{#1}}
-      \ifcpgein@\else
-         \ifltxcounter{#1}{}{\newcounter{#1}}
-         \ifblank{#2}{\cpgesetlabel*{#1}{|1|}}{\cpgesetlabel*{#1}{#2}}
-         \IfValueT{#3}
-            {\def\do##1{\counterwithin*{#1}{##1}}\docsvlist{#3}}
-         \IfValueT{#5}{\csdef{p@#1}{#5}}
-      \fi
    \fi
 \endgroup\@esphack}
+\def\getcounterformat#1#2{%
+   \ifltxcounter{#1}
+      {\begingroup\csname c@#1\endcsname=#2\relax%
+         \csname label@#1\endcsname}%
+      {\begingroup\relax}%
+      \endgroup%
+}
 
 %%%%% commande utilisateur \cpgesetlabel
 
 \def\single@count@change#1#2{\begingroup%
  \exploregroups\expandarg%
-% \expandafter\StrSubstitute\expandafter%
-%   {\csname label@#1\endcsname}
-%   {|#2|}
 	\def\StrSubstitute@expansion{%
 	\expandafter\StrSubstitute\expandafter%
 	 {\csname label@#1\endcsname}%
@@ -405,7 +408,6 @@
          	\csname count@#2\endcsname{#1}}%
        }{}%
        \lorg@cslet{label@#1}\tmp@string@%
-       %\lorg@cslet{theH#1}\tmp@string@%
   \fi%
  } 
 \def\count@parser#1#2{%
@@ -501,7 +503,7 @@
     \else
       \hbox to\labelwidth {\unhbox\@tempboxa}%
     \fi
-    \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
+   \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
 	%\hskip\labelsep}%
   \ignorespaces}
   
@@ -697,9 +699,12 @@
 %%% interface utilisateur plus conforme à l'orientation globale 
 \newif\ifenum@resume
 \newif\ifenum@restore 
-\def\deco@fake#1{#1}
-\def\outerdeco@list#1{#1}
-\def\outeremptydeco@list#1{#1}
+\let\deco@fake\@iden
+\def\outerdeco@init{
+   \def\outerdeco@list##1{##1}
+   \def\outeremptydeco@list##1{##1}
+}
+\outerdeco@init%
 \def\cpgelist@outerr#1{
    \ifundef\cpge@listenv{
       \cpgeb@error{#1 n'est pas directement utilisable 
@@ -822,7 +827,7 @@
       \edef\cpge@listlevel{\romannumeral\@enumdepth}%
       \edef\cpge@listctr{enum\cpge@listlevel}%
    \fi%
-   \let\outeremptydeco@list\relax% pour les niveaux imbriqués
+   \outerdeco@init% pour les niveaux imbriqués
    \IfValueT{#1}{%
       \cpgesetuplists{preload,#1}%
       \ifenum@restore%
@@ -1050,9 +1055,10 @@
 \cpgedefcounter{unite}{|X|.|1|}(T)
 \cpgesetdeco{unite}{\bfseries#1.}
 \makethetolabel{unite}
+\def\theHunite{\theHItem}
 \newif\ifinsideuniteenv
 \def\unite@env{%
-   \@enumdepth\@ne%
+   \@enumdepth\z@%
    \list\label@unite%
         {\usecounter{unite}%
          \listparindent\z@%
@@ -1350,8 +1356,8 @@
 		\leftmargin\z@\relax%
 		\rightmargin\z@\relax%
 	\else%
-    	\ifblank{#2}{\leftmargin\z@}{\leftmargin=#2\relax}%
-    	\ifblank{#3}{\rightmargin\z@}{\rightmargin=#3\relax}%
+    	\ifblank{#2}{\leftmargin\z@}{\leftmargin=#2}%
+    	\ifblank{#3}{\rightmargin\z@}{\rightmargin=#3}%
 	\fi%
    \let\makelabel\lrmargin@label%
     }%
@@ -1379,9 +1385,9 @@
 	label font=\sffamily\small\scshape\bfseries,
 	deco/.initial={#1.}
 	}
-\DeclareDocumentEnvironment{mini}{O{}m d()}{%
+\NewDocumentEnvironment{mini}{O{}m d()}{%
 		\cpgesetup[mini]{#1}%
-      \ifdim\leftmargin>3.4em\relax
+      \ifdim\@totalleftmargin>3.4em\relax
          \let\lrmarginleft\z@
       \fi
 		\lrmargin[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]
@@ -1390,15 +1396,15 @@
 		\mini@font%
 	}{\endlrmargin}
 
-\def\nb{\mini{n.b}}
-\let\endnb\endmini
-\def\dem{\mini{dem}}
-\let\enddem\endmini
-\def\ind{\mini{indication}}
-\let\endind\endmini
-\def\synt{\mini{synthèse}}
-\let\endsynt\endmini 
-\def\newmini#1#2{\csdef{#1}{\mini{#2}}\cslet{end#1}\endmini}
+\def\nb{\begin{mini}{n.b}}
+\def\endnb{\end{mini}}
+\def\dem{\begin{mini}{dem}}
+\def\enddem{\end{mini}}
+\def\ind{\begin{mini}{indication}}
+\def\endind{\end{mini}}
+\def\synt{\begin{mini}{synthèse}}
+\def\endsynt{\end{mini}} 
+\def\cpgenewmini#1#2{\csdef{#1}{\begin{mini}{#2}}\csdef{end#1}{\end{mini}}}
 
 %%%%%% Ajout 17/07/2021 %%%%%%%%
 %%%%% Pointillé 

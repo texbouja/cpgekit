@@ -83,7 +83,7 @@
   \gdef\import@path{}
 }
 %\AtBeginDocument{
-%	\ifdefstring\cpgecurrentclass{cpgedev}{}{\straighttrue}
+%	\ifdefstring\cpgecurrentclass{dev}{}{\straighttrue}
 %}
 \endinput
 %%

@@ -1,7 +1,7 @@
 \documentclass[11pt,report,oneside,solution]{cpgedev}
 
-\cpgegeometry[hmargin={1.5cm,3cm}, left=3cm, right=1.5cm]{tablet}
-\cpgefont{fira}
+\cpgegeometry[left=3.5cm, right=1cm]{tablet}
+\cpgefont{libertine}
 \usepackage{parskip}
 %\cpgeusetheme{newcg}
 
@@ -10,7 +10,7 @@
 %   Scale=MatchLowercase,
 % ]
 
-\usepackage{ltxdockit}
+\usepackage{ltxdockit} 
 \robustify\spotcolor
 
 \AtEndPreamble{\colorlet{spot}{coldcol}}
@@ -33,7 +33,7 @@
 %\PassOptionsToPackage{0.21}{listings}
 %\usepackage[inputencoding=utf8/latin1]{listingsutf8}
 \usepackage{tcolorbox}
-\tcbuselibrary{skins,listings,breakable}
+\tcbuselibrary{skins,listingsutf8,breakable}
 %\usepackage{lstfiracode} 
  \lstset{%%
 % 	%preset=\rule{\linewidth}{.4pt},
@@ -111,7 +111,7 @@
 
 \cpgenewlist*{optlist}
      {\xopt}
-     {d*=\spotcolor\ttfamily#1, m=3.4pc}
+     {d=\spotcolor\ttfamily#1, m=3.4pc}
 
 
 \def\main{\ding{42}}
@@ -131,22 +131,24 @@
 
 \Matiere{Documentation \LaTeX}
 \Document{cpgekit}
-\Theme{Manuel d'utilisation}
+\Theme{Manuel de l'utilisateur}
 \Auteur{Sadik Boujaida}
-\Periode{Mai 2024}
+\Periode{JuinX 2024}
 \Classe{}
 
-\cpgesetuplists{enumi={n=|1|, d*=\bfseries#1.}}
+\cpgesetuplists{enumi={n=|1|, d=\bfseries#1.}}
 
 
 \begin{document}
+
+\cpgesethead()()()
 
 %\titre(|document| \par |theme| \\ |auteur|)
 
 %\tableofcontents
 
 \section{Présentation} 
-Le projet \nom{cpgekit} est un kit \LaTeX{} qui permet de mettre en forme tous les types de documents utilisés dans les \nom{cpge}. Essentiellement, il propose deux fichiers de classe (utilisables avec la commande \cmd{documentclass}). Le premier, \verb+cpgedoc.cls+, est dédié au traitement des documents de cours et des planches d'exercices. Le second, \verb+cpgedev.cls+, est dédié au traitement de tout type de devoir, avec possibilité d'y intégrer des quiz (en stade expérimental).
+Le projet \nom{cpgekit} est un kit \LaTeX{} qui permet de mettre en forme tous les types de documents utilisés dans les \nom{cpge}. Essentiellement, il propose deux fichiers de classe (utilisables avec la commande \cmd{documentclass}). Le premier, \verb+cpgedoc.cls+, est dédié au traitement des documents de cours (contenant éventuellement des exercices avec solutions). Le second, \verb+cpgedev.cls+, est dédié au traitement de tout type de devoir et des planches d'exercices, avec possibilité d'y intégrer des quiz (en stade expérimental).
 
 \begin{nb} Couramment seul \verb+cpgedev.cls+ est utilisable. La classe \verb+cpgedoc.cls+ est en cours de test est contient encore beaucoup de bogues.
 \end{nb} 
@@ -215,7 +217,7 @@ Pour le traitement d'un devoir, une command similaire se chargera de l'inclusion
 \cpgeinclude{dm3}
 \end{latex} 
 Un mécanisme d'inclusion assez évolué est mis en oeuvre ici (voir détails plus loin). En gros :
-\xit*+
+\xit\i+
 \TeX{} commence par vérifier s'il y a des fichiers nommés \verb+dm3-eno.tex+ et \verb+dm3-cor.tex+, si oui il va les inclure ;
 \xit sinon il se contente d'inclure le fichier indiqué \verb+dm3.tex+
 \xit il est aussi possible de fournir le nom du fichier des solutions en option avec une syntaxe de la forme   
@@ -230,8 +232,10 @@ Il est possible de produire un document sans solutions en enlevant l'option \ver
 \cpgeinclude[solution=false]{dm3}
 \end{latex}
 
-Évidemment, rien de cela ne sera possible sans une mise en conformité des fichiers de contenus selon les directives du kit. Pour un devoir,  deux stratégies sont possibles, les questions et leurs solutions sont enchevêtrée dans le même environnement \LaTeX{} ou bien elles sont saisies dans des environnements séparés. Ces environnements  peuvent en outre résider dans des fichiers différents. Chaque sujet devra être saisi dans un environnement \LaTeX{}, \env{exercice} pour les exercices et \env{probleme} pour les problèmes. En cas de solutions séparées, elles doivent être saisi dans un environnement \verb+corrige+. Chacun de ces environnements exige un identifiant unique en argument. Cet argument sert de lien entre un énoncé et son corrigé. Le schema suivant est adopté :
-\xit*+ dans la première stratégie, on saisit les questions et leurs solutions dans le même environnement. Chaque question sera suivie immédiatement par un environnement qui contient  sa solution ; 
+Évidemment, rien de cela ne sera possible sans une mise en conformité des fichiers de contenus selon les directives du kit. Pour un devoir,  deux stratégies sont possibles. Dans la première les questions et leurs solutions sont enchevêtrées dans le même environnement \LaTeX{}. Dans la seconde elles sont saisies dans des environnements séparés sans obligation que les deux environnements  résident dans le même fichier. Chaque sujet devra être saisi dans un environnement \LaTeX{}, \env{exercice} pour les exercices et \env{probleme} pour les problèmes. En cas de solutions séparées, elles doivent être saisi dans l'environnement commun \env{corrige}. Chacun de ces environnements exige un identifiant unique comme premier argument. Celui d'un éventuel \env{corrige} devrait être exactement le même que celui de son énoncé.  
+
+Le schema suivant est adopté :
+\xit\i+ dans la première stratégie, on saisit les questions et leurs solutions dans le même environnement. Chaque question sera suivie immédiatement par un environnement qui contient  sa solution ; 
 \xit dans la seconde les questions sont mises dans un environnement \env{probleme}, par exemple, et son corrigé dans un environnement \env{corrige}. D'où la nécessité d'un identifiant commun pour les lier.
 \xit dans les deux une question qui possède une solution devra être précédé d'une commande \cmd{xques}, 
 une qui n'en possède pas (qui a des sous-questions par exemple) sera précédée d'une commande \cmd{zques}
@@ -248,13 +252,13 @@ Le code suivant donne en exemple les deux façons de traiter un même contenu se
 \cpgesetdeco{nolinkenumii}{#1}
 \cpgesetdeco{linksol}{\bfseries #1.}
 
-\begin{latex}[text and listing]
+\begin{latex}[]
 \cpgesetuplists{
-     enumi={n=|1|, d=\fbox, m=0pc},
-     enumii={n=|Q|.|a|, d*=\bfseries #1., m*=2pc}
+     enumi={n=|1|, d*=\textbf, m=0pc},
+     enumii={n=|Q|.|a|, d=\bfseries #1., m*=2pc}
 }
-\begin{exercice}{IDEXE}(Le titre de l'exercice)
-     <... presentation de l'exercice ...>
+\begin{exercice}{IDEXE1}(Le titre de l'exercice 1)
+     ... presentation de l'exercice ...
 \xques+ La première question. le + sert à initier un environnement de type enumerate. Cette question possède une réponse dans le fichier de corrigé.
 \begin{solution}
      Réponse de la question 1, le texte de la solution sera enregistré dans un fichier séparé et sera ensuite inclu une fois l'énoncé terminé. 
@@ -278,8 +282,8 @@ de question elle-même
 \end{latex} 
 
 \begin{latex}[]
-\begin{exercice}{IDEXE}(le titre de l'exercice)
-     <... presentation de l'exercice ...>
+\begin{exercice}{IDEXE2}(le titre de l'exercice 2)
+     ... presentation de l'exercice ...
 \xques+ La première question. le + sert à initier un environnement de type enumerate. Cette question possède une réponse dans le fichier de corrigé.
 \zques Cette unité possède des sous-questions et donc ne pose pas de question elle-même
      \xques+ on augmente d'un niveau (2.a par exemple, le style de numérotation est facilement réglable)
@@ -318,7 +322,7 @@ On peut mixer les deux méthodes : dans un même fichier maître on peut inclure
 \partie(Options de la classe)
 Les options suivantes sont disponibles. 
 \xopt+[solution]
-     Chaque sujet est immédiatement suivi de son corrigé s'il est disponible. 
+     Chaque sujet est immédiatement suivi de son corrigé s'il est disponible (imbriqué ou séparé). 
      
 %      Une question qui possède une solution dans le fichier de corrigé doit être insérée avec la commande \cmd{xques}, \cmd{zques} sinon. Le fichier de corrigé se contente d'une commande \cmd{xsol} sans aucune autre indication pour la solution de la question.  Dans le cas où on désire saisir les solutions avec les questions on utilise plutôt l'environnement \env{ques} pour chaque question qui possède une solution (et toujours \cmd{zques} pour celles qui n'en ont pas). La syntaxe est de la forme 
 % \begin{latex}
@@ -338,12 +342,12 @@ Les options suivantes sont disponibles.
 \xopt[hint*]
        chaque indication est produite au niveau de l'énoncé, là où elle est insérée, mais reste invisible jusqu'à ce que l'utilisateur clique sur un bouton.
       \begin{nb}\slshape
-          Les calques \nom{pdf} (\nom{ocg}) font partie du standard \nom{pdf} depuis sa version {1.5} mais ne sont gérés que par une poignée de  lecteurs. \nom{Adobe Reader} et \nom{Foxit PDF Reader} en sont des exemples mais malheureusement aucun lecteur \nom{pdf} pour appareils mobiles ne les gère à ce jour.
+          \opt{hint*}{} utilise las calques $PDF$. Les calques \nom{pdf} (\nom{ocg}) font partie du standard \nom{pdf} depuis sa version {1.5} mais ne sont gérés que par une poignée de  lecteurs. \nom{Adobe Reader} et \nom{Foxit PDF Reader} en sont des exemples mais malheureusement aucun lecteur \nom{pdf} pour appareils mobiles ne les gère à ce jour. Autant dire que l'option \opt{hint*} est à peu près inutile. Elle n'est là que parce qu'elle est possible.
       \end{nb}
 \xopt[draft] 
      on entre dans un mode brouillon où le style reste basique et sans liens hypertexte. Le contenu apparaît là où il est inséré. La compilation s'en trouve plus rapide. 
 \xopt[straight]
-      Il produit les corrigés immédiatement là où il les rencontre sans création de fichiers intermédiaires. En outre c'est un vrai mode de production contrairement au mode précédent, avec liens hypertexte et possibilité d'appliquer un thème. 
+      Il produit les corrigés immédiatement là où il les rencontre sans création de fichiers intermédiaires. Par contre c'est un vrai mode de production contrairement au mode précédent, avec création des liens hypertexte et possibilité d'appliquer un thème. 
 \exit 
 
 \partie(Instructions de mise en forme)
@@ -376,7 +380,7 @@ Les commandes suivantes sont à utiliser dans le préambule.
 \end{latex}
 utilisera la géométrie \opt{print} tout en modifiant les marges latérales de la page.
 
-\cmd{cpgegeometry} a en plus ses propres paramètres optionnels à côté de ceux qu'on passe à \cmd{geometry}. 
+\cmd{cpgegeometry} a en plus ses propres paramètres optionnels qui sont utilisables à côté de ceux communiqués à \cmd{geometry}. 
 \xopt+[dark] 
      ou \opt{dark=false} pour activer ou désactiver le mode sombre. Normalement, les versions pour petits écrans sont automatiquement produites avec un fond sombre et le texte en clair. On peut désactiver cette fonctionnalité avec \opt{dark=false} ou bien l'activer pour les autres types de géométrie avec \opt{dark=true} ou simplement \opt{dark}. 
 \xopt[force compact] ou \opt{force compact=false}
@@ -390,7 +394,7 @@ utilisera la géométrie \opt{print} tout en modifiant les marges latérales de 
 \end{latex}
      si l'option \opt{compact} a été activée c'est le premier texte qui sera restitué, sinon c'est le second qui le sera. Bien utile quand on a une formule centrée qui déborde de la zone de texte dans les petites géométries. 
 \xopt[force geometry]
-     option qui va forcer le mode indiqué par \cmd{cpgegeometry} quand l'option \opt{draft} de la classe est active. 
+     option qui va forcer le mode indiqué quand l'option \opt{draft} de la classe est active. 
 \exit   
 \end{ltxsyntax}
 
