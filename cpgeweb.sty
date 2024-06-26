@@ -907,14 +907,14 @@
 
         \tikzset{page decoration/.style={%
                     fill=bgcol,
-                    draw=warmcol,
+                    draw=strokecol,
                     line width=20pt,
                     rounded corners= 20pt
                 }
         }
         \tikzset{question style/.style={%
                     font=\fontsize{32pt}{32pt}\bfseries,
-                    text=warmcol, xshift=1cm, text width=1cm,
+                    text=strokecol, xshift=1cm, text width=1cm,
                     align=left, yshift=-.8cm
                 }
         }
@@ -926,12 +926,12 @@
         \def\SubTitleFont{\fontsize{16}{18}\firasemibold}
         \tikzset{title style/.style={%
                     font=\TitleFont,
-                    text = coldcol,
+                    text = fillcol,
                 }
         }
         \tikzset{subtitle style/.style={%
                     font=\SubTitleFont,
-                    text = warmcol,
+                    text = strokecol,
                 }
         }
         \long\def\title@format#1#2{%
@@ -1003,7 +1003,7 @@
             \end{tikzpicture}%
         }{\closeunite}
         \NewDocumentEnvironment{notations}{}{%
-            \cpgesetdeco{enumi}{\color{warmcol}\xsquare}
+            \cpgesetdeco{enumi}{\color{strokecol}\xsquare}
             \webenv{Notations}
         }{\endwebenv}
 
@@ -1453,7 +1453,7 @@
 
 \def\page@deco{
     \draw [overlay, fill=bgcol,
-        draw=warmcol,
+        draw=strokecol,
         line width=20pt,
         rounded corners= 20pt]
     (page.north west) rectangle (page.south east);
@@ -1461,7 +1461,7 @@
 
 
 
-\cpgesetdeco{thequiz}{{\color{warmcol}\bfseries[\ #1\ ]}}
+\cpgesetdeco{thequiz}{{\color{strokecol}\bfseries[\ #1\ ]}}
 
 
 %%%%% Définition du contenu de la commande \titre.
@@ -1518,7 +1518,7 @@
 
 \cpgesetup[mini]{%
     font=\Large,
-    label font=\Large\scshape\bfseries\color{warmcol},
+    label font=\Large\scshape\bfseries\color{strokecol},
     left margin=1pc
 }
 

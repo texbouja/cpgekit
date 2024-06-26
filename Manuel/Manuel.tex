@@ -13,13 +13,13 @@
 \usepackage{ltxdockit} 
 \robustify\spotcolor
 
-\AtEndPreamble{\colorlet{spot}{coldcol}}
+\AtEndPreamble{\colorlet{spot}{fillcol}}
 \let\CMD\cmd 
 \renewcommand\cmd[1]{{\spotcolor\CMD{#1}}}
 \let\ENV\env
 \renewcommand\env[1]{{\spotcolor\ENV{#1}}}
 \let\LEN\len
-\renewcommand\len[1]{{\color{warmcol}\LEN{#1}}}
+\renewcommand\len[1]{{\color{strokecol}\LEN{#1}}}
 \let\OPT\opt
 \renewcommand\opt[1]{{\spotcolor\OPT{#1}}}
 
@@ -42,7 +42,7 @@
       morekeywords={cpegeometry, cpgetheme, Matiere, Document, Theme, Subtheme, Auteur, Centre, Classe, Periode, Duree, iginclude, titre, mini, endmini, exercice, probleme, corrige, xques, zques, exit, xsol, unite, theo, exem, proof, solution},
 %      float=p,
 %      basicstyle=\small\ttfamily,%
-%      keywordstyle=\bfseries\color{coldcol},%
+%      keywordstyle=\bfseries\color{fillcol},%
 %      commentstyle=\itshape\color{neutralcol},%
 %      columns=flexible,
 %      tabsize=2,%
@@ -91,7 +91,7 @@
      fonttitle=\ttfamily\footnotesize, 
      bottomtitle=0pt,  
      bottom=0pt, top=3pt, 
-     colframe=warmcol,
+     colframe=strokecol,
      boxrule=.4pt,
      %frame left margin=2pt,
      #1}

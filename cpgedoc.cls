@@ -538,10 +538,10 @@ math box style={}
 \cpgesetup[theorems]{%
 	theorem style/.code=%
 		\cpgesetupdeco{theorem style/.style={%
-			maincol=warmcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
+			maincol=strokecol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
 	definition style/.code=%
 		\cpgesetupdeco{definition style/.style={%
-			maincol=coldcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
+			maincol=fillcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
 	remark style/.code=%
 		\cpgesetupdeco{remark style/.style={%
 			maincol=neutralcol, colbacktitle=maincol,#1,current counter=\thetcbcounter}},
@@ -853,7 +853,7 @@ math box style={}
 	title={#1},
 	IfValueT={#3}{description path={#3}},
 	IfValueT={#4}{nameref={#3}},
-	maincol=coldcol,
+	maincol=fillcol,
 	theorem style,
 	theorem name,
 	titled items,
@@ -864,7 +864,7 @@ math box style={}
 	IfValueT={#4}{label={#4}},
 	IfValueT={#3}{list entry=%
     	{\protect\numberline{\thetcbcounter}#2~:~#3}},%
-	maincol=coldcol,
+	maincol=fillcol,
 	theorem style,
 	theorem name,
 	titled items,

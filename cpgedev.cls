@@ -1814,9 +1814,12 @@
 \newdimen\thmboxdepth
 \newdimen\thmboxwidth
 \newbox\cpge@thmbox
-%%% Patch de la commande de base de amsthm pour qu'elle
-%%% prenne en charge les labels à la cpgekit
+%%% Patch des commandes de base de amsthm pour qu'elles
+%%% prennent en charge les labels à la cpgekit et la commande \unite
 \patchcmd\@thm{the#2}{label#2}{}{}
+%\patchcmd\@begintheorem{\ignorespaces}{\set@defaultforlistsinsideunite\ignorespaces}{}{}
+%\preto\@endtheorem{\closeunite}{}{}
+%%% Fin des patch
 \unless\ifdraft
 	\cpgesetup[theorem]{%
 		frame style/.code=\appto\thm@frame@style{,background={#1}},%

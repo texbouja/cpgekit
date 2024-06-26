@@ -563,6 +563,7 @@
 \def\ifdefmeta#1{\ifcsdef{cpge@#1}}
 
 \addmeta{Centre}{centre}{\scshape}{}
+\addmeta{Ville}{ville}{\scshape}{}
 \addmeta{Classe}{classe}{\scshape}{}
 \addmeta{Matiere}{matiere}{\scshape}{}
 
@@ -1205,8 +1206,8 @@
 	\csdef{cpge@#1col}{\ifdark #3\else #2\fi}
 }
 \cpgesetup[colors]{
-	warm/.code 2 args=\cpgeset@colors{warm}{#1}{#2},
-	cold/.code 2 args=\cpgeset@colors{cold}{#1}{#2},
+	stroke/.code 2 args=\cpgeset@colors{stroke}{#1}{#2},
+	fill/.code 2 args=\cpgeset@colors{fill}{#1}{#2},
 	neutral/.code 2 args=\cpgeset@colors{neutral}{#1}{#2},
 	main/.code 2 args=\cpgeset@colors{main}{#1}{#2},
 	important/.code 2 args=\cpgeset@colors{important}{#1}{#2},
@@ -1214,8 +1215,8 @@
 	fg/.code 2 args=\cpgeset@colors{fg}{#1}{#2},
 	bg/.code 2 args=\cpgeset@colors{bg}{#1}{#2},
 	page/.code 2 args=\cpgeset@colors{page}{#1}{#2},
-	warmcol/.colorlet=warmcol,
-    coldcol/.colorlet=coldcol,
+	strokecol/.colorlet=strokecol,
+    fillcol/.colorlet=fillcol,
     neutralcol/.colorlet=neutralcol,
     linkcol/.colorlet=linkcol,
 	maincol/.colorlet=maincol, 
@@ -1224,8 +1225,8 @@
     bgcol/.colorlet=bgcol,
     pagecol/.colorlet=pagecol,
 	default colors/.style={
-    	warmcol=\cpge@warmcol,
-    	coldcol=\cpge@coldcol,
+    	strokecol=\cpge@strokecol,
+    	fillcol=\cpge@fillcol,
     	neutralcol=\cpge@neutralcol,
 		maincol=\cpge@maincol,
 		importantcol=\cpge@importantcol,
@@ -1259,8 +1260,8 @@
 \definecolor{cpgeblack}{HTML}{1F1F1F}
    
 \cpgesetup[colors]{    
-	   warm={cpgegreen!85!black}{cpgegreen},
-	   cold={cpgeblue}{cpgealtblue},
+	   stroke={cpgegreen!85!black}{cpgegreen},
+	   fill={cpgeblue}{cpgealtblue},
 	   main={cpgegreen!85!black}{cpgegreen},
 	   important={DarkRed}{DarkOrange},
 	   link={cpgeblue}{cpgealtblue},
@@ -1269,10 +1270,10 @@
 	   bg={white}{cpgeblack!90!black},
 	   neutral={gray}{gray},
 	   cpgetext=fgcol,
-	   cpgeframe=warmcol,
+	   cpgeframe=strokecol,
 	   cpgeback=bgcol,
 	   cpgetitle=white, 
-	   cpgebacktitle=warmcol,
+	   cpgebacktitle=strokecol,
    }
 \def\cpgesetcolors#1{\ifcase#1\selectcolormodel{gray}\or\selectcolormodel{rgb}\fi}
 \def\reload@thecolors{
@@ -1301,7 +1302,7 @@
      \global\let#1\tmp@string
  }
 \def\hf@parser#1#2#3{\begingroup
-    \csgdef{#1@\romannumeral#2}{#3}
+    \csgdef{#1@\romannumeral#2}{\csuse{#1@font}{#3}}
     \expandafter\def\expandafter\hf@change@\expandafter%
          {\expandafter\hf@change\expandafter%
            {\csname#1@\romannumeral#2\endcsname}}
@@ -1557,12 +1558,12 @@
 	\pagestyle{main}%
 }
 \AtEndPreamble{
-	\def\label@itemi{\relsize{-2}$\mathcolor{colbacktitle}\xdiamond$}
-	\def\label@itemii{\relsize{-2}$\mathcolor{colbacktitle}\xsquare$}
-	\def\label@itemiii{\relsize{-2}$\mathcolor{colbacktitle}\xbullet$}
-	\def\ccsi{\textcolor{colbacktitle}\xheadarrowright}
-	\def\ccalors{\textcolor{colbacktitle}\xheadarrowleft}	
-	\def\ccneutre{\relsize{-2}$\mathcolor{colbacktitle}\xbullet$}
+	\def\label@itemi{\relsize{-2}$\mathcolor{neutralcol}\xdiamond$}
+	\def\label@itemii{\relsize{-2}$\mathcolor{neutralcol}\xsquare$}
+	\def\label@itemiii{\relsize{-2}$\mathcolor{neutralcol}\xbullet$}
+	\def\ccsi{\textcolor{neutralcol}\xheadarrowright}
+	\def\ccalors{\textcolor{neutralcol}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{neutralcol}\xbullet$}
 }
 \let\xdocument\document
 \let\endsxdocument\enddocument
