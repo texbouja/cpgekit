@@ -519,7 +519,7 @@ subsection label style={}
 		\cpgesetuptcb{theorem style/.style={%
 			thmcol=cpgegreen,
 			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
-	definition style/.code=%
+	definition style/.code=% 
 		\cpgesetuptcb{definition style/.style={%
 			thmcol=cpgeblue,
 			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
