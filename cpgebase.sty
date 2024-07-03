@@ -185,17 +185,17 @@
 }
 %%% Gestion de listes CSV
 \newrobustcmd{\csvadd}[2]{%
-  \ifblank{#2}{}{\appto#1{#2,}}}
+  \ifblank{#2}{}{\ifdefempty{#1}{\def#1{#2}}{\appto#1{,#2}}}}
 \newrobustcmd{\csveadd}[2]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-  \cpgeb@tempa{}{\eappto#1{#2,}}}
+  \cpgeb@tempa{}{\eappto#1{,#2}}}
 \newrobustcmd{\csvgadd}[2]{%
-  \ifblank{#2}{}{\gappto#1{#2,}}}
+  \ifblank{#2}{}{\gappto#1{,#2}}}
 \newrobustcmd{\csvxadd}[2]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-  \cpgeb@tempa{}{\xappto#1{#2,}}}
+  \cpgeb@tempa{}{\xappto#1{,#2}}}
 \newrobustcmd{\csvcsadd}[1]{%
   \expandafter\csvadd\csname#1\endcsname}
 \newrobustcmd{\csvcseadd}[1]{%
@@ -503,8 +503,8 @@
     \else
       \hbox to\labelwidth {\unhbox\@tempboxa}%
     \fi
-   \ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
-	%\hskip\labelsep}%
+   %\ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
+	\hskip\labelsep}%
   \ignorespaces}
   
 %% Fin du patch
@@ -1000,6 +1000,7 @@
 \RequirePackage{adforn}
 \newcommand*\xheadarrowright{\adforn{43}}
 \newcommand*\xheadarrowleft{\adforn{42}}
+\newcommand*\xaltarrow{\adforn{2}}
 
 \def\label@itemi{\relsize{-2}$\xdiamond$}
 \def\label@itemii{\relsize{-2}$\xsquare$}

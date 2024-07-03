@@ -104,11 +104,11 @@
 	\cpgesetlabel{unite}{|X|.|1|}%
 	\cpgesetlabel{enumi}{|X|.|1|}%
 	\cpgesetlabel{enumii}{|Q|.|a|}
-	\cpgesetdeco{unite}{\textcolor{maincol}{\sffamily\small\scshape\bfseries##1.}}
+	\cpgesetdeco{unite}{\textcolor{thmcol}{\sffamily\small\scshape\bfseries##1.}}
 	\cpgesetdeco{enumi}{\bfseries ##1.}%
 	\cpgesetdeco{enumii}{\bfseries ##1.}
 	\cpgesetdeco{itemtitle}{{\scshape\sffamily##1~:~}}
-	\cpgesetdeco{unitetitle}{\textcolor{maincol}{\sffamily\scshape\small##1~:~}}
+	\cpgesetdeco{unitetitle}{\textcolor{thmcol}{\sffamily\scshape\small##1~:~}}
 	\cpgesetlabel{equation}{|C|.|1|}
 	\makethetolabel{equation}
 }
@@ -126,12 +126,12 @@
 		\cpgesetenum{0}{align=l}
 	\fi 
 }
-\cpgesetupdeco{%
-	current counter/.code=\def\thecurrent@counter{#1}
+\cpgesetuptcb{%
+	current counter/.code=\def\thecurrent@counter{#1}%
 }	
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	titled items/.code={%
-		\cpgesetupdeco{after upper pre=\closeunite}%
+		\cpgesetuptcb{after upper pre=\closeunite}%
 		\set@defaultforlistsinsideunite%
 }}
 
@@ -143,13 +143,16 @@
 		\PassOptionsToPackage{draft}{hyperref}
 \fi
 
-
 \newtoks\toks@sol
 \newtoks\toks@prv 
+\let\solu\cpge@dummy@
+\let\preuve\cpge@dummy@
 \def\setup@solproofmode{%
 	\unless\ifdraft
 		\ifsolutiondelayed\solutiontrue\fi
 		\ifproofdelayed\prooftrue\fi
+		\ifsolution\let\solu\solution@push\fi%
+		\ifproof\let\preuve\proof@push\fi%
 		\ifsolutiondelayed
 			\unless\ifcpgerecordfileopen
 				\cpgestartrecording%
@@ -175,7 +178,7 @@
 }
 \AtBeginDocument{%
 	\setup@draftmode
-	\setup@straightmode%
+	%\setup@straightmode%
 	\setup@solproofmode%
 }
 
@@ -195,7 +198,7 @@
 	solution*/.is if=solutiondelayed,
 	proof/.code=\csname proof#1\endcsname\proofdelayedfalse,
 	proof*/.is if=proofdelayed,
-	straight/.code=\csname straight#1\endcsname,
+	% straight/.code=\csname straight#1\endcsname,
 	before solutions/.code=\def\before@solutions@hook{#1},
 	only/.code=\csvtolistadd\eno@list{#1},%
 	solution section/.code 2 args=\def\sol@section{#1}\def\sol@title{#2},
@@ -223,49 +226,36 @@
 }
 \def\processproofs{
 	\unless\ifdraft%
-		\edef\cpge@tmpe{\the\toks@prv}
-		\ifincluded
-			\ifproofdelayed
-				\ifcpgerecordfileopen\else\cpgestartrecording\fi%
-				\eappto\prv@section{{\prv@title du \chaptername\space\thechapter}}%
-				\cpgerecord{\expandonce\prv@section^^J}
-				\cpgerecord{\the\toks@prv}
-			\else
-				\ifproof
-					\ifdefvoid\cpge@tmpe{}{\typeout@proofs}
-				\fi
-			\fi
-		\else 
-			\ifproof
-				\ifdefvoid\cpge@tmpe{}{\typeout@proofs}
-			\fi
-		\fi 
-	\fi
+		\ifproofdelayed%
+			\edef\cpge@tmpe{\the\toks@prv}%
+			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
+			\ifdefvoid\cpge@tmpe{}{%
+				\protected@edef\cpge@tmpa{\proofsection{\prv@title\space du \chaptername\space\thechapter}}%
+				\cpgerecord{\expandonce\cpge@tmpa}
+				\cpgerecord{\the\toks@prv}%
+			}%
+		\fi%
+	\fi%
 }
 \def\processsolutions{%
-	\unless\ifdraft
-		\edef\cpge@tmpe{\the\toks@sol}
-		\ifincluded
-			\ifsolutiondelayed
-				\ifcpgerecordfileopen\else\cpgestartrecording\fi%
-				\eappto\sol@section{{\sol@title\space du \chaptername\space\thechapter}}%
-				\cpgerecord{\expandonce\sol@section^^J}
-				\cpgerecord{\the\toks@sol}
-			\else
-				\ifsolution
-					\ifdefvoid\cpge@tmpe{}{\typeout@solutions}
-				\fi
-			\fi
-		\else 
-			\ifsolution
-				\ifdefvoid\cpge@tmpe{}{\typeout@solutions}
-			\fi
-		\fi
-	\fi 
+	\unless\ifdraft%
+		\ifsolutiondelayed%
+			\edef\cpge@tmpe{\the\toks@sol}%
+			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
+			\ifdefvoid\cpge@tmpe{}{%
+				\protected@edef\cpge@tmpa{\solutionsection{\sol@title\space du \chaptername\space\thechapter}}%
+				\cpgerecord{\expandonce\cpge@tmpa}%
+				\cpgerecord{\the\toks@sol}% 
+			}%
+		\fi%
+	\fi%
 }
-\unless\ifincluded
-	\AtEndDocument{\processproofs\processsolutions}
-\fi 
+\newrobustcmd\proofsection[1]{
+	\ifx\preuve@\proof@push\prv@section{#1}\fi
+}
+\newrobustcmd\solutionsection[1]{
+	\ifx\solu\solution@push\sol@section{#1}\fi
+}
 \def\typeout@solutions{%
 	\clearpage%
 	\sol@section{\sol@title}%
@@ -280,24 +270,31 @@
 	\cpge@tmpe%
 	\let\preuve\cpge@dummy@%
 }
+
 \def\solutions{%
-	\unless\ifdraft
-		\cpgestoprecording%
-		\let\solu\solution@push%
-		\input{\jobname.rec}%
-		\let\solu\cpge@dummy@%
-	\fi
+	\ifsolutiondelayed%
+		\ifcpgerecordfileopen%
+			\cpgestoprecording%
+		\fi%
+		\let\preuve@\preuve%
+		\let\preuve\cpge@dummy%
+		\InputIfFileExists{\jobname.rec}{}{}
+		\let\preuve\preuve@%
+	\fi%
 }
 \def\proofs{%
-	\ifcpgerecordfileopen%
-		\cpgestoprecording%
+	\ifproofdelayed
+		\ifcpgerecordfileopen%
+			\cpgestoprecording%
+		\fi%
+		\let\solu@\solu%
+		\let\solu\cpge@dummy%
+		\InputIfFileExists{\jobname.rec}{}{}
+		\let\solu\solu@%
+		% {
+		% 	\input{\jobname.rec}%
+		% }
 	\fi%
-	\IfFileExists{\jobname.rec}
-		{
-			\let\preuve\proof@push%
-			\input{\jobname.rec}%
-			\let\preuve\cpge@dummy@%
-		}
 }
 \AtEndDocument{\ifcpgerecordfileopen\cpgestoprecording\fi}
 
@@ -308,8 +305,6 @@
 \cpgesettitle*{|document| \\ |theme| \\ |periode|}
 
 %%%% Chargement des differents packages 
-\RequirePackage{tcolorbox}
-\tcbuselibrary{skins,hooks,breakable,theorems,xparse}
 \usetikzlibrary{calc}
 \tikzset{
     every picture/.prefix style={
@@ -318,7 +313,7 @@
 }
 
 %%% Gestion des thèmes
-\cpgesetupdeco{maincol/.code=\colorlet{maincol}{#1}}
+\cpgesetuptcb{thmcol/.colorlet=thmcol}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% styles pour les titres de sections %%%%%%%%
@@ -329,16 +324,16 @@
 \cpgesetlabel{section}{|I|}
 \cpgesetlabel{subsection}{|S|.|1|}	   
 	   
-\cpgesetupdeco{chapter style/.style={}}
+\cpgesetuptcb{chapter style/.style={}}
 \tikzset{chapter label style/.style={}}
-\cpgesetupdeco{section style/.style={}}
+\cpgesetuptcb{section style/.style={}}
 \tikzset{section label style/.style={}}
 
-\cpgesetup{sections/.is family, sections,
-	chapter style/.code={\cpgesetupdeco{chapter style/.style={#1}}},
+\cpgesetup{sectiontitle/.is family, sectiontitle,
+	chapter style/.code={\cpgesetuptcb{chapter style/.style={#1}}},
 	chapter label style/.code={\tikzset{chapter label style/.style={#1}}},
 	chapter label decoration/.store in=\chapter@label@deco,
-	section style/.code={\cpgesetupdeco{section style/.style={#1}}},
+	section style/.code={\cpgesetuptcb{section style/.style={#1}}},
 	section label style/.code={\tikzset{section label style/.style={#1}}},
 	subsection label style/.code={\tikzset{subsection label style/.style={#1}}},
 	after section hook/.store in=\aftersection@hook,
@@ -348,18 +343,18 @@
 	section label anchor=west,
 }
 \cpgesetlabel{chapter}{|1|}
-\cpgesetup[sections]{%
+\cpgesetup[sectiontitle]{%
 chapter style={%
-	colback=bgcol,
-	coltext=fgcol,
+	colback=pagecol,
+	coltext=textcol,
 	boxrule=0pt,
 	lowerbox=ignored,
    },
 chapter label style={},
 section style={%
     boxrule=0pt,
-    coltext=fgcol,
-    colback=bgcol,
+    coltext=textcol,
+    colback=pagecol,
     fontupper=\itshape,
     },
 section label style={},
@@ -429,33 +424,10 @@ subsection label style={}
 	{3pt}
 	{\itshape#1}
 
-\let\fakebox\@iden
-%%%% Decoration des maths. La base est definie dans cpgemath.sty  
-\fadjwidth=6pt 
-\cpgesetup{%
-	math box style/.code={%
-		\tikzset{math box style/.style={%
-			fill=bgcol!90,
-			draw=tcbcolbacktitle,
-			text=fgcol,
-			#1,
-			line width=.4pt,
-			inner ysep=2pt,
-			inner xsep=.5\fadjwidth-0.2pt
-	}}},%
-math box style={}
-}
-\def\rslt@box#1{
-	\tikz [anchor=base, baseline] 
-		\node (formula)
-			[math box style] {#1};%
-}
-\cpgesetdeco{formule}{\rslt@box{#1}}
-\cpgesetdeco{formula}{\rslt@box{#1}}
-\cpgesetdeco{result}{\rslt@box{#1}}
+\let\fakebox\@iden 
 
-
-\cpgesetupdeco{
+%%% \footnote en dehors des boites tcolorbox
+\cpgesetuptcb{
   every box/.style={
     before title pre=\cpge@footnote@restore,
     before upper pre=\cpge@footnote@restore,
@@ -469,7 +441,7 @@ math box style={}
 
 
 %%%% Initialisation de la machinerie tcolorbox
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	primary box/.style={%
 		breakable,
 		lines before break=1,
@@ -477,16 +449,16 @@ math box style={}
 		title style if break,
 		fonttitle=\TitlingFont\footnotesize\vphantom{(},
 		description font=\scshape\footnotesize\vphantom{(},
-		colback=bgcol,coltext=fgcol,
+		colback=framebackcol,coltext=frametextcol,
 	},
 	secondary box/.style={%
 		reset, blank,
 		notitle,
-		colback=bgcol,
-		coltext=fgcol
+		colback=buttonbackcol,
+		coltext=buttontextcol
 	}
 }
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	every box on layer 1/.append style={primary box},
 	every box on layer 2/.prefix style={secondary box},
 	every box on layer 3/.prefix style={secondary box},
@@ -501,7 +473,7 @@ math box style={}
 	   simple label font/.code={\def\simple@label@font{#1\vphantom{(}}},
 }
 \cpgesetup{%
-	simple deco=\textcolor{maincol}{\fbox{#1}}\enskip,
+	simple deco=\textcolor{thmcol}{\fbox{#1}}\enskip,
 	simple label font=\scshape\sffamily\footnotesize,
 }
 \cpgesetup[mini]{
@@ -509,8 +481,15 @@ math box style={}
 	right margin=0pt,
 	font=\sffamily\footnotesize
 	}
-
-
+%%% Boite tikz générique pour différentes décorations (notamment pour les formules)
+\NewDocumentCommand\genboxcmd{O{}m}{\fbox{#2}}
+\cpgesetdeco{indication}{\textbf{#1 :}\kern4pt}
+\unless\ifdraft
+	\tikzset{generic style/.style={fill=none, draw=framestrokecol, inner sep = 3pt, rounded corners=3pt}}
+	\RenewDocumentCommand\genboxcmd{O{} +m}{%
+		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
+}
+\fi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% Mise en place des differents types de theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -527,7 +506,7 @@ math box style={}
 	 theorem type/remark/.code={\rem@typetrue},
 	 theorem type/proof/.code={\rem@typetrue}
  }
-\cpgesetupdeco{theorem type/.is choice,
+\cpgesetuptcb{theorem type/.is choice,
 	 theorem type/exercise/.code={\exo@typetrue},
 	 theorem type/theorem/.code={\theo@typetrue},
 	 theorem type/definition/.code={\def@typetrue},
@@ -537,19 +516,21 @@ math box style={}
 \cpge@cnt@shortcut{*X}{current@counter}
 \cpgesetup[theorems]{%
 	theorem style/.code=%
-		\cpgesetupdeco{theorem style/.style={%
-			maincol=strokecol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
+		\cpgesetuptcb{theorem style/.style={%
+			thmcol=cpgegreen,
+			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
 	definition style/.code=%
-		\cpgesetupdeco{definition style/.style={%
-			maincol=fillcol,colbacktitle=maincol,#1,current counter=\thetcbcounter}},
+		\cpgesetuptcb{definition style/.style={%
+			thmcol=cpgeblue,
+			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
 	remark style/.code=%
-		\cpgesetupdeco{remark style/.style={%
-			maincol=neutralcol, colbacktitle=maincol,#1,current counter=\thetcbcounter}},
+		\cpgesetuptcb{remark style/.style={%
+			thmcol=neutralcol, colbacktitle=thmcol,#1,current counter=\thetcbcounter}},
 	}
 
 \cpgesetup[theorems]{
 	exercise style/.code=%
-		\cpgesetupdeco{exercise style/.style={maincol=importantcol, colbacktitle=maincol,#1}}
+		\cpgesetuptcb{exercise style/.style={thmcol=importantcol, colbacktitle=thmcol,#1}}
 }
 \def\cpgesetuptheoremstyle{\pgfqkeys{/cpge/theorems}}
 
@@ -578,11 +559,11 @@ math box style={}
 	\tcbsubtitle[basic subtitle]{D\'emonstration}%
 	\set@defaultforlistsinsideunite%
 }
-\cpgesetupdeco{basic subtitle/.style={%
+\cpgesetuptcb{basic subtitle/.style={%
 		spartan,
 		coltext=white,
-		colback=maincol,
-		colbacktitle=maincol,
+		colback=thmcol,
+		colbacktitle=thmcol,
 		boxrule=0pt,
 		boxsep=0pt,
 		top=.8pt,
@@ -596,17 +577,20 @@ math box style={}
 %% Styles des hyperliens demo/solution
 \appto\endpreamble@hook{
 	\ifprint
-	\cpgesetupdeco{demolink/.style n args={3}{% 
+	\cpgesetuptcb{demolink/.style n args={3}{% 
 		size=#1, arc=#2, boxrule=2pt,
-		colframe=bgcol, coltext=linkcol!75!black, colback=bgcol, #3}}
+		colframe=pagecol, coltext=linktextcol!75!black, colback=pagecol, #3}}
 	\else
-	\cpgesetupdeco{demolink/.style n args={3}{%
+	\cpgesetuptcb{demolink/.style n args={3}{%
 		size=#1, arc=#2, boxrule=2pt,
-		colframe=bgcol, coltext=white, colback=linkcol!75!black, #3
+		colframe=pagecol, coltext=white, colback=linkbackcol!75!black, #3
 		}}
 	\fi
 }
 %%% Lien vers demo/solution en bas d'un \'enonc\'e.  
+\let\current@prv\relax
+\let\current@sol\relax
+\def\curr@counter{}
 \def\@demolink#1#2{%
 	\par\nopagebreak\vskip-\baselineskip%
 	\vbox to\z@{\null\hfill\tcbox[
@@ -621,75 +605,101 @@ math box style={}
 		\@hangfrom{
 			\tcbox[
 				enhanced,tcbox raise base,
-				enlarge left by=-.5\Gm@littlemargin,
-				demolink={small}{8pt}{colframe=linkcol, boxrule=.4pt},
+				enlarge left by=-14pt,
+				left=6pt, right=6pt,
+				demolink={small}{8pt}{colframe=linkstrokecol, boxrule=.4pt},
 				hyperlink={#1:#2},
 				hypertarget={#4@#2},
   				phantomlabel={#4@#2},
   			]
-	{\null\hskip6pt\sffamily\scshape\small\vphantom{)}#5 #3~#2\hskip6pt\null}\enskip}%
-	\ifblank{#6}{}{\textsc{\small (#6)}}%
-	\vrule width \z@  depth\medskipamount%
+			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
+				#5 #3~#2\hskip6pt\null}\enskip}%
+	\ifblank{#6}{}{({\scshape\footnotesize #6})}%
+	%\vrule width \z@  depth\medskipamount%
 	\par\penalty\@M%
 }
 \def\@recsol{%
-	\protected@edef\cpgec@@tmpe{%
-		\the\toks@sol%
+	\protected@edef\current@sol{%
 		\noexpand\solu%
-			{\cpge@theorem@prefix}%
+			{\cpge@theorem@countername}%
 			{\thetcbcounter}%
-			{\cpgedu@@theorem@name}%
+			{\cpge@@theorem@prefixedname}%
 			{\@theotitle}%
-			{\aux@dir/sol-\thetcbcounter}^^J%
-	}
-	\expandafter\global\expandafter\toks@sol\expandafter{\cpgec@@tmpe}%
+			{\aux@dir/sol-\thetcbcounter}%
+	}%
+	\ifsolutiondelayed
+		\edef\cpge@tmpe{\the\toks@sol^^J\expandonce\current@sol}
+		\global\@xp\toks@sol\@xp{\cpge@tmpe}
+	\else
+	   \ifsolution%
+	   		\global\cslet{sol@\thetcbcounter}\current@sol%
+		\fi%
+	\fi% 
 }
 \def\@recprv{%
-	\protected@edef\cpgec@@tmpe{%
-		\the\toks@prv%
+	\protected@edef\current@prv{%
 		\noexpand\preuve%
-			{\cpge@theorem@prefix}%
+			{\cpge@theorem@countername}%
 			{\thetcbcounter}%
-			{\cpgedu@@theorem@name}%
+			{\cpge@@theorem@prefixedname}%
 			{\@theotitle}%
-			{\aux@dir/prv-\thetcbcounter}^^J%
+			{\aux@dir/prv-\thetcbcounter}%
 	}%
-	\expandafter\global\expandafter\toks@prv\expandafter{\cpgec@@tmpe}%
+	\ifproofdelayed
+		\edef\cpge@tmpe{\the\toks@prv^^J\expandonce\current@prv}
+		\global\@xp\toks@prv\@xp{\cpge@tmpe}
+	\else
+	   \ifproof%
+	   		\global\cslet{prv@\thetcbcounter}\current@prv%
+		\fi%
+	\fi% 
+}
+\cpgesetuptcb{
+	before eapp/.code={\eappto\kvtcb@beforebox{#1}},%
+  	before epre/.code={\epreto\kvtcb@beforebox{#1}},%
+  	after eapp/.code={\eappto\kvtcb@afterbox{#1}},%
+  	after epre/.code={\epreto\kvtcb@afterbox{#1}},%
 }
 \def\setup@draftmode{
 	\ifdraft
 		\let\solution\draft@solution
 		\let\proof\draft@proof
-		\cpgesetupdeco{%
+		\cpgesetuptcb{%
 			with@solu/.style={},
 			with@proof/.style={},
 		}
 	\else 
-		\def\proof@link{\ifproof\@demolink{proof}{d\'emonstration}\fi}
-		\def\solution@link{\ifsolution\@demolink{solution}{solution}\fi}
-		\cpgesetupdeco{%
+		\def\proof@link{\ifproofdelayed\@demolink{proof}{d\'emonstration}\fi}
+		\def\solution@link{\ifsolutiondelayed\@demolink{solution}{solution}\fi}
+		\cpgesetuptcb{%
 			with@solu/.style={%
 				lowerbox=ignored,
-				before upper app=\def\solution{\@recsol\solution@link\tcblower},
+				before upper app=\xdef\curr@counter{\thetcbcounter}%
+					\def\solution{\@recsol\solution@link\tcblower},
 				savelowerto=\aux@dir/sol-\thetcbcounter.tex,
+				after app=\csuse{sol@\curr@counter}
 			},
 			with@proof/.style={%
 				lowerbox=ignored,
-				before upper app=\def\proof{\@recprv\proof@link\tcblower},
+				before upper app=\xdef\curr@counter{\thetcbcounter}%
+					\def\proof{\@recprv\proof@link\tcblower},
 				savelowerto=\aux@dir/prv-\thetcbcounter.tex,
+				after app=\csuse{prv@\curr@counter}
 			},
 		}
 	\fi 
 }
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	proof or solution/.code=%
-		\ifexo@type\cpgesetupdeco{with@solu}\fi
-		\iftheo@type\cpgesetupdeco{with@proof}\fi
+		\ifexo@type\cpgesetuptcb{with@solu}\fi
+		\iftheo@type\cpgesetuptcb{with@proof}\fi
 	}
 
-%%%%% Boites pour les demo/solutions	
+%%%%% Boites pour les demo/solutions
+\newrobustcmd\solutionname{solution}
+\newrobustcmd\proofname{démonstration}
 \NewDocumentCommand{\solution@push}{mmmmm}{%
-	\@titledemolink{#1}{#2}{#3}{solution}{solution}{#4}
+	\@titledemolink{#1}{#2}{#3}{solution}{\solutionname}{#4}
   	\begingroup%
 		\edef\thecurrent@counter{#2}
 		\set@defaultforlistsinsideunite
@@ -698,7 +708,7 @@ math box style={}
 	\endgroup%
 }
 \NewDocumentCommand{\proof@push}{mmmmm}{%
-	\@titledemolink{#1}{#2}{#3}{proof}{d\'emonstration}{#4}
+	\@titledemolink{#1}{#2}{#3}{proof}{\proofname}{#4}
   	\begingroup%
 		\edef\thecurrent@counter{#2}%
 		\set@defaultforlistsinsideunite
@@ -717,46 +727,47 @@ math box style={}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% macros et cles principales de creation de theorem
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	font app/.code 2 args={\csappto{kvtcb@font#1}{#2}},
 	font reset/.code 2 args={\csdef{kvtcb@font#1}{#2}}
 }
 \def\kvtbc@titlewho{\ifdefempty{\kvtcb@title}{\tcbtitletext}{\kvtcb@title}}
-\cpgesetupdeco{title style if break/.style={%%
+\cpgesetuptcb{title style if break/.style={%%
 	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
 	extras title after break={%
 		halign title=right,
-		coltitle=maincol,
-		colbacktitle=bgcol,
-		colback=bgcol,
+		coltitle=thmcol,
+		colbacktitle=backcol,
+		colback=backcol,
 		boxsep=0pt, top =0pt, bottom=0pt, left=3pt,right=3pt,
 		font app={title}{\fontsize{7}{7}\mdseries\itshape}
 		},
-	extras middle and last={colbacktitle=bgcol},
+	extras middle and last={colbacktitle=backcol},
 	bottomrule=1pt, 
 	bottomrule at break=1pt,
 	toprule at break=0pt,
 	titlerule=0pt
 }}
 
-\cpgesetupdeco{%
-		@theoprefix/.store in=\cpge@theorem@prefix,
-		@theoname/.store in=\cpge@theorem@name,
-		du@theoname/.store in=\cpgedu@@theorem@name,
-		@demoname/.store in=\cpge@demo@name
+\cpgesetuptcb{%
+		@theocountername/.store in=\cpge@theorem@countername,
+		@theoName/.store in=\cpge@theorem@Name,
+		@theoname/.code=\def\cpge@theorem@name{#1}\csdef{\cpge@theorem@countername autorefname}{#1},
+		@theoprefix/.code=\edef\cpge@@theorem@prefixedname{#1\cpge@theorem@name},
+		@demoname/.store in=\cpge@demo@name,
 	}
 \ifdraft
-\cpgesetupdeco{description path/.style={
+\cpgesetuptcb{description path/.style={
 		after title={\enskip\mdseries\scshape\itshape\small (#1)},
 	}}
 \else
 \tikzset{description path style/.style={%
-				fill=maincol,
+				fill=thmcol,
 				draw=none,
 				font=\smaller{-2}\vphantom{(},
 				text=tcbcoltitle,
 				#1}}
-\cpgesetupdeco{description path/.style={%
+\cpgesetuptcb{description path/.style={%
 	overlay unbroken and first={%
     	\path let \p1=(title.north east), \p2=([xshift=-12pt]frame.north east) in
 			node (description) [%
@@ -771,12 +782,12 @@ math box style={}
 \fi 
 
 \def\important@message{\ifexo@type exercice \else r\'esultat\fi{} important}
-\cpgesetupdeco{
+\cpgesetuptcb{
 	important/.style={%
-		maincol=importantcol,
+		thmcol=importantcol,
 		bottom=10pt,
 		underlay unbroken and last={\node at (frame.south west) 
-			[text=maincol, 
+			[text=thmcol, 
 			font=\fontsize{7}{8}\selectfont, 
 			anchor=south west, 
 			yshift=2pt
@@ -785,56 +796,51 @@ math box style={}
 		},
 	important/.default=\important@message
 }
-\cpgesetup[math]{
-	formula/.code=\cpgesetdeco{formula}{#1},
-	result/.code=\cpgesetdeco{result}{#1},
-	formula={\fcolorbox{maincol}{tcbcolback}{#1}},
-	result={\fcolorbox{maincol}{tcbcolback!95!maincol}{#1}}
-}
 %%% Environnement butineur : tous les environnement 
 %%% de theoreme l'utilisent en interne
 \def\cpge@theo@form@namenumber#1#2{\hbox{#1~#2}}
 \def\cpge@theo@form@numbername#1#2{\hbox{#2~#1}}
 \def\cpge@theo@form@name#1#2{\hbox{#1}}
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	theorem name and number/.code={\let\tcb@theo@form=\cpge@theo@form@namenumber},
 	theorem number and name/.code={\let\tcb@theo@form=\cpge@theo@form@numbername},
 	theorem name/.code={\let\tcb@theo@form=\cpge@theo@form@name},
 	new/@labelformat/.code 2 args=\labelformat{#1}{#2}
 }
 \def\@theotitle{}
-\NewDocumentCommand{\cpge@new@tcbtheorem}{O{} mmmmm}{%
-  \cpgesetup{theorem type=#5}%
+\NewDocumentCommand{\cpge@new@tcbtheorem}{O{} mmmmmm}{%
+  \cpgesetup{theorem type=#6}%
   \unless\ifrem@type
   \@@newtcolorbox[auto counter, list inside=theo,#1]{#2}{E{\op}{{}} d() d<>}{%
-  	@theoname={#3},
-	du@theoname={#4},
-    theorem type=#5,
-    #5 style,
+  	@theocountername=#2,
+  	@theoName={#3},
+	@theoname={#4},
+	@theoprefix={#5},
+    theorem type=#6,
+    #6 style,
     theorem name and number,
-	@theoprefix=#2,
     title={\cpge@tcb@theo@title{#3}{\thetcbcounter}},%
     IfValueT={##2}{list entry=%
     	{\protect\numberline{\thetcbcounter}#3~:~##2}},%
     IfValueT={##2}{nameref={##2},description path={##2}, code=\def\@theotitle{##2}},%
-    IfValueT={##3}{phantom={\MakeLinkTarget[#3]{tcb@cnt@theo}\label{##3}}},%
-	hypertarget={\cpge@theorem@prefix:\thetcbcounter},
+    IfValueT={##3}{phantom={\MakeLinkTarget[#4]{tcb@cnt@theo}\label{##3}}},%
+	hypertarget={\cpge@theorem@countername:\thetcbcounter},
 	proof or solution,
-    #6,##1}%
+    #7,##1}%
     \fi
     \ifrem@type
     \@@newtcolorbox[auto counter, list inside=theo,#1]{#2}{E{\op}{{}} d() d<>}{%
     remark style, 
     theorem name and number,
-	@theoprefix=#2,
+	@theocountername=#2,
     title={\cpge@tcb@theo@title{#3}{\thetcbcounter}
     		\IfValueTF{##2}{\enskip\mdseries\itshape({##2})}{}},%
     IfValueT={##2}{list entry=%
     	{\protect\numberline{\thetcbcounter}#3~:~##2}},%
     IfValueT={##2}{nameref={##2}},%
-    IfValueT={##3}{phantom={\MakeLinkTarget[#3]{tcb@cnt@rema}\label{##3}}},%
-    #6,##1,
-    colframe=maincol
+    IfValueT={##3}{phantom={\MakeLinkTarget[#4]{tcb@cnt@rema}\label{##3}}},%
+    #7,##1,
+    colframe=thmcol
     }%
 	\fi
 	\ifrem@type\else
@@ -850,26 +856,27 @@ math box style={}
 	
 \newcounter{genthm}[chapter]
 \NewTColorBox[use counter=genthm]{genthm*}{ m E{\op}{{}} d() d<>}{%
+	thmcol=framestrokecol,
 	title={#1},
 	IfValueT={#3}{description path={#3}},
 	IfValueT={#4}{nameref={#3}},
-	maincol=fillcol,
 	theorem style,
 	theorem name,
 	titled items,
 	#2}
 \NewTColorBox[use counter=genthm]{genthm}{ m E{\op}{{}} d() d<>}{%
+	thmcol=framestrokecol,
 	IfValueT={#1}{title={\cpge@tcb@theo@title{#1}{\thetcbcounter}}},
 	IfValueT={#3}{nameref={#3}, description path={#3}},
 	IfValueT={#4}{label={#4}},
 	IfValueT={#3}{list entry=%
     	{\protect\numberline{\thetcbcounter}#2~:~#3}},%
-	maincol=fillcol,
 	theorem style,
+	#2,
 	theorem name,
-	titled items,
-	#2}
-\cpgesetupdeco{marge/.style={left=#1,right=#1}}	
+	titled items
+}
+\cpgesetuptcb{marge/.style={left=#1,right=#1}}	
 	
 %%%%%%%% Tables des th\'eor\`emes 
 \def\cpge@tcb@theo@title#1#2{%
@@ -901,22 +908,22 @@ math box style={}
 %%%%%%%% jeu de styles tcolorbox %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cpgesetupdeco{minimal/.style=blanker}
+\cpgesetuptcb{minimal/.style=blanker}
 
-\cpgesetupdeco{simple/.style={%
-	colframe=maincol,
+\cpgesetuptcb{simple/.style={%
+	colframe=thmcol,
 	boxrule=.4pt,
 	top=3pt,bottom=3pt,
 	left=5pt,right=5pt
 	}}
 	
-\cpgesetupdeco{basic/.style={%
+\cpgesetuptcb{basic/.style={%
 	spartan,
   	top=3pt,bottom=3pt,
 	left=5pt,right=5pt,
 	boxrule=.4pt, 
 }}
-\cpgesetupdeco{
+\cpgesetuptcb{
 	basicthm/.style={%
 		empty, 
 		basic, 
@@ -928,22 +935,22 @@ math box style={}
 		}
 	}
 }
-\cpgesetupdeco{%
+\cpgesetuptcb{%
 	basicrmk/.style={
 		blankest, 
-		coltitle=maincol,
+		coltitle=thmcol,
 		top=3pt, bottomtitle=5pt, 
 		left=20pt, before title={\hskip-14pt},
-		borderline west={.6pt}{.6pt}{maincol}
+		borderline west={.6pt}{.6pt}{thmcol}
 	}
 }
-\cpgesetupdeco{rounded/.style={
+\cpgesetuptcb{rounded/.style={
 	arc=5pt,
-    colframe=maincol,
+    colframe=thmcol,
     boxrule=-1pt,
 	left=8pt,right=8pt
  }}
-\cpgesetupdeco{roundedthm/.style={%
+\cpgesetuptcb{roundedthm/.style={%
 	rounded,
     attach boxed title to top left={yshift=-\tcboxedtitleheight/2-1pt,xshift=3pt},
     boxed title style={%
@@ -955,13 +962,13 @@ math box style={}
         },
         bottomrule=.8pt
 }}
-\cpgesetupdeco{uphill/.style={
-    	colframe=maincol,
+\cpgesetuptcb{uphill/.style={
+    	colframe=thmcol,
 		left=5pt,right=5pt,
     	arc=.2cm,
     	sharp corners=uphill
  }}
-\cpgesetupdeco{uphillthm/.style={%
+\cpgesetuptcb{uphillthm/.style={%
 	uphill,
     attach boxed title to top left={yshift=-\tcboxedtitleheight},
     boxed title style={%
@@ -990,129 +997,140 @@ math box style={}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \cpgenewtheorem[number within=chapter]{theo}
 	{Th\'eor\`eme}
-	{du th\'eor\`eme}
+	{th\'eor\`eme}
+	{du\space}
 	{theorem}
 	{titled items}	
 \cpgenewtheorem[use counter from=theo]{theodef}
 	{Th\'eor\`eme et d\'efinition}
-	{du th\'eor\`eme}
+	{th\'eor\`eme}
+	{du\space}
 	{theorem}
 	{titled items}
 \cpgenewtheorem[use counter from=theo]{propdef}
 	{Proposition et d\'efinition}
-	{de la proposition}
+	{proposition}
+	{de la\space}
 	{theorem}
 	{titled items}
 \cpgenewtheorem[use counter from=theo]{prop}
 	{Proposition}
-	{de la proposition}
+	{proposition}
+	{de la\space}
 	{theorem}
 	{titled items}
 \cpgenewtheorem[use counter from=theo]{lemm}
 	{Lemme}
-	{du lemme}
+	{lemme}
+	{du\space}
 	{theorem}
 	{}
 \cpgenewtheorem[use counter from=theo]{ppte}
 	{Propri\'et\'es}
-	{des propri\'et\'es}
+	{propri\'et\'es}
+	{des\space}
 	{theorem}
 	{titled items}
 \cpgenewtheorem[use counter from=theo]{coro}
 	{Corollaire}
-	{du corollaire}
+	{corollaire}
+	{du\space}
 	{theorem}
 	{titled items}
 \cpgenewtheorem[number within=chapter]{defi}
 	{D\'efinition}
-	{}
+	{}{}
 	{definition}
 	{titled items}
 \cpgenewtheorem[use counter from=defi]{voca}
 	{Vocabulaire}
-	{}
+	{}{}
 	{definition}
 	{theorem name, titled items}
 \cpgenewtheorem[use counter from=defi]{nota}
 	{Notations}
-	{}
+	{}{}
 	{definition}
 	{theorem name,titled items}
 \cpgenewtheorem[number within=chapter]{rema}
 	{Remarque}
-	{}
+	{}{}
 	{remark}
 	{}
 \cpgenewtheorem[use counter from=rema]{remas}
 	{Remarques}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[use counter from=rema]{remap}
 	{Remarques pratiques}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[number within=chapter]{exem}
 	{Exemples}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exemf}
 	{Exemples fondamentaux}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exema}
 	{Exemple d'application}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exemp}
 	{Exemple pratique}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{appl}
 	{Application}
-	{}
+	{}{}
 	{remark}
 	{}
 \cpgenewtheorem[use counter from=exem]{appls}
 	{Application}
-	{}
+	{}{}
 	{remark}
 	{titled items}
 \cpgenewtheorem[no counter]{demo}
 	{D\'emonstration}
-	{}
+	{}{}
 	{proof}
 	{titled items, current counter=\@gobble}
 \cpgenewtheorem[number within=chapter]{float}
 	{Figure}
-	{}
+	{}{}
 	{remark}
 	{float, halign title=flush center}
-\cpgesetupdeco{floatplacement=tbp}
+\cpgesetuptcb{floatplacement=tbp}
 
 \cpgenewtheorem[number within=chapter,@labelformat={tcb@cnt@exer}{l'exercice}]{exer}
 	{Exercice}
-	{de l'exercice}
+	{exercice}
+	{de l'}
 	{exercise}
 	{titled items}
 \cpgenewtheorem[number within=chapter]{exerappli}
 	{Exercice d'application}
-	{de l'exercice}
+	{exercice}
+	{de l'}
 	{exercise}
 	{titled items}
 \cpgenewtheorem[number within=chapter]{exerappro}
 	{Exercice d'approfondissement}
-	{de l'exercice}
+	{exercice}
+	{de l'}
 	{exercise}
 	{titled items}
 \cpgenewtheorem[number within=chapter]{prob}
 	{Probl\`eme}
-	{du probl\`eme}
+	{probl\`eme}
+	{du\space}
 	{exercise}
 	{titled items}
 

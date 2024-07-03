@@ -1,0 +1,70 @@
+\documentclass{article}
+\usepackage{pgfkeys,etoolbox}
+
+\DeclareDocumentCommand\TestCmd{mO{}m}{
+    \ifblank{#2}
+        {#1 : [default]{#3}}
+        {#1 : [#2]{#3} }
+}
+\pgfkeysdef{/handlers/.test}{
+    \pgfkeysdefargs{\pgfkeyscurrentpath}{[##1]##2}{
+        \TestCmd{#1}[##1]{##2}}
+}
+
+
+\begin{document}
+
+\pgfkeys{keyone/.test=testone}
+\pgfkeys{keyone=[un]{deux}}
+\pgfkeys{keyone=[]{trois}}
+\end{document}
+
+
+%%%%%%%%%%%%%%%%%%%%
+\documentclass{article}
+
+\usepackage{pgfkeys}
+
+\makeatletter
+  % Handlers for creating keys with optional arguments.
+  \def\mypgf@install@code@with@optarg#1#2{%
+    \pgfkeysdef{#1}{%
+      \@ifnextchar[%
+        {\pgfkeysvalueof{#1/@cmd@with@optarg}}%
+        {\pgfkeysvalueof{#1/@cmd@with@optarg}[#2]}%
+      ##1\pgf@nil
+    }%
+  }
+  \pgfkeys{
+    /handlers/.code with optarg with default value/.code 2 args={%
+      \long\def\mypgfkeys@temp[##1]##2\pgf@nil{#2}%
+      \pgfkeyslet{\pgfkeyscurrentpath/@cmd@with@optarg}\mypgfkeys@temp
+      \expandafter\expandafter\expandafter\mypgf@install@code@with@optarg
+      \expandafter\expandafter\expandafter{\pgfkeyscurrentpath}{#1}%
+    },
+    /handlers/.code with optarg/.code={%
+      \pgfkeys{\pgfkeyscurrentpath/.code with optarg with default value={}{#1}}%
+    },
+    /handlers/.style with optarg with default value/.code 2 args={
+      \pgfkeys{\pgfkeyscurrentpath/.code with optarg with default value={#1}{\pgfkeysalso{#2}}}%
+    },
+    /handlers/.style with optarg/.code={%
+      \pgfkeys{\pgfkeyscurrentpath/.code with optarg with default value={}{\pgfkeysalso{#1}}}%
+    },
+  }
+\makeatother
+
+\begin{document}
+
+\pgfkeys{
+  one/.code with optarg with default value={default}{#1::#2\par},
+  two/.code with optarg={#1::#2\par},
+  one=normal,             % prints "default::normal"
+  one=[optional]normal,   % prints "optional::normal"
+  two=normal,             % prints "::normal"
+  two=[optional]normal,   % prints "optional::normal"
+}
+
+\end{document}
+
+\end{document}

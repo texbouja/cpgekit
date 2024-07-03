@@ -1,0 +1,38 @@
+\documentclass[]{cpgedev}
+
+\cpgegeometry[hmargin=1cm]{tablet}
+\cpgetheme[palette=cosmic,dark]{curve} 
+ 
+\Document{Série d'exercices}
+\Centre{Moulay Youssef}  
+\Ville{Rabat}
+\Theme{Probabilités et statistiques}  
+\Periode{Juin 2024} 
+\Classe{ECS}
+
+\begin{document} 
+
+\titre
+
+\showpalette
+
+\begin{xtheo}(de Monge)
+    Vous participez à un jeu où l'on vous propose trois portes au choix. L'une des portes cache une voiture à gagner, et chacune des deux autres une chèvre. Vous choisissez une porte, mais sans l'ouvrir! L'animateur, qui sait où est la voiture, ouvre une autre porte, derrière laquelle se trouve une chèvre. Il vous donne maintenant la possibilité de vous en tenir à votre choix initial, ou de changer de porte. Qu'avez-vous intérêt à faire?
+    \xit+ Donner les probabilités de nombres d'enfants par famille $p_{01} p_1, p_2, p_3$.
+    \xit On choisit une famille au hasard : quelle est la probabilité qu'il n'y ait aucun garçon?
+    \xit Toujours pour une famille choisie au hasard, quelle est la probabilité qu'elle ait 2 enfants sachant qu'elle n'a aucun garçon?
+    \exit
+    \begin{mini}{Remarque} 
+        C'est un problème auquel étaient confrontés les invités du jeu télévisé 'Let's make a deal" de Monty Hall (animateur et producteur américain), sauf que les lots de consolation n'étaient pas des chèvres.
+    \end{mini}
+\end{xtheo}
+
+\begin{exercice}{02}(Le problème du dépistage) 
+    \begin{questions}
+    \xques\sc{3+1} Soit $(\Omega, \mathcal{F}, \Pr)$ un espace probabilisé. Soit $\left(H_1, \ldots, H_n\right)$ une partition de $\Omega$ en $n$ événements de probabilites non nulles. Soit $A \in \mathcal{F}$ tel que $\Pr(A)>0$. Rappeler la formule de Bayes (encore appelée formule de probabilité des causes, les $H_i$ étant les causes possibles et $A$ la conséquence).
+    \xques\sc{1+1+1}(Application : Test de dépistage)
+    Une maladie est présente dans la population, dans la proportion d'une personne malade sur 1000. Un responsable d'un grand laboratoire pharmaceutique vient vous vanter son nouveau test de dépistage : si une personne est malade, le test est positif à $99 \%$. Néanmoins, sur une personne non malade, le test est positif a $0.2 \%$. Ces chiffres ont l'air excellent, vous ne pouvez qu'en convenir. Toutefois, oe qui vous intéresse, plus que les résultats présentés par le laboratoire, c'est la probabilité qu'une personne soit réellement malade lorsque son test est positif. Calculer cette probabilité.
+    \end{questions}
+    \end{exercice} 
+
+\end{document}

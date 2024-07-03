@@ -159,6 +159,8 @@
     	}
 \cpgesetup{math/symbols/.is family}
 
+%transpose/l/.style={transpose/position=l},
+
 \cpgesetupmath{
 	@interval/.is family,
 	@interval/separator/.code		= \def\IntSep{#1},
@@ -211,7 +213,7 @@
 	d/.code	= \def\dsymb{{#1}},
 	D/.code	= \def\Dsymb{{#1}},
 	N/.code	= \def\Nsymb{{#1}},
-	Z/.code	= \def\Zsymb{{#1}},transpose/l/.style				={transpose/position=l},
+	Z/.code	= \def\Zsymb{{#1}},
 	Q/.code	= \def\Qsymb{{#1}},
 	R/.code	= \def\Rsymb{{#1}},
 	C/.code	= \def\Csymb{{#1}},
@@ -2463,7 +2465,7 @@
 	\@xp\@ifdefinable\csname #1\endcsname{
 		\@xp\def
 			\csname#1\@xp\endcsname\@xp{\csname dlm@#2\endcsname}
-		\cspreto{#1}{\begingroup\dlm@PREPROCESS}
+		\protected\cspreto{#1}{\begingroup\dlm@PREPROCESS}
 	}
 }
 

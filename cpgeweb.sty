@@ -896,7 +896,7 @@
             \cpgeusefont{sf}
             \IfFileExists{#2web.sty}
             {\AtEndPreamble{\RequirePackage{#2web}}}{}%
-            \reload@thecolors%
+            \reloadthecolors%
         }
         \DeclareDocumentCommand\cpgegeometry{om}{}
 
@@ -906,7 +906,7 @@
 
 
         \tikzset{page decoration/.style={%
-                    fill=bgcol,
+                    fill=backcol,
                     draw=strokecol,
                     line width=20pt,
                     rounded corners= 20pt
@@ -926,7 +926,7 @@
         \def\SubTitleFont{\fontsize{16}{18}\firasemibold}
         \tikzset{title style/.style={%
                     font=\TitleFont,
-                    text = fillcol,
+                    text = titletextcol,
                 }
         }
         \tikzset{subtitle style/.style={%
@@ -996,7 +996,7 @@
                 \begin{pgfonlayer}{background}
                     \begin{scope}[overlay, minimum height=0]
                         \clip (page.north west) rectangle (page.south east);
-                        \fill [overlay, bgcol] (page.north west) rectangle (page.south east);
+                        \fill [overlay, backcol] (page.north west) rectangle (page.south east);
                         \page@deco%
                     \end{scope}
                 \end{pgfonlayer}%
@@ -1452,7 +1452,7 @@
 }
 
 \def\page@deco{
-    \draw [overlay, fill=bgcol,
+    \draw [overlay, fill=backcol,
         draw=strokecol,
         line width=20pt,
         rounded corners= 20pt]

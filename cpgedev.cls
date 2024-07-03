@@ -19,6 +19,7 @@
 	\newif\ifnolinks
 	\newif\ifprint
 	\newif\ifserie
+	\newif\ifquiz
 	\newif\ifnocolors
 	\newif\ifdark
 	\newif\ifcompact
@@ -114,8 +115,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \RequirePackage[customtitles]{cpgecommon}
 \unless\ifdraft
-	\cpgeloadpackage[skins, theorems]{tcolorbox}
-	\usetikzlibrary{calc}
+	\cpgeloadpackage[calc,backgrounds]{tikz}
 \fi
 
 
@@ -510,7 +510,7 @@
 	\cpgetitle@shape{display}{problem}[center]
 	\def\problem@font{\LARGE}
 \fi 
-\def\set@linkcol{\unless\ifx\listbox\default@listbox\hypersetup{linkcolor=white}\fi}
+\def\set@linkcol{\unless\ifx\listbox\default@listbox\hypersetup{linkcolor=mainone}\fi}
 \def\link@problemlabel#1{%
 	\edef\cpge@tmpa{#1}%
 	\unless\ifx\cpge@tmpa\space%
@@ -734,16 +734,12 @@
 
 %%% Boite tikz générique pour différentes déorations
 \NewDocumentCommand\genboxcmd{O{}m}{\fbox{#2}}
-\def\rslt@box{\genboxcmd}
 \cpgesetdeco{indication}{\textbf{#1 :}\kern4pt}
 \unless\ifdraft
-\tikzset{generic style/.style={fill=none, draw=maincol, inner sep = 3pt, rounded corners=3pt}}
+	\tikzset{generic style/.style={fill=none, draw=framestrokecol, inner sep = 3pt, rounded corners=3pt}}
 	\RenewDocumentCommand\genboxcmd{O{} +m}{%
 		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
-	}
-	\def\rslt@box{\genboxcmd}
-	\cpgesetdeco{formula}{\genboxcmd{#1}}
-	\cpgesetdeco{result}{\genboxcmd[double distance=.6pt, line width=1.2pt, inner sep=4pt, fill=maincol!5!bgcol, draw=bgcol, double=maincol]{#1}}
+}
 \fi
 
 %%
@@ -1113,7 +1109,7 @@
 			inner xsep=5pt, inner ysep=3pt,
 			text width=\linewidth-10pt-2\pgflinewidth,
 			%align=justify,
-			draw=linkcol,
+			draw=linkstrokecol,
 			fill=yellow!20,
 			font=\sffamily\small
 		},
@@ -1121,7 +1117,7 @@
 			rounded corners=2pt, 
 			text width=2em, 
 			align=center, anchor=west,
-			fill=linkcol, text=white,
+			fill=linkbackcol, text=white,
 			draw=none, inner xsep=.2em, inner ysep=2pt,
 			font=\sffamily\footnotesize\bfseries,
 		}
@@ -1193,7 +1189,7 @@
 		}
 		\tikzset{%
 			collink/.style={%
-				fill=linkcol, 
+				fill=linkbackcol, 
 				draw=none, 
 				text=white},
 			enodeco/.style={}
@@ -1790,26 +1786,15 @@
 	deco=#1.\kern1ex
 }
 \else
-\usetikzlibrary{arrows.meta}
-\def\funnyarrow#1#2{%
-	\tikz[baseline] 
-		\draw [
-				line width=\dimexpr\fntht x, #2, 
-				-{Round Cap[sep=-1pt] . Fast Round[]}
-			] 
-        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
-}
+\def\miniarrow#1{\textcolor{#1}{\xaltarrow}}
 \cpgesetup[mini]{%
-	deco=\llap{\funnyarrow{1.2em}{neutralcol}}%
+	deco=\llap{\miniarrow{neutralcol}}%
 		\textcolor{neutralcol}{#1.}\kern1ex%
 }
 \fi
 
 %%%%%%%% Environnements basique pour théorèmes et Cie
 \RequirePackage{amsthm}
-\unless\ifdraft
-	\usetikzlibrary{backgrounds}
-\fi 
 \newdimen\thmboxheight
 \newdimen\thmboxdepth
 \newdimen\thmboxwidth
@@ -1824,27 +1809,24 @@
 	\cpgesetup[theorem]{%
 		frame style/.code=\appto\thm@frame@style{,background={#1}},%
 		frame borderlines/.code=\appto\thm@frame@style{,#1},%
-		outer border sep/.code=\appto\thm@frame@style{,outer frame sep=#1}
-								\dimdef\outer@border@xsep{#1}
-								\dimdef\outer@border@ysep{#1},
-		outer border xsep/.code=\appto\thm@frame@style{,outer frame xsep=#1}
+		outer xsep/.code=\appto\thm@frame@style{,outer frame xsep=#1}
 								 \dimdef\outer@border@xsep{#1},
-		outer border ysep/.code=\appto\thm@frame@style{,outer frame ysep=#1}
+		outer ysep/.code=\appto\thm@frame@style{,outer frame ysep=#1}
 								 \dimdef\outer@border@ysep{#1},
-		inner border sep/.code=\dimdef\inner@border@xsep{#1}
-								\dimdef\inner@border@ysep{#1},%
-		inner border xsep/.code=\dimdef\inner@border@xsep{#1},
-		inner border ysep/.code=\dimdef\inner@border@ysep{#1},
-		inner border sep/.default=10pt, inner border sep,%
+		outer sep/.style={outer xsep=#1, outer ysep=#1},
+		inner xsep/.code=\dimdef\inner@border@xsep{#1},
+		inner ysep/.code=\dimdef\inner@border@ysep{#1},
+		inner sep/.style={inner xsep=#1, inner ysep=#1},
+		inner sep/.default=10pt, inner sep,%
 		title style/.store in=\thm@title@style,%
 		title style*/.code=\let\thm@title@overlay\relax\def\thm@title@style{#1},%
 		title style+/.code=\appto\thm@title@style{,#1},%
-		title border sep/.code=\dimdef\head@sep{#1},%
-		title border sep/.default=5pt, title border sep,%
+		title sep/.code=\dimdef\head@sep{#1},%
+		title sep/.default=5pt, title sep,%
 		title overlay/.store in=\thm@title@overlay
 	}
 	\tikzset{%
-		none/.style={draw=none,fill=none,text=fgcol},%
+		none/.style={draw=none,fill=none,text=textcol},%
 		background/.style={framed, background rectangle/.style={#1}},%
 		t/.style={background top/.style={#1}, show background top},%
 		t/.default=draw,
@@ -1855,10 +1837,10 @@
 		r/.style={background right/.style={#1}, show background right},%
 		r/.default=draw,
 		frame border sep/.style = {inner xsep=\inner@border@xsep,inner ysep=\inner@border@ysep},%
-		title border sep/.style = {inner ysep=2pt, inner xsep=\head@sep},%
+		title sep/.style = {inner ysep=2pt, inner xsep=\head@sep},%
 	}
 	\def\thm@frame@style{background={draw, rounded corners=3pt}}
-	\def\thm@title@style{fill=colback}
+	\def\thm@title@style{fill=backcol}
 	\dimdef\outer@border@xsep{0pt}
 	\dimdef\outer@border@ysep{0pt}
 \fi%
@@ -1875,13 +1857,13 @@
 		\@xp\tikzpicture\@xp[\thm@frame@style]
 			\ifblank{#1}
 				{\node [frame border sep] {};}
-				{\node [frame border sep, text width=\textwidth-\thmboxwidth] {\cpge@footnote@restore #1};}
+				{\node (frame) [frame border sep, text width=\textwidth-\thmboxwidth] {\cpge@footnote@restore #1};}
 		\endtikzpicture%
 		\aftergroup\cpge@footnote@use%
 	}
 	\def\thmhead@deco#1{%
 		\begin{tikzpicture} [baseline, anchor=base] 
-			\@xp\node\@xp[\thm@title@style, title border sep] (title) {#1};
+			\@xp\node\@xp[\thm@title@style, title sep] (title) {#1};
 			\thm@title@overlay
 		\end{tikzpicture}%
 	}
@@ -1952,8 +1934,8 @@
 			\th@cpgecustom% 
 			\@topsep\dimexpr\thm@beforeskip+\raise@title\relax%            
 			\@topsepadd\thm@postskip% 
+			\item[]\vrule height\z@ width\linewidth\linebreak%
 			\setbox\cpge@thmbox\hbox{\thmhead@deco{\cpge@thmname}}%
-			\item[]\leavevmode\noindent\ignorespaces%
 			\xframe@deco{%
 				\IfValueTF{#2}
 					{\IfValueTF{#3}
@@ -1962,7 +1944,7 @@
 					{\IfValueTF{#3}
 						{\csname\cpge@thmcounter\endcsname\relax\label{\cpge@labelprefix#3}}
 						{\csname\cpge@thmcounter\endcsname\relax}}%
-					\vspace*{\dimexpr-.5\thmboxheight-\ht\cpge@thmbox-\raise@title-\thm@beforeskip\ifdim\dimexpr\outer@border@ysep>\z@+\outer@border@ysep\fi\relax}%
+					\vspace*{\dimexpr-\thmboxheight-.5\ht\cpge@thmbox-.5\dp\cpge@thmbox-\raise@title\ifdim\dimexpr\outer@border@ysep>\z@+\outer@border@ysep\fi\relax}%
 					\leavevmode%
 					\vskip\dimexpr\inner@border@ysep-\baselineskip\relax%
 						#4

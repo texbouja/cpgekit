@@ -1,0 +1,9 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [],
+    "ignoreWords": [textcol,pagecol,strokecol,frametextcol,framebackcol,framestrokecol,linktextcol,linkbackcol,linkstrokecol,buttontextcol,buttonbackcol,buttonstrokecol,],
+    "import": []
+}

@@ -11,6 +11,7 @@
 \newif\ifdraft
 \newif\ifweb
 \newif\ifserie
+\newif\ifquiz
 \newif\ifsingleimage
 \newif\ifstraight
 \newif\ifprint

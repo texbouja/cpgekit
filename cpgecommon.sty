@@ -20,7 +20,7 @@
 	{\RequirePackage{xparse}}
 	{}
 \ifcustomtitles
-   \RequirePackage[loadonly, explicit,nobottomtitles*,pagestyles]{titlesec}
+   \RequirePackage[loadonly,explicit,nobottomtitles*,pagestyles]{titlesec}
 \else 
    \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
 \fi 
@@ -38,7 +38,7 @@
    }{}
 %%% hyperref, aboslument indispensable
 \RequirePackage[pdfencoding=auto,psdextra]{hyperref}
-\hypersetup{colorlinks,linkcolor=linkcol,urlcolor=linkcol,breaklinks,raiselinks}
+\hypersetup{colorlinks,linkcolor=linktextcol,urlcolor=linktextcol,breaklinks,raiselinks}
 \pdfstringdefDisableCommands{%
 	\def\({}%
 	\def\){}%
@@ -48,21 +48,42 @@
 \ProvideDocumentCommand\LinkTargetOn{}{}
 \ProvideDocumentCommand\LinkTargetOff{}{}
 \ProvideDocumentCommand\NextLinkTarget{m}{}
-
+\newif\ifsoutien
 
 %%%% Mécanisme pour charger certains packages avec les bonnes versions
 
 \NewDocumentCommand\cpgeloadpackage{O{}m}{%
-	\ifstrequal{#2}{tcolorbox}{
-		\RequirePackage{tcolorbox}[2022/01/07]
+	\ifstrequal{#2}{tcolorbox}{%
+		\RequirePackage{tcolorbox}%[2022/01/07]
 		\forcsvlist\tcbuselibrary{#1}
-		\def\cpgesetupdeco{\pgfqkeys{/tcb}}
+		\def\cpgesetuptcb{\pgfqkeys{/tcb}}
 		\let\cpgebox\tcbox 
 		\let\newcpgebox\newtcbox
 		\let\renewcpgebox\renewtcbox
 		\def\boxedenv{\tcolorbox} 
 		\let\endboxedenv\endtcolorbox
 		\ifdef\tcbraster{\let\raster\tcbraster\let\endraster\endtcbraster}{}
+		\cpgesetup[colors]{
+			tcbcolupper/.preparecolor={named}{frametextcol},
+			tcbcollower/.preparecolor={named}{frametextcol},
+			tcbcoltext/.preparecolor={named}{frametextcol},
+			tcbcolback/.preparecolor={named}{framebackcol},
+			tcbcolframe/.preparecolor={named}{framestrokecol},
+			tcbcoltitle/.preparecolor={named}{titletextcol},
+			tcbcolbacktitle/.preparecolor={named}{titlebackcol},
+		}
+		\def\tcbdefinecolors{%
+			\definecolors{tcbcolupper,tcbcollower,tcbcoltext,tcbcolframe,tcbcolback,tcbcoltitle,tcbcolbacktitle}
+		}
+	}{}
+	\ifstrequal{#2}{tikz}{
+		\@ifpackageloaded{tikz}{}{\RequirePackage{tikz}}
+		\forcsvlist\usetikzlibrary{#1}
+		\def\cpgesetuptikz{\pgfqkeys{/tikz}}
+		\tikzset{
+			draw/.default=framestrokecol, fill/.default= framebackcol, text/.default=frametextcol,
+			line width/.default=2pt
+		}
 	}{}
 }
 
@@ -1141,7 +1162,7 @@
 			\csuse{hook@lateaftertitlepage}
 		\end{titlepage}%
 		\pagecolor{pagecol}%
-		\color{fgcol}%
+		\color{textcol}%
 		\restoregeometry%
 	\else%
 		\thispagestyle{plain}%
@@ -1199,90 +1220,160 @@
 \pgfkeys{/handlers/.colorlet/.code=
 	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
 }
-\pgfkeys{/handlers/.colordef/.code=
-	\pgfkeysalso{\pgfkeyscurrentpath/.code=\preparecolor{#1}{named}{##1}}
+\cpgesetup[colors]{
+	default import model/.store in=\default@colormodel,
+	default import model=named
 }
-\def\cpgeset@colors#1#2#3{%
-	\csdef{cpge@#1col}{\ifdark #3\else #2\fi}
+\DeclareDocumentCommand\cpgedefinecolor{mO{}m}{%
+	\begingroup%
+		\ifblank{#2}
+			{\convertcolorspec{\default@colormodel}{#3}{\cpge@colormodel}\xc@tmp}
+			{\convertcolorspec{#2}{#3}{\cpge@colormodel}\xc@tmp}
+		\edef\cpge@tmpb{\endgroup
+			\@nx\definecolor{#1}{\cpge@colormodel}{\xc@tmp}}
+	\cpge@tmpb
+}
+\DeclareDocumentCommand\cpgepreparecolor{mO{}m}{%
+	\begingroup%
+		\ifblank{#2}
+			{\convertcolorspec{\default@colormodel}{#3}{\cpge@colormodel}\xc@tmp}
+			{\convertcolorspec{#2}{#3}{\cpge@colormodel}\xc@tmp}
+		\edef\cpge@tmpb{\endgroup
+			\@nx\preparecolor{#1}{\cpge@colormodel}{\xc@tmp}}
+	\cpge@tmpb%
+	\listgadd\preparecolorlist{#1}%
+}
+\DeclareDocumentCommand\cpgesetbrightdarkcolor{smO{}mm}{%
+	\begingroup%
+		\IfBooleanTF{#1}
+			{\def\define@color{\preparecolor}}
+			{\def\define@color{\definecolor}}
+		\ifblank{#3}
+			{\let\@colormodel\default@colormodel}
+			{\def\@colormodel{#3}}
+		\convertcolorspec{\@colormodel}{#4}{\cpge@colormodel}\xc@tmpb
+		\convertcolorspec{\@colormodel}{#5}{\cpge@colormodel}\xc@tmpa
+		\edef\cpge@tmpa{%
+			\endgroup%
+			\expandonce\define@color{#2}{\cpge@colormodel}{\ifdark\xc@tmpa\else\xc@tmpb\fi}%
+		}
+	\cpge@tmpa%
+	\IfValueT{#1}{\listgadd\preparecolorlist{#2}}
+}
+\pgfkeysdef{/handlers/.definecolor}{
+	\pgfkeysdefargs{\pgfkeyscurrentpath}{[##1]##2}
+		{\cpgedefinecolor{#1}[##1]{##2}}
+}
+\pgfkeysdef{/handlers/.preparecolor}{
+	\pgfkeysdefargs{\pgfkeyscurrentpath}{[##1]##2}
+		{\cpgepreparecolor{#1}[##1]{##2}}
+}
+\pgfkeysdef{/handlers/.definebrightdarkcolor}{ 
+	\pgfkeysdefargs{\pgfkeyscurrentpath}{[##1]##2##3}
+		{\cpgesetbrightdarkcolor{#1}[##1]{##2}{##3}}
+}
+\pgfkeysdef{/handlers/.preparebrightdarkcolor}{ 
+	\pgfkeysdefargs{\pgfkeyscurrentpath}{[##1]##2##3}
+		{\cpgesetbrightdarkcolor*{#1}[##1]{##2}{##3}}
 }
 \cpgesetup[colors]{
-	stroke/.code 2 args=\cpgeset@colors{stroke}{#1}{#2},
-	fill/.code 2 args=\cpgeset@colors{fill}{#1}{#2},
-	neutral/.code 2 args=\cpgeset@colors{neutral}{#1}{#2},
-	main/.code 2 args=\cpgeset@colors{main}{#1}{#2},
-	important/.code 2 args=\cpgeset@colors{important}{#1}{#2},
-	link/.code 2 args=\cpgeset@colors{link}{#1}{#2},
-	fg/.code 2 args=\cpgeset@colors{fg}{#1}{#2},
-	bg/.code 2 args=\cpgeset@colors{bg}{#1}{#2},
-	page/.code 2 args=\cpgeset@colors{page}{#1}{#2},
-	strokecol/.colorlet=strokecol,
-    fillcol/.colorlet=fillcol,
-    neutralcol/.colorlet=neutralcol,
-    linkcol/.colorlet=linkcol,
-	maincol/.colorlet=maincol, 
-	importantcol/.colorlet=importantcol, 
-    fgcol/.colorlet=fgcol,
-    bgcol/.colorlet=bgcol,
-    pagecol/.colorlet=pagecol,
-	default colors/.style={
-    	strokecol=\cpge@strokecol,
-    	fillcol=\cpge@fillcol,
-    	neutralcol=\cpge@neutralcol,
-		maincol=\cpge@maincol,
-		importantcol=\cpge@importantcol,
-    	linkcol=\cpge@linkcol,
-    	fgcol=\cpge@fgcol,
-    	bgcol=\cpge@bgcol,
-    	pagecol=\cpge@pagecol,
-	},
-	cpgetext/.estore in=\cpge@coltext,
-	cpgeback/.estore in=\cpge@colback,
-	cpgeframe/.estore in=\cpge@colframe,
-	cpgetitle/.estore in=\cpge@coltitle,
-	cpgebacktitle/.estore in=\cpge@colbacktitle,
-	coltext/.colorlet=coltext,
-	colback/.colorlet=colback,
-	colframe/.colorlet=colframe,
-	coltitle/.colorlet=coltitle,
-	colbacktitle/.colorlet=colbacktitle,
-	default cpgecolors/.style={
-		coltext=\cpge@coltext,
-		colback=\cpge@colback,
-		colframe=\cpge@colframe,
-		coltitle=\cpge@coltitle,
-		colbacktitle=\cpge@colbacktitle
+	mainone/.definecolor=mainone,
+	maintwo/.definecolor=maintwo,
+	mainthree/.definecolor=mainthree,
+	mainfour/.definecolor=mainfour,
+	mainfive/.definecolor=mainfive,
+	mainsix/.definecolor=mainsix,
+	magenta/.definebrightdarkcolor=cpgemagenta,
+	blue/.definebrightdarkcolor=cpgeblue,
+	green/.definebrightdarkcolor=cpgegreen,
+	yellow/.definebrightdarkcolor=cpgeyellow,
+	orange/.definebrightdarkcolor=cpgeorange,
+	red/.definebrightdarkcolor=cpgered,
+	cyan/.definebrightdarkcolor=cpgecyan,
+	text/.preparebrightdarkcolor=textcol,
+	stroke/.preparebrightdarkcolor=strokecol,
+	page/.preparebrightdarkcolor=pagecol,
+	frametext/.preparebrightdarkcolor=frametextcol,
+	framestroke/.preparebrightdarkcolor=framestrokecol,
+	frameback/.preparebrightdarkcolor=framebackcol,
+	buttontext/.preparebrightdarkcolor=buttontextcol,
+	buttonstroke/.preparebrightdarkcolor=buttonstrokecol,
+	buttonback/.preparebrightdarkcolor=buttonbackcol,
+	titletext/.preparebrightdarkcolor=titletextcol,
+	titlestroke/.preparebrightdarkcolor=titlestrokecol,
+	titleback/.preparebrightdarkcolor=titlebackcol,
+	linktext/.preparebrightdarkcolor=linktextcol,
+	linkstroke/.preparebrightdarkcolor=linkstrokecol,
+	linkback/.preparebrightdarkcolor=linkbackcol,
+	neutral/.preparebrightdarkcolor=neutralcol,
+	important/.preparebrightdarkcolor=importantcol,
+	alert/.preparebrightdarkcolor=alertcol,
+	error/.preparebrightdarkcolor=errorcol,%
+	class/.code n args={3}{\begingroup%
+		\ifdefstring{\cpgecurrentclass}{dev}
+			{
+				\ifserie
+					\def\xc@tmp{#2}
+				\else
+					\def\xc@tmp{#1}
+				\fi
+			}
+			{\def\xc@tmp{#3}}
+		\convertcolorspec{named}{\xc@tmp}{\cpge@colormodel}\xc@tmp
+		\edef\cpge@tmpa{\endgroup\@nx\preparecolor{classcol}{\cpge@colormodel}{\xc@tmp}}
+		\cpge@tmpa
+		\listgadd\preparecolorlist{classcol}
 	}
-   }
-
-\definecolor{cpgeblue}{HTML}{373A73}
-\definecolor{cpgealtblue}{HTML}{007AFF}
-\definecolor{cpgegreen}{HTML}{8CBA30}
-\definecolor{cpgeblack}{HTML}{1F1F1F}
-   
-\cpgesetup[colors]{    
-	   stroke={cpgegreen!85!black}{cpgegreen},
-	   fill={cpgeblue}{cpgealtblue},
-	   main={cpgegreen!85!black}{cpgegreen},
-	   important={DarkRed}{DarkOrange},
-	   link={cpgeblue}{cpgealtblue},
-	   page={white}{cpgeblack},
-	   fg={black}{white},
-	   bg={white}{cpgeblack!90!black},
-	   neutral={gray}{gray},
-	   cpgetext=fgcol,
-	   cpgeframe=strokecol,
-	   cpgeback=bgcol,
-	   cpgetitle=white, 
-	   cpgebacktitle=strokecol,
-   }
-\def\cpgesetcolors#1{\ifcase#1\selectcolormodel{gray}\or\selectcolormodel{rgb}\fi}
-\def\reload@thecolors{
-	\cpgesetup[colors]{default colors}%
-	\cpgesetup[colors]{default cpgecolors}
+}
+\def\cpgesetupcolors{\cpgesetup[colors]}
+\def\cpgedefinecolors{%
+	\forlistloop\definecolors\preparecolorlist}
+\def\colorpalettelist{
+mainone,maintwo,mainthree,mainfour,mainfive,mainsix,cpgemagenta,cpgeblue,cpgegreen,cpgeyellow,cpgeorange,cpgered,cpgecyan,textcol,strokecol,pagecol,frametextcol,framestrokecol,framebackcol,buttontextcol,buttonstrokecol,buttonbackcol,titletextcol,titlestrokecol,titlebackcol,linktextcol,linkstrokecol,linkbackcol,thmcol,neutralcol,importantcol,alertcol,errorcol,classcol}
+\def\missing@colors{}
+\def\addto@missing#1{\listgadd\missing@colors{#1}}
+\def\misssing@loopcmd#1{#1\enskip}
+\DeclareDocumentCommand\showpalette{O{cmyk,rgb}}{%
+	\clearpage\pagecolor{white}\thispagestyle{empty}%
+	\begingroup%
+		\sffamily\small\color{black}%
+		\def\test@color##1{%
+			\@ifundefinedcolor{##1}%
+				{\addto@missing{##1}}%
+				{\testcolor{##1}}%
+			}%
+		\def\cpge@tmpa{\forcsvlist{\test@color}}%
+		\testcolors[#1]%
+			\global\def\@testc@l@r##1##2{%
+				\colorbox[##1]{##2}{\phantom{XXXX}}%
+				\kern2pt%
+			}%
+			\@xp\cpge@tmpa\@xp{\colorpalettelist}%
+		\endtestcolors%
+	\ifdefempty{\missing@colors}{}{
+			\par\bigskip 
+			\description\item[\textbf{Missing Colors~:~}] 
+			\ttfamily\forlistloop\misssing@loopcmd\missing@colors
+			\enddescription
+		}
+	\endgroup
+	\clearpage\pagecolor{pagecol}
+}
+\def\cpge@palette{default}
+\def\load@thecolors{\input{\cpge@palette colors}}
+\def\cpgesetcolormodel#1{\ifcase#1\selectcolormodel{gray}\or\selectcolormodel{\cpge@colormodel}\fi}
+\def\reloadthecolors{%
+	\cpgedefinecolors%
+	\colorlet{thmcol}{framestrokecol}%
+	\@ifpackageloaded{tcolorbox}{\tcbdefinecolors}{}%
 	\pagecolor{pagecol}%
-	\color{fgcol}%
-	\AtBeginDocument{\ifnocolors\cpgesetcolors0\fi\color{fgcol}\pagecolor{pagecol}}%
+	\color{textcol}%
+	\AfterEndPreamble{%
+		\ifnocolors\cpgesetcolormodel0\fi%
+		\color{textcol}\pagecolor{pagecol}%
+	}%
 }%
+
 
 
 %%%% Entetes et pieds de pages
@@ -1493,7 +1584,7 @@
 \DeclareDocumentCommand\cpgefont{m}{%
 	\cpgesetup[font]{#1}
 }
-\def\reload@thefonts{
+\def\reloadthefonts{
 	\load@thefonts%
 	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
 		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}
@@ -1502,13 +1593,18 @@
 }
 %%%% Gestion des themes
 %%%% Gestion des themes
-
 \cpgesetup[theme]{%
-	.search also={/cpge/colors},
+	postload/.is family,
+	postload/.unknown/.code=\relax,
+	postload/colors/.code=\pgfkeysalso{/cpge/colors,#1},
+	postload/no colors/.is if=nocolors,
+	color model/.store in=\cpge@colormodel,
+	rgb/.style={color model=rgb}, rgb,
+	cmyk/.style={color model=cmyk},
+	palette/.store in=\cpge@palette,
+	.unknown/.code=\relax,
 	dark/.is if=dark,
 	draft/.is if=draft,
-	colors/.code=\pgfkeysalso{/cpge/colors,#1},
-	no colors/.is if=nocolors,
 	font/.code=\cpgefont{#1},
 	libertine/.style={font=libertine},
 	fira/.style={font=fira},
@@ -1528,32 +1624,36 @@
 }
 \DeclareDocumentCommand\cpgetheme{O{} m}{%
 	\unless\ifdraft
+		\cpgesetup[theme]{#1}
+		\ifstrequal{#2}{ibnghazi}{\def\cpge@palette{ibnghazi}}{}
+		\load@thecolors
+		\cpgesetup[theme/postload]{#1}
 		\IfFileExists{#2\cpgecurrentclass.sty}
-			{%
-				\cpgesetup[theme]{#1}
-				\def\load@thetheme{\RequirePackage{#2\cpgecurrentclass}}
-			}{}%
+			{\def\load@thetheme{\RequirePackage{#2\cpgecurrentclass}}}{}%
 	\fi%
 	\setup@enumstyle%
+	\let\darktrue\relax%
 }
 \DeclareDocumentCommand\cpgeconfig{O{}m}{%
+	\let\load@thetheme\relax
+	\cpgesetup[theme]{#1}
+	\load@thecolors
+	\cpgesetup[theme/postload]{#1}
 	\IfFileExists{cfg-#2.sty}
-		{%	
-			\let\load@thetheme\relax%
-			\cpgesetup[theme]{#1}%
-			\def\load@theconfig{\RequirePackage{cfg-#2}}
-		}{}
+		{\def\load@theconfig{\RequirePackage{cfg-#2}}}{}
+	\let\darktrue\relax%
 }
 \def\load@thetheme{}
 \def\load@theconfig{}
 \AtEndPreamble{
+	\cpgedefinecolors
 	\load@theconfig%
 	\load@thetheme%
 	\ifundef\load@thefonts
 		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
 		{}%
-	\reload@thefonts%
-	\reload@thecolors%
+	\reloadthefonts%
+	\reloadthecolors%
 	\endpreamble@hook%
 	\pagestyle{main}%
 }
@@ -1592,8 +1692,13 @@
 }
 \global\let\cpge@footnote@acc\@empty
 
-
-
+%%%% Décorations des formules mathématiques
+\cpgesetdeco{formula}{\genboxcmd[draw=thmcol]{#1}}
+\cpgesetdeco{result}{%
+	\genboxcmd[double distance=.6pt, line width=1.2pt, inner sep=4pt, 
+		fill=framebackcol, draw=pagecol, double=thmcol]
+		{#1}%
+	}
 
 %%% Acronymes
 
