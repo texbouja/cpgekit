@@ -1,0 +1,678 @@
+\def\filedate{2024/07/08}
+\def\fileversion{v0.1alpha}
+\def\fileauthor{Sadik Boujaida}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cpgethm}[\filedate\space\fileversion]
+
+\RequirePackage{etoolbox}
+\RequirePackage{pgfkeys}
+\RequirePackage{calc}
+\RequirePackage{xparse}
+
+
+\newif\ifexercise@type
+\newif\iftheorem@type
+
+\RequirePackage{cpgebase}
+\RequirePackage{cpgecolor}
+\cpgeloadpackage[skins,breakable,hooks,xparse]{tcolorbox}
+
+\ifundef{\cpgesetuptcb}{
+    \def\cpgesetuptcb{\pgfqkeys{/tcb}}
+}{}
+
+%%% Clés de configuration préliminaires
+\cpgesetuptcb{thmcol/.colorlet=thmcol}
+\cpgesetuptcb{%
+	current counter/.code=\def\thecurrent@counter{#1}%
+}	
+\cpgesetuptcb{%
+	titled items/.code={%
+		\cpgesetuptcb{after upper pre=\closeunite}%
+		\set@defaultforlistsinsideunite%
+}}
+
+%%%% Initialisation de la machinerie tcolorbox
+%%% \footnote en dehors des boites tcolorbox
+\cpgesetuptcb{
+  every box/.style={
+    before title pre=\cpge@footnote@restore,
+    before upper pre=\cpge@footnote@restore,
+    before lower pre=\cpge@footnote@restore,
+  },
+  every box on layer 1/.append style={
+    after pre=\cpge@footnote@use
+  }
+}
+% Fin du hack
+\cpgesetuptcb{%
+	primary box/.style={%
+		breakable,
+		lines before break=1,
+		height fixed for=first and middle,
+		title style if break,
+		fonttitle=\TitlingFont\footnotesize\vphantom{(},
+		description font=\scshape\footnotesize\vphantom{(},
+		colback=framebackcol,coltext=frametextcol,
+		drop shadow/.default=frameshadowcol,
+		drop fuzzy shadow/.default=frameshadowcol,
+	},
+	secondary box/.style={%
+		reset, blank,
+		notitle,
+		colback=buttonbackcol,
+		coltext=buttontextcol
+	}
+}
+\cpgesetuptcb{%
+	every box on layer 1/.append style={primary box},
+	every box on layer 2/.prefix style={secondary box},
+	every box on layer 3/.prefix style={secondary box},
+	every box on layer 4/.prefix style={secondary box}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% Définition des environnements pour théroremes %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\cpge@cnt@shortcut{*X}{current@counter}
+\cpgesetup[theorems]{%
+	@theotype/.is choice,
+		@theotype/exercise/.code=
+			{\exercise@typetrue\def\cpge@theorem@style{exercisestyle}},
+		@theotype/theorem/.code=
+			{\theorem@typetrue\def\cpge@theorem@style{theoremstyle}},
+		@theotype/definition/.code=
+			{\def\cpge@theorem@style{definitionstyle}},
+		@theotype/remark/.code=
+			{\def\cpge@theorem@style{remarkstyle}},
+		@theotype/proof/.code=
+			{\def\cpge@theorem@style{proofstyle}},
+		@theotype/other/.code=
+			{\def\cpge@theorem@style{otherstyle}},
+	@theoenvname/.store in=\cpge@theorem@envname,
+	@theoName/.store in=\cpge@theorem@Name,
+	@theoname/.code=\def\cpge@theorem@name{#1}
+		\csgdef{\cpge@theorem@envname autorefname}{#1},
+	@theoprefix/.code=\edef\cpge@@theorem@prefixedname
+		{#1\cpge@theorem@name},
+	theorem style/.code=%
+		\cpgesetuptcb{theoremstyle/.style={#1}},%
+	definition style/.code=% 
+		\cpgesetuptcb{definitionstyle/.style={#1}},
+	remark style/.code=%
+		\cpgesetuptcb{remarkstyle/.style={#1}},%
+	exercise style/.code=%
+		\cpgesetuptcb{exercisestyle/.style={#1}},
+	other style/.code=%
+		\cpgesetuptcb{otherstyle/.style={#1}},
+	.search also=/tcb
+}
+\def\cpgesetuptheorems{\pgfqkeys{/cpge/theorems}}
+\cpgesetuptcb{%
+	theorem style/.code=\pgfkeysalso{%
+		theoremstyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	definition style/.code=\pgfkeysalso{%
+		definitionstyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	remark style/.code=\pgfkeysalso{%
+		remarkstyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	exercise style/.code=\pgfkeysalso{%
+		exercisestyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	other style/.code=\pgfkeysalso{%
+		otherstyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	localstyle/.style={},
+	@prestyle/.is family,
+	@prestyle/style/.code=
+		\@xp\cpgesetuptcb\@xp{\cpge@theorem@style/.style={#1}},
+	@prestyle/important/.style={/tcb/thmcol=importantcol},
+	@prestyle/.unknown/.code=\relax,
+	prestyle/.code=\pgfqkeys{/tcb/@prestyle}{#1},
+	style/.style={},
+	set theorem prop/.code=\cpgesetuptheorems{#1}
+}
+
+%%% macros et cles principales de creation de theorem
+\cpgesetuptcb{%
+	font app/.code 2 args={\csappto{kvtcb@font#1}{#2}},
+	font reset/.code 2 args={\csdef{kvtcb@font#1}{#2}}
+}
+\def\kvtbc@titlewho{\ifdefempty{\kvtcb@title}{\tcbtitletext}{\kvtcb@title}}
+\cpgesetuptcb{title style if break/.style={%%
+	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
+	extras title after break={%
+		halign title=left,
+		boxsep=0pt, top =0pt, bottom=0pt, left=3pt,right=3pt,
+		font app={title}{\fontsize{7}{7}\mdseries\itshape},
+		coltext=black, coltitle=black,colback=red
+		},
+	extras middle and last={coltitle=thmcol,colbacktitle=backcol},
+	bottomrule=1pt, 
+	bottomrule at break=1pt,
+	toprule at break=0pt,
+	titlerule=0pt
+}}
+\cpgesetuptcb{
+	description offset/.code=\dimdef\description@offset{#1},
+    description offset=0.5em,
+    description deco/.code=\def\deco@description##1{#1},
+    description parenthesis/.style={description deco={(##1)}},
+	description font/.store in=\cpge@descriptionfont, 
+	description font=\kvtcb@fonttitle\mdseries\itshape\smaller\vphantom{(},
+    description draft/.code=\cpgesetuptcb{after title=
+        {\enskip\cpge@descriptionfont(#1)}},
+    description overlay/.style={%
+        overlay unbroken and first={%
+            \path  
+            let \p1=(title.east), \p2=(frame.east) in
+                node (description) [%
+                    description path style, 
+                    text width=\x2-\x1-0.5em-\description@offset,
+                    right=0.5em of title,
+                    ] 
+                {\deco@description{#1}};
+    }},
+    description path style/.code=
+		\tikzset{description path style/.append style={#1}},  
+}
+\let\deco@description\@firstone
+\def\set@descriptionpath{%
+	\ifdraft
+		\cpgesetuptcb{description path/.style={description draft={##1}}}
+	\else
+		\cpgesetuptcb{description path/.style={description overlay={##1}}}
+	\fi 
+}
+\appto\endpreamble@hook{\set@descriptionpath}
+
+\tikzset{%
+    description path style/.style={%
+        font=\cpge@descriptionfont,
+		text=thmcol,
+	},
+    reserved style/.style={%
+        fill=pagecol, 
+        draw=thmcol, 
+        rounded corners=1ex, 
+        xshift=-3pt, 
+        inner ysep=1pt},
+}
+
+\def\important@message{\ifexercise@type exercice \else résultat\fi{} important}
+\cpgesetuptcb{
+	important/.style={%
+		thmcol=importantcol,
+		bottom=10pt,
+		underlay unbroken and last={\node at (frame.south west) 
+			[text=thmcol, 
+			font=\fontsize{7}{8}\selectfont, 
+			anchor=south west, 
+			yshift=2pt
+			] 
+			{#1};}
+		},
+	important/.default=\important@message
+}
+%%% Environnement butineur : tous les environnement 
+%%% de theoreme l'utilisent en interne
+
+
+\def\cpge@theo@form@namenumber#1#2{\hbox{#1~#2}}
+\def\cpge@theo@form@numbername#1#2{\hbox{#2~#1}}
+\def\cpge@theo@form@name#1#2{\hbox{#1}}
+\cpgesetuptcb{%
+	theorem name and number/.code={\let\tcb@theo@form=\cpge@theo@form@namenumber},
+	theorem number and name/.code={\let\tcb@theo@form=\cpge@theo@form@numbername},
+	theorem name/.code={\let\tcb@theo@form=\cpge@theo@form@name},
+}
+\def\cpge@theorem@title{}
+\NewDocumentCommand{\cpge@new@tcbtheorem}{O{} mmmmmm}{%
+  \@@newtcolorbox[auto counter, list inside=theo,#1]{#2}{E{\op}{{}} d() d<>}{%
+	set theorem prop={
+		@theoenvname=#2,
+		@theoName={#3},
+		@theoname={#4},
+		@theoprefix={#5},
+		@theotype=#6,
+	},
+    theorem name and number,
+	thmcol=#6col,
+	prestyle={##1},
+	localstyle/.style={#7},
+	localstyle/.append style={##1},
+	#6 style,
+    title={\cpge@tcb@theo@title{#3}{\thetcbcounter}},%
+    IfValueT={##2}{%
+		code=\def\cpge@theorem@title{##2},
+		description path={##2},
+		list entry={\protect\numberline{\thetcbcounter}#3~:~##2}	
+	},%
+    IfValueT={##3}{%
+		code=\edef\cpge@theorem@label{##3}, 
+		phantom={\MakeLinkTarget[#2]{\kvtcb@new@counter}
+					\label{\cpge@theorem@label}
+				},
+		IfValueT={##2}{nameref={##2}},
+	},
+	hypertarget={\cpge@theorem@envname @\thetcbcounter},
+    }
+	\DeclareDocumentEnvironment{#2*}{E{\op}{{}} d() d<>}
+    	{\csname #2\endcsname [##1,theorem name](##2)<##3>}
+		{\csname end#2\endcsname}
+	}
+\NewTColorBox[use counter=genthm]{genthm}{ m E{\op}{{}} d() d<>}{%
+	set theorem prop={@theotype=other},
+	theorem name,
+	thmcol=cpgeneutral,
+	prestyle={#2},
+	localstyle={#2}, 
+	other style,
+	IfValueT={#1}{title={\cpge@tcb@theo@title{#1}{\thetcbcounter}}},
+	IfValueT={#3}{description path={#3}},
+	IfValueT={#4}{label={#4}, IfValueT={#3}{nameref={#3}}},
+	IfValueT={#3}{list entry=%
+    	{\protect\numberline{\thetcbcounter}#2~:~#3}},%
+	titled items
+}
+	
+%%%%%%%% Tables des théorèmes 
+\def\cpge@tcb@theo@title#1#2{%newth
+	\ifdefempty{#2}
+		{\setbox\z@=\color@hbox#1~\color@endbox}
+  		{\setbox\z@=\tcb@theo@form{#1}{#2}}%
+	\unhbox\z@%
+}
+
+\def\cpge@addcontentsline#1#2{%
+	\ifx\kvtcb@listentry\@empty\else
+    	\addcontentsline{#1}{#2}{\kvtcb@listentry}%
+	\fi%
+}
+
+\def\cpgenewtheorem{\let\tcb@addcontentsline\cpge@addcontentsline%
+	\let\@@newtcolorbox\NewTColorBox%
+	\cpge@new@tcbtheorem}
+
+\def\cpgerenewtheorem{\let\@@newtcolorbox\RenewTColorBox%
+  \cpge@new@tcbtheorem}
+  
+\ProvideDocumentCommand\tableofresults%
+	{O{\section*} D(){Liste des résultats remarquables}}{%
+		\tcblistof[#1]{theo}{#2}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% jeu de styles tcolorbox %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\cpgesetuptcb{minimal/.style=blanker}
+
+\cpgesetuptcb{simple/.style={%
+	colframe=thmcol,
+	colback=framebackcol,
+	coltext=frametextcol,
+	boxrule=.4pt,
+	top=3pt,bottom=3pt,
+	left=5pt,right=5pt
+	}}
+	
+\cpgesetuptcb{cpgedefault/.style={%
+	spartan,
+	colframe=thmcol,
+	colback=framebackcol,
+	coltext=frametextcol,
+	colbacktitle=thmcol,
+  	top=3pt,bottom=3pt,
+	left=5pt,right=5pt,
+	boxrule=.4pt, 
+}}
+\cpgesetuptcb{
+	cpgedefaultthm/.style={%
+		cpgedefault, 
+		attach boxed title to top left={xshift=6.2pt,yshift*=-\tcboxedtitleheight+3.2pt},
+		boxed title style={%
+			boxrule=1.2pt,
+			colframe=pagecol,
+			boxsep=0pt,
+			top=2pt,bottom=1pt,left=3pt,right=3pt,
+		},
+		coltitle=white, colbacktitle=thmcol
+	},
+	cpgedefaultrmk/.style={
+		blankest, 
+		top=0pt, bottom=0pt, bottomtitle=8pt, 
+		borderline west={.6pt}{.6pt}{thmcol},
+		coltitle=thmcol,
+		left=5pt,
+	}
+}
+\cpgesetuptcb{rounded/.style={
+	skin=enhanced,
+	arc=6pt,
+    colframe=thmcol,
+	colback=framebackcol,
+	coltext=frametextcol,
+    boxrule=-1pt,
+	left=5pt,right=5pt, bottom=5pt,
+	bottomrule=1.2pt,
+ }}
+\cpgesetuptcb{
+	roundedthm/.style={%10203090
+		rounded,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight/2,xshift=5pt},
+		boxed title style={%
+			arc=(\fntht D+7pt)/2,
+			boxsep=0pt,
+			top=2pt,bottom=3pt,left=6pt,right=6pt,
+			boxrule=1.2pt,
+			coltext=white,
+			colframe=pagecol,
+			colback=thmcol
+			},
+		description path style={reserved style},
+		description offset=1.5em,
+		top=\tcboxedtitleheight/2,
+	},
+	roundedrmk/.style={
+		rounded,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight-5pt, xshift=7pt},
+		boxed title style={blank},
+		coltitle=thmcol,
+		top=\tcboxedtitleheight+10pt, bottom=5pt
+	}
+}
+\cpgesetuptcb{uphill/.style={
+		skin=enhanced,
+		colframe=thmcol,
+		colback=framebackcol,
+		coltext=frametextcol,
+		boxrule=-.1pt,
+		rightrule=.6pt, bottomrule=.6pt,
+		boxsep=0pt,
+		left=5pt,right=5pt,bottom=5pt,top=5pt,
+    	arc=6pt,
+    	sharp corners=uphill
+ }}
+\cpgesetuptcb{
+	uphillthm/.style={%
+		uphill,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight+1.2pt, xshift=-1.2pt},
+		boxed title style={%,
+			boxsep=0pt,
+			top=2pt,bottom=1pt,left=6pt,right=6pt,
+			arc=6pt,
+			sharp corners=uphill,
+			boxrule=1.2pt,
+			colframe=pagecol,
+			colback=thmcol,
+			coltext=white
+			},
+		top=\tcboxedtitleheight+6.2pt,
+ 	},
+	uphillrmk/.style={
+		uphill,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight-3pt, xshift=7pt},
+		boxed title style={blank},
+		coltitle=thmcol,
+		top=\tcboxedtitleheight+8pt, bottom=5pt,
+	}
+}
+\tcbset{
+	flag/.style={%
+		enhanced,
+		colframe=thmcol, colback=framebackcol,
+		left=5pt,right=5pt,
+		boxrule=0pt,
+		top=3pt,bottom=3pt,
+		left=5pt,right=5pt,
+		toprule=.6pt,bottomrule=1.2pt,
+		sharp corners=north,
+}}
+\tcbset{
+	flagthm/.style={%
+		flag,
+		attach boxed title to top left={xshift=12pt,yshift*=1mm-\tcboxedtitleheight},
+		varwidth boxed title*=-3cm,
+		boxed title style={size=small,frame code={%
+			\path[
+					fill=thmcol!50!black
+				] 
+			([yshift=-1mm,xshift=-1mm]frame.north west)
+			arc [start angle=0,end angle=180,radius=1mm]
+			([yshift=-1mm,xshift=1mm]frame.north east)
+				arc [start angle=180,end angle=0,radius=1mm];
+			\path [
+						top color=thmcol!75!black,
+						bottom color=thmcol!75!black,
+						middle color=thmcol
+					]
+				([xshift=-2mm]frame.north west) -- 
+				([xshift=2mm]frame.north east) [rounded corners=1mm] -- 
+				([xshift=1mm,yshift=-1mm]frame.north east) -- 
+				(frame.south east) -- (frame.south west) 
+					-- ([xshift=-1mm,yshift=-1mm]frame.north west)
+					[sharp corners]-- cycle;
+			}, 
+			interior engine=empty,
+			no underlay
+		}},
+	flagrmk/.style={
+		flag,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight-3pt, xshift=7pt},
+		boxed title style={blank},
+		coltitle=thmcol,
+		top=\tcboxedtitleheight+8pt, bottom=5pt
+	}
+}
+\cpgesetuptcb{cpgebeamer/.style={
+	skin=beamer,
+	no shadow,
+	arc=6pt,
+    colframe=thmcol,
+	colback=framebackcol,
+	coltext=frametextcol,
+    boxrule=-2pt,
+	left=5pt,right=5pt, bottom=5pt, toptitle=2pt,
+ }}
+\cpgesetuptcb{
+	beamerthm/.style={%10203090
+		cpgebeamer,
+		bottomtitle=-2pt,
+		titlerule=3pt,
+		description path/.style={description draft={#1}},
+		before skip=1\baselineskip plus 2pt minus 3pt,
+		after skip=1\baselineskip plus 2pt minus 3pt,
+	},
+	beamerrmk/.style={
+		cpgebeamer,
+		sharp corners=west,
+		leftrule=1.2pt,
+		attach boxed title to top left={yshift=-\tcboxedtitleheight-2pt, xshift=9pt},
+		boxed title style={blank},
+		coltitle=thmcol,
+		top=\tcboxedtitleheight+7pt, 
+		bottom=3pt, 
+		before skip=1\baselineskip plus 2pt minus 3pt,
+		after skip=1\baselineskip plus 2pt minus 3pt,
+	}
+}
+
+
+
+%%% Theme par defaut (cpgedefault)		
+\cpgesetuptheorems{%
+	theorem style=cpgedefaultthm,
+	definition style=cpgedefaultthm,
+	exercise style=cpgedefaultthm,
+	remark style=cpgedefaultrmk,
+	other style=cpgedefaultrmk
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% exemples d'environement pour theoremes %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\cpgenewtheorem[use counter=theo, number within=chapter]{theo}
+	{Théorème}
+	{théorème}
+	{du\space}
+	{theorem}
+	{titled items}	
+\cpgenewtheorem[use counter from=theo]{theodef}
+	{Théorème et définition}
+	{théorème}
+	{du\space}
+	{theorem}
+	{titled items}
+\cpgenewtheorem[use counter from=theo]{propdef}
+	{Proposition et définition}
+	{proposition}
+	{de la\space}
+	{theorem}
+	{titled items}
+\cpgenewtheorem[use counter from=theo]{prop}
+	{Proposition}
+	{proposition}
+	{de la\space}
+	{theorem}
+	{titled items}
+\cpgenewtheorem[use counter from=theo]{lemm}
+	{Lemme}
+	{lemme}
+	{du\space}
+	{theorem}
+	{}
+\cpgenewtheorem[use counter from=theo]{ppte}
+	{Propriétés}
+	{propriétés}
+	{des\space}
+	{theorem}
+	{titled items}
+\cpgenewtheorem[use counter from=theo]{coro}
+	{Corollaire}
+	{corollaire}
+	{du\space}
+	{theorem}
+	{titled items}
+\cpgenewtheorem[use counter=defi, number within=chapter]{defi}
+	{Définition}
+	{défintion}
+	{}
+	{definition}
+	{titled items}
+\cpgenewtheorem[use counter from=defi]{voca}
+	{Vocabulaire}
+	{vocabulaire}
+	{}
+	{definition}
+	{theorem name, titled items}
+\cpgenewtheorem[use counter from=defi]{nota}
+	{Notations}
+	{notation}
+	{}
+	{definition}
+	{theorem name,titled items}
+\cpgenewtheorem[use counter=rema, number within=chapter]{rema}
+	{Remarque}
+	{remarque}
+	{}
+	{remark}
+	{}
+\cpgenewtheorem[use counter from=rema]{remas}
+	{Remarques}
+	{remarques}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter from=rema]{remap}
+	{Remarques pratiques}
+	{remarques pratiques}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter=exem, number within=chapter]{exem}
+	{Exemples}
+	{exemples}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter from=exem]{exemf}
+	{Exemples fondamentaux}
+	{exemples fondamentaux}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter from=exem]{exema}
+	{Exemple d'application}
+	{exemple d'application}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter from=exem]{exemp}
+	{Exemple pratique}
+	{exemple pratique}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[use counter from=exem]{appl}
+	{Application}
+	{application}
+	{}
+	{remark}
+	{}
+\cpgenewtheorem[use counter from=exem]{appls}
+	{Applications}
+	{applications}
+	{}
+	{remark}
+	{titled items}
+\cpgenewtheorem[no counter]{demo}
+	{Démonstration}
+	{}{}
+	{proof}
+	{titled items, current counter=\@gobble}
+\cpgenewtheorem[number within=chapter]{float}
+	{Figure}
+	{}{}
+	{other}
+	{float, halign title=flush center}
+\cpgesetuptcb{floatplacement=tbp}
+
+\cpgenewtheorem[use counter=exer, number within=chapter]{exer}
+	{Exercice}
+	{exercice}
+	{de l'}
+	{exercise}
+	{titled items}
+\cpgenewtheorem[use counter from=exer]{exerappli}
+	{Exercice d'application}
+	{exercice}
+	{de l'}
+	{exercise}
+	{titled items}
+\cpgenewtheorem[use counter from=exer]{exerappro}
+	{Exercice d'approfondissement}
+	{exercice}
+	{de l'}
+	{exercise}
+	{titled items}
+\cpgenewtheorem[use counter from=exer]{prob}
+	{Problème}
+	{problème}
+	{du\space}
+	{exercise}
+	{titled items}

@@ -80,6 +80,11 @@
 	{\RequirePackage{xparse}}
 	{}
 
+\ifdraft
+	\PassOptionsToPackage{draft}{pgf}
+	\PassOptionsToPackage{draft}{hyperref}
+\fi
+
 %%%% Packages du projet 
 \RequirePackage{cpgebase}
 \RequirePackage{cpgesubdoc}
@@ -91,14 +96,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \RequirePackage{cpgecommon}
-\cpgeloadpackage[skins, breakable, hooks, theorems, xparse]{tcolorbox}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% style d'enumerations dans les theorem %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \def\setup@enumstyle{%
-	\let\thecurrent@counter\@gobble
+	\let\thecurrent@counter\@gobble%
 	\cpgesetenum{1}{marge}
 	\cpgesetenum{2}{marge*}
 	\cpgesetlabel{unite}{|X|.|1|}%
@@ -126,45 +131,41 @@
 		\cpgesetenum{0}{align=l}
 	\fi 
 }
-\cpgesetuptcb{%
-	current counter/.code=\def\thecurrent@counter{#1}%
-}	
-\cpgesetuptcb{%
-	titled items/.code={%
-		\cpgesetuptcb{after upper pre=\closeunite}%
-		\set@defaultforlistsinsideunite%
-}}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-\ifdraft
-		\PassOptionsToPackage{draft}{pgf}
-		\PassOptionsToPackage{draft}{hyperref}
-\fi
 
 \newtoks\toks@sol
-\newtoks\toks@prv 
+\newtoks\toks@prv
+\cpgedefcounter{theo}{|C|.|1|}[chapter]
+\cpgedefcounter{defi}{|C|.|1|}[chapter]
+\cpgedefcounter{rema}{|C|.|1|}[chapter]
+\cpgedefcounter{exem}{|C|.|1|}[chapter]
+\cpgedefcounter{exer}{|C|.|1|}[chapter]
+\cpgedefcounter{genthm}{|C|.|1|}[chapter]
+
+\RequirePackage{cpgethm}
+
 \let\solu\cpge@dummy@
 \let\preuve\cpge@dummy@
+\newif\ifdelayedprooforsolution
 \def\setup@solproofmode{%
-	\unless\ifdraft
-		\ifsolutiondelayed\solutiontrue\fi
-		\ifproofdelayed\prooftrue\fi
-		\ifsolution\let\solu\solution@push\fi%
-		\ifproof\let\preuve\proof@push\fi%
-		\ifsolutiondelayed
-			\unless\ifcpgerecordfileopen
+	\unless\ifdraft%
+		\ifsolution\def\solu{\solution@push*}\fi%
+		\ifproof\def\preuve{\proof@push*}\fi%
+		\ifsolutiondelayed%
+			\solutiontrue%
+			\delayedprooforsolutiontrue%
+			\let\solu\solution@push%
+		\fi%
+		\ifproofdelayed%
+			\prooftrue%
+			\delayedprooforsolutiontrue%
+			\let\preuve\proof@push%
+		\fi%
+		\ifdelayedprooforsolution%
+			\unless\ifcpgerecordfileopen%
 				\cpgestartrecording%
-			\fi
-		\else
-			\ifproofdelayed
-				\unless\ifcpgerecordfileopen
-					\cpgestartrecording%
-				\fi 
-			\fi 
-		\fi
-	\fi 
+			\fi%
+		\fi%
+	\fi%
 }
 \def\setup@straightmode{%
 	\ifstraight
@@ -212,6 +213,7 @@
 	\toks@sol{}%
 	\toks@prv{}%
 	\includedtrue
+	\def\current@file{#2}
 		%\RenewDocumentCommand\titre{s e\op +d()}{}%
 		\ifdraft
 			\subdoc{#2}
@@ -251,7 +253,7 @@
 	\fi%
 }
 \newrobustcmd\proofsection[1]{
-	\ifx\preuve@\proof@push\prv@section{#1}\fi
+	\ifx\preuve\proof@push\prv@section{#1}\fi
 }
 \newrobustcmd\solutionsection[1]{
 	\ifx\solu\solution@push\sol@section{#1}\fi
@@ -312,8 +314,7 @@
     }
 }
 
-%%% Gestion des thèmes
-\cpgesetuptcb{thmcol/.colorlet=thmcol}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% styles pour les titres de sections %%%%%%%%
@@ -426,45 +427,6 @@ subsection label style={}
 
 \let\fakebox\@iden 
 
-%%% \footnote en dehors des boites tcolorbox
-\cpgesetuptcb{
-  every box/.style={
-    before title pre=\cpge@footnote@restore,
-    before upper pre=\cpge@footnote@restore,
-    before lower pre=\cpge@footnote@restore,
-  },
-  every box on layer 1/.append style={
-    after pre=\cpge@footnote@use
-  }
-}
-% Fin du hack
-
-
-%%%% Initialisation de la machinerie tcolorbox
-\cpgesetuptcb{%
-	primary box/.style={%
-		breakable,
-		lines before break=1,
-		height fixed for=first and middle,
-		title style if break,
-		fonttitle=\TitlingFont\footnotesize\vphantom{(},
-		description font=\scshape\footnotesize\vphantom{(},
-		colback=framebackcol,coltext=frametextcol,
-	},
-	secondary box/.style={%
-		reset, blank,
-		notitle,
-		colback=buttonbackcol,
-		coltext=buttontextcol
-	}
-}
-\cpgesetuptcb{%
-	every box on layer 1/.append style={primary box},
-	every box on layer 2/.prefix style={secondary box},
-	every box on layer 3/.prefix style={secondary box},
-	every box on layer 4/.prefix style={secondary box}
-}
-%%%%%
 
 
 \cpgesetup{simple deco/.code={%
@@ -490,49 +452,7 @@ subsection label style={}
 		\tikz [baseline=(T.base)] \node (T) [generic style, #1] {\strut #2};
 }
 \fi
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% Mise en place des differents types de theoremes %%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newif\ifexo@type
-\newif\iftheo@type
-\newif\ifdef@type
-\newif\ifrem@type
-\newif\ifproof@type
-\cpgesetup{theorem type/.is choice,
-	 theorem type/exercise/.code={\rem@typefalse},
-	 theorem type/theorem/.code={\rem@typefalse},
-	 theorem type/definition/.code={\rem@typefalse},
-	 theorem type/remark/.code={\rem@typetrue},
-	 theorem type/proof/.code={\rem@typetrue}
- }
-\cpgesetuptcb{theorem type/.is choice,
-	 theorem type/exercise/.code={\exo@typetrue},
-	 theorem type/theorem/.code={\theo@typetrue},
-	 theorem type/definition/.code={\def@typetrue},
-	 theorem type/remark/.code={\rem@typetrue},
-	 theorem type/proof/.code={\proof@typetrue},
- }
-\cpge@cnt@shortcut{*X}{current@counter}
-\cpgesetup[theorems]{%
-	theorem style/.code=%
-		\cpgesetuptcb{theorem style/.style={%
-			thmcol=cpgegreen,
-			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
-	definition style/.code=% 
-		\cpgesetuptcb{definition style/.style={%
-			thmcol=cpgeblue,
-			colbacktitle=framebackcol,#1,current counter=\thetcbcounter}},
-	remark style/.code=%
-		\cpgesetuptcb{remark style/.style={%
-			thmcol=neutralcol, colbacktitle=thmcol,#1,current counter=\thetcbcounter}},
-	}
-
-\cpgesetup[theorems]{
-	exercise style/.code=%
-		\cpgesetuptcb{exercise style/.style={thmcol=importantcol, colbacktitle=thmcol,#1}}
-}
-\def\cpgesetuptheoremstyle{\pgfqkeys{/cpge/theorems}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% Gestion des demos et des solutions %%%%%%%
@@ -541,25 +461,25 @@ subsection label style={}
 %%% Enregistrement des demo/solutions dans des fichiers individuels 
 %%% et creation des hyperliens.
 %%% Une token list contient la liste des commandes d'inclusion 
-%%% des fichiers cr\'ees. 
+%%% des fichiers crées. 
 %%% si les fichiers doivent être inclu en fin du fichier en cours
-%%% la token list est ex\'ecut\'ee (et vid\'ee) sinon son contenu
-%%% est ajout\'e à un fichier record. Celui-ci peut être inclu ensuite
+%%% la token list est exécutée (et vidée) sinon son contenu
+%%% est ajouté à un fichier record. Celui-ci peut être inclu ensuite
 %%% par l'utilisateur à un endroit de son choix.  
 
 \def\out@dir{output}
 \def\aux@dir{tmp}
 \def\draft@solution{%
 	\closeunite%
-	\tcbsubtitle[basic subtitle]{Solution}%
+	\tcbsubtitle[default subtitle]{Solution}%
 	\set@defaultforlistsinsideunite%
 }
 \def\draft@proof{%
 	\closeunite%
-	\tcbsubtitle[basic subtitle]{D\'emonstration}%
+	\tcbsubtitle[default subtitle]{Démonstration}%
 	\set@defaultforlistsinsideunite%
 }
-\cpgesetuptcb{basic subtitle/.style={%
+\cpgesetuptcb{default subtitle/.style={%
 		spartan,
 		coltext=white,
 		colback=thmcol,
@@ -575,56 +495,94 @@ subsection label style={}
 		{\immediate\write18{md  "\aux@dir"}}%
 
 %% Styles des hyperliens demo/solution
-\appto\endpreamble@hook{
+\def\set@demolink{
 	\ifprint
-	\cpgesetuptcb{demolink/.style n args={3}{% 
-		size=#1, arc=#2, boxrule=2pt,
-		colframe=pagecol, coltext=linktextcol!75!black, colback=pagecol, #3}}
+	   \cpgesetuptcb{
+	   		@demolink/.style n args={3}{
+				size=##1, arc=##2,
+				demolink,
+				colframe=linkstrokecol, coltext=linktextcol, colback=pagecol,
+				##3
+			}
+	   }
 	\else
-	\cpgesetuptcb{demolink/.style n args={3}{%
-		size=#1, arc=#2, boxrule=2pt,
-		colframe=pagecol, coltext=white, colback=linkbackcol!75!black, #3
-		}}
-	\fi
+		\cpgesetuptcb{
+	   		@demolink/.style n args ={3}{
+				size=##1, arc=##2,
+				demolink,
+				colframe=linkstrokecol, coltext=white, colback=linkbackcol,
+				##3
+			}
+	   }
+	\fi 
 }
-%%% Lien vers demo/solution en bas d'un \'enonc\'e.  
+\cpgesetuptcb{demolink/.style={}}
+\appto\endpreamble@hook{\set@demolink}
+%%% Lien vers demo/solution en bas d'un énoncé.  
 \let\current@prv\relax
 \let\current@sol\relax
+\def\cpge@theorem@label{}%
 \def\curr@counter{}
 \def\@demolink#1#2{%
 	\par\nopagebreak\vskip-\baselineskip%
 	\vbox to\z@{\null\hfill\tcbox[
-			reset, enhanced, nobeforeafter,
-			demolink={tight}{3.2pt}{},
+			enhanced, nobeforeafter,
+			@demolink={tight}{2.4pt}{},
 			hyperlink={#1@\thetcbcounter}, 
 		]
-		{\null\hskip10pt\sffamily\fontsize{8}{8}\scshape\vphantom{(3} #2 \thetcbcounter, page \pageref*{#1@\thetcbcounter}\hskip10pt\null}
+		{\null\hskip5pt\sffamily\fontsize{8}{8}\scshape\vphantom{(}%
+			#2 \ref*{#1:\cpge@theorem@label},
+			page \pageref*{#1:\cpge@theorem@label}
+			\hskip5pt\null%
+		}
 }}
-\def\@titledemolink#1#2#3#4#5#6{
-	\par\penalty-999\bigskip
+\def\@titledemolink{
+	\@ifstar\@titledemolink@\@titledemolink@@
+}
+\def\@titledemolink@@#1#2#3#4#5#6{
 		\@hangfrom{
 			\tcbox[
 				enhanced,tcbox raise base,
 				enlarge left by=-14pt,
 				left=6pt, right=6pt,
-				demolink={small}{8pt}{colframe=linkstrokecol, boxrule=.4pt},
-				hyperlink={#1:#2},
+				@demolink={small}{8pt}{},
+				hyperlink={#1@#2},
 				hypertarget={#4@#2},
-  				phantomlabel={#4@#2},
+  				%phantomlabel={#4@#2},
   			]
 			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
 				#5 #3~#2\hskip6pt\null}\enskip}%
 	\ifblank{#6}{}{({\scshape\footnotesize #6})}%
-	%\vrule width \z@  depth\medskipamount%
+		\protected@edef\@currentlabel{#2}%
+		\ifblank{#6}{}{\protected@edef\@currentlabelname{#6}}%
+		\@xp\@xp\@xp\Hy@MakeCurrentHrefAuto\@xp\@xp\@xp	
+			{\csname#4name\endcsname}%
+		\Hy@raisedlink{\hyper@anchorstart{\@currentHref}\hyper@anchorend}%
+		\label{#4:\cpge@theorem@label}%
+	\vrule width \z@  depth\bigskipamount%
+	\par\penalty\@M%
+}
+\def\@titledemolink@#1#2#3#4#5#6{
+		\@hangfrom{
+			\tcbox[
+				enhanced,tcbox raise base,
+				enlarge left by=-14pt,
+				left=6pt, right=6pt,
+				@demolink={small}{8pt}{colframe=strokecol, colback=pagecol, coltext=textcol}
+  			]
+			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
+				#5 #3~#2\hskip6pt\null}\enskip}%
+	\vrule width \z@  depth\bigskipamount%
 	\par\penalty\@M%
 }
 \def\@recsol{%
 	\protected@edef\current@sol{%
 		\noexpand\solu%
-			{\cpge@theorem@countername}%
-			{\thetcbcounter}%
-			{\cpge@@theorem@prefixedname}%
-			{\@theotitle}%
+			{\cpge@theorem@envname}
+			{\thetcbcounter}
+			{\cpge@theorem@label}
+			{\cpge@@theorem@prefixedname}
+			{\cpge@theorem@title}
 			{\aux@dir/sol-\thetcbcounter}%
 	}%
 	\ifsolutiondelayed
@@ -638,11 +596,12 @@ subsection label style={}
 }
 \def\@recprv{%
 	\protected@edef\current@prv{%
-		\noexpand\preuve%
-			{\cpge@theorem@countername}%
-			{\thetcbcounter}%
-			{\cpge@@theorem@prefixedname}%
-			{\@theotitle}%
+		\noexpand\preuve
+			{\cpge@theorem@envname}
+			{\thetcbcounter}
+			{\cpge@theorem@label}
+			{\cpge@@theorem@prefixedname}
+			{\cpge@theorem@title}
 			{\aux@dir/prv-\thetcbcounter}%
 	}%
 	\ifproofdelayed
@@ -667,473 +626,158 @@ subsection label style={}
 		\cpgesetuptcb{%
 			with@solu/.style={},
 			with@proof/.style={},
+			def@label/.style={}, 
+			with proof/.style={},
+			with solution/.style={}
 		}
 	\else 
-		\def\proof@link{\ifproofdelayed\@demolink{proof}{d\'emonstration}\fi}
+		\def\proof@link{\ifproofdelayed\@demolink{proof}{démonstration}\fi}
 		\def\solution@link{\ifsolutiondelayed\@demolink{solution}{solution}\fi}
 		\cpgesetuptcb{%
-			with@solu/.style={%
+			with solution/.style={%
 				lowerbox=ignored,
-				before upper app=\xdef\curr@counter{\thetcbcounter}%
-					\def\solution{\@recsol\solution@link\tcblower},
+				before upper app=\edef\cpge@theorem@label{%
+					\ifdefvoid\cpge@theorem@label
+						{\thetcbcounter}
+						{\cpge@theorem@label}%
+					}%
+					\xdef\curr@counter{\thetcbcounter}%
+					\def\solution{\solution@link\@recsol\tcblower},
 				savelowerto=\aux@dir/sol-\thetcbcounter.tex,
 				after app=\csuse{sol@\curr@counter}
 			},
-			with@proof/.style={%
+			with proof/.style={%
 				lowerbox=ignored,
-				before upper app=\xdef\curr@counter{\thetcbcounter}%
-					\def\proof{\@recprv\proof@link\tcblower},
+				before upper app=\edef\cpge@theorem@label{%
+					\ifdefvoid\cpge@theorem@label
+						{\thetcbcounter}
+						{\cpge@theorem@label}%
+					}%
+					\xdef\curr@counter{\thetcbcounter}%
+					\def\proof{\proof@link\@recprv\tcblower},
 				savelowerto=\aux@dir/prv-\thetcbcounter.tex,
 				after app=\csuse{prv@\curr@counter}
 			},
 		}
 	\fi 
 }
-\cpgesetuptcb{%
-	proof or solution/.code=%
-		\ifexo@type\cpgesetuptcb{with@solu}\fi
-		\iftheo@type\cpgesetuptcb{with@proof}\fi
-	}
-
-%%%%% Boites pour les demo/solutions
+%%%%% commandes de traitement  des demos/solutions
 \newrobustcmd\solutionname{solution}
-\newrobustcmd\proofname{démonstration}
-\NewDocumentCommand{\solution@push}{mmmmm}{%
-	\@titledemolink{#1}{#2}{#3}{solution}{\solutionname}{#4}
-  	\begingroup%
-		\edef\thecurrent@counter{#2}
-		\set@defaultforlistsinsideunite
- 		\input{#5}%
-		\closeunite%
-	\endgroup%
+\newrobustcmd\proofname{d\'emonstration}
+\def\cpge@thmlabel@prefix{}
+\newrobustcmd\solution@push{\file@push{solution}}
+\newrobustcmd\proof@push{\file@push{proof}}
+\DeclareDocumentCommand{\file@push}{msmmmmmm}{%
+\begin{trivlist}%
+	\def\cpge@thmlabel@prefix{#1}
+	\def\cpge@theorem@label{#5}%
+	\IfBooleanTF{#2}
+		{\item[]\@titledemolink*{#3}{#4}{#6}{\cpge@thmlabel@prefix}{\csname #1name\endcsname}{#7}}
+		{\item[]\@titledemolink{#3}{#4}{#6}{\cpge@thmlabel@prefix}{\csname #1name\endcsname}{#7}}
+	\edef\thecurrent@counter{#4}
+	\set@defaultforlistsinsideunite
+ 		\input{#8}%
+	\closeunite%
+\end{trivlist}%
 }
-\NewDocumentCommand{\proof@push}{mmmmm}{%
-	\@titledemolink{#1}{#2}{#3}{proof}{\proofname}{#4}
-  	\begingroup%
-		\edef\thecurrent@counter{#2}%
-		\set@defaultforlistsinsideunite
- 		\input{#5}%
-		\closeunite%
-	\endgroup%
-}
-\def\cpge@dummy@#1#2#3#4#5{}
+
+\def\cpge@dummy@#1#2#3#4#5#6{}
 \let\preuve\cpge@dummy@
 \let\solu\cpge@dummy@
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% D\'efinition des environnements pour th\'eroremes %%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%% macros et cles principales de creation de theorem
-\cpgesetuptcb{%
-	font app/.code 2 args={\csappto{kvtcb@font#1}{#2}},
-	font reset/.code 2 args={\csdef{kvtcb@font#1}{#2}}
+%%% Systeme des réfeŕences croisées
+\def\solutionautorefname{\solutionname}
+\def\proofautorefname{\proofname}
+\cpgesetdeco{pageref}{\sffamily\smaller{}[p. #1]}
+\def\set@pageref#1#2{%
+	\ifcsdef{r@#2}%
+		{\def\pageref@eno{%
+			\space\deco@pageref{\pageref*{#2}}}%
+		}{}%
+	\ifcsdef{r@#1:#2}%
+		{\def\pageref@cor{%
+			\space\deco@pageref{\pageref*{#1:#2}}}%
+		}{}%
 }
-\def\kvtbc@titlewho{\ifdefempty{\kvtcb@title}{\tcbtitletext}{\kvtcb@title}}
-\cpgesetuptcb{title style if break/.style={%%
-	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
-	extras title after break={%
-		halign title=right,
-		coltitle=thmcol,
-		colbacktitle=backcol,
-		colback=backcol,
-		boxsep=0pt, top =0pt, bottom=0pt, left=3pt,right=3pt,
-		font app={title}{\fontsize{7}{7}\mdseries\itshape}
-		},
-	extras middle and last={colbacktitle=backcol},
-	bottomrule=1pt, 
-	bottomrule at break=1pt,
-	toprule at break=0pt,
-	titlerule=0pt
-}}
-
-\cpgesetuptcb{%
-		@theocountername/.store in=\cpge@theorem@countername,
-		@theoName/.store in=\cpge@theorem@Name,
-		@theoname/.code=\def\cpge@theorem@name{#1}\csdef{\cpge@theorem@countername autorefname}{#1},
-		@theoprefix/.code=\edef\cpge@@theorem@prefixedname{#1\cpge@theorem@name},
-		@demoname/.store in=\cpge@demo@name,
-	}
-\ifdraft
-\cpgesetuptcb{description path/.style={
-		after title={\enskip\mdseries\scshape\itshape\small (#1)},
-	}}
-\else
-\tikzset{description path style/.style={%
-				fill=thmcol,
-				draw=none,
-				font=\smaller{-2}\vphantom{(},
-				text=tcbcoltitle,
-				#1}}
-\cpgesetuptcb{description path/.style={%
-	overlay unbroken and first={%
-    	\path let \p1=(title.north east), \p2=([xshift=-12pt]frame.north east) in
-			node (description) [%
-        		anchor=west ,
-				xshift=2pt , inner ysep=1pt ,
-				text width=\x2-\x1 ,
-				description path style
-				] 
-			at (title.east) {#1} ;
-  		}
-}}
-\fi 
-
-\def\important@message{\ifexo@type exercice \else r\'esultat\fi{} important}
-\cpgesetuptcb{
-	important/.style={%
-		thmcol=importantcol,
-		bottom=10pt,
-		underlay unbroken and last={\node at (frame.south west) 
-			[text=thmcol, 
-			font=\fontsize{7}{8}\selectfont, 
-			anchor=south west, 
-			yshift=2pt
-			] 
-			{#1};}
-		},
-	important/.default=\important@message
+\NewDocumentCommand\xref{s t\n t\e t\c t\p t\t m}{%
+	\IfBooleanTF{#2}
+		{\def\xref@ref{\ref}}
+		{\def\xref@ref}{\autoref}
+	\IfBooleanTF{#1}
+		{\def\x@ref{\xref@ref*}}
+		{\def\x@ref{\xref@ref}}
 }
-%%% Environnement butineur : tous les environnement 
-%%% de theoreme l'utilisent en interne
-\def\cpge@theo@form@namenumber#1#2{\hbox{#1~#2}}
-\def\cpge@theo@form@numbername#1#2{\hbox{#2~#1}}
-\def\cpge@theo@form@name#1#2{\hbox{#1}}
-\cpgesetuptcb{%
-	theorem name and number/.code={\let\tcb@theo@form=\cpge@theo@form@namenumber},
-	theorem number and name/.code={\let\tcb@theo@form=\cpge@theo@form@numbername},
-	theorem name/.code={\let\tcb@theo@form=\cpge@theo@form@name},
-	new/@labelformat/.code 2 args=\labelformat{#1}{#2}
-}
-\def\@theotitle{}
-\NewDocumentCommand{\cpge@new@tcbtheorem}{O{} mmmmmm}{%
-  \cpgesetup{theorem type=#6}%
-  \unless\ifrem@type
-  \@@newtcolorbox[auto counter, list inside=theo,#1]{#2}{E{\op}{{}} d() d<>}{%
-  	@theocountername=#2,
-  	@theoName={#3},
-	@theoname={#4},
-	@theoprefix={#5},
-    theorem type=#6,
-    #6 style,
-    theorem name and number,
-    title={\cpge@tcb@theo@title{#3}{\thetcbcounter}},%
-    IfValueT={##2}{list entry=%
-    	{\protect\numberline{\thetcbcounter}#3~:~##2}},%
-    IfValueT={##2}{nameref={##2},description path={##2}, code=\def\@theotitle{##2}},%
-    IfValueT={##3}{phantom={\MakeLinkTarget[#4]{tcb@cnt@theo}\label{##3}}},%
-	hypertarget={\cpge@theorem@countername:\thetcbcounter},
-	proof or solution,
-    #7,##1}%
-    \fi
-    \ifrem@type
-    \@@newtcolorbox[auto counter, list inside=theo,#1]{#2}{E{\op}{{}} d() d<>}{%
-    remark style, 
-    theorem name and number,
-	@theocountername=#2,
-    title={\cpge@tcb@theo@title{#3}{\thetcbcounter}
-    		\IfValueTF{##2}{\enskip\mdseries\itshape({##2})}{}},%
-    IfValueT={##2}{list entry=%
-    	{\protect\numberline{\thetcbcounter}#3~:~##2}},%
-    IfValueT={##2}{nameref={##2}},%
-    IfValueT={##3}{phantom={\MakeLinkTarget[#4]{tcb@cnt@rema}\label{##3}}},%
-    #7,##1,
-    colframe=thmcol
-    }%
-	\fi
-	\ifrem@type\else
-    \DeclareDocumentEnvironment{#2+}{}
-    	{\csname #2\endcsname}
-		{\csname end#2\endcsname}
-	\fi
-	\DeclareDocumentEnvironment{#2*}{E{\op}{{}} d() d<>}
-    	{\csname #2\endcsname [##1,theorem name](##2)<##3>}
-		{\csname end#2\endcsname}
-	\rem@typefalse
-	}
-	
-\newcounter{genthm}[chapter]
-\NewTColorBox[use counter=genthm]{genthm*}{ m E{\op}{{}} d() d<>}{%
-	thmcol=framestrokecol,
-	title={#1},
-	IfValueT={#3}{description path={#3}},
-	IfValueT={#4}{nameref={#3}},
-	theorem style,
-	theorem name,
-	titled items,
-	#2}
-\NewTColorBox[use counter=genthm]{genthm}{ m E{\op}{{}} d() d<>}{%
-	thmcol=framestrokecol,
-	IfValueT={#1}{title={\cpge@tcb@theo@title{#1}{\thetcbcounter}}},
-	IfValueT={#3}{nameref={#3}, description path={#3}},
-	IfValueT={#4}{label={#4}},
-	IfValueT={#3}{list entry=%
-    	{\protect\numberline{\thetcbcounter}#2~:~#3}},%
-	theorem style,
-	#2,
-	theorem name,
-	titled items
-}
-\cpgesetuptcb{marge/.style={left=#1,right=#1}}	
-	
-%%%%%%%% Tables des th\'eor\`emes 
-\def\cpge@tcb@theo@title#1#2{%
-	\ifdefempty{#2}
-		{\setbox\z@=\color@hbox#1~\color@endbox}
-  		{\setbox\z@=\tcb@theo@form{#1}{#2}}%
-	\unhbox\z@%
-}
-
-\def\cpge@addcontentsline#1#2{%
-	\ifx\kvtcb@listentry\@empty\else
-    	\addcontentsline{#1}{#2}{\kvtcb@listentry}%
-	\fi%
-}
-
-\def\cpgenewtheorem{\let\tcb@addcontentsline\cpge@addcontentsline%
-	\let\@@newtcolorbox\NewTColorBox%
-	\cpge@new@tcbtheorem}
-
-\def\cpgerenewtheorem{\let\@@newtcolorbox\RenewTColorBox%
-  \cpge@new@tcbtheorem}
-  
-\ProvideDocumentCommand\tableofresults%
-	{O{\section*} D(){Liste des r\'esultats remarquables}}{%
-		\tcblistof[#1]{theo}{#2}
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% jeu de styles tcolorbox %%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\cpgesetuptcb{minimal/.style=blanker}
-
-\cpgesetuptcb{simple/.style={%
-	colframe=thmcol,
-	boxrule=.4pt,
-	top=3pt,bottom=3pt,
-	left=5pt,right=5pt
-	}}
-	
-\cpgesetuptcb{basic/.style={%
-	spartan,
-  	top=3pt,bottom=3pt,
-	left=5pt,right=5pt,
-	boxrule=.4pt, 
-}}
-\cpgesetuptcb{
-	basicthm/.style={%
-		empty, 
-		basic, 
-		attach boxed title to top left={xshift=3pt,yshift*=-\tcboxedtitleheight+.1pt},
-		boxed title style={%
-					boxrule=0pt,
-			boxsep=0pt,
-			top=2pt,bottom=1pt,left=3pt,right=3pt,
-		}
-	}
-}
-\cpgesetuptcb{%
-	basicrmk/.style={
-		blankest, 
-		coltitle=thmcol,
-		top=3pt, bottomtitle=5pt, 
-		left=20pt, before title={\hskip-14pt},
-		borderline west={.6pt}{.6pt}{thmcol}
-	}
-}
-\cpgesetuptcb{rounded/.style={
-	arc=5pt,
-    colframe=thmcol,
-    boxrule=-1pt,
-	left=8pt,right=8pt
- }}
-\cpgesetuptcb{roundedthm/.style={%
-	rounded,
-    attach boxed title to top left={yshift=-\tcboxedtitleheight/2-1pt,xshift=3pt},
-    boxed title style={%
-    	arc=5pt,
-        boxsep=0pt,
-        top=2pt,bottom=1pt,left=6pt,right=6pt,
-        boxrule=1pt,
-        colframe=pagecol
-        },
-        bottomrule=.8pt
-}}
-\cpgesetuptcb{uphill/.style={
-    	colframe=thmcol,
-		left=5pt,right=5pt,
-    	arc=.2cm,
-    	sharp corners=uphill
- }}
-\cpgesetuptcb{uphillthm/.style={%
-	uphill,
-    attach boxed title to top left={yshift=-\tcboxedtitleheight},
-    boxed title style={%
-        boxsep=0pt,
-        top=2pt,bottom=1pt,left=6pt,right=6pt,
-        arc=.2cm,
-        sharp corners=uphill
-        },
-        boxrule=.4pt,
- }}
-
-
-
-%%% Theme par defaut (basic)		
-\cpgesetuptheoremstyle{%
-	theorem style=basicthm,
-	definition style=basicthm,
-	exercise style=basicthm,
-	remark style=basicrmk 
-}
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% exemples d'environement pour theoremes %%%%%%%%
+%%%%%%%% redefinition des environements pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\cpgenewtheorem[number within=chapter]{theo}
-	{Th\'eor\`eme}
-	{th\'eor\`eme}
+
+\cpgerenewtheorem[use counter=theo, number within=chapter]{theo}
+	{Théorème}
+	{théorème}
 	{du\space}
 	{theorem}
-	{titled items}	
-\cpgenewtheorem[use counter from=theo]{theodef}
-	{Th\'eor\`eme et d\'efinition}
-	{th\'eor\`eme}
+	{titled items, with proof}	
+\cpgerenewtheorem[use counter from=theo]{theodef}
+	{Théorème et définition}
+	{théorème}
 	{du\space}
 	{theorem}
-	{titled items}
-\cpgenewtheorem[use counter from=theo]{propdef}
-	{Proposition et d\'efinition}
+	{titled items, with proof}
+\cpgerenewtheorem[use counter from=theo]{propdef}
+	{Proposition et définition}
 	{proposition}
 	{de la\space}
 	{theorem}
-	{titled items}
-\cpgenewtheorem[use counter from=theo]{prop}
+	{titled items, with proof}
+\cpgerenewtheorem[use counter from=theo]{prop}
 	{Proposition}
 	{proposition}
 	{de la\space}
 	{theorem}
-	{titled items}
-\cpgenewtheorem[use counter from=theo]{lemm}
+	{titled items, with proof}
+\cpgerenewtheorem[use counter from=theo]{lemm}
 	{Lemme}
 	{lemme}
 	{du\space}
 	{theorem}
-	{}
-\cpgenewtheorem[use counter from=theo]{ppte}
-	{Propri\'et\'es}
-	{propri\'et\'es}
+	{with proof}
+\cpgerenewtheorem[use counter from=theo]{ppte}
+	{Propriétés}
+	{propriétés}
 	{des\space}
 	{theorem}
-	{titled items}
-\cpgenewtheorem[use counter from=theo]{coro}
+	{titled items, with proof}
+\cpgerenewtheorem[use counter from=theo]{coro}
 	{Corollaire}
 	{corollaire}
 	{du\space}
 	{theorem}
-	{titled items}
-\cpgenewtheorem[number within=chapter]{defi}
-	{D\'efinition}
-	{}{}
-	{definition}
-	{titled items}
-\cpgenewtheorem[use counter from=defi]{voca}
-	{Vocabulaire}
-	{}{}
-	{definition}
-	{theorem name, titled items}
-\cpgenewtheorem[use counter from=defi]{nota}
-	{Notations}
-	{}{}
-	{definition}
-	{theorem name,titled items}
-\cpgenewtheorem[number within=chapter]{rema}
-	{Remarque}
-	{}{}
-	{remark}
-	{}
-\cpgenewtheorem[use counter from=rema]{remas}
-	{Remarques}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[use counter from=rema]{remap}
-	{Remarques pratiques}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[number within=chapter]{exem}
-	{Exemples}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[use counter from=exem]{exemf}
-	{Exemples fondamentaux}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[use counter from=exem]{exema}
-	{Exemple d'application}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[use counter from=exem]{exemp}
-	{Exemple pratique}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[use counter from=exem]{appl}
-	{Application}
-	{}{}
-	{remark}
-	{}
-\cpgenewtheorem[use counter from=exem]{appls}
-	{Application}
-	{}{}
-	{remark}
-	{titled items}
-\cpgenewtheorem[no counter]{demo}
-	{D\'emonstration}
-	{}{}
-	{proof}
-	{titled items, current counter=\@gobble}
-\cpgenewtheorem[number within=chapter]{float}
-	{Figure}
-	{}{}
-	{remark}
-	{float, halign title=flush center}
-\cpgesetuptcb{floatplacement=tbp}
-
-\cpgenewtheorem[number within=chapter,@labelformat={tcb@cnt@exer}{l'exercice}]{exer}
+	{titled items, with proof}
+\cpgerenewtheorem[use counter=exer, number within=chapter]{exer}
 	{Exercice}
 	{exercice}
 	{de l'}
 	{exercise}
-	{titled items}
-\cpgenewtheorem[number within=chapter]{exerappli}
+	{titled items, with solution}
+\cpgerenewtheorem[use counter from=exer]{exerappli}
 	{Exercice d'application}
 	{exercice}
 	{de l'}
 	{exercise}
 	{titled items}
-\cpgenewtheorem[number within=chapter]{exerappro}
+\cpgerenewtheorem[use counter from=exer]{exerappro}
 	{Exercice d'approfondissement}
 	{exercice}
 	{de l'}
 	{exercise}
-	{titled items}
-\cpgenewtheorem[number within=chapter]{prob}
-	{Probl\`eme}
-	{probl\`eme}
+	{titled items, with solution}
+\cpgerenewtheorem[use counter from=exer]{prob}
+	{Problème}
+	{problème}
 	{du\space}
 	{exercise}
-	{titled items}
-
+	{titled items, with solution}
 
 \endinput
 

@@ -217,6 +217,7 @@
 	Q/.code	= \def\Qsymb{{#1}},
 	R/.code	= \def\Rsymb{{#1}},
 	C/.code	= \def\Csymb{{#1}},
+	U/.code	= \def\Usymb{{#1}},
 	K/.code	= \def\Ksymb{{#1}},
 	1/.code= \csdef{1symb}{{#1}},
 	corps/.code =\def\corpssymb{\csuse{#1symb}},
@@ -253,6 +254,7 @@
 	Q=\mathbb{Q},
 	R=\mathbb{R},
 	C=\mathbb{C},
+	U=\mathbb{U},
 	K=\mathbb{K},
 	corps=K,
 	dim=n,
@@ -271,6 +273,7 @@
 \DeclareRobustCommand{\Q}{\Qsymb}
 \DeclareRobustCommand{\R}{\Rsymb}
 \DeclareRobustCommand{\C}{\Csymb}
+\DeclareRobustCommand{\U}{\Usymb}
 \DeclareRobustCommand{\K}{\Ksymb}
 \DeclareMathSymbol{\vphi}{\mathord}{letters}{"27}
 \DeclareMathSymbol{\veps}{\mathord}{letters}{"22}
@@ -557,7 +560,7 @@
 			\cpge@minipagetrue%
 			\everymath{\displaystyle}%
 			\abovedisplayskip\medcenterskip%
-			\belowdisplayskip\medcenterskip%		
+			\belowdisplayskip\medcenterskip%	
 		 		#1%
 		\end{\@renderer}%
 	}%
@@ -575,7 +578,7 @@
 	\trivlist%
 		\@topsep\topsep%
 		\partopsep\topsep%
-		\@topsepadd\z@skip%
+		\@topsepadd\topsep%
 		\parsep\z@skip%
 		\@beginparpenalty\precenterpenalty%
 		\@endparpenalty\postcenterpenalty%

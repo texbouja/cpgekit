@@ -672,8 +672,8 @@
         }%
    }
 \def\cpgelist@builder@star{%
-   \let\outeremptydeco@list\deco@fake%
-   \let\outerdeco@list\deco@fake%
+   \let\outeremptydeco@list\@iden%
+   \let\outerdeco@list\@iden%
    \cpgelist@setprop%
    \expandafter
    \list
@@ -699,7 +699,7 @@
 %%% interface utilisateur plus conforme à l'orientation globale 
 \newif\ifenum@resume
 \newif\ifenum@restore 
-\let\deco@fake\@iden
+\let\@iden\@iden
 \def\outerdeco@init{
    \def\outerdeco@list##1{##1}
    \def\outeremptydeco@list##1{##1}
@@ -751,7 +751,7 @@
    label prefix/.code=\def\cpge@enumlabelprefix{#1},
    p/.style={label prefix=#1},
    n/.code=\cpgelist@outerr{n}\cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n=#1},
-   n*/.code=\cpgelist@outerr{n*}\cslet{deco@\cpge@listctr}\deco@fake%
+   n*/.code=\cpgelist@outerr{n*}\cslet{deco@\cpge@listctr}\@iden%
              \cpgesetlabel{\cpge@listctr}{#1}\cpgelist@save{n*=#1},
    d*/.code=\cpgelist@outerr{d}\cpgesetdeco*{\cpge@listctr}{#1}\cpgelist@save{d=#1},
    d/.code=\cpgelist@outerr{d*}\cpgesetdeco{\cpge@listctr}{#1}\cpgelist@save{d*=#1},
@@ -765,13 +765,14 @@
    m+/.default=\z@,
    m*/.default=\z@,
    s/.default=\z@,
-   a/.default=r
+   a/.default=r,
+   item label/.code 2 args=\csdef{label@item\romannumeral#1}{#2},
 }
 \def\cpgesetup@enum#1#2{
    \cpgesetuplists{
       enum@#1/.is family,
       enum@#1/n/.code=\cpgesetlabel{enum#1}{##1},
-      enum@#1/n*/.code=\cslet{deco@enum#1}\deco@fake
+      enum@#1/n*/.code=\cslet{deco@enum#1}\@iden
                        \cpgesetlabel{enum#1}{##1},
       enum@#1/d/.code=\cpgesetdeco{enum#1}{##1},
       enum@#1/d*/.code=\cpgesetdeco*{enum#1}{##1},
@@ -796,7 +797,7 @@
    \cpgesetuplists{
       item@#1/.is family,
       item@#1/n/.store in=\csname label@item#1\endcsname,
-      item@#1/n*/.code=\cslet{deco@item#1}\deco@fake%
+      item@#1/n*/.code=\cslet{deco@item#1}\@iden%
                        \csdef{label@item#1}{##1},
       item@#1/d/.code=\cpgesetdeco{item#1}{##1},
       item@#1/d*/.code=\cpgesetdeco*{item#1}{##1},
@@ -861,45 +862,54 @@
   \cpgelist@builder@star%
  }
 \let\endxitem\endlist
-\NewDocumentCommand\init@xlist{mm !t- !t- !t- !t\r !t+  !E{\op}{{}} }{
-	\IfBooleanTF{#6}%
-        {\begin{#1}\op{r,#8}}
-        {\IfBooleanT{#7}{\begin{#1}\op{#8}}}%
-	\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-\IfBooleanT{#5}{\exit-}}}%
-	\let\xit#2\xit%
+\newif\ifinlist
+\NewDocumentCommand\init@xlist{mm !t\r !t+  !E{\op}{{}}}{%
+   \IfBooleanTF{#3}%
+      {\begin{#1}\op{r,#5}}
+      {\IfBooleanTF{#4}
+         {\begin{#1}\op{#5}}
+         {\unless\ifinlist\begin{#1}\op{#5}\inlisttrue\fi}
+      }%
+	#2%
 }
 \cpgesetdeco{itemtitle}{\bfseries\boldmath #1.\enskip}
-\NewDocumentCommand\xit@enum{!o !d() !d<>}{%
-      \IfValueTF{#1}
-         {\if@staratend{#1}%
+\NewDocumentCommand\xit@enum{!t- !t- !t- !o !d() !d<>}{%
+      \IfBooleanT{#1}
+      {\exit-\IfBooleanT{#2}{%
+         \exit-\IfBooleanT{#3}{%
+            \exit-}
+         }%
+      }%
+      \IfValueTF{#4}
+         {\if@staratend{#4}%
             {\cpgeref@setcounter{\cpge@listctr}{\x@arg-1}\item}%
-            {\if@plusatend{#1}%
+            {\if@plusatend{#4}%
                {\cpgeref@addtocounter{\cpge@listctr}{\x@arg-1}\item}%
-               {\item[#1]}%
+               {\item[#4]}%
             }}
          {\item}%
-      \IfValueT{#2}
-         {\deco@itemtitle{#2}\protected@edef\@currentlabelname{#2}}%
-      \IfValueT{#3}
-         {\label{\cpge@enumlabelprefix#3}}%
+      \IfValueT{#5}
+         {\deco@itemtitle{#5}\protected@edef\@currentlabelname{#5}}%
+      \IfValueT{#6}
+         {\label{\cpge@enumlabelprefix#6}}%
  }
 \def\xitenum{\init@xlist{xenum}\xit@enum}
-\NewDocumentCommand\xit@item{!o !E{\zap}{{@}} !d() !d<>}{%
+\NewDocumentCommand\xit@item{!o  !d() !d<>}{%
    \IfValueTF{#1}
       {\item[\csuse{deco@\cpge@listctr}{#1}]}%
       {\item}
-   \IfValueT{#3}{\deco@itemtitle{#3}}%
-   \IfValueT{#4}{
+   \IfValueT{#2}{\deco@itemtitle{#2}}%
+   \IfValueT{#3}{
       \phantomsection%
-      \protected@edef\@currentlabelname{#3}%
-      \label{\cpge@enumlabelprefix#4}%
+      \protected@edef\@currentlabelname{#2}%
+      \label{\cpge@enumlabelprefix#3}%
    }
 }
 \def\xititem{\init@xlist{xitem}\xit@item}
 
-\NewDocumentCommand\xit@tab{!o !E{\zap}{{@}} !d() !d<>}{%
+\NewDocumentCommand\xit@tab{!o !d() !d<>}{%
    \tabitem%
-   \IfValueT{#4}{\label{\cpge@enumlabelprefix#4}}%
+   \IfValueT{#3}{\label{\cpge@enumlabelprefix#3}}%
 }
 \def\xittab{\init@xlist{tabenum}\xit@tab}
 
@@ -1438,12 +1448,40 @@
 		\hbox to #1{\xleaders\copy\cpge@boxb\hskip 0pt plus 1fill\hbox{}}%
 }
 
-
-
 \def\fntht{\fontcharht\font`}
 \def\fntdp{\fontchardp\font`}
 \def\fntwd{\fontcharwd\font`}
 \newcommand\cpgesquare[1][x]{\rule{\fntht#1}{\fntht#1}}
+
+
+%%%% Hack pour que les footnote soient collectées et restituées en dehors 
+%%%% des environnement qui utilisent minipage (tcolorbox, tikz, ...)
+%%%% mettre \cpge@footnote@restore au début de l'environnement 
+%%%% et \cpge@footnote@use juste après qu'il soit fermé (par exemple avec \aftergroup)
+\def\cpge@footnote@restore{%
+  \def\@mpfn{footnote}%
+  \def\thempfn{\arabic{footnote}}%
+  \let\@footnotetext\cpge@footnote@collect
+}
+% collect footnote text
+\long\def\cpge@footnote@collect#1{%
+  \expandafter\gappto\expandafter\cpge@footnote@acc\expandafter{%
+    \expandafter\footnotetext\expandafter[\@thefnmark]{#1}%
+  }%
+}
+\def\cpge@footnote@use{%
+  \cpge@footnote@acc
+  \global\let\cpge@footnote@acc\@empty
+}
+\global\let\cpge@footnote@acc\@empty
+
+%%%% Décorations des formules mathématiques
+\cpgesetdeco{formula}{\genboxcmd[draw=thmcol]{#1}}
+\cpgesetdeco{result}{%
+	\genboxcmd[double distance=.6pt, line width=1.2pt, inner sep=4pt, 
+		fill=framebackcol, draw=pagecol, double=thmcol]
+		{#1}%
+	}
 
 %%%%%%%
 %%%%%%%%%

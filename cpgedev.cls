@@ -10,7 +10,7 @@
 
 
 
-\@ifundefined{ifsubdoc}{
+\@ifundefined{ifsubdoc}{%
 	\newif\ifweb
 	\newif\ifsingleimage
 	\newif\ifthisfile
@@ -257,12 +257,11 @@
 	\ifdefmeta{theme}{|theme| \\}{} 
 	|periode|%
 }
-\cpgesettitle*{
+\cpgesettitle*{%
 	|document|  
 	|theme|  
 	|periode|%
 }
-
 \let\xdocument\document
 \let\endsxdocument\enddocument
 
@@ -505,11 +504,13 @@
 }
 \ifserie 
 	\cpgetitle@shape{hang}{problem}[right]
-	\def\problem@font{\large}
+	\def\problem@font{\Large}
 \else 
 	\cpgetitle@shape{display}{problem}[center]
 	\def\problem@font{\LARGE}
 \fi 
+\def\parti@font{\large}
+\def\partii@font{\normalsize}
 \def\set@linkcol{\unless\ifx\listbox\default@listbox\hypersetup{linkcolor=mainone}\fi}
 \def\link@problemlabel#1{%
 	\edef\cpge@tmpa{#1}%
@@ -530,14 +531,14 @@
 	\fi}%
 \def\problem@format{%
 	\cpgetitle@format{\problem}[\problem@shape]
-  		{\Large}
+  		{\problem@font}
   		{\problemlabel@align
   			\link@problemlabel{\cnt@name}}
   		{\z@}
   		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
   		[\after@problemtitle]
 	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
-  		{\Large}
+  		{\problem@font}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
   		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
@@ -556,7 +557,6 @@
 %%% \parti, à utiliser dans {probleme} ou {exercice}
 \setcounter{secnumdepth}{5}
 \cpgetitle@shape{block}{parti}[right]
-\def\parti@font{\large\bfseries}
 \def\parti@format{%
 	\cpgetitle@format{\parti}[\parti@shape]
   		{\csuse{parti@align}\parti@font}
@@ -565,7 +565,11 @@
   		{\protect\boldmath\deco@parti{##1}}
 }
 \parti@format
-\cpgetitle@spacing{\parti}{\z@}{*4}{*2}
+\ifserie 
+	\cpgetitle@spacing{\parti}{\z@}{*2}{*1}
+\else 
+	\cpgetitle@spacing{\parti}{\z@}{*4}{*2}
+\fi
 \cpgetitle@setspacing{\parti}
 
 %%% \partii,  subdivision de \parti
@@ -579,7 +583,11 @@
 		{\protect\boldmath\deco@partii{##1}}
 }
 \partii@format
-\cpgetitle@spacing{\partii}{\z@}{*3}{*1.5}
+\ifserie 
+	\cpgetitle@spacing{\partii}{\z@}{*1}{*1}
+\else 
+	\cpgetitle@spacing{\partii}{\z@}{*3}{*1.5}
+\fi 
 \cpgetitle@setspacing{\partii}
 
 %%% \bigques, pour certains sujets de concours (Centrale) 
@@ -1168,7 +1176,7 @@
 	soldeco/.code=\def\boxing@item##1{##1\kern.25em},
 	.unknown/.code=\relax
 }
-\let\boxing@item\deco@fake 
+\let\boxing@item\@iden
 \NewDocumentCommand\default@listbox{O{}m}{%
 	\cpgesetup[listbox]{#1}%
 	\boxing@item{#2}%
@@ -1348,7 +1356,7 @@
 			\hskip\labelsep%
 }
 
-\NewDocumentCommand\draft@save{o d() d<>}{%
+\NewDocumentCommand\draft@save{o d() d<>}{% 
 	\par\medskip
 	\def\endsolution{\par\medskip}%
 	\strut\textbf{\scshape solution~:~}%
@@ -1788,8 +1796,8 @@
 \else
 \def\miniarrow#1{\textcolor{#1}{\xaltarrow}}
 \cpgesetup[mini]{%
-	deco=\llap{\miniarrow{neutralcol}}%
-		\textcolor{neutralcol}{#1.}\kern1ex%
+	deco=\llap{\miniarrow{cpgeneutral}}%
+		\textcolor{cpgeneutral}{#1.}\kern1ex%
 }
 \fi
 
