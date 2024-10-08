@@ -1,0 +1,96 @@
+\RequirePackage{curvecommon}
+\RequirePackage{eso-pic}
+
+\usetikzlibrary{shadows}
+\pgfdeclarelayer{background}
+        \pgfdeclarelayer{foreground}
+        \pgfsetlayers{background,main,foreground}
+
+\ifsuivi\else 
+   \cpgesetdeco{student}{%
+      \begin{tikzpicture}[overlay, remember picture]
+         \sffamily\large\bfseries\scshape
+         \node (Student) at ([xshift=-.5\hma, yshift=\tma]current page.north east)
+         [
+            left,
+            minimum width=.25\textwidth,
+            inner xsep=1pc, inner ysep=4pt,
+            align=right
+         ]
+         {\csuse{studentname}};
+         \begin{pgfonlayer}{background}
+            \fill [
+                  pagecol, 
+                  draw=titlestrokecol!50!transparent, 
+                  line width=1pt, 
+                  rounded corners=8pt] 
+               let \p1=(Student.east), \p2=(Student.west) in
+               ([xshift=-.5\hma, yshift=.5\tma-3ex]current page.north east) -- 
+               ++(0,3ex) [sharp corners] --
+               ++(\x2-\x1,0) [rounded corners=8pt] -- 
+               ++(0,-3ex) [sharp corners] -- 
+               cycle; 
+            \draw [titlestrokecol, rounded corners=8pt, line width=1pt]
+               let \p1=(Student.east), \p2=(Student.west) in
+               ([xshift=-.5\hma+.5pt, yshift=.5\tma-3ex]current page.north east)
+                -| +(\x2-\x1-1pt,3ex+.5pt);
+         \end{pgfonlayer}
+      \end{tikzpicture}%
+   }
+   \cpgesetdeco{note}{%
+      \begin{tikzpicture}[overlay, remember picture]
+         \node  at ([xshift=.5\hma,yshift=-.5\tma+1.5ex]current page.south west)
+            [
+               right,
+               text=textcol, 
+               font=\large\sffamily\bfseries\scshape,
+               text width=\textwidth,
+               align=right,
+            ]
+            {note : \textcolor{titletextcol}#1\smaller[2]/20};
+      \end{tikzpicture}%
+   }
+   \newbox\backbox
+   \AtBeginDocument{
+      \setbox\backbox\vbox{%
+         \begin{tikzpicture} [overlay, remember picture]
+            \node (C) at ([xshift=.5\hma,yshift=-.5\tma+1.5ex]current page.south west) 
+               [text width=\paperwidth-\hma, align=left, right, font=\sffamily\scshape\small] 
+               {\hskip\hma\textsl{\smaller cpge} \textcolor{titlestrokecol}{\cpge@centre}};
+         \begin{pgfonlayer}{background}
+            \fill 
+               [
+                  draw=titlestrokecol, 
+                  line width=1pt
+               ] 
+                  ([xshift=-.5\hma, yshift=.5\tma]current page.north east) [sharp corners] -- 
+                  +(-\paperwidth+\hma,0) [rounded corners=\hma] -- 
+                  ([xshift=.5\hma, yshift=-.5\tma]current page.south west) [sharp corners] -- 
+                  +(\paperwidth-\hma,0)  [rounded corners=8pt] -- 
+                  cycle;
+            \fill [
+                  pagecol, 
+                  draw=titlestrokecol!50!transparent, 
+                  line width=1pt, rounded corners=\hma]
+                     ([yshift=\hma]C.north west) -- 
+                     ++(0,-\hma) [sharp corners] -- 
+                     ++(\paperwidth-\hma,0)  -- 
+                     ([xshift=-.5\hma,yshift=-.5\tma]current page.south east) [rounded corners=\hma] -- 
+                     +(-\paperwidth+\hma,0)  -- cycle;
+               \draw [titlestrokecol, line width=1pt, rounded corners=\hma] 
+                     ([yshift=\hma]C.north west) -- 
+                     ++(0,-\hma) -- 
+                     ++(\paperwidth-\hma,0);
+            \end{pgfonlayer}
+         \end{tikzpicture}%
+      }
+      \AddToShipoutPictureBG{%
+               \AtPageUpperLeft{\copy\backbox}
+      }%
+   } 
+   \renewpagestyle{plain}{}
+   \cpgesetup[mini]{
+      lm=\hma
+   }
+\fi
+

@@ -270,6 +270,7 @@
 	},
 	hypertarget={\cpge@theorem@envname @\thetcbcounter},
     }
+	\cspreto{end#2}{\exit}%
 	\DeclareDocumentEnvironment{#2*}{E{\op}{{}} d() d<>}
     	{\csname #2\endcsname [##1,theorem name](##2)<##3>}
 		{\csname end#2\endcsname}

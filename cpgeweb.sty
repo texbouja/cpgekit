@@ -866,6 +866,7 @@
         \cpgedefcounter{ch@ice}{}[quiz]
         \cpgedefcounter{rigid@choice}{}[quiz]
         \newcounter{imgcnt}
+        \RequirePackage{cpgecolor}
 
         \pgfdeclarelayer{background}
         \pgfdeclarelayer{foreground}
@@ -893,7 +894,7 @@
 
         \DeclareDocumentCommand\cpgetheme{O{} m}{%
             \cpgesetup[theme]{#1}
-            \cpgeusefont{sf}
+            %\cpgefont{fira}
             \IfFileExists{#2web.sty}
             {\AtEndPreamble{\RequirePackage{#2web}}}{}%
             \reloadthecolors%
@@ -1222,7 +1223,7 @@
 
 %\RequirePackage{cpgecomment}
 \NewDocumentCommand\cpgeinclude{om}{}
-\RenewDocumentCommand\cpgeincludeweb{m}{
+\NewDocumentCommand\cpgeincludeweb{m}{
     \global\cpgeincludedtrue%
     \IfFileExists{#1-eno.tex}
     {\input{#1-eno}}

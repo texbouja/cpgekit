@@ -470,12 +470,12 @@ subsection label style={}
 \def\out@dir{output}
 \def\aux@dir{tmp}
 \def\draft@solution{%
-	\closeunite%
+	\exit\closeunite%
 	\tcbsubtitle[default subtitle]{Solution}%
 	\set@defaultforlistsinsideunite%
 }
 \def\draft@proof{%
-	\closeunite%
+	\exit\closeunite%
 	\tcbsubtitle[default subtitle]{Démonstration}%
 	\set@defaultforlistsinsideunite%
 }
@@ -677,6 +677,7 @@ subsection label style={}
 	\edef\thecurrent@counter{#4}
 	\set@defaultforlistsinsideunite
  		\input{#8}%
+	\exit%
 	\closeunite%
 \end{trivlist}%
 }

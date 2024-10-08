@@ -158,6 +158,12 @@
 }
 %% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
 %% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
+\def\list@maker#1#2{
+   \begingroup
+   \def\do##1{\listcsgadd{list@#1}{##1}}
+   \docsvlist{#2}
+   \endgroup
+}
 
 \DeclareDocumentCommand\csvtolistcsadd{smm}{%
    \IfBooleanT{#1}{\csglobal}%
@@ -185,17 +191,17 @@
 }
 %%% Gestion de listes CSV
 \newrobustcmd{\csvadd}[2]{%
-  \ifblank{#2}{}{\ifdefempty{#1}{\def#1{#2}}{\appto#1{,#2}}}}
+  \ifblank{#2}{}{\ifdefvoid{#1}{\def#1{#2}}{\appto#1{,#2}}}}
 \newrobustcmd{\csveadd}[2]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-  \cpgeb@tempa{}{\eappto#1{,#2}}}
+  \cpgeb@tempa{}{\ifdefvoid{#1}{\edef#1{#2}}{\eappto#1{,#2}}}}
 \newrobustcmd{\csvgadd}[2]{%
   \ifblank{#2}{}{\gappto#1{,#2}}}
 \newrobustcmd{\csvxadd}[2]{%
   \begingroup
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-  \cpgeb@tempa{}{\xappto#1{,#2}}}
+  \cpgeb@tempa{}{\ifdefvoid{#1}{\xdef#1{#2}}{\xappto#1{,#2}}}}
 \newrobustcmd{\csvcsadd}[1]{%
   \expandafter\csvadd\csname#1\endcsname}
 \newrobustcmd{\csvcseadd}[1]{%
@@ -706,7 +712,7 @@
 }
 \outerdeco@init%
 \def\cpgelist@outerr#1{
-   \ifundef\cpge@listenv{
+   \ifundef\cpge@xlistenv{
       \cpgeb@error{#1 n'est pas directement utilisable 
                      avec \string\cpgesetuplists.}
                   {utiliser l'une des familles enumi}
@@ -820,7 +826,6 @@
 \cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
 
 \NewDocumentCommand\xenum{ e\op}{%
-   \def\cpge@listenv{enum}
    \def\cpge@xlistenv{xenum}
    \ifnum \@enumdepth >2 \@toodeep\else%
       \advance\@enumdepth\@ne%
@@ -850,7 +855,6 @@
  }
  \def\endxenum{\cpgelist@savecounter\endlist}
  \NewDocumentCommand\xitem{ e\op }{%
-  \def\cpge@listenv{item}
   \def\cpge@xlistenv{xitem}
   \ifnum \@itemdepth >2 \@toodeep\else%
       \advance\@itemdepth\@ne%
@@ -862,14 +866,20 @@
   \cpgelist@builder@star%
  }
 \let\endxitem\endlist
-\newif\ifinlist
 \NewDocumentCommand\init@xlist{mm !t\r !t+  !E{\op}{{}}}{%
+   \let\init@tmp\relax%
    \IfBooleanTF{#3}%
-      {\begin{#1}\op{r,#5}}
+      {\def\init@tmp{\begin{#1}\op{r,#5}}}
       {\IfBooleanTF{#4}
-         {\begin{#1}\op{#5}}
-         {\unless\ifinlist\begin{#1}\op{#5}\inlisttrue\fi}
+         {\def\init@tmp{\begin{#1}\op{#5}}}
+         {\ifundef\cpge@xlistenv%
+            {\def\init@tmp{\begin{#1}\op{#5}}}{}%
+         }
       }%
+   \ifundef\init@tmp{
+      \ifblank{#5}{}{\def\init@tmp{\begin{#1}\op{#5}}}
+   }{}
+   \init@tmp%
 	#2%
 }
 \cpgesetdeco{itemtitle}{\bfseries\boldmath #1.\enskip}
@@ -894,15 +904,21 @@
          {\label{\cpge@enumlabelprefix#6}}%
  }
 \def\xitenum{\init@xlist{xenum}\xit@enum}
-\NewDocumentCommand\xit@item{!o  !d() !d<>}{%
-   \IfValueTF{#1}
-      {\item[\csuse{deco@\cpge@listctr}{#1}]}%
+\NewDocumentCommand\xit@item{!t- !t- !t- !o  !d() !d<>}{%
+   \IfBooleanT{#1}
+      {\exit-\IfBooleanT{#2}{%
+         \exit-\IfBooleanT{#3}{%
+            \exit-}
+         }%
+      }%
+   \IfValueTF{#4}
+      {\item[\csuse{deco@\cpge@listctr}{#4}]}%
       {\item}
-   \IfValueT{#2}{\deco@itemtitle{#2}}%
-   \IfValueT{#3}{
+   \IfValueT{#5}{\deco@itemtitle{#5}}%
+   \IfValueT{#6}{
       \phantomsection%
-      \protected@edef\@currentlabelname{#2}%
-      \label{\cpge@enumlabelprefix#3}%
+      \protected@edef\@currentlabelname{#5}%
+      \label{\cpge@enumlabelprefix#6}%
    }
 }
 \def\xititem{\init@xlist{xitem}\xit@item}
@@ -920,10 +936,10 @@
 }
 \def\cpge@enumlabelprefix{}
 \def\end@xlist{%
-	\ifundef\cpge@listenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
+	\ifundef\cpge@xlistenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
 }
 \def\end@xlist@rec{%
-   \ifundef\cpge@listenv{}{%
+   \ifundef\cpge@xlistenv{}{%
       \expandafter\end\expandafter{\cpge@xlistenv}%
 		 \end@xlist@rec%
   }%
@@ -1327,7 +1343,6 @@
    \edef\cpge@listlevel{\romannumeral\@enumdepth}%
    \edef\cpge@listctr{enum\cpge@listlevel}%
    \edef\tab@enum{enum\cpge@listlevel}%
-   \def\cpge@listenv{enum}
    \def\cpge@xlistenv{tabenum}
    \partopsep\z@\topsep\z@\labelsep.33em%
    \def\\{\intertab{}}%

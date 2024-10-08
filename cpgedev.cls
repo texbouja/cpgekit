@@ -34,7 +34,7 @@
 \newif\ifconvert
 \newif\iflocalscore
 
-\def\class@options{11pt}
+\def\class@options{}
 \pgfkeys{/IGD/.is family, /IGD/.cd,
 	article/.code={\def\cpge@class{article}},
 	report/.code={\def\cpge@class{report}},
@@ -64,7 +64,7 @@
 	web/.code=\compacttrue\webtrue%
 		\ifundef\convert@option{\def\convert@options{}}{}
 		\def\cpgecomment@list{#1},
-	web/.default={exercice},
+	web/.default={probleme,exercice,planche},
 	convert/.code=\appto\convert@options{,#1},
 	singleimage/.is if=singleimage,
 	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,%
@@ -893,7 +893,7 @@
 				{\IfValueT{#4}{\protected@edef\@currentlabelname{#4}}}%
 				{\protected@edef\@currentlabelname{#5}}%
 			\MakeLinkTarget[#2]{problem}%
-			\label{\cpge@labelprefix#6}%
+			\label{#6}%
 		}%
 	}	
 \DeclareDocumentCommand\genericproblemtitle{
@@ -1014,6 +1014,11 @@
 	{|1|}
 	{de l'exercice}
 	(E)
+\cpgenewproblem{planche}
+	{Planche}
+	[planche]
+	{|1|}
+	{de la planche}
 \cpgenewproblem{cours}
 	{Questions de cours}
 	[q. de cours]
@@ -1215,10 +1220,10 @@
 						\listbox[enodeco, collink, text width=\curr@textwidth, align=right]{#1}%
 					}%
 		\else% 
-			\listbox[enodeco, align=center]{#1}%
+			\listbox[enodeco, text width=\curr@textwidth, align=center]{#1}%
 		\fi%
 	\else%
-		\listbox[enodeco, align=center]{#1}%
+		\listbox[enodeco, text width=\curr@textwidth, align=center]{#1}%
 	\fi%
 }
 \cpgesetdeco{nolink@}{%
@@ -1278,27 +1283,46 @@
 		{\begin{xenum}\op{switchdeco,#2}}%
 	\set@solutionslinks%
 }
-\NewDocumentCommand\init@ques{m !t- !t- !t- !t\r !t+  E{\op}{{}} }{%
-	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
-	\IfBooleanTF{#5}%
-        {\startques\r\op{#7}}%
-        {\IfBooleanT{#6}{\startques\op{#7}}}%
+\newif\ifinsidequestions
+\NewDocumentCommand\init@ques{m !t\r !t+  e\op }{%
+	\let\tmp@ques\relax
+	\IfBooleanTF{#2}%
+        {\def\tmp@ques{\startques\r}}%
+        {\IfBooleanTF{#3}
+			{\def\tmp@ques{\startques}}
+			{\unless\ifinsidequestions%
+				\def\tmp@ques{\startques}%
+			\fi%
+			}%
+		}%
+	\IfValueTF{#4}
+		{%
+			\ifundef\tmp@ques
+				{\def\tmp@ques{\startques\op{#4}\insidequestionstrue}}
+				{\appto\tmp@ques{\op{#4}\insidequestionstrue}}%
+		}{%
+			\ifundef\tmp@ques{}
+				{\appto\tmp@ques{\insidequestionstrue}}%
+		}
+	\tmp@ques%
 	#1%
 }
-\NewDocumentCommand\x@ques{o E{\sc}{{}} d() d<>}{%
-	\def\ques@score@{#2}%
-	\ifblank{#2}{}{%
-		\global\c@score@tmp=\numexpr\c@score@tmp+#2\relax%
-		\def\show@quesscore{\print@eno@score{#2}}%
+\NewDocumentCommand\x@ques{m !t- !t- !t-  E{\sc}{{}} o d() d<>}{%
+	\IfBooleanT{#2}{\exit-\IfBooleanT{#3}{\exit-\IfBooleanT{#4}{\exit-}}}%
+	\csname cpge@withsol#1\endcsname%
+	\def\ques@score@{#5}%
+	\ifdefvoid\ques@score@{}{%
+		\global\c@score@tmp=\numexpr\c@score@tmp+#5\relax%
+		\def\show@quesscore{\print@eno@score{#5}}%
 	}%
-	\IfValueTF{#1}%
-		{\if@staratend{#1}
+	\IfValueTF{#6}%
+		{\if@staratend{#6}
 		   {\cpgeref@setcounter{\cpge@listctr}{\x@arg-1}\cpge@item}
-		   {\if@plusatend{#1}
+		   {\if@plusatend{#6}
 			  {\cpgeref@addtocounter{\cpge@listctr}{\x@arg-1}\pcge@item}
-			  {\cpge@item[#1]}%
+			  {\cpge@item[#6]}%
 		   }
-			\ifblank{#1}%
+			\ifblank{#6}%
 				{\stepcounter{\cpge@listctr}}%
 				{}%
 		}%
@@ -1306,22 +1330,27 @@
 	\refstepcounter{question}%
 	\edef\@currentlabel{\csuse{label@\cpge@listctr}}
 	\ifcpge@withsol%
-		\IfValueTF{#4}{\gdef\ques@label@{#4}}{\gdef\ques@label@{}}%
-		\xappto\queslist{{\cpge@listctr}{\csuse{label@\cpge@listctr}}{\ques@label@}{\ques@score@},}
+		\IfValueTF{#8}{\gdef\ques@label@{#8}}{\gdef\ques@label@{}}%
+		\xappto\queslist{%
+			{\cpge@listctr}%
+			{\csuse{label@\cpge@listctr}}%
+			{\ques@label@}%
+			{\ques@score@},%
+		}
 	\fi%
 	\begingroup%
-	\IfValueT{#3}{\protected@edef\@currentlabelname{#4}\deco@itemtitle{#3}}%
-	\IfValueT{#4}{%
+	\IfValueT{#7}{\protected@edef\@currentlabelname{#7}\deco@itemtitle{#7}}%
+	\IfValueT{#8}{%
 		\MakeLinkTarget[question]{Item}%
-		\ifblank{#4}%
+		\ifblank{#8}%
 			{\label{eno:\cpge@problem@id:\csuse{label@\cpge@listctr}}}%
-			{\label{eno:\cpge@problem@id:#4}}%
+			{\label{eno:\cpge@problem@id:#8}}%
 	}%
 	\endgroup%
 }
 %%% Les commandes utilisateurs 
-\def\xques{\init@ques{\cpge@withsoltrue\x@ques}}
-\def\zques{\init@ques{\cpge@withsolfalse\x@ques}}
+\def\xques{\init@ques{\x@ques{true}}}
+\def\zques{\init@ques{\x@ques{false}}}
 \def\stopques{\exit}
 
 %%%%%%%%%%%%%%%%%%% mécanisme d'écriture des solutions dans un fichier %%%%%%%%%%%
@@ -1813,6 +1842,10 @@
 %\patchcmd\@begintheorem{\ignorespaces}{\set@defaultforlistsinsideunite\ignorespaces}{}{}
 %\preto\@endtheorem{\closeunite}{}{}
 %%% Fin des patch
+\dimdef\inner@border@xsep{0pt}
+\dimdef\inner@border@ysep{0pt}
+\dimdef\outer@border@xsep{0pt}
+\dimdef\outer@border@ysep{0pt}
 \unless\ifdraft
 	\cpgesetup[theorem]{%
 		frame style/.code=\appto\thm@frame@style{,background={#1}},%
@@ -1849,14 +1882,14 @@
 	}
 	\def\thm@frame@style{background={draw, rounded corners=3pt}}
 	\def\thm@title@style{fill=backcol}
-	\dimdef\outer@border@xsep{0pt}
-	\dimdef\outer@border@ysep{0pt}
 \fi%
+
 \ifdraft
+	\dimdef\head@sep{5pt}
 	\long\def\xframe@deco#1{%
-			\trivlist\item[]\fboxep=6pt
+			%\trivlist\item[]\fboxsep=6pt
 				\fbox{\parbox{\textwidth-12.8pt}{\cpge@footnote@restore #1}}
-			\endtrivlist%
+			%\endtrivlist%
 			\aftergroup\cpge@footnote@restore%
 	}
 	\def\thmhead@deco#1{\fboxsep\z@\colorbox{pagecol}{\kern\head@sep#1\kern\head@sep}}

@@ -48,7 +48,7 @@
 
 \ifundef\ifnoclors{\newif\ifnocolors}{}
 \ifundef\ifdraft{\newif\ifdraft}{}
-\ifundef\ifdark{\newif\ifdraft}{}
+\ifundef\ifdark{\newif\ifdark}{}
 
 \pgfkeys{/handlers/.colorlet/.code=
 	\pgfkeysalso{\pgfkeyscurrentpath/.code=\colorlet{#1}{##1}}
@@ -58,7 +58,8 @@
 	color model/.store in=\cpge@colormodel,
 	rgb/.style={color model=rgb}, rgb,
 	cmyk/.style={color model=cmyk},
-	dark/.is if=dark,
+	dark/.code=\unless\ifprint\csname dark#1\endcsname\fi,
+	dark/.default=true,
 	no colors/.is if=nocolors,
 	default import model=named,
 }
@@ -228,8 +229,16 @@ mainone,maintwo,mainthree,mainfour,mainfive,mainsix,cpgemagenta,cpgeblue,cpgegre
 		}
 	}{}
 }
+\def\cpgeprintcolors{
+	\ifprint
+		\xglobal\colorlet{pagecol}{white}%
+		\xglobal\colorlet{textcol}{black}%
+		\xglobal\colorlet{strokecol}{black}%
+	\fi%
+}
 \def\reloadthecolors{%
 	\cpgedefinecolors%
+	\cpgeprintcolors%
 	\colorlet{thmcol}{framestrokecol}%
 	\@ifpackageloaded{tcolorbox}{\tcbdefinecolors}{}%
 	\pagecolor{pagecol}%
@@ -251,3 +260,21 @@ mainone,maintwo,mainthree,mainfour,mainfive,mainsix,cpgemagenta,cpgeblue,cpgegre
 \@ifpackageloaded{cpgecommon}{}{%
 	\AtEndPreamble{\reloadthecolors}%
 }
+\cpgesetup[colors]{%
+	class/.code n args={3}{\begingroup%
+			\ifdefstring{\cpgecurrentclass}{dev}
+				{
+					\ifserie
+						\def\xc@tmp{#2}
+					\else
+						\def\xc@tmp{#1}
+					\fi
+				}
+				{\ifdefstring{\cpgecurrentclass}{doc}{\def\xc@tmp{#3}}{\def\xc@tmp{#1}}}
+			\convertcolorspec{named}{\xc@tmp}{\cpge@colormodel}\xc@tmp
+			\edef\cpge@tmpa{\endgroup\@nx\preparecolor{classcol}{\cpge@colormodel}{\xc@tmp}}
+			\cpge@tmpa
+			\listgadd\preparecolorlist{classcol}
+		}
+}
+\appto\colorpalettelist{,classcol}

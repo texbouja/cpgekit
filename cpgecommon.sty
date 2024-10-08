@@ -34,24 +34,7 @@
 
 %%%%% gestion de la couleur
 \RequirePackage{cpgecolor}
-\cpgesetup[colors]{%
-	class/.code n args={3}{\begingroup%
-			\ifdefstring{\cpgecurrentclass}{dev}
-				{
-					\ifserie
-						\def\xc@tmp{#2}
-					\else
-						\def\xc@tmp{#1}
-					\fi
-				}
-				{\def\xc@tmp{#3}}
-			\convertcolorspec{named}{\xc@tmp}{\cpge@colormodel}\xc@tmp
-			\edef\cpge@tmpa{\endgroup\@nx\preparecolor{classcol}{\cpge@colormodel}{\xc@tmp}}
-			\cpge@tmpa
-			\listgadd\preparecolorlist{classcol}
-		}
-}
-\appto\colorpalettelist{,classcol}
+
 %%% hyperref, aboslument indispensable
 \RequirePackage[pdfencoding=auto,psdextra]{hyperref}
 \hypersetup{colorlinks,linkcolor=linktextcol,urlcolor=linktextcol,breaklinks,raiselinks}
@@ -627,6 +610,288 @@
 }
 \cpgesetup[background]{position=pb, code=\relax}
 
+%%% Fonts loading. 
+\RequirePackage{ifxetex} 
+\cpgesetup[font]{%
+	libertine/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+			\RequirePackage[french]{babel}
+			\RequirePackage[tt=false]{libertine}
+			 \RequirePackage[%
+			 	libertine,smallerops,bigdelims,upint,vvarbb
+			 ]{newtxmath}
+			%\usepackage[amsthm,sansmath]{libertinust1math}
+			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
+			\RequirePackage[scaled=.8]{FiraMono}
+			\useosf
+			\def\TitlingFont{\sffamily\scshape}
+	}},
+	lmodern/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\usepackage{mlmodern}
+		\RequirePackage[french]{babel}
+		\def\TitlingFont{\scshape}
+	}},
+	utopia/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\RequirePackage[french]{babel}
+		\usepackage[p,scaled=.98,space]{erewhon}
+		\usepackage[scaled=1.05]{biolinum} % sans serif like Gill Sans
+		\usepackage[varqu,varl]{inconsolata} % typewriter
+		\usepackage[utopia,vvarbb]{newtxmath}
+		\useosf
+		\def\TitlingFont{\sffamily\scshape}
+	}},
+	palatino/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+		\RequirePackage[french]{babel}
+		\usepackage[nohelv]{newpxtext}
+		\usepackage[scaled=1.05]{biolinum}
+		\usepackage[vvarbb,smallerops]{newpxmath}
+		\useosf
+		\def\TitlingFont{\sffamily\scshape}
+	}},
+	fira/.code={%
+		\def\load@thefonts{%
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+
+			\fi
+			\RequirePackage[french]{babel}
+			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
+			\RequirePackage[scaled=.88]{FiraMono}
+			\RequirePackage[smallerops,upint]{newtxsf}
+			\def\fira@loaded{}%
+			\firaoldstyle
+			\def\TitlingFont{\scshape}
+	}},
+	load/.code={%
+		\def\load@thefonts{%
+			\RequirePackage[T1]{fontenc}
+			\RequirePackage[french]{babel}
+			\RequirePackage{#1}
+			\RequirePackage{microtype}
+	}},
+	none/.code={\def\load@thefonts{}},
+	titling font/.store in=\TitlingFont,
+}
+\DeclareDocumentCommand\cpgefont{m}{%
+	\cpgesetup[font]{#1}
+}
+\def\reloadthefonts{
+	\load@thefonts%
+	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
+		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}
+			{\unexpanded{\varmathbb{##1}}}
+		}
+}
+
+\AtEndPreamble{
+	\def\label@itemi{\relsize{-2}$\mathcolor{cpgeneutral}\xdiamond$}
+	\def\label@itemii{\relsize{-2}$\mathcolor{cpgeneutral}\xsquare$}
+	\def\label@itemiii{\relsize{-2}$\mathcolor{cpgeneutral}\xbullet$}
+	\def\ccsi{\textcolor{cpgeneutral}\xheadarrowright}
+	\def\ccalors{\textcolor{cpgeneutral}\xheadarrowleft}	
+	\def\ccneutre{\relsize{-2}$\mathcolor{cpgeneutral}\xbullet$}
+}
+\let\xdocument\document
+\let\endsxdocument\enddocument
+
+%%% Acronymes
+
+\RequirePackage{acronym}
+%\RequirePackage{acro}
+% \acsetup{
+% 	list/display=used,
+% 	list/template=description,
+% 	pages/display=first,
+% 	format/short=\sffamily\scshape,
+% 	format/long=\sffamily,
+% }
+% \def\listofacronyms{\printacronyms}
+
+\renewcommand\acsfont[1]{\textsc{#1}}
+\renewcommand\acffont[1]{\emph{#1}}
+\def\acro@@{\newacro}
+\def\acro@@plural{\newacroplural}
+
+\acro@@				{vap}{valeur propre}
+\acro@@plural		{vap}{valeurs propres}
+\acro@@				{vep}{vecteur propre}
+\acro@@plural		{vep}{vecteurs propres}
+\acro@@				{sep}{sous-espace propre}
+\acro@@plural		{sep}{sous-espaces propres}
+\acro@@				{sev}{sous-espace vectoriel}
+\acro@@plural		{sev}{sous-espaces vectoriels}
+\acro@@				{evn}{espace vectoriel norm\'e}
+\acro@@plural		{evn}{espaces vectoriels norm\'es}
+\acro@@				{cpa}{connexe par arcs}
+\acro@@plural		{cpa}{connexes par arcs}
+\acro@@				{uc}{uniform\'ement continue}
+\acro@@				{uce}[uc]{uniform\'ement continue}
+\acro@@plural		{uc}{uniform\'ement continues}
+\acro@@				{bon}{base orthonorm\'ee}
+\acro@@plural		{bon}{bases orthonorm\'ees}
+\acro@@				{pgcd}{plus grand diviseur commun}
+\acro@@				{ppcm}{plus petit multiple commun}
+\acro@@				{de}{division euclidienne}
+\acro@@				{cvs}{converge simplement}
+\acro@@				{cves}[cvs]{convergence simple}
+\acro@@				{cva}{converge absolument}
+\acro@@				{cvea}[cva]{convergence absolue}
+\acro@@				{cvu}{converge uniform\'ement}
+\acro@@				{cveu}[cvu]{convergence uniforme}
+\acro@@				{cvuc}{converge uniformément sur tout compact}
+\acro@@				{cveuc}[cvuc]{convergence uniforme sur tout compact}
+\acro@@				{cvn}{converge normalement}
+\acro@@				{cven}[cvn]{convergence normale}
+\acro@@				{dse}{d\'eveloppable en s\'erie enti\`ere}
+\acro@@				{rc}{rayon de convergence}
+\acro@@plural		{rc}{rayons de convergence}
+\acro@@				{cpm}{continue par morceaux}
+\acro@@plural		{cpm}{continues par morceaux}
+\acro@@				{cepm}{continuit\'e par morceaux}
+\acro@@				{va}{variable al\'eatoire}
+\acro@@				{var}{variable al\'eatoire r\'eelle}
+\acro@@				{vad}{variable al\'eatoire discrète}
+\acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
+\acro@@				{eaf}{\'egalit\'e des accroissements finis}
+\acro@@				{iaf}{in\'egalit\'e des accroissements finis}
+\acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
+\acro@@				{ipp}{int\'egration par parties}
+\acro@@				{itt}{int\'egration terme \`a terme}
+\acro@@				{dtt}{d\'erivation terme \`a terme}
+\acro@@				{il}{interversion de limites}
+\acro@@				{cvd}{convergence domin\'ee}
+\acro@@				{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
+\acro@@				{tch}{th\'eor\`eme de Cayley-Hamilton}
+\acro@@				{tsp}{th\'eor\`eme spectral}
+\acro@@				{tcd}{th\'eor\`eme de la convergence domin\'ee}
+\acro@@				{til}{th\'eor\`eme d'interversion de limites}
+\acro@@				{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
+\acro@@				{titt}{th\'eor\`eme d'int\'egration terme \`a terme}
+\acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
+\acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
+\acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
+
+
+\RequirePackage{xspace}
+\def\vap{\ac{vap}\xspace}
+\def\vep{\ac{vep}\xspace}
+\def\sev{\ac{sev}\xspace}
+\def\sep{\ac{sep}\xspace}
+\def\cvs{\ac{cvs}\xspace}
+\def\cvu{\ac{cvu}\xspace}
+\def\cvuc{\ac{cvuc}\xspace}
+\def\cvn{\ac{cvn}\xspace}
+\def\rc{\ac{rc}\xspace}
+\def\cpm{\ac{cpm}\xspace}
+\def\dse{\ac{dse}\xspace}
+\def\var{\ac{var}\xspace}
+\def\vad{\ac{vad}\xspace}
+\def\vadr{\ac{vadr}\xspace}
+
+\ifweb\expandafter\endinput\fi
+
+%%%% Gestion des themes
+\cpgesetup[theme]{%
+	postload/.is family,
+	postload/.unknown/.code=\relax,
+	postload/colors/.code=\pgfkeysalso{/cpge/colors,#1},
+	postload/no colors/.is if=nocolors,
+	color model/.store in=\cpge@colormodel,
+	rgb/.style={color model=rgb}, rgb,
+	cmyk/.style={color model=cmyk},
+	palette/.store in=\cpge@palette,
+	.unknown/.code=\relax,
+	dark/.code=\unless\ifprint\csname dark#1\endcsname\fi,
+	dark/.default=true,
+	draft/.is if=draft,
+	font/.code=\cpgefont{#1},
+	libertine/.style={font=libertine},
+	fira/.style={font=fira},
+	utopia/.style={font=utopia},
+	palatino/.style={font=palatino},
+	lmodern/.style={font=lmodern},
+	title page/.is if=titlepage,
+	title format/.code=\cpgesettitle{#1},
+	title format*/.code=\cpgesettitle*{#1},
+	scale title/.code=
+		\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
+	logo/.store in=\cpge@logo,
+	logo=all, 
+}
+\cpgesetup[title]{%
+	scale/.code=\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
+}
+\DeclareDocumentCommand\cpgetheme{O{} m}{%
+	\unless\ifdraft
+		\cpgesetup[theme]{#1}
+		\ifstrequal{#2}{ibnghazi}{\def\cpge@palette{ibnghazi}}{}
+		\load@thecolors
+		\cpgesetup[theme/postload]{#1}
+		\IfFileExists{#2\cpgecurrentclass.sty}
+			{\def\load@thetheme{\RequirePackage{#2\cpgecurrentclass}}}{}%
+	\fi%
+	\setup@enumstyle%
+	\let\darktrue\relax%
+}
+\DeclareDocumentCommand\cpgeconfig{O{}m}{%
+	\let\load@thetheme\relax
+	\cpgesetup[theme]{#1}
+	\load@thecolors
+	\cpgesetup[theme/postload]{#1}
+	\IfFileExists{cfg-#2.sty}
+		{\def\load@theconfig{\RequirePackage{cfg-#2}}}{}
+	\let\darktrue\relax%
+}
+\def\load@thetheme{}
+\def\load@theconfig{}
+\AtEndPreamble{
+	\cpgedefinecolors
+	\load@theconfig%
+	\load@thetheme%
+	\ifundef\load@thefonts
+		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
+		{}%
+	\reloadthefonts%
+	\reloadthecolors%
+	\pagestyle{main}%
+	\endpreamble@hook%
+}
+
 % \AtBeginDocument{%
 %  \cpgesetup{background}
 %  \ifbackground%
@@ -664,7 +929,7 @@
 \@namedef{Gm@bk17x24}#1{\Gm@setsize{#1}(170,240){truemm}}	%livre 17x24
 \@namedef{Gm@bk19x24}#1{\Gm@setsize{#1}(190,240){truemm}}	%livre 19x24
 \@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(135,240){truemm}}	%smartphone 16x9 (Apple)
-\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}	%smarthone 19x9	(Samsung)
+\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}	%smartphone 19x9	(Samsung)
 \@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}		%tablette 4x3 (Apple)
 \@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(180,288){truemm}}	%tablette 16x10 (Samsung)
 \@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}		%beamer
@@ -710,7 +975,6 @@
 		\geometry{%
 			a4paper,
 			twocolumn, columnsep=24truept,
-			%mag=830,
 			inner=1truecm, outer=1truecm,
 			vmargin={2.4truecm,2.4truecm},
 			footskip=1.6cm,
@@ -725,7 +989,6 @@
 			a4paper,
 			landscape,
 			twocolumn, columnsep=36truept,
-			%mag=870,
 			inner=1.8truecm, outer=1.8truecm,
 			vmargin={1.5truecm,1.5truecm},
 			footskip=1cm,
@@ -766,7 +1029,6 @@
 		\titlepagetrue%
 		\geometry{%
 			sc16x9,
-			mag=1100,
 			hmargin={1cm,.5cm},
 			vmargin={1.2cm,1.4cm},
 			littlemargin=4.5pc,
@@ -802,7 +1064,6 @@
 			sc4x3,
 			hmargin={1.8cm,1.8cm},
 			vmargin={1.5cm,2cm},
-			%mag=1100,
 			littlemargin=4.5pc
 		},%
 	lstablet/.code=%
@@ -817,7 +1078,6 @@
 			twocolumn, columnsep=36truept,
 			hmargin={.75cm,.75cm},
 			vmargin={1.2cm,1.8cm},
-			%mag=880,
 			littlemargin=4.5pc
 		},%
 	alttablet/.code=%
@@ -829,7 +1089,6 @@
 			sc16x10,
 			hmargin={1.2cm,1.2cm},
 			vmargin={2cm,3cm},
-			%mag=1100,
 			littlemargin=4.5pc
 		},%
 	lsalttablet/.code=%
@@ -843,7 +1102,6 @@
 			twocolumn, columnsep=40pt,
 			hmargin={1cm,1cm},
 			vmargin={1.2cm,1.2cm},
-			%mag=880,
 			littlemargin=6pc
 		},%
 }
@@ -1281,287 +1539,24 @@
    \sethead{}{}{}
    \setfoot{}{page \thepage{}}{}
  }
+ \newpagestyle{colle}{
+	\renewcommand\makeheadrule{}
+	\renewcommand\makefootrule{}
+	\sethead{}{}{}
+	\setfoot{}{}{}
+ }
 
-
-%%%%% HYPERREF, Absolument indispensable.
-
-%%%% Fonts loading. 
-\RequirePackage{ifxetex} 
-\cpgesetup[font]{%
-	libertine/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[tt=false]{libertine}
-			 \RequirePackage[%
-			 	libertine,smallerops,bigdelims,upint,vvarbb
-			 ]{newtxmath}
-			%\usepackage[amsthm,sansmath]{libertinust1math}
-			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
-			\RequirePackage[scaled=.8]{FiraMono}
-			\useosf
-			\def\TitlingFont{\sffamily\scshape}
-	}},
-	lmodern/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\usepackage{mlmodern}
-		\RequirePackage[french]{babel}
-		\def\TitlingFont{\scshape}
-	}},
-	utopia/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage[p,scaled=.98,space]{erewhon}
-		\usepackage[scaled=1.05]{biolinum} % sans serif like Gill Sans
-		\usepackage[varqu,varl]{inconsolata} % typewriter
-		\usepackage[utopia,vvarbb]{newtxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	palatino/.code={%
-		\def\load@thefonts{
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-			\fi
-		\RequirePackage[french]{babel}
-		\usepackage[nohelv]{newpxtext}
-		\usepackage[scaled=1.05]{biolinum}
-		\usepackage[vvarbb,smallerops]{newpxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
-	}},
-	fira/.code={%
-		\def\load@thefonts{%
-			\ifxetex
-				\RequirePackage{fontspec}
-				\let\lsstyle\relax
-			\else 
-				\RequirePackage[T1]{fontenc}
-				\RequirePackage{microtype}
-
-			\fi
-			\RequirePackage[french]{babel}
-			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
-			\RequirePackage[scaled=.88]{FiraMono}
-			\RequirePackage[smallerops,upint]{newtxsf}
-			\def\fira@loaded{}%
-			\firaoldstyle
-			\def\TitlingFont{\scshape}
-	}},
-	load/.code={%
-		\def\load@thefonts{%
-			\RequirePackage[T1]{fontenc}
-			\RequirePackage[french]{babel}
-			\RequirePackage{#1}
-			\RequirePackage{microtype}
-	}},
-	none/.code={\def\load@thefonts{}},
-	titling font/.store in=\TitlingFont,
-}
-\DeclareDocumentCommand\cpgefont{m}{%
-	\cpgesetup[font]{#1}
-}
-\def\reloadthefonts{
-	\load@thefonts%
-	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
-		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}
-			{\unexpanded{\varmathbb{##1}}}
-		}
-}
-%%%% Gestion des themes
-%%%% Gestion des themes
-\cpgesetup[theme]{%
-	postload/.is family,
-	postload/.unknown/.code=\relax,
-	postload/colors/.code=\pgfkeysalso{/cpge/colors,#1},
-	postload/no colors/.is if=nocolors,
-	color model/.store in=\cpge@colormodel,
-	rgb/.style={color model=rgb}, rgb,
-	cmyk/.style={color model=cmyk},
-	palette/.store in=\cpge@palette,
-	.unknown/.code=\relax,
-	dark/.is if=dark,
-	draft/.is if=draft,
-	font/.code=\cpgefont{#1},
-	libertine/.style={font=libertine},
-	fira/.style={font=fira},
-	utopia/.style={font=utopia},
-	palatino/.style={font=palatino},
-	lmodern/.style={font=lmodern},
-	title page/.is if=titlepage,
-	title format/.code=\cpgesettitle{#1},
-	title format*/.code=\cpgesettitle*{#1},
-	scale title/.code=
-		\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}},
-	logo/.store in=\cpge@logo,
-	logo=all, 
-}
-\cpgesetup[title]{%
-	scale/.code=\appto\endpreamble@hook{\pgfmathsetlength\cpge@ttlw{\cpge@ttlw/#1}}
-}
-\DeclareDocumentCommand\cpgetheme{O{} m}{%
-	\unless\ifdraft
-		\cpgesetup[theme]{#1}
-		\ifstrequal{#2}{ibnghazi}{\def\cpge@palette{ibnghazi}}{}
-		\load@thecolors
-		\cpgesetup[theme/postload]{#1}
-		\IfFileExists{#2\cpgecurrentclass.sty}
-			{\def\load@thetheme{\RequirePackage{#2\cpgecurrentclass}}}{}%
-	\fi%
-	\setup@enumstyle%
-	\let\darktrue\relax%
-}
-\DeclareDocumentCommand\cpgeconfig{O{}m}{%
-	\let\load@thetheme\relax
-	\cpgesetup[theme]{#1}
-	\load@thecolors
-	\cpgesetup[theme/postload]{#1}
-	\IfFileExists{cfg-#2.sty}
-		{\def\load@theconfig{\RequirePackage{cfg-#2}}}{}
-	\let\darktrue\relax%
-}
-\def\load@thetheme{}
-\def\load@theconfig{}
-\AtEndPreamble{
-	\cpgedefinecolors
-	\load@theconfig%
-	\load@thetheme%
-	\ifundef\load@thefonts
-		{\ifprint\cpgefont{libertine}\else\cpgefont{fira}\fi}
-		{}%
-	\reloadthefonts%
-	\reloadthecolors%
-	\endpreamble@hook%
-	\pagestyle{main}%
-}
-\AtEndPreamble{
-	\def\label@itemi{\relsize{-2}$\mathcolor{cpgeneutral}\xdiamond$}
-	\def\label@itemii{\relsize{-2}$\mathcolor{cpgeneutral}\xsquare$}
-	\def\label@itemiii{\relsize{-2}$\mathcolor{cpgeneutral}\xbullet$}
-	\def\ccsi{\textcolor{cpgeneutral}\xheadarrowright}
-	\def\ccalors{\textcolor{cpgeneutral}\xheadarrowleft}	
-	\def\ccneutre{\relsize{-2}$\mathcolor{cpgeneutral}\xbullet$}
-}
-\let\xdocument\document
-\let\endsxdocument\enddocument
-
-%%% Acronymes
-
-\RequirePackage{acronym}
-%\RequirePackage{acro}
-% \acsetup{
-% 	list/display=used,
-% 	list/template=description,
-% 	pages/display=first,
-% 	format/short=\sffamily\scshape,
-% 	format/long=\sffamily,
-% }
-% \def\listofacronyms{\printacronyms}
-
-\renewcommand\acsfont[1]{\textsc{#1}}
-\renewcommand\acffont[1]{\emph{#1}}
-\def\acro@@{\newacro}
-\def\acro@@plural{\newacroplural}
-
-\acro@@				{vap}{valeur propre}
-\acro@@plural		{vap}{valeurs propres}
-\acro@@				{vep}{vecteur propre}
-\acro@@plural		{vep}{vecteurs propres}
-\acro@@				{sep}{sous-espace propre}
-\acro@@plural		{sep}{sous-espaces propres}
-\acro@@				{sev}{sous-espace vectoriel}
-\acro@@plural		{sev}{sous-espaces vectoriels}
-\acro@@				{evn}{espace vectoriel norm\'e}
-\acro@@plural		{evn}{espaces vectoriels norm\'es}
-\acro@@				{cpa}{connexe par arcs}
-\acro@@plural		{cpa}{connexes par arcs}
-\acro@@				{uc}{uniform\'ement continue}
-\acro@@				{uce}[uc]{uniform\'ement continue}
-\acro@@plural		{uc}{uniform\'ement continues}
-\acro@@				{bon}{base orthonorm\'ee}
-\acro@@plural		{bon}{bases orthonorm\'ees}
-\acro@@				{pgcd}{plus grand diviseur commun}
-\acro@@				{ppcm}{plus petit multiple commun}
-\acro@@				{de}{division euclidienne}
-\acro@@				{cvs}{converge simplement}
-\acro@@				{cves}[cvs]{convergence simple}
-\acro@@				{cva}{converge absolument}
-\acro@@				{cvea}[cva]{convergence absolue}
-\acro@@				{cvu}{converge uniform\'ement}
-\acro@@				{cveu}[cvu]{convergence uniforme}
-\acro@@				{cvuc}{converge uniformément sur tout compact}
-\acro@@				{cveuc}[cvuc]{convergence uniforme sur tout compact}
-\acro@@				{cvn}{converge normalement}
-\acro@@				{cven}[cvn]{convergence normale}
-\acro@@				{dse}{d\'eveloppable en s\'erie enti\`ere}
-\acro@@				{rc}{rayon de convergence}
-\acro@@plural		{rc}{rayons de convergence}
-\acro@@				{cpm}{continue par morceaux}
-\acro@@plural		{cpm}{continues par morceaux}
-\acro@@				{cepm}{continuit\'e par morceaux}
-\acro@@				{va}{variable al\'eatoire}
-\acro@@				{var}{variable al\'eatoire r\'eelle}
-\acro@@				{vad}{variable al\'eatoire discrète}
-\acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
-\acro@@				{eaf}{\'egalit\'e des accroissements finis}
-\acro@@				{iaf}{in\'egalit\'e des accroissements finis}
-\acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
-\acro@@				{ipp}{int\'egration par parties}
-\acro@@				{itt}{int\'egration terme \`a terme}
-\acro@@				{dtt}{d\'erivation terme \`a terme}
-\acro@@				{il}{interversion de limites}
-\acro@@				{cvd}{convergence domin\'ee}
-\acro@@				{tdn}{th\'eor\`eme de la d\'ecomposition des noyax}
-\acro@@				{tch}{th\'eor\`eme de Cayley-Hamilton}
-\acro@@				{tsp}{th\'eor\`eme spectral}
-\acro@@				{tcd}{th\'eor\`eme de la convergence domin\'ee}
-\acro@@				{til}{th\'eor\`eme d'interversion de limites}
-\acro@@				{tdtt}{th\'eor\`eme de d\'erivation terme \`a terme}
-\acro@@				{titt}{th\'eor\`eme d'int\'egration terme \`a terme}
-\acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
-\acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
-\acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
-
-
-\RequirePackage{xspace}
-\def\vap{\ac{vap}\xspace}
-\def\vep{\ac{vep}\xspace}
-\def\sev{\ac{sev}\xspace}
-\def\sep{\ac{sep}\xspace}
-\def\cvs{\ac{cvs}\xspace}
-\def\cvu{\ac{cvu}\xspace}
-\def\cvuc{\ac{cvuc}\xspace}
-\def\cvn{\ac{cvn}\xspace}
-\def\rc{\ac{rc}\xspace}
-\def\cpm{\ac{cpm}\xspace}
-\def\dse{\ac{dse}\xspace}
-\def\var{\ac{var}\xspace}
-\def\vad{\ac{vad}\xspace}
-\def\vadr{\ac{vadr}\xspace}
+%
 %%%%%%
+
+\RequirePackage[normalem]{ulem}
+\newcommand\cst{\bgroup\markoverwith
+    {\textcolor{cpgered}{\rule[0.5ex]{2pt}{0.4pt}}}\ULon}
+\UL@protected\def\cwa{\leavevmode \bgroup  
+  \markoverwith{\color@begingroup\color{cpgered}%
+    \lower6pt\hbox to0pt{\ninely \char58}%
+    \lower6.4pt\hbox{\ninely \char58}%
+    \color@endgroup}\ULon}
+\font\ninely=lasy9
 
 \endinput

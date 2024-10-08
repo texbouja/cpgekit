@@ -1,0 +1,733 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cpgelist}[Sep. 2024, v1.0beta, Sadik Boujaida]
+
+\ReuirePackage{pgfkeys}
+\RequirePackage{etoolbox}
+\RequirePackage{cpgebase}
+
+
+%%%%%%
+\RequirePackage[inline]{enumitem}
+\RequirePackage{pifont}
+\RequirePackage{relsize}
+\def\cpgeendash{--}
+\def\cpgehand{{\larger[2]\raisebox{-.25ex}{\ding{42}}}}
+\def\cpgecheckmark{{\smaller[2]\ding{52}}}
+\def\cpgecrossmark{{\smaller\ding{56}}}
+\def\cpgefourstar{{\smaller\ding{70}}}
+\def\cpgefivestar{{\smaller\ding{72}}}
+\def\cpgetriangle{{\rotatebox{90}{\resizebox{.58em}{!}{\ding{116}}}}}
+\def\cpgebullet{{\resizebox{.45em}{!}{\ding{108}}}}
+\def\cpgeshadowedbullet{{\resizebox{.66em}{!}{\ding{109}}}}
+\def\cpgesquare{{\smaller[3]\ding{110}}}
+\def\cpgeshadowedsquare{{\smaller[2]\ding{113}}}
+\def\cpgediamond{{\smaller[2]\ding{117}}}
+\def\cpgearrowstrobe{{\larger\ding{224}}}
+\def\cpgearrowheadright{{\smaller[2]\raisebox{.33ex}{\ding{228}}}}
+\def\cpgearrowheadleft{{\rotatebox[origin=l]{180}{\cpgearrowheadright}}}
+\def\cpgearrowdown{{\ding{229}}}
+\def\cpgearrowup{{\ding{230}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%% Les listes LVRT %%%%%%%%%%%%%%%%
+
+\newif\iflistopen
+\newif\if@inline
+\newif\if@restore
+\newdimen\numwidth
+\newrobustcmd\littleskip{\hskip.25em}
+\def\opts@tmp{}%
+
+%%%% Dans le processus d'initialisation, les options sont 
+%%%% d'abords fournies à pgfkeys, il traite celles qu'il connait
+%%%% et ignore les autres : celles qui sont destinées à
+%%%% enumitem qui implémente son propre mécanisme clé/valeur 
+%%%% (beaucoup moins puissant que pgfkeys)
+%%%% un jeu d'options enumitem est aussi ajouté.
+
+%%%% clés pgfkeys pour former le label dans enumerate.
+\def\list@defformat#1#2{%
+	\def#1##1{%
+		\edef\@tmpnum{##1}%
+		\ifdefvoid\@tmpnum{}{#2{##1}}%
+	}%
+}
+\def\list@csdefformat#1#2{%
+	\csdef{#1}##1{%
+		\edef\@tmpnum{##1}%
+		\ifdefvoid\@tmpnum{}{#2{##1}}%
+	}%
+}
+\newrobustcmd\numpunct[1]{%
+	\edef\@tmpnum{#1}%
+	\ifdefvoid\@tmpnum{}{#1\list@punct}%
+}
+\def\punct@origin{.}
+\def\commondeco{\color{numcol}\sffamily\bfseries}
+\def\process@currlabel#1{%
+	\ifdefstring\list@type{enum}
+		{\ifinlist{#1}\cpge@list
+			{%
+				\edef\list@label{%
+					\@xp\@xo\csname labelnumber@#1\endcsname
+						{\@xo\@levelname}}%
+			}{%
+				\@xp\cpgesetcont\@xp{\@levelname}{#1}%
+				\letcs\list@label{label@\@levelname}}%
+		}{\ifinlist{#1}\cpge@list
+			{\edef\list@label{\@xp\@xo\csname labelsymbol@#1\endcsname}}
+			{\def\list@label{#1}}%
+		}%@punct
+}
+\def\process@label#1#2{%
+	\in@{!enum}{!#1}
+	\ifin@	
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelnumber@#2}}
+			{\cpgesetcont{#1}{#2}}%
+	\else 
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelsymbol@#2}}
+			{\csdef{label@#1}{#2}}%
+	\fi%
+}
+\def\process@shortlabel#1#2{
+	\in@{!enum}{!#1}
+	\ifin@	
+		\ifinlist{#2}\cpge@list
+			{\csedef{label@#1}{\@xp\@xo\csname labelnumber@#2\endcsname{#1}}}
+			{\common@err{label #2 non défini}}%
+	\else 
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelsymbol@#2}}
+			{\common@err{label #2 non défini}}%
+	\fi%
+	%\csshowhere{label@#1}
+}
+\def\process@currformat#1{
+	\list@defformat\list@deco{\commondeco#1}
+	\settowidth\numwidth{\list@deco{\appcounterstyle{\@levelname}{13}}}%
+	\process@placement\opts@currentlist
+}
+\def\process@format#1#2{
+	\list@csdefformat{deco@#1}{\commondeco#2}%
+	\settowidth\numwidth{\csuse{deco@#1}{\appcounterstyle{#1}{13}}}%
+	\@xp\process@placement\csname opts@#1\endcsname
+}
+\def\process@placement#1{
+	\ifdim\numwidth>\dimexpr 2em+\labelsep\relax	
+		\appto#1{,wide, leftmargin=2em, labelsep=.75em}
+	\else 
+		\eappto#1{,labelindent=\the\numwidth}
+	\fi
+}
+%%% Passerelle pour le système keyval d'enumitem
+%%% exécute  l'action #2  si \list@type est le bon type de liste
+\def\cpge@goodtype#1#2{
+	\ifdefstring\list@type{#1}
+		{#2}
+		{\csname cpge@#1err\endcsname}
+}
+%%% exécute l'option #2  si \list@type est le bon type de liste
+\def\list@goodtype#1#2{
+	\ifdefstring\list@type{#1}
+		{\pgfqkeys{/cpge/list/loading}{#2}}
+		{\csname cpge@#1err\endcsname}
+}
+%%% pour les clés pgf .unknown qui stockent 
+%%% les options à destination de enumitem
+\def\list@addenumitemopt#1#2{
+	\edef\cpge@tmp{#1}
+	\cpge@toks{#2}%
+	\if@plusatend{\cpge@tmp}
+		{\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto\opts@globallist{,\cpge@arg}}
+			{\eappto\opts@globallist{,\cpge@arg=\the\cpge@toks}}}
+		{\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto\opts@currentlist{,\cpge@arg}}
+			{\eappto\opts@currentlist{,\cpge@arg=\the\cpge@toks}}}
+}
+%%% pour reinterpreter une option existante d'enumitem (wide)
+\DeclareDocumentCommand\list@enumitemsameopt{mmmo}{
+	\cpge@toks{#3}%
+	\edef\cpge@tmp{#3}
+	\ifdefstring\cpge@tmp{NoValue}
+		{\cseappto{opts@#1list}{,#2}}
+		{	\IfValueTF{#4}
+			{\cseappto{opts@#1list}{,#2=\the\cpge@toks, #4}}
+			{\cseappto{opts@#1list}{,#2=\the\cpge@toks}}
+		}
+}
+%%% pour ajouter l'option \pgfkeyscurrentname=#2 à la liste interne #1
+%%% sert dans : enumi, enumii, enumiii 
+\def\list@addenitopt#1#2{
+	\cpge@toks{#2}%
+	\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto#1{,\pgfkeyscurrentname}}
+			{\eappto#1{,\pgfkeyscurrentname=\the\cpge@toks}}
+}
+%%% commande intermédiaire pour relayer un lot d'option à \setlist(*)
+\DeclareDocumentCommand\list@setlist{som}{%
+	\begingroup
+	\def\tmp@{\endgroup\setlist}
+	\IfBooleanT{#1}{\appto\tmp@*}
+	\IfValueT{#2}{\eappto\tmp@{[\@xo#2]}}
+	\eappto\tmp@{{\@xo#3}}
+	\tmp@%
+}
+\def\list@setlevel#1#2{%
+	\ifcsdef{\list@csname @#1}{}{
+		\csdef{\list@csname @#1}{}%
+		#2
+	}%
+}
+%%% commandes de sauvegarde/restauration des compteurs enum
+\def\save@counter#1#2{\csxdef{saved@#1@#2}{\the\value{#2}}}
+\def\restore@counter#1#2{\setcounter{#2}{\csuse{saved@#1@#2}}}
+%%% styles par défaut, 
+\cpgesetcont{enumi}{|1|}		
+\cpgesetcont{enumii}{|a|}		
+\cpgesetcont{enumiii}{|i|}		
+\def\label@itemi{\cpgesquare}
+\def\label@itemii{\cpgediamond}
+\def\label@itemiii{\cpgebullet}
+\def\deco@enumi{\commondeco\numpunct}
+\def\deco@enumii{\commondeco\numpunct}
+\def\deco@enumiii{\commondeco\numpunct}
+\def\deco@itemi{\commondeco}
+\def\deco@itemii{\commondeco}
+\def\deco@itemiii{\commondeco}
+\def\opts@enumi{} 
+\def\opts@enumii{} 
+\def\opts@enumiii{}
+\def\opts@itemi{} 
+\def\opts@itemii{} 
+\def\opts@itemiii{}
+\def\opts@list{}
+\cpgesetup[list]{
+	@enumi/.is family,
+	@enumi/label/.code=\process@label{enumi}{#1},
+	@enumi/format/.code=\process@format{enumi}{#1},
+	@enumi/format/.default=\@iden,
+	@enumi/punctuation/.store in=\punct@enumi,
+	@enumi/lab/.style={label=#1},
+	@enumi/for/.style={format=#1},
+	@enumi/punct/.style={punctuation=#1},
+	@enumi/.unknown/.code=\list@addenitopt\opts@enumi{#1},
+	enumi/.code=\list@setlevel{enumi}{%
+				\pgfqkeys{/cpge/list/@enumi}{#1}%
+				\list@setlist*[enumerate,1]{%
+					\opts@enumi, 
+					label=\@xo\label@enumi, 
+					format=\@nx\deco@enumi,
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[list]{
+	@enumii/.is family,
+	@enumii/label/.code=\process@label{enumii}{#1},
+	@enumii/format/.code=\process@format{enumii}{#1},
+	@enumii/format/.default=\@iden,
+	@enumii/punctuation/.store in=\punct@enumii,
+	@enumii/lab/.style={label=#1},
+	@enumii/for/.style={format=#1},
+	@enumii/punct/.style={punctuation=#1},
+	@enumii/.unknown/.code=\list@addenitopt\opts@enumii{#1},
+	enumii/.code=\list@setlevel{enumii}{\pgfqkeys{/cpge/list/@enumii}{#1}
+				\list@setlist*[enumerate,2]{%
+					\opts@enumii, 
+					label=\@xo\label@enumii, 
+					format=\@nx\deco@enumii,%
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[list]{
+	@enumiii/.is family,
+	@enumiii/label/.code=\process@label{enumiii}{#1},
+	@enumiii/format/.code=\process@format{enumiii}{#1},
+	@enumiii/format/.default=\@iden,
+	@enumiii/punctuation/.store in=\punct@enumiii,
+	@enumiii/lab/.style={label=#1},
+	@enumiii/for/.style={format=#1},
+	@enumiii/punct/.style={punctuation=#1},
+	@enumiii/.unknown/.code=\list@addenitopt\opts@enumiii{#1},
+	enumiii/.code=\list@setlevel{enumiii}{\pgfqkeys{/cpge/list/@enumiii}{#1}%
+				\list@setlist*[enumerate,3]{%
+					\opts@enumiii,
+					label=\@xo\label@enumiii, 
+					format=\@nx\deco@enumiii,
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[list]{
+	itemi/.is family,
+	itemi/label/.code=\process@label{itemi}{#1},
+	itemi/lab/.style={label=#1},
+	itemi/format/.code=\cpge@itemerr,
+	itemi/for/.code=\cpge@itemerr,
+	itemi/.unknown/.code=\list@addenitopt\opts@itemi{#1},
+	itemi/.code=\list@setlevel{itemi}{\pgfqkeys{/cpge/list/itemi}{#1}
+				\list@setlist*[itemize,1]{%
+					\opts@itemi, 
+					label=\@xo\label@itemi, 
+				}}
+}
+\cpgesetup[list]{
+	itemii/.is family,
+	itemii/label/.code=\process@label{itemii}{#1},
+	itemii/lab/.style={label=#1},
+	itemii/format/.code=\cpge@itemerr,
+	itemii/for/.code=\cpge@itemerr,
+	itemii/.unknown/.code=\list@addenitopt\opts@itemii{#1},
+	itemii/.code=\list@setlevel{itemii}{\pgfqkeys{/cpge/list/itemii}{#1}
+				\list@setlist*[itemize,2]{%
+					\opts@itemii, 
+					label=\@xo\label@itemii, 
+				}}
+}
+\cpgesetup[list]{
+	itemiii/.is family,
+	itemiii/label/.code=\process@label{itemiii}{#1},
+	itemiii/lab/.style={label=#1},
+	itemiii/format/.code=\cpge@itemerr,
+	itemiii/for/.code=\cpge@itemerr,
+	itemiii/.unknown/.code=\list@addenitopt\opts@itemiii{#1},
+	itemiii/.code=\list@setlevel{itemiii}{\pgfqkeys{/cpge/list/itemiii}{#1}
+				\list@setlist*[itemize,3]{%
+					\opts@itemiii, 
+					label=\@xo\label@itemiii, 
+				}}
+}
+\cpgesetup[list]{
+	global/.is family,
+	global/enumi/.forward to=/cpge/list/enumi, 
+	global/enumii/.forward to=/cpge/list/enumii,
+	global/enumiii/.forward to=/cpge/list/enumiii,
+	global/itemi/.forward to=/cpge/list/itemi, 
+	global/itemii/.forward to=/cpge/list/itemii,
+	global/itemiii/.forward to=/cpge/list/itemiii,
+	global/.unknown/.code=\list@addenitopt\opts@list{#1}, 
+	global/.code=
+		{\pgfqkeys{/cpge/list/global}{#1}%
+			\list@setlist*{\opts@list}%
+		}
+}
+\cpgesetup[list]{
+	loading/.is family, loading, 
+	.unknown/.code=\list@addenumitemopt{\pgfkeyscurrentname}{#1},
+	enumi/.forward to=/cpge/list/enumi, 
+	enumii/.forward to=/cpge/list/enumii,
+	enumiii/.forward to=/cpge/list/enumiii,
+	label/.code=
+		\ifdef\list@fixedlabel
+			{\cpge@enumitemerr}
+			{\process@currlabel{#1}},
+	lab/.style={label=#1},
+	label*/.code=
+		\ifdef\list@fixedlabel
+			{\cpge@enumitemerr}
+			{\@xp\process@shortlabel\@xp{\@levelname}{#1}},
+	format/.code=\cpge@goodtype{enum}{\process@currformat{#1}},
+	for/.style={format=#1},
+	format/.default=\@iden,
+	punctuation/.store in=\list@punct,
+	punct/.style={punctuation=#1},
+	1/.code=	\list@goodtype{enum}{label*=1},
+	a/.code=	\list@goodtype{enum}{label*=a},
+	A/.code=	\list@goodtype{enum}{label*=A},
+	i/.code=	\list@goodtype{enum}{label*=i,widest*=4},
+	I/.code=	\list@goodtype{enum}{label*=I,widest*=4},
+	p/.code=	\list@goodtype{enum}{label*=p, punct={}, ind=1em},
+	b/.code=	\list@goodtype{item}{label*=b},
+	c/.code=	\list@goodtype{item}{label*=c},
+	d/.code=	\list@goodtype{item}{label*=d},
+	e/.code=	\list@goodtype{item}{label*=e},     
+	s/.code=	\list@goodtype{item}{label*=s},
+	t/.code=	\list@goodtype{item}{label*=t},
+	bs/.code=	\list@goodtype{item}{label*=bs},
+	as/.code=	\list@goodtype{item}{label*=as},
+	ad/.code=	\list@goodtype{item}{label*=ad},
+	au/.code=	\list@goodtype{item}{label*=au},
+	al/.code=	\list@goodtype{item}{label*=al},
+	ar/.code=	\list@goodtype{item}{label*=ar},
+	5s/.code=	\list@goodtype{item}{label*=5s},
+	4s/.code=	\list@goodtype{item}{label*=4s},
+	cm/.code=	\list@goodtype{item}{label*=cm}, 
+	h/.code=	\list@goodtype{item}{label*=h},
+	resume/.code=\common@err{l'option resume d'enumitem est descativée.
+		\MessageBreak utiliser le drapeau \string\r},
+	ind/.code=	\preto\opts@currentlist{labelindent=#1,},
+	ind+/.code=	\preto\opts@globallist{labelindent=#1,},
+	sep/.code=	\preto\opts@currentlist{labelsep=#1,},
+	sep+/.code=	\preto\opts@globallist{labelsep=#1,},
+	wide/.code={%
+		\list@enumitemsameopt{current}{wide}{#1}
+			[leftmargin=\the\cpge@toks]
+	},
+	wide/.default=NoValue,
+	wide+/.code={%
+		\list@enumitemsameopt{global}{wide}{#1}
+			[leftmargin=\the\cpge@toks]
+	},
+}
+\newcommand*\cpgesetuplist{\pgfqkeys{/cpge/list/global}}
+\newcommand*\cpgelistloading{\pgfqkeys{/cpge/list/loading}}
+\NewDocumentCommand\additemizestyle{mmmm}{%
+		%	1 csname
+		%	2 symbol name
+		%	3 symbol code
+		%	default options
+	\csdef{labelsymbol@#2}{#3}
+	\listadd\cpge@list{newsimplifiedi#2}
+	\cpgelistloading{#2/.code=\list@goodtype{item}{label*=#2}}
+	\newsimplifieditemize{#1}{#4}[#2]
+}
+\csvtolistadd\cpge@list{%
+	s,d,t,b,bs,c,e,as,ad,au,al,ar,5s,4s,cm,h,1,a,A,i,I,p}
+\def\labelsymbol@s{\cpgesquare}
+\def\labelsymbol@d{\cpgediamond}
+\def\labelsymbol@t{\cpgetriangle}
+\def\labelsymbol@b{\cpgebullet}
+\def\labelsymbol@bs{\cpgeshadowedbullet}
+\def\labelsymbol@c{\cpgecheckmark}
+\def\labelsymbol@e{\cpgeendash}
+\def\labelsymbol@as{\cpgearrowstrobe}
+\def\labelsymbol@ad{\cpgearrowdown}
+\def\labelsymbol@au{\cpgearrowup}
+\def\labelsymbol@al{\cpgearrowheadleft}
+\def\labelsymbol@ar{\cpgearrowheadright}
+\def\labelsymbol@cm{\cpgecrossmark}
+\def\labelsymbol@h{\cpgehand}
+\csdef{labelsymbol@5s}{\cpgefivestar}
+\csdef{labelsymbol@4s}{\cpgefourstar}
+\csdef{labelnumber@1}{\arabic}
+\def\labelnumber@a{\alph}
+\def\labelnumber@A{\Alph}
+\def\labelnumber@i{\roman}
+\def\labelnumber@I{\Roman}
+\def\labelnumber@p{\pinumber}
+
+\newrobustcmd\pinumber[1]{\larger\expandafter\pi@number\csname c@#1\endcsname}
+\def\pi@number#1{%
+  \ifcase#1\or \r@ding{202}\or \r@ding{203}\or \r@ding{204}\or \r@ding{205}\or \r@ding{206}\or \r@ding{207}\or \r@ding{208}\or \r@ding{209}\or \r@ding{210}\or \r@ding{211}\else\@ctrerr\fi}
+\def\LARGER#1{\ifblank{#1}{\larger[-1]}{\larger[#1]}}
+\cpgelistloading{pi/.code 2 args=%
+	\cpge@goodtype{item}{\def\list@label{\LARGER{#1}\raisebox{-.33ex}{\ding{#2}}}}%
+}
+\def\r@ding#1{\raisebox{-.25ex}{\ding{#1}}}
+%%% Messages d'erreur
+\def\cpge@enumitemerr{%
+	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Son label est fixe
+	}{}}
+\def\cpge@enumerr{%
+	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Elle est réservée aux listes enumerate.
+	}{}}
+\def\cpge@itemerr{%
+	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Elle est réservée aux listes itemize.
+	}{}}
+\SetEnumitemKey{inline}{
+	afterlabel=\littleskip,
+	itemjoin={{;\enskip}}, 
+	itemjoin*={{\enskip et\enskip}}
+}
+
+%%% collecte des options des listes dans environnement multicolonne
+\def\opts@itemize@columns{nosep, labelsep=.45em}
+\def\opts@enumerate@columns{labelsep=.4em, nosep}
+\newcommand\cpgesetlist[2][]{
+	\ifblank{#1}{
+		\cspreto{opts@itemize@columns}{#2,}
+		\cspreto{opts@enumerate@columns}{#2,}
+	}{
+		\cspreto{col@#1@opts}{#2,}
+	}
+}
+
+%%% Commandes de fermeture des environnement de liste
+%%% \closeall ferme récursivement TOUS les niveaux ouverts
+%%% \closelist ferme le niveau courant s'il y'en a un
+\newrobustcmd\closeall{%
+	\iflistopen%
+%		\ifhmode\strut\fi%
+	\endlistcmd\endgroup%
+	\@xp\closeall\fi%
+}
+\newrobustcmd\closelist{%
+	\iflistopen%
+%		\ifhmode\strut\fi%
+		\endlistcmd\endgroup%
+\fi}%
+\def\cpge@endenumerate{%
+	\endenumerate%
+	\save@counter{\@xp\list@csname}{\@levelname}
+}
+
+%%% Commande utilisée dans la redéfinition de la commande de liste 
+%%% une fois la liste ouverte. 
+%%% si elle est suivie d'une option <> elle relance la version 
+%%% originale de la commande (ce qui implique l'ouverture d'un niveau)
+%%% sinon elle teste si  niveau courant >  niveau d'origine 
+%%%  et elle ferme recursivement les niveau jusqu'à égalité des 2 niveaux
+%%% ensuite elle teste la présence d'un arg -, elle se retire encore 
+%%% d'un niveau. L'instruction terminale est toujours \item  
+\DeclareDocumentCommand\list@unity{mm !d<> t\r !t-}{%
+	\IfValueTF{#3}%
+		{\csuse{#1@#2@origin}<#3>}
+		{%
+		\ifnumless{\csname#1@#2@depth\endcsname}{\@listdepth}
+				{\closelist\list@unity{#1}{#2}}
+				{%
+					\IfBooleanTF{#5}
+						{\closelist\iflistopen%
+							\def\cpge@tmp{\list@unity{#1}{#2}}%
+							\@xp\cpge@tmp%
+						\fi}%
+						{\item}%
+				}%
+		}%
+}
+
+%%% Commandes d'initialisation et d'ouverture d'une liste
+\def\list@punct{.}
+\def\list@unsetcontext{%
+	\undef\list@label%
+	\undef\list@deco%
+	\let\list@punct\relax%
+	\@restorefalse
+	\def\opts@currentlist{}%
+	\def\opts@globallist{}%
+}
+\DeclareDocumentCommand\list@init{%
+		m % abrev : item ou enum
+		D<>{} % liste des options locales
+		t\r % flag pour restauration
+		t\s % flag pour sauvegarde
+}{%
+	\def\list@type{#1}%
+	\ifdefstring\list@type{enum}
+		{\edef\list@currname{\list@csname num}}
+		{\edef\list@currname{\list@csname it}}%
+	\csnumdef{\list@csname @#1@depth}{\@listdepth+1}%
+	\process@levelnames{#1}%
+	\list@unsetcontext%
+	\booltrue{listopen}%
+	% récuperer les opts par défauts de la cmd
+	\letcs\opts@tmp{\list@csname @#1@opts}%
+	% ajouter les opts locales
+	\ifblank{#2}{}{\csvadd\opts@tmp{#2}}%
+	% restaurer les opts sauvegradées si flag \r
+	\IfBooleanT{#3}{%
+		\ifdefstring\list@type{item}{}{%
+			\@restoretrue%
+			\ifcsdef{\list@csname @\@levelname @sopts}{%
+			\csveadd\opts@tmp{\@xp\@xo\csname\list@csname @\@levelname @sopts\endcsname}}{}%
+		}%
+	}
+	% sauvegrader les opts locales si flag \s
+	\IfBooleanT{#4}{%
+		\ifdefstring\list@type{item}{}{%
+			\IfBooleanTF{#3}{%
+				\common@err{drapeaux \string\s et \string\r 
+					utlilisés simultanément}%
+			}{%
+				\csgdef{\list@csname @\@levelname @sopts}{#2}%
+			}%
+		}%
+	}%
+	% activation des opts locales et relai des opts inconnues à enumitem
+	\@xp\cpgelistloading\@xp{\opts@tmp}%
+	% activation des opts + si disponibles
+	\ifdefempty\opts@globallist{}{%
+		\@xp\setlist\@xp*\@xp{\opts@globallist}%
+	}%
+	% si label fixé, le traiter 
+	\ifdef\list@fixedlabel{%
+		\@xp\process@currlabel\@xp{\list@fixedlabel}%
+	}{}%
+	% relai passé à l'une des cmd d'initialisation enum/item
+	\csname list@first#1\endcsname%
+}
+\def\process@levelnames#1{%
+	\edef\@levelname{%
+			#1\romannumeral\numexpr\csname @#1depth\endcsname+1\relax}%
+	\numdef\@levelnumber{\csname @#1depth\endcsname+1}%
+	\ifstrequal{#1}{enumi}
+		{\edef\@enumitemlevelname{enumerate,\@levelnumber}}
+		{\edef\@enumitemlevelname{itemize,\@levelnumber}}%
+}
+\DeclareDocumentCommand\list@firstitem{s}{%
+	\ifcsdef{\list@csname @item@origin}{}
+		{\csletcs{\list@csname @item@origin}{\list@csname it}}%
+	\@xp\renewrobustcmd\csname\list@csname it\@xp\endcsname\@xp{%
+		\@xp\list@unity\@xp{\list@csname}{item}}%
+	\IfBooleanTF{#1}
+		{%
+			\letcs\listcmd{itemize*}%
+			\letcs\endlistcmd{enditemize*}%
+			\appto\opts@currentlist{,inline}%
+		}{%
+			\let\listcmd\itemize%
+			\let\endlistcmd\enditemize%
+		}%
+	%\begingroup
+	% si \list@label n'a pas été definie par les options,
+	% utiliser la valeur par défaut du niveau
+	\ifdef\list@label{}
+		{\letcs\list@label{label@\@levelname}}%
+	\edef\@tmp{%\endgroup%
+		\@nx\listcmd[%
+			\@xo\opts@currentlist, 
+			label=\@xo\list@label,%
+		]%
+	}
+	\@tmp%
+	\csuse{\list@csname it}%
+}
+\DeclareDocumentCommand\list@firstenum{s}{%
+	\@bsphack
+	\ifcsdef{\list@csname @enum@origin}{}
+		{\csletcs{\list@csname @enum@origin}{\list@csname num}}%
+	\@xp\renewrobustcmd\csname\list@csname num\@xp\endcsname\@xp{%
+		\@xp\list@unity\@xp{\list@csname}{enum}}%
+	\IfBooleanTF{#1}
+		{%
+			\def\listcmd{\csname enumerate*\endcsname}%
+			%\letcs\endlistcmd{endenumerate*}%
+			\def\endlistcmd{%
+				\csname endenumerate*\endcsname%
+				\save@counter{\list@csname}{\@levelname}%
+			}%
+			\appto\opts@currentlist{,inline}%
+		}{%
+			\let\listcmd\enumerate%
+			\let\endlistcmd\cpge@endenumerate%
+		}%
+	%\begingroup%
+	\ifdef\list@label{}
+		{\letcs\list@label{label@\@levelname}}%
+	\ifdef\list@deco{}
+		{\letcs\list@deco{deco@\@levelname}}{}%
+	\ifundef\list@punct
+		{%
+			\ifcsdef{punct@\@levelname}%
+				{\letcs\list@punct{punct@\@levelname}}
+				{\let\list@punct\punct@origin}%
+		}{}%
+	\edef\@tmp{%\endgroup%
+		\@nx\listcmd[%
+			\@xo\opts@currentlist, 
+			label=\@xo\list@label,
+			format=\@nx\list@deco%
+		]%
+	}%
+	\@tmp%
+	\if@restore\restore@counter{\list@csname}{\@levelname}\fi%
+	\@esphack
+	\csuse{\list@csname num}%
+}
+
+%%%% metacommandes de création de listes
+\NewDocumentCommand\newsimplifiedenumerate{mmo}{%
+	\IfValueTF{#3}
+		{%
+			\@xp\newrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{enum}%
+			}%
+		}{%
+			\@xp\newrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{enum}%
+			}%
+		}
+	\csdef{#1@enum@opts}{#2}%
+	\cslet{#1close}\closelist%
+}
+\NewDocumentCommand\renewsimplifiedenumerate{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\renewrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{enum}%
+			}%
+		}{%
+			\@xp\renewrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{enum}%
+			}%
+		}	
+	\csdef{#1@enum@opts}{#2}
+}
+\NewDocumentCommand\newsimplifieditemize{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\newrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{item}%
+			}%
+		}{%
+			\@xp\newrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{item}%
+			}%
+		}	
+	\csdef{#1@item@opts}{#2}
+	\cslet{#1close}\closelist
+}
+\NewDocumentCommand\renewsimplifieditemize{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\renewrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{item}%
+			}%
+		}{%
+			\@xp\renewrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{item}%
+			}%
+		}	
+	\csdef{#1@item@opts}{#2}
+}
+%%% définitions de listes itemize spécialisées
+\newsimplifiedenumerate{pc}{}
+\newsimplifiedenumerate{shadow}{for=\rectangle}
+\newsimplifiedenumerate{a}{}[1]
+\newsimplifiedenumerate{l}{}[a]
+\newsimplifiedenumerate{L}{}[A]
+\newsimplifiedenumerate{r}{}[i]
+\newsimplifiedenumerate{q}{format=Q\numpunct}[|1|]
+\newsimplifiedenumerate{R}{}[I]
+\newsimplifieditemize{pc}{}
+\newsimplifieditemize{s}{}[s]
+\newsimplifieditemize{d}{}[d]
+\newsimplifieditemize{b}{}[b]
+\newsimplifieditemize{t}{}[t]
+\newsimplifieditemize{c}{}[c]
+\newsimplifieditemize{e}{}[e]
+\additemizestyle{n}{n}{}{ind=\objmarge-\labelsep}
+\additemizestyle{o}{o}{}{ind=\objmarge-\labelsep, before=\ObjFont}
+\NewDocumentCommand\bibit{d<>o}{%
+	\IfValueTF{#1}{\dit<#1>}{\dit}% 
+	\IfValueT{#2}{\texttitle{\itshape#2.}}%
+}
+\newrobustcmd\bibclose{\closelist}
