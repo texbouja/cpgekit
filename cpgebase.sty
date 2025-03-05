@@ -50,7 +50,7 @@
    	   {\pgfkeysifdefined{/cpge/#1/.is family}{}
 			   {\pgfkeys{/cpge/#1/.is family}}}%
       \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
-   }
+   }%
 }{}
 
 
@@ -103,7 +103,7 @@
 \def\cpge@removestar#1*{#1}
 \def\cpge@removeplus#1+{#1}
 \def\cpge@erasestar*#1+{#1}
-\def\if@staratend#1{
+\def\if@staratend#1{%
 	\def\in@@{\in@{*!}}%
 	\@xp\in@@\@xp{#1!}%
 	\ifin@%
@@ -112,7 +112,7 @@
 		\def\x@arg{#1}\expandafter\@secondoftwo%
 	\fi%
 }
-\def\if@plusatend#1{
+\def\if@plusatend#1{%
 	\def\in@@{\in@{+!}}%
 	\@xp\in@@\@xp{#1!}%
 	\ifin@%
@@ -131,7 +131,7 @@
 \DeclareDocumentCommand\cpgename{smm}{%
 	\IfBooleanT{#1}{\csglobal}%
 	\lorg@csdef{name@#2}{#3}%
-	\endcslorg
+	\endcslorg%
 }
 \DeclareDocumentCommand\cpgexname{smm}{%
 	\IfBooleanT{#1}{\csglobal}%
@@ -158,34 +158,34 @@
 }
 %% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
 %% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
-\def\list@maker#1#2{
-   \begingroup
-   \def\do##1{\listcsgadd{list@#1}{##1}}
-   \docsvlist{#2}
-   \endgroup
+\def\list@maker#1#2{%
+   \begingroup%
+   \def\do##1{\listcsgadd{list@#1}{##1}}%
+   \docsvlist{#2}%
+   \endgroup%
 }
 
 \DeclareDocumentCommand\csvtolistcsadd{smm}{%
    \IfBooleanT{#1}{\csglobal}%
    \def\do{\forcsvlist{\lorg@listcsadd{#2}}}
-   \expandafter\docsvlist\expandafter{#3}
+   \expandafter\docsvlist\expandafter{#3}%
    \endcslorg%
 }
 \DeclareDocumentCommand\csvtolistcseadd{smm}{%
    \IfBooleanT{#1}{\csglobal}%
-   \def\do{\forcsvlist{\lorg@listcseadd{#2}}}
-   \expandafter\docsvlist\expandafter{#3}
+   \def\do{\forcsvlist{\lorg@listcseadd{#2}}}%
+   \expandafter\docsvlist\expandafter{#3}%
    \endcslorg%
 }
 \DeclareDocumentCommand\csvtolistadd{smm}{%
    \IfBooleanT{#1}{\csglobal}%
-   \def\do{\forcsvlist{\lorg@listadd{#2}}}
+   \def\do{\forcsvlist{\lorg@listadd{#2}}}%
    \expandafter\docsvlist\expandafter{#3}%
    \endcslorg%
 }
 \DeclareDocumentCommand\csvtolisteadd{smm}{%
    \IfBooleanT{#1}{\csglobal}%
-   \def\do{\forcsvlist{\lorg@listeadd{#2}}}
+   \def\do{\forcsvlist{\lorg@listeadd{#2}}}%
    \expandafter\docsvlist\expandafter{#3}%
    \endcslorg%
 }
@@ -193,13 +193,13 @@
 \newrobustcmd{\csvadd}[2]{%
   \ifblank{#2}{}{\ifdefvoid{#1}{\def#1{#2}}{\appto#1{,#2}}}}
 \newrobustcmd{\csveadd}[2]{%
-  \begingroup
+  \begingroup%
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
   \cpgeb@tempa{}{\ifdefvoid{#1}{\edef#1{#2}}{\eappto#1{,#2}}}}
 \newrobustcmd{\csvgadd}[2]{%
   \ifblank{#2}{}{\gappto#1{,#2}}}
 \newrobustcmd{\csvxadd}[2]{%
-  \begingroup
+  \begingroup%
   \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
   \cpgeb@tempa{}{\ifdefvoid{#1}{\xdef#1{#2}}{\xappto#1{,#2}}}}
 \newrobustcmd{\csvcsadd}[1]{%
@@ -219,7 +219,7 @@
     {}
     {\ifincsv{#2}{#1}{%
      \begingroup
-     \def\cpgeb@tempa##1,#2,##2&{\endgroup
+     \def\cpgeb@tempa##1,#2,##2&{\endgroup%
        \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
     \expandafter\cpgeb@tempa\expandafter,#1&}{}}%
 }
@@ -228,20 +228,20 @@
 \newrobustcmd{\csvcsgremove}[1]{%
   \expandafter\csvgremove\csname#1\endcsname}
 \newrobustcmd{\ifincsv}[2]{%
-  \begingroup
-  \def\cpgeb@tempa##1,#1,##2&{\endgroup
+  \begingroup%
+  \def\cpgeb@tempa##1,#1,##2&{\endgroup%
     \ifblank{##2}\@secondoftwo\@firstoftwo}%
-  \expandafter\expandafter\expandafter\cpgeb@tempa
+  \expandafter\expandafter\expandafter\cpgeb@tempa%
   \expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
 \newrobustcmd{\xifincsv}[1]{%
-  \begingroup
+  \begingroup%
   \edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
   \cpgeb@tempa}
 \newrobustcmd{\ifincsvcs}[2]{%
   \expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
 \long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
 \newrobustcmd{\xifincsvcs}[1]{%
-  \begingroup
+  \begingroup%
   \edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
   \cpgeb@tempa}
 %% ajoute les éléments de #2 (separe par des virgules)
@@ -273,27 +273,27 @@
 
 \def\MO@rdinal#1{%
    \ifcase#1%
-   \or Premier \or Deuxi\`eme \or Troisi\`eme \or Quatri\`eme
-    \or Cinqui\`eme \or Sixi\`eme \or Septi\`eme \or Huiti\`eme
-     \or  Neuvi\`eme \else\@ctrerr\fi}
+   \or Premier\or Deuxi\`eme\or Troisi\`eme\or Quatri\`eme%
+   \or Cinqui\`eme\or Sixi\`eme\or Septi\`eme\or Huiti\`eme%
+     \or Neuvi\`eme\else\@ctrerr\fi}
 \def\MOrdinal#1{\expandafter\MO@rdinal\csname c@#1\endcsname}
 \def\FO@rdinal#1{%
    \ifcase#1%
-   \or Premi\`ere \or Deuxi\`eme \or Troisi\`eme \or Quatri\`eme
-    \or Cinqui\`eme \or Sixi\`eme \or Septi\`eme \or Huiti\`eme
-     \or  Neuvi\`eme \else\@ctrerr\fi}
+   \or Premi\`ere\or Deuxi\`eme\or Troisi\`eme\or Quatri\`eme%
+    \or Cinqui\`eme\or Sixi\`eme\or Septi\`eme\or Huiti\`eme
+     \or  Neuvi\`eme\else\@ctrerr\fi}
 \def\FOrdinal#1{\expandafter\FO@rdinal\csname c@#1\endcsname}
 \def\mo@rdinal#1{%
    \ifcase#1%
-   \or premier \or deuxi\`eme \or troisi\`eme \or quatri\`eme
-    \or cinqui\`eme \or sixi\`eme \or septi\`eme \or huiti\`eme
-     \or  neuvi\`eme \else\@ctrerr\fi}
+   \or premier\or deuxi\`eme\or troisi\`eme\or quatri\`eme%
+    \or cinqui\`eme\or sixi\`eme\or septi\`eme\or huiti\`eme%
+     \or  neuvi\`eme\else\@ctrerr\fi}
 \def\mordinal#1{\expandafter\mo@rdinal\csname c@#1\endcsname}
 \def\fo@rdinal#1{%
    \ifcase#1%
-   \or premi\`ere \or deuxi\`eme \or troisi\`eme \or quatri\`eme
-    \or cinqui\`eme \or sixi\`eme \or septi\`eme \or huiti\`eme
-     \or  neuvi\`eme \else\@ctrerr\fi}
+   \or premi\`ere\or deuxi\`eme\or troisi\`eme\or quatri\`eme%
+    \or cinqui\`eme\or sixi\`eme\or septi\`eme\or huiti\`eme%
+     \or  neuvi\`eme\else\@ctrerr\fi}
 \def\fordinal#1{\expandafter\fo@rdinal\csname c@#1\endcsname}
 
 %%% cree les listes 
@@ -360,10 +360,10 @@
 			  {le raccourci #2 sera ignoré, 
 			  \messageBreak il n'est pas sûr que tout fonctionne ensuite}%
  \else%
-      \ifin@\csundef{count@\cshr@}\fi
+      \ifin@\csundef{count@\cshr@}\fi%
        \ifcsundef{count@\cshr@}
              {\xifinlist{\cshr@}{\list@count}{}{\listxadd{\list@count}{\cshr@}}%
-               \csgdef{count@\cshr@}##1{\csuse{the#3}}}
+               \csgdef{count@\cshr@}##1{\csuse{the#3}}}%
 	         {\cpgeb@error{Le raccourci #2 est pris.}
 				        {Vous pouvez l'écraser avec (*#2)}}%
 \fi}
@@ -401,12 +401,12 @@
 	\expandafter\StrSubstitute\expandafter%
 	 {\csname label@#1\endcsname}%
 	 {|#2|}%
-	}
+	}%
 	\expandafter\StrSubstitute@expansion\expandafter%
    		{\csname count@#2\endcsname{#1}}
    		[\tmp@string]%
    \global\let\tmp@string@\tmp@string%
-   \endgroup
+   \endgroup%
   \expandafter\ifx\csname label@#1\endcsname\tmp@string@\else%
      \ifinlist{#2}{\list@active}
        {\lorg@csedef{the#1}{%
@@ -426,7 +426,7 @@
 \newcommand\cpgesetlabel{\@ifstar{\csglobal\count@parser}{\count@parser}}
 \let\allthetolabel\cpge@thetolabeltrue
 \DeclareDocumentCommand\makethetolabel{sm}{%
-	\IfBooleanT{#1}{\csglobal}
+	\IfBooleanT{#1}{\csglobal}%
 	\lorg@csedef{the#2}{\expandafter\expandonce\csname label@#2\endcsname}%
 	\endcslorg%
 }
@@ -569,7 +569,7 @@
             \dimexpr#1\relax%
          \csdef{marge@\cpge@listctr}{%
                \labelwidth\z@\relax
-               \itemindent\labelsep\relax
+               \itemindent\labelsep\relax%
                \listparindent\z@%
             }%
       }{}%
@@ -587,17 +587,17 @@
 \let\right@listfil\relax
 \def\cpgelist@setalign#1{%
    \ifcsundef{align@\cpge@listctr}{%
-      \if#1r 
+      \if#1r%
       \csdef{align@\cpge@listctr}{%b
          \let\right@listfil\relax%
          \let\left@listfil\hfil}%
       \else
-         \if#1l 
+         \if#1l%
             \csdef{align@\cpge@listctr}{%
                \let\right@listfil\hfil%
                \let\left@listfil\relax}%
          \else
-            \if#1c
+            \if#1c%
                \csdef{align@\cpge@listctr}{%
                   \let\left@listfil\hfil%
                   \let\right@listfil\hfil}%
@@ -606,8 +606,8 @@
       \fi%
  }{}}
 
-\NewDocumentCommand\cpgelist@addprop{ s mm }{
-   \IfBooleanT{#1}{\csdef{prop@#2}{}}
+\NewDocumentCommand\cpgelist@addprop{ s mm }{%
+   \IfBooleanT{#1}{\csdef{prop@#2}{}}%
       \cspreto{prop@#2}{#3,}%
 }
 %%% Commandes utilisateur pour configurer marge, saut vertical et 
@@ -645,20 +645,20 @@
 \def\cpgelist@setprop{%
    \ifcsdef{c@\cpge@listctr}
       {\csname c@\cpge@listctr\endcsname13\relax}%
-      {}
+      {}%
    \setbox\@tempboxa\hbox{\color@begingroup%
       \outeremptydeco@list{}%
-         \color@endgroup}
-   \edef\curr@emtydecowidth{\the\wd\@tempboxa}
+         \color@endgroup}%
+   \edef\curr@emtydecowidth{\the\wd\@tempboxa}%
    \setbox\@tempboxa\hbox{\color@begingroup%
       \csuse{deco@\cpge@listctr}{\csuse{label@\cpge@listctr}}% 
       \color@endgroup}%
-   \edef\curr@textwidth{\the\wd\@tempboxa}
+   \edef\curr@textwidth{\the\wd\@tempboxa}%
    \processed@labelwidth=\dimexpr\curr@textwidth+\curr@emtydecowidth\relax%
    \ifdim\@maxlabelwidth<\curr@textwidth\relax%
       \global\@maxlabelwidth=\curr@textwidth%
    \fi%
-   \begingroup
+   \begingroup%
    \edef\cpge@tempa{\endgroup%
       \noexpand\cpgesetup@lists{\csuse{prop@\cpge@listctr}}%
       }%
@@ -689,7 +689,7 @@
            \csuse{saut@\cpge@listctr}%
             \csuse{align@\cpge@listctr}%
          \let\makelabel\cpge@makelabel%
-        }
+        }%
    }
 \def\cpge@makelabel#1{%
    \ifblank{#1}{}{%
@@ -705,21 +705,21 @@
 %%% interface utilisateur plus conforme à l'orientation globale 
 \newif\ifenum@resume
 \newif\ifenum@restore 
-\let\@iden\@iden
-\def\outerdeco@init{
-   \def\outerdeco@list##1{##1}
-   \def\outeremptydeco@list##1{##1}
+\newif\ifenum@save \enum@savetrue
+\def\outerdeco@init{%
+   \def\outerdeco@list##1{##1}%
+   \def\outeremptydeco@list##1{##1}%
 }
 \outerdeco@init%
-\def\cpgelist@outerr#1{
-   \ifundef\cpge@xlistenv{
+\def\cpgelist@outerr#1{%
+   \ifundef\cpge@xlistenv{%
       \cpgeb@error{#1 n'est pas directement utilisable 
                      avec \string\cpgesetuplists.}
                   {utiliser l'une des familles enumi}
-   }{}
+   }{}%
 }
-\ProvideDocumentCommand\cpgelist@addlocalprop{smm}{
-   \cpgelist@outerr{#2}   
+\ProvideDocumentCommand\cpgelist@addlocalprop{smm}{%
+   \cpgelist@outerr{#2}%
    \IfBooleanTF{#1}
       {\cpgelist@addprop*{\cpge@listctr}{#3}}%
       {\cpgelist@addprop{\cpge@listctr}{#3}}%
@@ -736,6 +736,7 @@
 \def\cpgesetuplists{\cpgesetup[lists]}
 \cpgesetuplists{%
    preload/.is family,
+   preload/save/.is if=enum@save, 
    preload/restore/.is if=enum@restore,
    preload/resume/.is if=enum@resume,
    preload/r/.style={/cpge/lists/preload, resume, restore},
@@ -743,6 +744,7 @@
    preload/.unknown/.code=\relax,
    resume/.code=\relax,
    restore/.code=\relax,
+   save/.code=\relax,
    r/.code=\relax,
    r*/.code=\relax
 
@@ -826,16 +828,20 @@
 \cpgesetup[lists]{local/.is family, local/.cd, t/.store in=\local@item, .unknown/.code=\relax}
 
 \NewDocumentCommand\xenum{ e\op}{%
-   \def\cpge@xlistenv{xenum}
+   \def\cpge@xlistenv{xenum}%
    \ifnum \@enumdepth >2 \@toodeep\else%
       \advance\@enumdepth\@ne%
-      \edef\cpge@listdepth{\the\@enumdepth}
+      \edef\cpge@listdepth{\the\@enumdepth}%
       \edef\cpge@listlevel{\romannumeral\@enumdepth}%
       \edef\cpge@listctr{enum\cpge@listlevel}%
    \fi%
    \outerdeco@init% pour les niveaux imbriqués
    \IfValueT{#1}{%
       \cpgesetuplists{preload,#1}%
+      \unless\ifenum@save%
+         \let\cpgelist@savecounter\relax%
+         \let\cpgelist@save\@gobble%
+      \fi%
       \ifenum@restore%
          \csuse{setlastopts@\cpge@listctr}%
          \enum@restorefalse%
@@ -845,20 +851,20 @@
          \csxdef{setlastopts@\cpge@listctr}%
             {\@nx\cpgesetuplists{\the\toks@listopts}}%
       \fi%
-   }
+   }%
    \cpgelist@builder%
    \ifenum@resume%
-      \csname c@\cpge@listctr\expandafter\endcsname
+      \csname c@\cpge@listctr\expandafter\endcsname%
        \csname last@\cpge@listctr\endcsname\relax%
         \enum@resumefalse% pour les niveaux imbriqués
    \fi%
  }
  \def\endxenum{\cpgelist@savecounter\endlist}
  \NewDocumentCommand\xitem{ e\op }{%
-  \def\cpge@xlistenv{xitem}
+  \def\cpge@xlistenv{xitem}%
   \ifnum \@itemdepth >2 \@toodeep\else%
       \advance\@itemdepth\@ne%
-      \edef\cpge@listdepth{\the\@itemdepth}
+      \edef\cpge@listdepth{\the\@itemdepth}%
       \edef\cpge@listlevel{\romannumeral\@itemdepth}%
       \edef\cpge@listctr{item\cpge@listlevel}%
   \fi%
@@ -874,11 +880,11 @@
          {\def\init@tmp{\begin{#1}\op{#5}}}
          {\ifundef\cpge@xlistenv%
             {\def\init@tmp{\begin{#1}\op{#5}}}{}%
-         }
+         }%
       }%
-   \ifundef\init@tmp{
-      \ifblank{#5}{}{\def\init@tmp{\begin{#1}\op{#5}}}
-   }{}
+   \ifundef\init@tmp{%
+      \ifblank{#5}{}{\def\init@tmp{\begin{#1}\op{#5}}}%
+   }{}%
    \init@tmp%
 	#2%
 }
@@ -887,7 +893,7 @@
       \IfBooleanT{#1}
       {\exit-\IfBooleanT{#2}{%
          \exit-\IfBooleanT{#3}{%
-            \exit-}
+            \exit-}%
          }%
       }%
       \IfValueTF{#4}
@@ -896,7 +902,7 @@
             {\if@plusatend{#4}%
                {\cpgeref@addtocounter{\cpge@listctr}{\x@arg-1}\item}%
                {\item[#4]}%
-            }}
+            }}%
          {\item}%
       \IfValueT{#5}
          {\deco@itemtitle{#5}\protected@edef\@currentlabelname{#5}}%
@@ -908,18 +914,18 @@
    \IfBooleanT{#1}
       {\exit-\IfBooleanT{#2}{%
          \exit-\IfBooleanT{#3}{%
-            \exit-}
+            \exit-}%
          }%
       }%
    \IfValueTF{#4}
       {\item[\csuse{deco@\cpge@listctr}{#4}]}%
-      {\item}
+      {\item}%
    \IfValueT{#5}{\deco@itemtitle{#5}}%
-   \IfValueT{#6}{
+   \IfValueT{#6}{%
       \phantomsection%
       \protected@edef\@currentlabelname{#5}%
       \label{\cpge@enumlabelprefix#6}%
-   }
+   }%
 }
 \def\xititem{\init@xlist{xitem}\xit@item}
 
@@ -929,10 +935,10 @@
 }
 \def\xittab{\init@xlist{tabenum}\xit@tab}
 
-\NewDocumentCommand\xit{t\i t\t}{
+\NewDocumentCommand\xit{t\i t\t}{%
    \IfBooleanTF{#1}%
-      {\xititem}%
-      {\IfBooleanTF{#2}{\xittab}{\xitenum}}%
+      {\xititem+}%
+      {\IfBooleanTF{#2}{\xittab+}{\xitenum}}%
 }
 \def\cpge@enumlabelprefix{}
 \def\end@xlist{%
@@ -944,7 +950,7 @@
 		 \end@xlist@rec%
   }%
 }%
-\NewDocumentCommand\exit{!t- !t- !t- !t-}{
+\NewDocumentCommand\exit{!t- !t- !t- !t-}{%
    \IfBooleanTF{#1}
       {%
          \end@xlist%
@@ -959,15 +965,15 @@
       }%
       {\end@xlist@rec}%
 }
-\NewDocumentCommand\cpgenewlist{ smmm }{
+\NewDocumentCommand\cpgenewlist{ smmm }{%
    \toks@listopts{#4}
-   \IfBooleanF{#1}{
+   \IfBooleanF{#1}{%
       \@xp\NewDocumentCommand\csname#2\endcsname{!E{\op}{{}}}
          {\@xp\xenum\@xp\op\@xp{\the\toks@listopts,##1}\def\cpge@xlistenv{#2}}
       \csdef{end#2}{\cpgelist@savecounter\endlist}
       \newcommand#3{\init@xlist{#2}\xit@enum}
-   }
-   \IfBooleanT{#1}{
+   }%
+   \IfBooleanT{#1}{%
       \@xp\NewDocumentCommand\csname#2\endcsname{!E{\op}{{}}}
          {\@xp\xitem\@xp\op\@xp{\the\toks@listopts,##1}\def\cpge@xlistenv{#2}}
       \cslet{end#2}\endlist
@@ -1053,11 +1059,11 @@
 				\advance\leftmargin\labelsep%
 				\labelwidth=\leftmargin%
 				\itemindent\z@%
-			}
+			}%
     	\let\makelabel\discuss@label%
 	}%
 }{%
-  \endlist
+  \endlist%
 }
 \def\discuss@label#1{%
 	\hskip\labelsep%
@@ -1096,7 +1102,7 @@
         }%
  }
  \def\lab@unite#1{\ifblank{#1}{}{\deco@unite{#1}}}
- \def\closeunite{
+ \def\closeunite{%
    \ifinsideuniteenv%
       \endlist%
       \let\unite\relax%
@@ -1104,7 +1110,7 @@
    \fi%
 }
  \def\first@unite{%   
-   \insideuniteenvtrue
+   \insideuniteenvtrue%
    \cpgesetlabel{enumii}{|T|.|1|}%
  	\cpgesetlabel{enumiii}{|q|.|a|}%
 	\def\unite{\unite@}%
@@ -1117,13 +1123,15 @@
          {\if@plusatend{#1}%
             {\cpgeref@addtocounter{unite}{\x@arg-1}\item}%
             {\item[#1]}%
-      }}
+      }}%
       {\item}%
 	\IfValueT{#2}{\deco@unitetitle{#2}}%
 	\IfValueT{#3}{\IfValueF{#1}{\label{#3}}}%
 }
 \cpgesetdeco{unitetitle}{\textbf{#1~:~}}
 \def\set@defaultforlistsinsideunite{%
+   \cpgesetlabel{enumi}{|1|}%
+   \cpgesetlabel{enumii}{|a|}%
 	\def\unite{\first@unite}%
 	\cpgesetenum*{1}{marge*}%
 	\cpgesetenum*{2}{marge}%
@@ -1148,13 +1156,13 @@
 \DeclareDocumentEnvironment{cond}{O{\ccleftmargin} O{l}}{%
 	\ifhmode\par\else\leavevmode\fi%
 	\extrarowheight3pt%
-	\tabular[t]{@{}p{#1}@{\ccsi}#2@{}}%
+	\tabular[t]{@{}p{#1}@{\ccsi\enspace}#2@{}}%
 	}
 	{\endtabular\par\smallskip}
 \DeclareDocumentEnvironment{cons}{O{\ccleftmargin} O{l}}{%
 	\ifhmode\par\else\leavevmode\fi%
 	\extrarowheight3pt%
-	\tabular[t]{@{}p{#1}@{\ccalors}#2@{}}%
+	\tabular[t]{@{}p{#1}@{\ccalors\enspace}#2@{}}%
 	}
 	{\endtabular\par\smallskip}
 \DeclareDocumentEnvironment{stab}{O{2cm} O{l}}{%
@@ -1370,7 +1378,6 @@
 %%%%%% Borrowed from adjustwidth.sty
 
 \newenvironment{lrmargin}[3][]{%
-  \advance\cpge@lrcount\@ne%
   \list\relax{%
     \topsep\smallskipamount%
     \listparindent\parindent%
@@ -1378,7 +1385,7 @@
 		\itemindent\z@\relax%
       \labelwidth\z@\relax%
 		\itemindent\labelsep%
-	 \ifnum\cpge@lrcount>\tw@%
+	 \ifnum\@listdepth>3\relax%
 		\leftmargin\z@\relax%
 		\rightmargin\z@\relax%
 	\else%

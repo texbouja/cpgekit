@@ -205,17 +205,17 @@
 		\IfValueT{#1}{\cpgesetup[include]{#1}}%
 		\setup@solutionmode% %
 		\setup@draftmode%
-		\unless\ifstraight
+		\ifsolution\unless\ifstraight
 			\ifundef\solfilename{}
 			{%
 				\typeout{====================================^^J%
 					^^J%
-					Inclusion en aval des fichiers de solutions \solfilename^^J%
+					Traitement en aval de(s) fichier(s) de solutions \solfilename^^J%
 					^^J%
 					====================================}
-				\forcsvlist\subdoc\solfilename%
+				\@xp\forcsvlist\@xp\subdoc\@xp{\solfilename}%
 			}%
-		\fi% 
+		\fi\fi% 
 		\include@beforehook%
 		\IfFileExists{#2-eno.tex}
 			{%
@@ -234,17 +234,17 @@
 				====================================}%
 			}
 		\include@afterhook%
-		\ifstraight
+		\ifsolution\ifstraight
 			\ifundef\solfilename{}
 			{%
 				\typeout{====================================^^J%
 					^^J%
-					Inclusion en amont des fichiers de solutions \solfilename^^J%
+					Inclusion en amont de(s) fichier(s) de solutions \solfilename^^J%
 					^^J%
 					====================================}
-				\forcsvlist\subdoc{\solfilename}%
+				\@xp\forcsvlist\@xp\subdoc\@xp{\solfilename}%
 			}%
-		\fi%
+		\fi\fi%
 	\endgroup%
 	\undef\eno@list%
 }
@@ -509,8 +509,8 @@
 	\cpgetitle@shape{display}{problem}[center]
 	\def\problem@font{\LARGE}
 \fi 
-\def\parti@font{\large}
-\def\partii@font{\normalsize}
+\def\parti@font{\Large}
+\def\partii@font{\large}
 \def\set@linkcol{\unless\ifx\listbox\default@listbox\hypersetup{linkcolor=mainone}\fi}
 \def\link@problemlabel#1{%
 	\edef\cpge@tmpa{#1}%
@@ -529,19 +529,25 @@
 			\deco@problemlabel{#1}%
 		\fi%
 	\fi}%
+\def\print@origin{%
+	\ifdef\hook@problemorigin
+		{\deco@origin{\hook@problemorigin}}
+		{}%
+}
+\cpgesetdeco{origin}{\mbox{}\\\smaller[2]\itshape#1}
 \def\problem@format{%
 	\cpgetitle@format{\problem}[\problem@shape]
   		{\problem@font}
   		{\problemlabel@align
   			\link@problemlabel{\cnt@name}}
   		{\z@}
-  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi\print@origin}
   		[\after@problemtitle]
 	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
   		{\problem@font}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
-  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi\print@origin}
   		[\after@problemtitle]
 }
 \problem@format
@@ -603,6 +609,7 @@
 \bigques@format
 \cpgetitle@spacing{\bigques}{\z@}{*1}{*1}
 \cpgetitle@setspacing{\bigques}
+
 
 
 %%% Variantes de \parti et \partii pour ecrire en plus
@@ -801,6 +808,7 @@
 	after title/.code=\title@parser{#1}%
 		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
+	origin/.code=\def\hook@problemorigin{#1},
 	label/.code=\@xp\cpgesetlabel\@xp{\problemcounter@name}{#1},
 	title deco/.code=\cpgesetdeco{problem}{#1},
 	label deco/.code=\cpgesetdeco{problemlabel}{#1},
@@ -973,11 +981,11 @@
 			\edef\cor@curropts{\@xo\cor@commonopts}%
 			\ifnonumber\appto\cor@curropts{,nonumber}\fi%
 			\setup@solutionmode%
-			\ifcsundef{##1@param}{%
-				\csxdef{##1@param}{{\@xo\cor@curropts}}%
-				\IfValueT{##3}{\csgappto{##1@param}{[##3]}}%
-				\IfValueT{##4}{\csgappto{##1@param}{(##4)}}%
-				\IfValueT{##5}{\csgappto{##1@param}{<##5>}}%
+			\ifcsundef{\cpge@problem@id @param}{%
+				\csxdef{\cpge@problem@id @param}{{\@xo\cor@curropts}}%
+				\IfValueT{##3}{\csgappto{\cpge@problem@id @param}{[##3]}}%
+				\IfValueT{##4}{\csgappto{\cpge@problem@id @param}{(##4)}}%
+				\IfValueT{##5}{\csgappto{\cpge@problem@id @param}{<##5>}}%
 			}{}%
 			\edef\cpge@labelprefix{eno:\cpge@problem@id:}%
 			\csuse{hook@beforeproblemtitle}%
@@ -1042,7 +1050,10 @@
 	{}
 
 \def\solutionname{Corrigé}
-
+\def\exer{\exercice{}}
+\let\endexer\endexercice
+\csdef{exer*}{\csuse{exercice*}{}}
+\csletcs{endexer*}{endexercice*}
 %%%%%%%%%%%%%%%%%%%%%%
 %%% table des matières
 \let\ttl@savemark\relax
@@ -1115,7 +1126,9 @@
 		\fi%
 	\fi%
 }
-\unless\ifstraight\ifhintocg
+\unless\ifstraight
+\def\hintradio{ind}
+\ifhintocg
 	\RequirePackage[tikz]{ocgx2}
 	\tikzset{
 		hintbox/.style={rounded corners=2pt,
@@ -1638,7 +1651,7 @@
 }
 \def\poorref{\xref\r}
 \NewDocumentCommand\xref@numeno{t\n t\e t\c t\a m}{%
-	\IfBooleanTF{#1}{\let\ques@arn\relax}{\let\ques@arn\questionautorefname}%
+	\IfBooleanTF{#1}{\def\ques@arn\relax}{\let\ques@arn\questionautorefname}%
 	\hyperlink{hyeno:\problem@id:#5}{\ques@arn\space#5}%
 }
 \NewDocumentCommand\xref@numcor{t\n t\e t\c t\a m}{%
@@ -1830,7 +1843,7 @@
 }
 \fi
 
-%%%%%%%% Environnements basique pour théorèmes et Cie
+%%%%%%%% Environnements basique pour théorèmes et similaire
 \RequirePackage{amsthm}
 \newdimen\thmboxheight
 \newdimen\thmboxdepth
@@ -1888,7 +1901,7 @@
 	\dimdef\head@sep{5pt}
 	\long\def\xframe@deco#1{%
 			%\trivlist\item[]\fboxsep=6pt
-				\fbox{\parbox{\textwidth-12.8pt}{\cpge@footnote@restore #1}}
+				\fbox{\parbox{\linewidth-12.8pt}{\cpge@footnote@restore #1}}
 			%\endtrivlist%
 			\aftergroup\cpge@footnote@restore%
 	}
@@ -1898,7 +1911,7 @@
 		\@xp\tikzpicture\@xp[\thm@frame@style]
 			\ifblank{#1}
 				{\node [frame border sep] {};}
-				{\node (frame) [frame border sep, text width=\textwidth-\thmboxwidth] {\cpge@footnote@restore #1};}
+				{\node (frame) [frame border sep, text width=\linewidth-\thmboxwidth] {\cpge@footnote@restore #1};}
 		\endtikzpicture%
 		\aftergroup\cpge@footnote@use%
 	}
@@ -1943,7 +1956,7 @@
 	{\z@}				% space after head
 	{%
 		\ifdef\cpge@thmcounter%
-			{\thmhead@deco{\thmname{#1}\thmnumber{ #2}\thmnote{ \thm@notestyle{#3}}}}%
+			{\thmhead@deco{\thmname{#1}\thmnumber{ #2}\thmnote{\thm@notestyle{#3}}}}%
 			{\thmname{#1}\thmnumber{ #2}\thmnote{ \thm@notestyle{#3}}}%
 	}					% head specs
 \theoremstyle{cpgecustom}
@@ -1977,7 +1990,7 @@
 			\@topsepadd\thm@postskip% 
 			\item[]\vrule height\z@ width\linewidth\linebreak%
 			\setbox\cpge@thmbox\hbox{\thmhead@deco{\cpge@thmname}}%
-			\xframe@deco{%
+			\xframe@deco{% 
 				\IfValueTF{#2}
 					{\IfValueTF{#3}
 						{\csname\cpge@thmcounter\endcsname[#2]\relax\label{\cpge@labelprefix#3}}
@@ -1997,7 +2010,7 @@
 \NewDocumentCommand\cpgenewtheorem{ mmm O{} }{%
 	\ifcsundef{#1}{
 		\theoremstyle{cpgecustom}
-		\newtheorem{#1}{#2}[problem]
+		\newtheorem{#1}{#2}%[problem]
 		\newtheorem*{#1*}{#2}
 	}{}
 	\csdef{#1autorefname}{#3}
@@ -2019,6 +2032,9 @@
 \cpgenewtheorem{obje}{Objectif}{objectif}
 \cpgenewtheorem{defi}{Définition}{définition}
 \cpgenewtheorem{voca}{Vocabulaire}{vocabulaire}
+\cpgenewtheorem{nota}{Notations}{notations}
+\cpgenewtheorem{conv}{Conventions}{conventions}
+\cpgenewtheorem{convnota}{Conventions et notations}{convnota}
 \cpgenewtheorem{rema}{Remarque}{remarque}
 
 \cpgesetlabel{theo}{|1|}
@@ -2038,7 +2054,9 @@
 		\cpgehypersetup{subject}{theme}
 		\cpgehypersetup{author}{auteur}
 		\hypersetup{pdfcreator=LaTeX with cpgekit}
-	}{}}
+	}{}%
+	\pagestyle{main}%
+}
 \cpgesetup[background]{%
 	position = tb,
 	code = {\tikz[overlay]\draw[rounded corners=10pt] 

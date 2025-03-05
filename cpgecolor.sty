@@ -270,7 +270,13 @@ mainone,maintwo,mainthree,mainfour,mainfive,mainsix,cpgemagenta,cpgeblue,cpgegre
 						\def\xc@tmp{#1}
 					\fi
 				}
-				{\ifdefstring{\cpgecurrentclass}{doc}{\def\xc@tmp{#3}}{\def\xc@tmp{#1}}}
+				{
+					\ifserie
+						\def\xc@tmp{#2}
+					\else
+						\def\xc@tmp{#3}
+					\fi
+				}
 			\convertcolorspec{named}{\xc@tmp}{\cpge@colormodel}\xc@tmp
 			\edef\cpge@tmpa{\endgroup\@nx\preparecolor{classcol}{\cpge@colormodel}{\xc@tmp}}
 			\cpge@tmpa

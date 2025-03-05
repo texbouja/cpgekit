@@ -1,0 +1,89 @@
+\RequirePackage{curvecommon}
+
+\usetikzlibrary{shadows}
+\pgfdeclarelayer{background}
+        \pgfdeclarelayer{foreground}
+        \pgfsetlayers{background,main,foreground}
+
+\ifsuivi\else 
+   \cpgesetdeco{topbutton}{%
+      \begin{tikzpicture}[overlay]
+         \sffamily\large\bfseries\scshape
+         \node (Top) at (\paperwidth-.5\hma,-\tma)
+         [
+            left,
+            minimum width=.25\textwidth,
+            inner xsep=1pc, inner ysep=4pt,
+            align=right
+         ]
+         {#1};
+         \begin{pgfonlayer}{background}
+            \fill [
+                  pagecol, 
+                  draw=buttonstrokecol!50!transparent, 
+                  line width=1pt, 
+                  rounded corners=8pt] 
+               let \p1=(Top.east), \p2=(Top.west) in
+               (\paperwidth-.5\hma, -\tma-2ex) -- 
+               ++(\x2-\x1,0) [sharp corners] --  
+               ++(0,2ex+.5\tma) [rounded corners=8pt] -- 
+               ++(\x1-\x2,0) [sharp corners] --cycle;
+            \draw [buttonstrokecol, rounded corners=8pt, line width=1pt]
+               let \p1=(Top.east), \p2=(Top.west) in
+               (\paperwidth-.5\hma+.5pt, -\tma-2ex) -| 
+               ++(\x2-\x1-.5pt,2ex+.5\tma+.5pt);
+         \end{pgfonlayer}
+      \end{tikzpicture}%
+   }
+   \cpgesetdeco{bottombutton}{%
+      \begin{tikzpicture}[overlay]
+         \node  at (\paperwidth-\hma,.5\bma+8pt)
+            [
+               left,
+               text=textcol, 
+               font=\large\sffamily\bfseries\scshape,
+               text width=.5\textwidth,
+               align=right
+            ]
+            {#1};
+      \end{tikzpicture}%
+   }
+   \AtBeginDocument{
+      \setbox\backbox\vbox{%
+         \begin{tikzpicture} [overlay]
+            \node (C) at (.5\hma,.5\bma+8pt)% ([xshift=.5\hma,yshift=-.5\tma+1.5ex]current page.south west) 
+               [text width=\paperwidth-\hma, align=left, right, font=\sffamily\scshape\small] 
+               {\hskip\hma\textsl{\smaller cpge} \textcolor{buttonstrokecol}{\cpge@centre}};
+         \begin{pgfonlayer}{background}
+            \fill 
+               [
+                  draw=buttonstrokecol, 
+                  line width=1pt
+               ] 
+                  (\paperwidth-.5\hma, .5\bma)  [rounded corners=\hma]  --
+                  ++(-\paperwidth+\hma,0)  [sharp corners]-- 
+                  ++(0, \paperheight-.5\tma-.5\bma)  [rounded corners=8pt] -- 
+                  ++(\paperwidth-\hma,0)  [sharp corners] -- 
+                  cycle;
+            \fill [
+                     pagecol, 
+                     draw=buttonstrokecol!50!transparent, 
+                     line width=1pt, rounded corners=\hma
+                  ]
+                     ([yshift=\hma]C.north west)  -- 
+                     (.5\hma,.5\bma) [sharp corners]  -- 
+                     ++(\paperwidth-\hma,0)  -- 
+                     ++(0,3ex) [rounded corners=\hma] --
+                     ++(-\paperwidth+\hma,0)  [sharp corners] -- cycle;
+             \draw [buttonstrokecol, line width=1pt, rounded corners=\hma] 
+                  (.5\hma, .2\paperheight) |- (\paperwidth-.5\hma+.5pt,.5\bma+3ex);
+            \end{pgfonlayer}
+         \end{tikzpicture}%
+      }
+   } 
+   \renewpagestyle{plain}{}
+   \cpgesetup[mini]{
+      lm=\hma
+   }
+\fi
+

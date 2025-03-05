@@ -512,11 +512,11 @@
 	\fi
 \@esphack%
 }
-\ifundef\cpge@removestar{
-	\def\cpge@removestar#1*{#1}
-	\def\cpge@removeplus#1+{#1}
-	\def\cpge@erasestar*#1+{#1}
-	\def\if@staratend#1{
+\ifundef\cpge@removestar{%
+	\def\cpge@removestar#1*{#1}%
+	\def\cpge@removeplus#1+{#1}%
+	\def\cpge@erasestar*#1+{#1}%
+	\def\if@staratend#1{%
 		\def\in@@{\in@{*!}}%
 		\@xp\in@@\@xp{#1!}%
 		\ifin@%
@@ -525,7 +525,7 @@
 			\def\x@arg{#1}\expandafter\@secondoftwo%
 		\fi%
 	}
-	\def\if@plusatend#1{
+	\def\if@plusatend#1{%
 		\def\in@@{\in@{+!}}%
 		\@xp\in@@\@xp{#1!}%
 		\ifin@%
@@ -533,8 +533,8 @@
 		\else%
 			\def\x@arg{#1}\expandafter\@secondoftwo%
 		\fi%
-	}
-}
+	}%
+}{}
 \long\def\eqn@preparemidbox#1#2{%
 \@bsphack
 	\if@staratend{#1}{\def\@renderer{varwidth}}{\def\@renderer{minipage}}
@@ -584,8 +584,7 @@
 		\@endparpenalty\postcenterpenalty%
 	\item[]\leavevmode%
 }
-\def\begin@center@{%	
-}
+\def\begin@center@{}
 \long\def\eqn@item#1#2#3#4#5{%
 	%\begingroup%
 	\eqn@prepareboxes{#1}{#2}{#3}%
@@ -656,10 +655,10 @@
 }
 \def\@center@#1#2#3#4#5{%
 	\eqn@item%
-		{#1} % width argument, used only if \iftextmode is true
-		{#2} % left text
-		{#3} % middle text
-		{#4} % right text
+		{#1}% width argument, used only if \iftextmode is true
+		{#2}% left text
+		{#3}% middle text
+		{#4}% right text
 		{#5}%% \label used only if \ifeqn@number is true
 	\endtrivlist%
 }
@@ -668,22 +667,22 @@
 %%% Interfacce utilisateur (xparse) pour \@center@
 
 
-\NewDocumentCommand\xmath@init{ 
+\NewDocumentCommand\xmath@init{
 		t\n % numbered or not 
 		t\r % framed text mode for the mid part
 		t\t % unframed text mode for the mid part
 }{
 	\let\eqnframecmd\eqn@fakecmd%
-	\IfBooleanTF{#1}
-		{\eqn@numbertrue}
+	\IfBooleanTF{#1}%
+		{\eqn@numbertrue}%
 		{\eqn@numberfalse}%
-	\IfBooleanTF{#2}
-		{\is@resulttrue}
+	\IfBooleanTF{#2}%
+		{\is@resulttrue}%
 		{\is@resultfalse}%
-	\IfBooleanTF{#3}
-		{\textmodetrue}
+	\IfBooleanTF{#3}%
+		{\textmodetrue}%
 		{\textmodefalse}%
-	\xmath@preprocess
+	\xmath@preprocess%
 }
 \NewDocumentCommand\xmath@preprocess{
 	E{
@@ -701,8 +700,8 @@
 	\def\minipage@wd{100*}%
 	\def\cpge@tmpl{#1}%
 	\def\cpge@tmpr{#2}%
-	\ifblank{#3}{}{\eqn@shift{l}{#3}}
-	\ifblank{#4}{}{\eqn@shift{r}{#4}}
+	\ifblank{#3}{}{\eqn@shift{l}{#3}}%
+	\ifblank{#4}{}{\eqn@shift{r}{#4}}%
 	\ifstrequal{#5}{@}
 		{}
 		{%
@@ -718,30 +717,30 @@
 		\textmodetrue%
 		\let\eqnframecmd\deco@result%
 	\fi%
-	\iftextmode
+	\iftextmode%
 		\ifblank{#7}{}{\def\minipage@wd{#7}}%
 	\fi%
 	\ifstrequal{#6}{@}
 		{\let\@ligned\relax}
 		{%
-			\ifblank{#6}
-				{\def\@ligned{\aligned[t]}}
+			\ifblank{#6}%
+				{\def\@ligned{\aligned[t]}}%
 				{\def\@ligned{\aligned[#6]}}%
 		}%
 	\ifstrequal{#8}{@}%
-		{\def\Make@Link{}\def\cpge@tmplb{}}
-		{\label@parts{#8}}
-	\ifblank{#9}{}{\setlength\bigcenterskip{\bigcenterskip*\real{#9}}}
-	\xmath@process
+		{\def\Make@Link{}\def\cpge@tmplb{}}%
+		{\label@parts{#8}}%
+	\ifblank{#9}{}{\setlength\bigcenterskip{\bigcenterskip*\real{#9}}}%
+	\xmath@process%
 }
 \long\def\xmath@process#1\end@xmath{%
 	\ifx\relax\@ligned%
 		\iftextmode%
 			\long\def\cpge@tmpm{#1}%
-		\else
+		\else%
 			\def\cpge@tmpm{$\m@th\displaystyle#1$}%
 		\fi%
-	\else 
+	\else%
 		\def\cpge@tmpm{$\m@th\displaystyle\@ligned#1\endaligned$}%
 	\fi%
 	\@xp\@center@\@xp
@@ -760,11 +759,11 @@
 				{deux séquences \string\< ...\string \> 
 					ne peuvent être imbriquées ^^Jsauf si
 					la première utilise le modificateur \r 
-				}
-		\else
-			\@xp\xmath@orig
-		\fi
-	}
+				}%
+		\else%
+			\@xp\xmath@orig%
+		\fi%
+	}%
 }
 \NewDocumentEnvironment{xmath}{ t\a +b}
 	{%
@@ -776,12 +775,32 @@
 	{\begin{xmath}#1\end{xmath}}
 \long\def\<{\xmath@single\<}
 
+\NewDocumentCommand\formule{somo}{%
+	\begingroup%
+	\long\def\cpge@tmp{\endgroup\<}%
+	\IfBooleanT{#1}{\appto\cpge@tmp{\n}}%
+	\IfValueT{#2}{\appto\cpge@tmp{\lt{#2}}}%
+	\IfValueT{#4}{\IfBooleanTF{#1}{\appto\cpge@tmp{\lb{#4}}}{\appto\cpge@tmp{\rt{#4}}}}%
+	\appto\cpge@tmp{#3\>}%
+	\cpge@tmp%
+}
+\NewDocumentCommand\resultat{somo}{%
+	\begingroup%
+	\long\def\cpge@tmp{\endgroup\<}%
+	\IfBooleanTF{#1}{\appto\cpge@tmp{\n\r}}{\appto\cpge@tmp{\r}}
+	\IfValueT{#2}{\appto\cpge@tmp{\lt{#2}}}%
+	\IfValueT{#4}{\IfBooleanTF{#1}{\appto\cpge@tmp{\lb{#4}}}{\appto\cpge@tmp{\rt{#4}}}}%
+	\appto\cpge@tmp{#3\>}%
+	\cpge@tmp%
+}
+\NewDocumentEnvironment{mFormule}{oob}{\formule[#1]{#3}[#2]}
+
 %%% Système des références croisées pour les équations
 \ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
 \ProvideDocumentCommand\LinkTargetOn{}{}
 \ProvideDocumentCommand\LinkTargetOff{}{}
 \ProvideDocumentCommand\NextLinkTarget{m}{}
-\def\set@label@#1#2{
+\def\set@label@#1#2{%
 	\def\cpge@tmplb{#2}%
 	\ifstrequal{#1}{f}
 		{\def\Make@Link{\MakeLinkTarget[formule]{equation}}}
@@ -797,15 +816,19 @@
 								{%
 									\ifstrequal{#1}{r}
 										{\def\Make@Link{\MakeLinkTarget[relation]{equation}}}
-										{
+										{%
 											\ifstrequal{#1}{p}
 												{\def\Make@Link{\MakeLinkTarget[propriete]{equation}}}
-												{\def\Make@Link{\MakeLinkTarget[#1]{equation}}}
+												{
+													\ifstrequal{#1}{q}
+														{\def\Make@Link{\MakeLinkTarget[equivalence]{equation}}}
+														{\def\Make@Link{\MakeLinkTarget[#1]{equation}}}%
+												}
+										}%
 								}%
 						}%
 				}%
-		}%
-	}% 
+		}% 
 }
 \def\label@parts#1{%
 	\in@{&}{#1}%
@@ -813,7 +836,7 @@
 		\label@parts@#1\cpge@nil%
 	\else%
 		\def\cpge@tmplb{#1}%
-		\def\Make@Link{}
+		\def\Make@Link{}%
 	\fi%
 }
 \let\cpge@plural\relax
@@ -826,6 +849,7 @@
 \def@autorefname{inegalite}{inégalité}
 \def@autorefname{propriete}{propriété}
 \def@autorefname{majoration}{majoration}
+\def@autorefname{equivalence}{équivalence}
 \def\label@parts@#1&#2\cpge@nil{\set@label@{#1}{#2}}%
 \def\cpge@problem@id{Unnamed}
 \NewDocumentCommand\xeqref{s t\n t\s t\p O{@} m}{%
@@ -916,11 +940,11 @@
 	\@esphack
 }
 \def\eqn@graber@ii@#1{%
-	\ifblank{#1}{\global\let\cpge@tmpy\@empty}
+	\ifblank{#1}{\global\let\cpge@tmpy\@empty}%
 	{\fake@eqn@mtextfunc{#1\math@nil}%
 		\xdef\cpge@tmpy{%
 		\unexpanded{\def\eqn@num@{ii}}%
-		\expandonce\eqn@mtextfunc
+		\expandonce\eqn@mtextfunc%
 			\unexpanded{#1\math@nil}%
 	}}%
 }
@@ -947,7 +971,7 @@
 	\eqn@finalizer%
 }
 \def\renew@graber#1{%
-	\advance\eqn@count\@ne
+	\advance\eqn@count\@ne%
 	\@xp\NewDocumentCommand
 		\csname eqline@\romannumeral\eqn@count\endcsname
 		{u\eline}
@@ -979,7 +1003,7 @@
 			\unexpanded{\xtrimspaces{#1}}%
 		}%
 	}%
-	\@esphack
+	\@esphack%
 	%\show\cpge@tmpx%
 	\csname eqline@\romannumeral\eqn@count@ @ii\endcsname%
 }
@@ -987,7 +1011,7 @@
 	\fake@eqn@mtextfunc#1\math@nil%sets \cpge@tmpx and \cpge@tmpz with the \lt and \rt flags 
 	\xdef\cpge@tmpy{%
 		\unexpanded{\def\eqn@num@{ii}}%
-		\expandonce\eqn@mtextfunc
+		\expandonce\eqn@mtextfunc%
 			\unexpanded{#1\math@nil}%
 	}%
 	%\show\cpge@tmpy
@@ -1022,12 +1046,12 @@
 	+e\end
 }{
 	\IfValueTF{#5}
-		{\end{#5}}
+		{\end{#5}}%
 		{%
 			\IfBooleanF{#4}
 				{%
-					\IfBooleanT{#1}{\endpar}
-					\IfValueT{#2}{\vskip#2}
+					\IfBooleanT{#1}{\endpar}%
+					\IfValueT{#2}{\vskip#2}%
 					\eqn@initgrabers%
 				}%
 		}%
@@ -1055,13 +1079,13 @@
 	\def\cpge@tmpe{#2}%
 	\ifblank{#2}
 		{%
-			\def\cpge@tmpe{
+			\def\cpge@tmpe{%
 				exec,
 				ltextfunc,
 				mtextfunc,
 				rtextfunc,
 				finalizer,
-				shift} 
+				shift}%
 		}{}%
 	\@xp\docsvlist\@xp{\cpge@tmpe}%
 }
@@ -1072,7 +1096,7 @@
 	t\r
 	E{\fr\lb\al\wd\lt\rt}{{@}{}{@}{@}{}{}}
 	u\math@nil
-}{
+}{%
 	\undef\cpge@tmpz%
 	\ifblank{#7}{}
 		{%
@@ -1098,13 +1122,13 @@
 \newif\ifeqn@break
 
 \NewDocumentCommand\xbreak{O{t} m}{%
-	\global\eqn@breaktrue
+	\global\eqn@breaktrue%
 	\begin{multlined}[#1]
 		#2
 	\end{multlined}
 }
 \NewDocumentCommand\compactbreak{O{t} m}{%
-	\global\eqn@breaktrue
+	\global\eqn@breaktrue%
 	\ifcompact
 		\begin{multlined}[#1]
 			#2
@@ -1136,7 +1160,7 @@
 %% dans un environnement {xalign} ou {xdevel} de cpgemath.sty
 \NewDocumentCommand\math@unit{ s O{} }{%
 	\ifdim\leftmargin=\z@
-		\leftmargin=\leftmargini
+		\leftmargin=\leftmargini%
 	\fi
 	\IfBooleanTF{#1}
 		{%
@@ -1190,34 +1214,34 @@
 		\crcr
 	\fi
 	\noalign{%
-		\vskip-\ht\strutbox
-		\vskip-\dp\strutbox
-		\vskip-\lineskiplimit
-		\unless\ifnum\row@=\z@\relax
-			\penalty\postdisplaypenalty
-			\vskip\abovedisplayshortskip
-			\vskip\normallineskiplimit
-			\vskip\largetextabove
+		\vskip-\ht\strutbox%
+		\vskip-\dp\strutbox%
+		\vskip-\lineskiplimit%
+		\unless\ifnum\row@=\z@\relax%
+			\penalty\postdisplaypenalty%
+			\vskip\abovedisplayshortskip%
+			\vskip\normallineskiplimit%
+			\vskip\largetextabove%
 		\fi%
 		\vbox{%
 			\normalbaselines
 			\ifdim
 				\ifdim
-					\@totalleftmargin=\z@\linewidth
+					\@totalleftmargin=\z@\linewidth%
 				\else
-					-\maxdimen
+					-\maxdimen%
 				\fi
-				=\columnwidth
+				=\columnwidth%
 			\else
-				\parshape\@ne \@totalleftmargin \linewidth
-			\fi
+				\parshape\@ne \@totalleftmargin \linewidth%
+			\fi%
 			\noindent\ignorespaces #1\par%
 		}%
-		\penalty\predisplaypenalty
-		\vskip\abovedisplayshortskip
-		\vskip-\lineskiplimit
-		\vskip\normallineskiplimit
-		\vskip\largetextbelow
+		\penalty\predisplaypenalty%
+		\vskip\abovedisplayshortskip%
+		\vskip-\lineskiplimit%
+		\vskip\normallineskiplimit%
+		\vskip\largetextbelow%
 	}%
 }
 
@@ -1270,8 +1294,8 @@
 \def\get@entry#1#2{%
 	\ifcase\@xp#1#2\fi
 }
-\def\text@mesuring#1#2{
-	\begingroup
+\def\text@mesuring#1#2{%
+	\begingroup%
 		\settowidth\cpge@dima{#2}
 		\save@csentry{\the\cpge@dima}{#1@widths}
 	\endgroup
@@ -1315,7 +1339,7 @@
 	\endgroup
 }
 \def\find@maxtagwidth#1{%
-	\begingroup
+	\begingroup%
 		\settowidth\cpge@dima{\tag@kern\deco@tag{#1}}
 		\ifdim\cpge@dima>\cpgetag@width
 			\global\cpgetag@width\cpge@dima
@@ -1757,7 +1781,7 @@
 }{%
 	\mathchoice 
 		{\forall #4 \forall@dsep}
-		{
+		{%
 			\IfBooleanTF{#1}
 				{\forall #4 \forall@sep}
 				{
@@ -1774,16 +1798,17 @@
 	t!
 	t\M
 	t\f
+	t\p
 	u{\;}
 	%E{\tq}{{ tel que }}
 }{%
 	\mathchoice
-		{\exists \IfBooleanT{#2}{!} #5 \exists@dsep}
+		{\exists \IfBooleanT{#2}{!} #6 \exists@dsep}
 		{\IfBooleanTF{#1}
-			{\exists \IfBooleanT{#2}{!} #5 \exists@sep}
+			{\exists \IfBooleanT{#2}{!} #6 \exists@sep}
 			{
 				\text{\IfBooleanTF{#3}{I}{i}l existe\ }
-				#5 \IfBooleanT{#2}{\text{ unique }} \text{ tel\IfBooleanT{#4}{le} que\ }
+				#6 \IfBooleanT{#2}{\text{ unique\IfBooleanT{#5}{s} }} \text{ tel\IfBooleanT{#4}{le}\IfBooleanT{#5}{s} que\ }
 			}
 		}{\text{Hoho ! c'est trop sérré ici}}{}
 }
@@ -3591,6 +3616,7 @@
 	\let\Lra\Longrightarrow
 	\let\Llra\Longleftrightarrow
 	\let\cqfd\qed
+	\def\qtext##1{\quad\text{##1}\quad}
 	\newcommand\be{\begin{xenum}}
 	\newcommand\ee{\end{xenum}}
 	\newcommand\bi{\begin{xitem}}

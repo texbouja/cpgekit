@@ -26,6 +26,7 @@
 	\newif\ifproof
 	\newif\ifsolutiondelayed
 	\newif\ifproofdelayed
+	\newif\ifserie
 	\def\class@options{}
 }{}
 
@@ -36,7 +37,8 @@
 	solution*/.is if=solutiondelayed,
 	proof/.code=\csname proof#1\endcsname\proofdelayedfalse,%
 	proof/.default=true,
-	proof*/.is if=proofelayed,
+	proof*/.is if=proofdelayed,
+	serie/.is if=serie,
 	compact/.is if=compact,
 	nocolor/.is if=nocolor, 
 	web/.code=\compacttrue\webtrue%
@@ -48,6 +50,7 @@
 	.search also=/IGC,
 }
 \pgfkeys{IGC/.is family, IGC/.cd,
+	article/.code={\def\cpge@class{article}},
 	report/.code={\def\cpge@class{report}},
 	book/.code={\def\cpge@class{book}\cspreto\class@options{oneside}},
 	.unknown/.code={%
@@ -60,6 +63,7 @@
 	solution*/.style={},
 	proof/.style={},
 	proof*/.style={},
+	serie/.style={},
 	web/.style={},
 	convert/.style={},
 }
@@ -68,7 +72,7 @@
 	{\ProcessPgfOptions{/IGC}}
 
 \ifundef\cpge@class{\def\cpge@class{report}}{}
-\def\class@options{11pt}
+\def\class@options{11pt,openany}
 \ifdraft\appto\class@options{,draft}\fi
 \begingroup
 \edef\cpge@tmpa{\endgroup%
@@ -134,17 +138,24 @@
 
 \newtoks\toks@sol
 \newtoks\toks@prv
-\cpgedefcounter{theo}{|C|.|1|}[chapter]
-\cpgedefcounter{defi}{|C|.|1|}[chapter]
-\cpgedefcounter{rema}{|C|.|1|}[chapter]
-\cpgedefcounter{exem}{|C|.|1|}[chapter]
-\cpgedefcounter{exer}{|C|.|1|}[chapter]
-\cpgedefcounter{genthm}{|C|.|1|}[chapter]
+\ifdef\c@chapter{
+	\cpgedefcounter{theo}{|C|.|1|}[chapter]
+	\cpgedefcounter{defi}{|C|.|1|}[chapter]
+	\cpgedefcounter{rema}{|C|.|1|}[chapter]
+	\cpgedefcounter{exem}{|C|.|1|}[chapter]
+	\cpgedefcounter{exer}{|C|.|1|}[chapter]
+	\cpgedefcounter{genthm}{|C|.|1|}[chapter]
+}{
+	\cpgedefcounter{theo}{|1|}
+	\cpgedefcounter{defi}{|1|}
+	\cpgedefcounter{rema}{|1|}
+	\cpgedefcounter{exem}{|1|}
+	\cpgedefcounter{exer}{|1|}
+	\cpgedefcounter{genthm}{|1|}
+}
 
 \RequirePackage{cpgethm}
 
-\let\solu\cpge@dummy@
-\let\preuve\cpge@dummy@
 \newif\ifdelayedprooforsolution
 \def\setup@solproofmode{%
 	\unless\ifdraft%
@@ -279,7 +290,7 @@
 			\cpgestoprecording%
 		\fi%
 		\let\preuve@\preuve%
-		\let\preuve\cpge@dummy%
+		\let\preuve\cpge@dummy@%
 		\InputIfFileExists{\jobname.rec}{}{}
 		\let\preuve\preuve@%
 	\fi%
@@ -290,7 +301,7 @@
 			\cpgestoprecording%
 		\fi%
 		\let\solu@\solu%
-		\let\solu\cpge@dummy%
+		\let\solu\cpge@dummy@%
 		\InputIfFileExists{\jobname.rec}{}{}
 		\let\solu\solu@%
 		% {
@@ -517,7 +528,7 @@ subsection label style={}
 	\fi 
 }
 \cpgesetuptcb{demolink/.style={}}
-\appto\endpreamble@hook{\set@demolink}
+\appto\endpreamble@hook{\set@demolink\pagestyle{main}}
 %%% Lien vers demo/solution en bas d'un énoncé.  
 \let\current@prv\relax
 \let\current@sol\relax
@@ -540,7 +551,7 @@ subsection label style={}
 	\@ifstar\@titledemolink@\@titledemolink@@
 }
 \def\@titledemolink@@#1#2#3#4#5#6{
-		\@hangfrom{
+		{\@hangfrom{
 			\tcbox[
 				enhanced,tcbox raise base,
 				enlarge left by=-14pt,
@@ -559,11 +570,11 @@ subsection label style={}
 			{\csname#4name\endcsname}%
 		\Hy@raisedlink{\hyper@anchorstart{\@currentHref}\hyper@anchorend}%
 		\label{#4:\cpge@theorem@label}%
-	\vrule width \z@  depth\bigskipamount%
+	\vrule width \z@  depth\bigskipamount\par}%
 	\par\penalty\@M%
 }
 \def\@titledemolink@#1#2#3#4#5#6{
-		\@hangfrom{
+		{\@hangfrom{
 			\tcbox[
 				enhanced,tcbox raise base,
 				enlarge left by=-14pt,
@@ -573,7 +584,7 @@ subsection label style={}
 			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
 				#5 #3~#2\hskip6pt\null}\enskip}%
 	\vrule width \z@  depth\bigskipamount%
-	\par\penalty\@M%
+	\par}\penalty\@M%
 }
 \def\@recsol{%
 	\protected@edef\current@sol{%
@@ -713,7 +724,7 @@ subsection label style={}
 %%%%%%%% redefinition des environements pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cpgerenewtheorem[use counter=theo, number within=chapter]{theo}
+\cpgerenewtheorem[use counter=theo, within chapter or section]{theo}
 	{Théorème}
 	{théorème}
 	{du\space}
@@ -755,12 +766,22 @@ subsection label style={}
 	{du\space}
 	{theorem}
 	{titled items, with proof}
-\cpgerenewtheorem[use counter=exer, number within=chapter]{exer}
-	{Exercice}
-	{exercice}
-	{de l'}
-	{exercise}
-	{titled items, with solution}
+\ifserie
+	\cpgerenewtheorem[use counter=exer]{exer}
+		{Exercice}
+		{exercice}
+		{de l'}
+		{exercise}
+		{titled items, with solution}
+	\counterwithout{exer}{section}
+\else 
+	\cpgerenewtheorem[use counter=exer, within chapter or section]{exer}
+		{Exercice}
+		{exercice}
+		{de l'}
+		{exercise}
+		{titled items, with solution}
+\fi 
 \cpgerenewtheorem[use counter from=exer]{exerappli}
 	{Exercice d'application}
 	{exercice}
@@ -779,6 +800,14 @@ subsection label style={}
 	{du\space}
 	{exercise}
 	{titled items, with solution}
+\cpgedefcounter{obje}{|1|}
+\cpgenewtheorem[use counter=obje]{obje}
+		{Objectifs}
+		{objectif}
+		{}
+		{theorem}
+		{titled items}
+\counterwithout{obje}{section}
 
 \endinput
 

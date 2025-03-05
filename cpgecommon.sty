@@ -17,13 +17,11 @@
 {
 	\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
 	\NewDocumentCommand\cpgesetup{o}{%
-      \IfValueT{#1}
-   	   {\pgfkeysifdefined{/cpge/#1/.is family}{}
-			   {\pgfkeys{/cpge/#1/.is family}}}%
-      \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
-   }
-   }{}
-
+    	\IfValueT{#1}
+   			{\pgfkeysifdefined{/cpge/#1/.is family}{}{\pgfkeys{/cpge/#1/.is family}}}%
+    	\IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
+	}%
+}{}
 
 \ifcustomtitles
    \RequirePackage[loadonly,explicit,nobottomtitles*,pagestyles]{titlesec}
@@ -75,7 +73,7 @@
 \let\cpge@set@verbatim@finish\@empty
 \def\cpgewriteonce#1{%
   \@bsphack
-  \cpge@set@verbatim@finish%
+  \cpge@set@verbatim@finish
   \cpgeopenfile{solhandle}
   \immediate\openout\solhandle@file #1.tex
   \cpge@verbatim@begin@hook%
@@ -94,6 +92,7 @@
 %%%% Le système record
 \def\cpge@allocate@out{\newwrite\cpge@out}
 \def\cpge@null#1{}
+\let\cpgerecord\cpge@null
 \newcommand{\cpge@record}[1]{\immediate\write\cpge@out{#1}}
 \newif\ifcpgerecordfileopen
 \newcommand{\cpgestartrecording}[1][\jobname]{%
@@ -390,7 +389,7 @@
 \def\cpge@removestar#1*{#1}
 \def\cpge@removeplus#1+{#1}
 \def\cpge@erasestar*#1+{#1}
-\def\if@staratend#1{
+\def\if@staratend#1{%
 	\def\in@@{\in@{*!}}%
 	\@xp\in@@\@xp{#1!}%
 	\ifin@%
@@ -399,7 +398,7 @@
 		\def\x@arg{#1}\expandafter\@secondoftwo%
 	\fi%
 }
-\def\if@plusatend#1{
+\def\if@plusatend#1{%
 	\def\in@@{\in@{+!}}%
 	\@xp\in@@\@xp{#1!}%
 	\ifin@%
@@ -420,14 +419,14 @@
 \DeclareDocumentCommand\cpgename{smm}{%
 \IfBooleanT{#1}{\csglobal}%
 \lorg@csdef{name@#2}{#3}%
-\endcslorg
+\endcslorg%
 }
 \DeclareDocumentCommand\cpgexname{smm}{%
 \IfBooleanT{#1}{\csglobal}%
 \lorg@csedef{name@#2}{#3}%
 \endcslorg%
 }
-\cpgesetup[decorations]{
+\cpgesetup[decorations]{%
 .unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
 }
 \def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
@@ -474,13 +473,13 @@
 \newrobustcmd{\csvadd}[2]{%
 \ifblank{#2}{}{\appto#1{#2,}}}
 \newrobustcmd{\csveadd}[2]{%
-\begingroup
+\begingroup%
 \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
 \cpgeb@tempa{}{\eappto#1{#2,}}}
 \newrobustcmd{\csvgadd}[2]{%
 \ifblank{#2}{}{\gappto#1{#2,}}}
 \newrobustcmd{\csvxadd}[2]{%
-\begingroup
+\begingroup%
 \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
 \cpgeb@tempa{}{\xappto#1{#2,}}}
 \newrobustcmd{\csvcsadd}[1]{%
@@ -499,8 +498,8 @@
 \ifblank{#2}
 {}
 {\ifincsv{#2}{#1}{%
- \begingroup
- \def\cpgeb@tempa##1,#2,##2&{\endgroup
+ \begingroup%
+ \def\cpgeb@tempa##1,#2,##2&{\endgroup%
    \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
 \expandafter\cpgeb@tempa\expandafter,#1&}{}}%
 }
@@ -510,19 +509,19 @@
 \expandafter\csvgremove\csname#1\endcsname}
 \newrobustcmd{\ifincsv}[2]{%
 \begingroup
-\def\cpgeb@tempa##1,#1,##2&{\endgroup
+\def\cpgeb@tempa##1,#1,##2&{\endgroup%
 \ifblank{##2}\@secondoftwo\@firstoftwo}%
-\expandafter\expandafter\expandafter\cpgeb@tempa
+\expandafter\expandafter\expandafter\cpgeb@tempa%
 \expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
 \newrobustcmd{\xifincsv}[1]{%
-\begingroup
+\begingroup%
 \edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
 \cpgeb@tempa}
 \newrobustcmd{\ifincsvcs}[2]{%
 \expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
 \long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
 \newrobustcmd{\xifincsvcs}[1]{%
-\begingroup
+\begingroup%
 \edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
 \cpgeb@tempa}
 %% ajoute les éléments de #2 (separe par des virgules)
@@ -532,16 +531,16 @@
 \IfBooleanT{#1}{\csglobal}%
 \IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
 \endcslorg%
-}
+}%
 }{}
 
 %%%%% Gestion des métadonnées 
 \newcommand\addmeta[4]{%
-   \csdef{#1}##1{
-      \csgdef{cpge@#2}{##1}
-      \csgdef{cpge@#2@format}{{#3{##1}}}
+   \csdef{#1}##1{%
+      \csgdef{cpge@#2}{##1}%
+      \csgdef{cpge@#2@format}{{#3{##1}}}%
    }
-   \ifblank{#4}{}{\csuse{#1}{#4}}
+   \ifblank{#4}{}{\csuse{#1}{#4}}%
 }
 \newcommand\usemeta[1]{\csuse{cpge@#1@format}}
 \def\ifdefmeta#1{\ifcsdef{cpge@#1}}
@@ -632,6 +631,24 @@
 			\RequirePackage[scaled=.8]{FiraMono}
 			\useosf
 			\def\TitlingFont{\sffamily\scshape}
+	}},
+	garamond/.code={%
+		\def\load@thefonts{
+			\ifxetex
+				\RequirePackage{fontspec}
+				\let\lsstyle\relax
+			\else 
+				\RequirePackage[T1]{fontenc}
+				\RequirePackage{microtype}
+			\fi
+			 \RequirePackage[french]{babel}
+			 \usepackage[vvarbb,ebgaramond,smallerops]{newtx}
+			 \usepackage[sf,scale=0.95]{libertine}
+			 % \usepackage[cmintegrals,cmbraces]{newtxmath}
+			 % \usepackage{ebgaramond-maths}
+			 %\RequirePackage[scaled=.8]{FiraMono}
+			 \usepackage[scr=boondoxo,bb=boondox]{mathalpha}
+			\def\TitlingFont{\scshape}
 	}},
 	lmodern/.code={%
 		\def\load@thefonts{
@@ -755,6 +772,10 @@
 \acro@@plural		{sep}{sous-espaces propres}
 \acro@@				{sev}{sous-espace vectoriel}
 \acro@@plural		{sev}{sous-espaces vectoriels}
+\acro@@				{ts}{triangulaire supérieure}
+\acro@@				{tss}{triangulaire supérieure stricte}
+\acro@@				{sp}{symétrique positive}
+\acro@@				{sdp}{symétrique définie positive}
 \acro@@				{evn}{espace vectoriel norm\'e}
 \acro@@plural		{evn}{espaces vectoriels norm\'es}
 \acro@@				{cpa}{connexe par arcs}
@@ -812,6 +833,8 @@
 \def\vep{\ac{vep}\xspace}
 \def\sev{\ac{sev}\xspace}
 \def\sep{\ac{sep}\xspace}
+\def\evn{\ac{evn}\xspace}
+\def\bon{\ac{bon}\xspace}
 \def\cvs{\ac{cvs}\xspace}
 \def\cvu{\ac{cvu}\xspace}
 \def\cvuc{\ac{cvuc}\xspace}
@@ -888,8 +911,8 @@
 		{}%
 	\reloadthefonts%
 	\reloadthecolors%
-	\pagestyle{main}%
 	\endpreamble@hook%
+	\ifdefstring\cpgecurrentclass{doc}{\titlepagetrue}{}
 }
 
 % \AtBeginDocument{%
@@ -1180,7 +1203,7 @@
       {#2\cpge@relsize\csuse{cpge@#1@format}%
       \global\cpge@dima\baselineskip}%
       \baselineskip\cpge@dima%
-   }
+   }%
 }
 \cpgenewtitlekeyword{document}{\LARGE\bfseries}
 \cpgenewtitlekeyword{concours}{\LARGE\bfseries}
@@ -1198,7 +1221,7 @@
 \cpgenewtitlekeyword{website}{\small\ttfamily}
 
 
-\NewDocumentCommand\renew@title@format{O{1}mm}{
+\NewDocumentCommand\renew@title@format{O{1}mm}{%
 	\ifcase #1\relax	
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
@@ -1208,7 +1231,7 @@
 				\global\cpge@dima\baselineskip%
 				}%
 			}\par\baselineskip1.56\cpge@dima%
-		}
+		}%
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
 				\parbox{2\cpge@ttlw}{%
@@ -1217,7 +1240,7 @@
 				\global\cpge@dima\baselineskip%
 				}%
 			}\par\baselineskip1.56\cpge@dima%
-		}
+		}%
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
 				\parbox{1.5\cpge@ttlw}{%
@@ -1226,7 +1249,7 @@
 					\global\cpge@dima\baselineskip%
 				}%
 			}\par\baselineskip1.56\cpge@dima%
-		}
+		}%
 		\or \csdef{title@#2}{%
 			\resizebox{\hsize}{!}{%
 				\parbox{\cpge@ttlw}{%
@@ -1235,8 +1258,8 @@
 					\global\cpge@dima\baselineskip%
 				}%
 			}\par\baselineskip1.56\cpge@dima%
-		}
-	\fi 
+		}%
+	\fi%
 } 
 \def\titlepage@formats{%
 		\renew@title@format[2]{centre}{\scshape}%
@@ -1262,7 +1285,7 @@
 \long\def\title@change#1{%
    \StrSubstitute{\title@contents}
      {|#1|}{\csname title@#1\endcsname}[\title@string]%
-     \global\let\title@contents\title@string
+     \global\let\title@contents\title@string%
  }
 \long\def\title@parser#1{\begingroup%
     \gdef\title@contents{#1}%
@@ -1281,11 +1304,11 @@
 		{%
 			\@xp\long\@xp\gdef
 				\@xp\cpgetitlepagecontents\@xp
-					{\title@contents}
+					{\title@contents}%
 		}{%
 			\@xp\long\@xp\gdef
 				\@xp\cpgetitlecontents\@xp
-					{\title@contents}
+					{\title@contents}%
 		}%
 }
 
@@ -1299,11 +1322,11 @@
 		{%
 			\@xp\long\@xp\def
 				\@xp\cpgetitlepagecontents\@xp
-					{\title@contents}
+					{\title@contents}%
 		}{%
 			\@xp\long\@xp\def
 				\@xp\cpgetitlecontents\@xp
-					{\title@contents}
+					{\title@contents}%
 		}%
 }
 
@@ -1380,7 +1403,7 @@
 \def\STRIP{}
 \let\endSTRIP\relax
 \NewDocumentCommand\titre{s e{\op} +d()}{%
-   	\IfBooleanT{#1}{\titlepagetrue}
+   	\IfBooleanT{#1}{\titlepagetrue}%
 	\IfValueT{#2}{\cpgesetup[title]{#2}}%
 	\IfValueT{#3}{%
 		\iftitlepage\cpge@localtitle*{#3}\else\cpge@localtitle{#3}\fi%
@@ -1397,27 +1420,27 @@
 				\csuse{cpgetitlepagecontents}%
 			\csuse{hook@titleaftertitlepage}%
 			\csuse{hook@aftertitlepage}%
-			\csuse{hook@lateaftertitlepage}
+			\csuse{hook@lateaftertitlepage}%
 		\end{titlepage}%
 		\pagecolor{pagecol}%
 		\color{textcol}%
 		\restoregeometry%
 	\else%
 		\thispagestyle{plain}%
-		\ifstriptitle
+		\ifstriptitle%
 			\def\STRIP{\strip}%
 			\let\endSTRIP\endstrip%
 		\fi%
 		\begin{STRIP}%
 			\renewcommand\thefootnote{\@fnsymbol\c@footnote}%
 			\def\@makefnmark{\rlap{\@textsuperscript{\normalfont\@thefnmark}}}%
-			\long\def\@makefntext##1{\parindent 1em\noindent
+			\long\def\@makefntext##1{\parindent 1em\noindent%
 				\hb@xt@1.8em{%
 				\hss\@textsuperscript{\normalfont\@thefnmark}}##1}%
-			\fil@outer
+			\fil@outer%
 			\csuse{hook@beforetitle}%
-			\fil@inner
-			\csuse{hook@titlebeforetitle}
+			\fil@inner%
+			\csuse{hook@titlebeforetitle}%
 				\csuse{cpgetitlecontents}%
 				\csuse{hook@titleaftertitle}%
 				\csuse{hook@aftertitle}%
@@ -1449,16 +1472,16 @@
 \def\hf@change#1#2{%
    \StrSubstitute{#1}
      {|#2|}{\csname hf@#2\endcsname}[\tmp@string]%
-     \global\let#1\tmp@string
+     \global\let#1\tmp@string%
  }
-\def\hf@parser#1#2#3{\begingroup
-    \csgdef{#1@\romannumeral#2}{\csuse{#1@font}{#3}}
+\def\hf@parser#1#2#3{\begingroup%
+    \csgdef{#1@\romannumeral#2}{\csuse{#1@font}{#3}}%
     \expandafter\def\expandafter\hf@change@\expandafter%
          {\expandafter\hf@change\expandafter%
-           {\csname#1@\romannumeral#2\endcsname}}
+           {\csname#1@\romannumeral#2\endcsname}}%
     \exploregroups\expandarg
     \forlistloop{\hf@change@}{\list@hf}%
-    \endgroup
+    \endgroup%
 }
 \NewDocumentCommand\cpgesethead{o O{} O{} D(){} D(){} D(){}}{%
 	\IfNoValueTF{#1}
@@ -1521,7 +1544,7 @@
 \cpgeaddkeyword{hf}{square}{\cpgesquare}
 \cpgeaddkeyword{hf}{tpsvp}{\quad\cpgesquare[1]\ %
    \ifnum\c@page<\getrefbykeydefault{LastPage}{page}{0}
-      \cpgesquare[1]\ \cpgesquare[1]
+      \cpgesquare[1]\ \cpgesquare[1]%
    \fi%
 }
 \def\hf@deco{\title@deco}
@@ -1539,7 +1562,7 @@
    \sethead{}{}{}
    \setfoot{}{page \thepage{}}{}
  }
- \newpagestyle{colle}{
+ \newpagestyle{void}{
 	\renewcommand\makeheadrule{}
 	\renewcommand\makefootrule{}
 	\sethead{}{}{}

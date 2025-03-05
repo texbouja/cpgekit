@@ -14,7 +14,7 @@
 \newif\ifquiz
 \newif\ifsingleimage
 \newif\ifstraight
-\newif\ifprint
+\newif\ifprint 
 \newif\ifnocolors
 \newif\ifdark
 \newif\ifcompact
@@ -58,6 +58,8 @@
 	web/.default={theo,exer,probleme,exercice},
 	convert/.code=\appto\convert@options{,#1},
 	singleimage/.is if=singleimage,	
+	nomarks/.is if=nomarks,
+	suivi/.is if=suivi
 }
 \def\preamble@file{
 	\ClasseError{cpgesubdoc}{Utiliser l'option master= pour undiquer le fichier maitre}{}

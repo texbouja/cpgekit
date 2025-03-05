@@ -1,0 +1,79 @@
+\RequirePackage{curvecommon}
+\RequirePackage{eso-pic}
+
+\usetikzlibrary{shadows}
+\pgfdeclarelayer{background}
+        \pgfdeclarelayer{foreground}
+        \pgfsetlayers{background,main,foreground}
+
+\ifsuivi\else 
+   \cpgesetdeco{topbutton}{%
+      \begin{tikzpicture}[overlay]
+         \sffamily\large\bfseries\scshape
+         \node (Top) at (.5\paperwidth, -.5\tma)
+         [
+            rounded corners=10pt, 
+            minimum width=.66\textwidth,
+            top color=framebackcol!75, bottom color=framebackcol!85!black,
+            draw=pagecol, line width=2pt,
+            inner xsep=1pc, inner ysep=5pt,
+         ]
+         {#1};
+         \draw [framestrokecol, rounded corners=10pt] (Top.east) |- (Top.south) -| (Top.west) ;
+      \end{tikzpicture}%
+   }
+   \cpgesetdeco{bottombutton}{%
+      \begin{tikzpicture}[overlay]
+         \node  (Bottom) at (\paperwidth-1.5\hma, .5\bma)
+            [
+               left,
+               text=textcol, 
+               rounded corners=10pt,
+               top color=framebackcol!75, bottom color=framebackcol!85!black,
+                draw=pagecol, line width=2pt,
+               font=\large\sffamily\bfseries\scshape,
+               inner xsep=1pc, inner ysep=5pt
+            ]
+            {#1};
+            \draw [framestrokecol, rounded corners=10pt] (Bottom.east) |- (Bottom.north) -| (Bottom.west) ;
+      \end{tikzpicture}%
+   }
+   \newbox\backbox
+   \AtBeginDocument{
+      \setbox\backbox\vbox{%
+         \begin{tikzpicture} [overlay]
+            \draw 
+            [framestrokecol, fill, rounded corners=\hma]
+            (.5\hma, .5\bma) 
+            rectangle 
+            (\paperwidth-.5\hma,\paperheight-.5\tma) ;
+        \node  at (.5\hma, .25\bma+2pt) 
+            [right, font=\sffamily\scshape\small] 
+            {\hskip\hma\textsl{\smaller cpge} \textcolor{titletextcol}{\cpge@centre}};
+         \end{tikzpicture}%
+      }
+      \AddToShipoutPictureBG{%
+               \AtPageUpperLeft{\copy\backbox}
+      }%
+   } 
+   \renewpagestyle{plain}{}
+   \cpgesetup[mini]{
+      lm=\hma
+   }
+\fi
+
+\cpgesetup[theorem]{
+	frame style={
+		fill=pagecol,
+		draw=framestrokecol,
+		text=frametextcol,
+		rounded corners=10pt
+	},
+	inner xsep=10pt,
+	inner ysep=5pt,
+	title sep=5pt,
+   raise title=-2pt,
+	title style={text=framestrokecol, fill=framebackcol, rounded corners=6pt, draw=none},
+	title overlay={\draw [framestrokecol, rounded corners=6pt] (title.east) |- (title.south west) -- (title.west);}
+}
+

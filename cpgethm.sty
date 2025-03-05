@@ -272,7 +272,7 @@
     }
 	\cspreto{end#2}{\exit}%
 	\DeclareDocumentEnvironment{#2*}{E{\op}{{}} d() d<>}
-    	{\csname #2\endcsname [##1,theorem name](##2)<##3>}
+    	{\csname #2\endcsname\op{##1,theorem name}(##2)<##3>}
 		{\csname end#2\endcsname}
 	}
 \NewTColorBox[use counter=genthm]{genthm}{ m E{\op}{{}} d() d<>}{%
@@ -527,7 +527,17 @@
 %%%%%%%% exemples d'environement pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cpgenewtheorem[use counter=theo, number within=chapter]{theo}
+\tcbset{new/within chapter or section/.code=
+	\ifdef\c@chapter
+		{\tcbset{new/number within=chapter}}
+		{\tcbset{new/number within=section}}
+}
+\tcbset{new/within chapter or none/.code=
+	\ifdef\c@chapter
+		{\tcbset{new/number within=chapter}}{}
+}
+
+\cpgenewtheorem[use counter=theo, within chapter or section]{theo}
 	{Théorème}
 	{théorème}
 	{du\space}
@@ -569,7 +579,7 @@
 	{du\space}
 	{theorem}
 	{titled items}
-\cpgenewtheorem[use counter=defi, number within=chapter]{defi}
+\cpgenewtheorem[use counter=defi, within chapter or section]{defi}
 	{Définition}
 	{défintion}
 	{}
@@ -587,7 +597,7 @@
 	{}
 	{definition}
 	{theorem name,titled items}
-\cpgenewtheorem[use counter=rema, number within=chapter]{rema}
+\cpgenewtheorem[use counter=rema, within chapter or section]{rema}
 	{Remarque}
 	{remarque}
 	{}
@@ -605,7 +615,7 @@
 	{}
 	{remark}
 	{titled items}
-\cpgenewtheorem[use counter=exem, number within=chapter]{exem}
+\cpgenewtheorem[use counter=exem, within chapter or section]{exem}
 	{Exemples}
 	{exemples}
 	{}
@@ -615,7 +625,7 @@
 	{Exemples fondamentaux}
 	{exemples fondamentaux}
 	{}
-	{remark}
+	{theorem}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exema}
 	{Exemple d'application}
@@ -646,14 +656,14 @@
 	{}{}
 	{proof}
 	{titled items, current counter=\@gobble}
-\cpgenewtheorem[number within=chapter]{float}
+\cpgenewtheorem{float}
 	{Figure}
 	{}{}
 	{other}
 	{float, halign title=flush center}
 \cpgesetuptcb{floatplacement=tbp}
 
-\cpgenewtheorem[use counter=exer, number within=chapter]{exer}
+\cpgenewtheorem[use counter=exer, within chapter or section]{exer}
 	{Exercice}
 	{exercice}
 	{de l'}
