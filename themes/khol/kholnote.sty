@@ -49,6 +49,11 @@
       \end{tikzpicture}%
    }
    \AtBeginDocument{
+      \ifprint 
+         \def\page@color{white}
+      \else
+         \def\page@color{pagecol}
+      \fi
       \setbox\backbox\vbox{%
          \begin{tikzpicture} [overlay]
             \node (C) at (.5\hma,.5\bma+8pt)% ([xshift=.5\hma,yshift=-.5\tma+1.5ex]current page.south west) 
@@ -57,6 +62,7 @@
          \begin{pgfonlayer}{background}
             \fill 
                [
+                  fill=\page@color,
                   draw=buttonstrokecol, 
                   line width=1pt
                ] 
@@ -66,7 +72,7 @@
                   ++(\paperwidth-\hma,0)  [sharp corners] -- 
                   cycle;
             \fill [
-                     pagecol, 
+                     fill=pagecol, 
                      draw=buttonstrokecol!50!transparent, 
                      line width=1pt, rounded corners=\hma
                   ]

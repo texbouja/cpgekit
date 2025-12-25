@@ -153,6 +153,7 @@
 		\fi%
 	\fi%
 }
+
 \def\setup@draftmode{%
 	\ifdraft
 		\solutiontrue
@@ -276,9 +277,9 @@
 \cpgedefcounter{@devoir}{}(D)
 \cpgedefcounter{section}{}[@devoir](*S) % (*S) pour écraser le raccourci S
 \cpgedefcounter{problem}{}[@devoir](Y) 
-\cpgedefcounter{parti}{}[problem](P)<partie>
-\cpgedefcounter{partii}{}[parti](p)<partie>
-\cpgedefcounter{bigques}{|I|}[partii](B)<question>
+\cpgedefcounter{parti}{|I|}[problem](P)<partie>
+\cpgedefcounter{partii}{|A|}[parti](p)<partie>
+\cpgedefcounter{bigques}{|1|}[partii](B)<question>
 \cpgedefcounter{solution}{}
 \cpgedefcounter{question}{}
 \def\theHquestion{\theHItem}
@@ -353,8 +354,8 @@
 	problem/.is family,
 	problem/font/.code=\def\problem@font{#1},
 	problem/label/.code=\cpgesetlabel{problem}{#1},
-	problem/fill/.code=\def\problem@align{\csuse{fil#1}},
-	problem/label fill/.code=\def\problemlabel@align{\csuse{fil#1}},
+	problem/fill/.code=\letcs\problem@align{fil#1}\letcs\afterproblem@align{ragged#1},
+	problem/label fill/.code=\letcs\problemlabel@align{fil#1},
 	problem/shape/.code=\def\problem@shape{#1}\cpge@tmpswatrue,
 	problem/deco/.code=\cpgesetdeco{problem}{#1},
 	problem/label deco/.code=\cpgesetdeco{problemlabel}{#1},
@@ -491,8 +492,9 @@
 \cpgetitle@setspacing{\section}
 
 %%%%% version interne des titres pour les sujets
+\let\afterproblem@align\relax
 \def\after@problemtitle{%
-	\csundef@afterexec{hook@afterproblemtitle}%
+	\afterproblem@align%
 	\iflocalscore%
 		\ifdef{\problemcounter@name}
 			{
@@ -529,25 +531,24 @@
 			\deco@problemlabel{#1}%
 		\fi%
 	\fi}%
-\def\print@origin{%
-	\ifdef\hook@problemorigin
-		{\deco@origin{\hook@problemorigin}}
-		{}%
-}
-\cpgesetdeco{origin}{\mbox{}\\\smaller[2]\itshape#1}
+
 \def\problem@format{%
 	\cpgetitle@format{\problem}[\problem@shape]
   		{\problem@font}
   		{\problemlabel@align
   			\link@problemlabel{\cnt@name}}
   		{\z@}
-  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi\print@origin}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi
+		  	\ifcsvoid{hook@afterproblemtitle}{}
+		  		{\mbox{}\csundef@afterexec{hook@afterproblemtitle}\medskip}}
   		[\after@problemtitle]
 	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
   		{\problem@font}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
-  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi\print@origin}
+  		{\problem@align\ifcpge@tmpswa\deco@problem{}\else\deco@problem{##1}\fi
+		  \ifcsvoid{hook@afterproblemtitle}{}
+		  	{\mbox{}\csundef@afterexec{hook@afterproblemtitle}\medskip}}
   		[\after@problemtitle]
 }
 \problem@format
@@ -560,7 +561,7 @@
 
 %%%%%%
 
-%%% \parti, à utiliser dans {probleme} ou {exercice}
+%%% \parti, à utiliser dans {probleme}, {exercice} ...
 \setcounter{secnumdepth}{5}
 \cpgetitle@shape{block}{parti}[right]
 \def\parti@format{%
@@ -613,7 +614,7 @@
 
 
 %%% Variantes de \parti et \partii pour ecrire en plus
-%%% les titres dans le ficheir de corrigé
+%%% les titres dans le fichier de corrigé
 \NewDocumentCommand\wparti{om}{
     \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
@@ -808,11 +809,11 @@
 	after title/.code=\title@parser{#1}%
 		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
-	origin/.code=\def\hook@problemorigin{#1},
+	origin/.code=\Origine{#1},
 	label/.code=\@xp\cpgesetlabel\@xp{\problemcounter@name}{#1},
 	title deco/.code=\cpgesetdeco{problem}{#1},
 	label deco/.code=\cpgesetdeco{problemlabel}{#1},
-	corrige/.code=\def\cor@curropts{#1}, 
+	corrige/.code=\appto\cor@curropts{,#1}, 
 }
 \cpgesetup[solution]{
 	nonumber/.is if=nonumber,
@@ -826,6 +827,7 @@
 		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
 	questions list/.store in=\queslist,
+	auteur/.code=\Auteur{#1},
 	.unknown/.code={},
 }
 \def\noqueslistmessage{%
@@ -904,7 +906,7 @@
 			\label{#6}%
 		}%
 	}	
-\DeclareDocumentCommand\genericproblemtitle{
+\DeclareDocumentCommand\generictitle{
 		m % #1 printed name
 		o % #2 alternative title
 		d() % #3 optional title
@@ -926,7 +928,7 @@
 		}%
 	}
 \def\cpge@problem@id{Unnamed}
-\DeclareDocumentCommand\cpgenewproblem{%sudo apt update
+\DeclareDocumentCommand\cpgenewproblem{%
 		s %1 corrige or enonce
 		m %2 counter name
 		m %3 printed name
@@ -959,7 +961,6 @@
 				\else%
 					\@problemtitle{#2}{#3}[##3](##4)<##5>
 				\fi%
-				\csuse{hook@afterproblemtitle}%
 				\setup@id%
 				\setup@xsol%
 				\csuse{hook@beforeproblem}%
@@ -977,8 +978,8 @@
 				{\edef\cpge@problem@id{#2-\the\numexpr\value{#2}+1}}
 				{\def\cpge@problem@id{##1}}%
 			\def\problemcounter@name{#2}%
-			\cpgesetup[@problem]{current counter=#2,##2}%
 			\edef\cor@curropts{\@xo\cor@commonopts}%
+			\cpgesetup[@problem]{current counter=#2,##2}%
 			\ifnonumber\appto\cor@curropts{,nonumber}\fi%
 			\setup@solutionmode%
 			\ifcsundef{\cpge@problem@id @param}{%
@@ -994,7 +995,6 @@
 			\else 
 				\@problemtitle{#2}{#3}[##3](##4)<##5>%
 			\fi
-			\csuse{hook@afterproblemtitle}%
 			\setup@id%
 			\setup@sol%
 			\setup@hint%
@@ -1016,6 +1016,11 @@
 	{|1|}
 	{du problème}
 	(R)
+\cpgenewproblem{sujet}
+	{Sujet}
+	[sujet]
+	{|1|}
+	{du sujet}
 \cpgenewproblem{exercice}
 	{Exercice}
 	[exercice]
@@ -1110,7 +1115,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Gestion des questions et des solutions	%%% 
 %%% dans un probleme ou un exercice 		%%%
-\long\def\hint@draft#1{\mini(ind)#1\endmini}%
+\long\def\hint@draft#1{\begin{mini}{ind}#1\end{mini}}%
 \def\setup@hint{%
 	\long\def\hint##1{}%
 	\ifstraight
@@ -1651,7 +1656,7 @@
 }
 \def\poorref{\xref\r}
 \NewDocumentCommand\xref@numeno{t\n t\e t\c t\a m}{%
-	\IfBooleanTF{#1}{\def\ques@arn\relax}{\let\ques@arn\questionautorefname}%
+	\IfBooleanTF{#1}{\def\ques@arn{}}{\let\ques@arn\questionautorefname}%
 	\hyperlink{hyeno:\problem@id:#5}{\ques@arn\space#5}%
 }
 \NewDocumentCommand\xref@numcor{t\n t\e t\c t\a m}{%
@@ -1763,10 +1768,10 @@
 		\global\let\show@quesscore\relax%
 	\fi}
 \NewDocumentCommand\xzapsol{o}{%
-	\IfValueF{#1}{\@xp\tmp@queslist@pop\@xp{\queslist}}
+	\IfValueF{#1}{\@xp\queslist@pop\queslist\cpge@nil}
 	\IfValueT{#1}{%
 		\ifnum#1>\z@
-			\@xp\tmp@queslist@pop\@xp{\queslist}%
+			\@xp\queslist@pop\queslist\cpge@nil%
 			\edef\cpge@tempa{\@nx\xzapsol[\number\numexpr#1-1]}
 			\@xp\cpge@tempa
 		\fi
@@ -1969,6 +1974,7 @@
 \newtheorem{voca}{Vocabulaire}[problem]
 \newtheorem*{voca*}{Vocabulaire}
 
+
 %%%% Frame générique pour théorème et similaire
 %%%% Reglages du theorème preeatblit dans une \trivlist externe 
 %%%% car le contenu est mis dans une \parbox qui annule ses reglages. 
@@ -2033,15 +2039,22 @@
 \cpgenewtheorem{defi}{Définition}{définition}
 \cpgenewtheorem{voca}{Vocabulaire}{vocabulaire}
 \cpgenewtheorem{nota}{Notations}{notations}
+\cpgenewtheorem{vocanota}{Vocabulaire et notations}{vocanota}
 \cpgenewtheorem{conv}{Conventions}{conventions}
 \cpgenewtheorem{convnota}{Conventions et notations}{convnota}
 \cpgenewtheorem{rema}{Remarque}{remarque}
+\cpgenewtheorem{exer}{Exercice}{exercice}
+\cpgenewtheorem{data}{Données du sujet}{données}
+\cpgenewtheorem{dire}{Conseils et directives}{directives}
 
 \cpgesetlabel{theo}{|1|}
 \cpgesetlabel{prop}{|1|}
 \cpgesetlabel{lemm}{|1|}
 \cpgesetlabel{defi}{|1|}
 \cpgesetlabel{rema}{|1|}
+\cpgesetlabel{exer}{|1|}
+\cpgesetlabel{data}{|1|}
+\cpgesetlabel{dire}{|1|}
 
 
 %%%% Différents réglages

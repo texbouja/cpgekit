@@ -547,6 +547,7 @@
 
 \addmeta{Centre}{centre}{\scshape}{}
 \addmeta{Ville}{ville}{\scshape}{}
+\addmeta{Filiere}{filiere}{\scshape}{}
 \addmeta{Classe}{classe}{\scshape}{}
 \addmeta{Matiere}{matiere}{\scshape}{}
 
@@ -562,6 +563,7 @@
 \addmeta{Periode}{periode}{}{}
 
 \addmeta{Concours}{concours}{}{}
+\addmeta{Origine}{origine}{}{}
 \addmeta{Epreuve}{epreuve}{}{}
 \addmeta{Session}{session}{\itshape Session\space}{}
 \addmeta{Duree}{duree}{\@duree}{}
@@ -577,6 +579,7 @@
       },
 	Centre/.code=\Centre{#1},
 	Classe/.code=\Classe{#1},
+	Filiere/.code=\Filiere{#1},
 	Auteur/.code=\Auteur{#1},
 	Email/.code=\Email{#1},
 	Website/.code=\Website{#1},
@@ -587,6 +590,7 @@
 	Theme/.code=\Theme{#1},
    	Subtheme/.code=\Subtheme{#1},
 	Concours/.code=\Concours{#1},
+	Origine/.code=\Origine{#1},
 	Session/.code=\Session{#1},
 	Epreuve/.code=\Epreuve{#1},
 	Periode/.code=\Periode{#1},
@@ -951,8 +955,8 @@
 % ajout de formats, reconnaissables par la commande \goemetry
 \@namedef{Gm@bk17x24}#1{\Gm@setsize{#1}(170,240){truemm}}	%livre 17x24
 \@namedef{Gm@bk19x24}#1{\Gm@setsize{#1}(190,240){truemm}}	%livre 19x24
-\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(135,240){truemm}}	%smartphone 16x9 (Apple)
-\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(135,285){truemm}}	%smartphone 19x9	(Samsung)
+\@namedef{Gm@sc16x9}#1{\Gm@setsize{#1}(126,224){truemm}}	%smartphone 16x9 (Apple)
+\@namedef{Gm@sc19x9}#1{\Gm@setsize{#1}(126,266){truemm}}	%smartphone 19x9	(Samsung)
 \@namedef{Gm@sc4x3}#1{\Gm@setsize{#1}(180,240){truemm}}		%tablette 4x3 (Apple)
 \@namedef{Gm@sc16x10}#1{\Gm@setsize{#1}(180,288){truemm}}	%tablette 16x10 (Samsung)
 \@namedef{Gm@sc4x3b}#1{\Gm@setsize{#1}(128,96){truemm}}		%beamer
@@ -1141,11 +1145,14 @@
 	\unless\ifdraft%
 			\forced@geometrytrue%
 	\fi%
+	\ifundef\media 
+		{\def\media{#2}}
+		{}
 	\cpgesetup[geometry]{#1}
 	\ifactivated@geometry\else%
 		\activated@geometrytrue%
 		\ifforced@geometry
-			\cpgesetup[@geometry]{#2}
+			\cpgesetup[@geometry]{\media}
 		\else
 			\ifdraft
 				\cpgesetup[@geometry]{draft}
@@ -1208,10 +1215,12 @@
 \cpgenewtitlekeyword{document}{\LARGE\bfseries}
 \cpgenewtitlekeyword{concours}{\LARGE\bfseries}
 \cpgenewtitlekeyword{epreuve}{\Large\scshape}
+\cpgenewtitlekeyword{origine}{\large\scshape}
 \cpgenewtitlekeyword{theme}{\Large\scshape}
 \cpgenewtitlekeyword{subtheme}{\large\scshape\itshape}
 \cpgenewtitlekeyword{centre}{\Large\scshape}
 \cpgenewtitlekeyword{classe}{\large\scshape}
+\cpgenewtitlekeyword{filiere}{\large\scshape}
 \cpgenewtitlekeyword{texte}{\sffamily\slshape} 
 \cpgenewtitlekeyword{periode}{\itshape}
 \cpgenewtitlekeyword{session}{\itshape}
@@ -1264,6 +1273,7 @@
 \def\titlepage@formats{%
 		\renew@title@format[2]{centre}{\scshape}%
 		\renew@title@format[2]{classe}{\scshape}%
+		\renew@title@format[2]{filiere}{\scshape}%
 		\renew@title@format[3]{matiere}{\bfseries}%
 		\renew@title@format[4]{document}{\bfseries}%
 		\renew@title@format[4]{devoir}{\bfseries}%
@@ -1272,9 +1282,10 @@
 		\renew@title@format[2]{subtheme}{\scshape\itshape}%
 		\renew@title@format[3]{epreuve}{\scshape}%
 		\renew@title@format[2]{session}{\itshape}%
+		\renew@title@format{origine}{\scshape}%
 		\renew@title@format{periode}{\small\itshape}%
 		\renew@title@format{duree}{\small\itshape}%
-		\renew@title@format{auteur}{\footnotesize\textit{\cpge@preauthor}\small~}%
+		\renew@title@format{auteur}{\smaller\textit{\cpge@preauthor}\small~}%
 		\renew@title@format{email}{\footnotesize\ttfamily}%
 		\renew@title@format{website}{\footnotesize\ttfamily}%
 }
@@ -1461,13 +1472,13 @@
 %%%% Entetes et pieds de pages
 
 \csvtolistcsadd{list@hf}{%
-	centre,classe,periode,document,devoir,
-	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
+	centre,classe,filiere,periode,document,devoir,
+	concours,epreuve,session,matiere,theme,subtheme,auteur,origine,email,website}
 	
 \def\tmp@do#1{\csdef{hf@#1}{\csuse{cpge@#1}}}
 \forcsvlist\tmp@do{%
-	centre,classe,periode,document,devoir,
-	concours,epreuve,session,matiere,theme,subtheme,auteur,email,website}
+	centre,classe,filiere,periode,document,devoir,
+	concours,epreuve,session,matiere,theme,subtheme,auteur,origine,email,website}
 
 \def\hf@change#1#2{%
    \StrSubstitute{#1}
@@ -1524,12 +1535,14 @@
 }
 \cpgenewpagestylekeyword{centre}{\scshape}
 \cpgenewpagestylekeyword{classe}{\scshape}
+\cpgenewpagestylekeyword{filiere}{\scshape}
 \cpgenewpagestylekeyword{matiere}{\scshape}
 \cpgenewpagestylekeyword{document}{}
 \cpgenewpagestylekeyword{devoir}{}
 \cpgenewpagestylekeyword{theme}{\scshape}
 \cpgenewpagestylekeyword{concours}{\scshape}
 \cpgenewpagestylekeyword{epreuve}{\scshape}
+\cpgenewpagestylekeyword{origine}{\scshape}
 \cpgenewpagestylekeyword{session}{\itshape}
 \cpgenewpagestylekeyword{auteur}{\scshape}
 \cpgenewpagestylekeyword{siteweb}{\ttfamily}

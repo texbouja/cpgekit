@@ -231,13 +231,44 @@
 %%% de theoreme l'utilisent en interne
 
 
+
 \def\cpge@theo@form@namenumber#1#2{\hbox{#1~#2}}
-\def\cpge@theo@form@numbername#1#2{\hbox{#2~#1}}
+\def\cpge@theo@form@numbername#1#2{\hbox{\deco@number{#2}~#1}}
 \def\cpge@theo@form@name#1#2{\hbox{#1}}
+\let\default@number@position=\cpge@theo@form@numbername
+\cpgesetdeco{number}{\tcbox[number deco]{#1}}
+\tcbset{number deco/.style={
+	on line,
+	size=small, 
+	colback=thmcol!85!black,
+	coltext=white,
+	fontupper=\bfseries\footnotesize,
+	arc=2pt,
+	boxrule=0pt,
+	boxsep=2pt,
+	left=5pt,
+	right=5pt
+}}
 \cpgesetuptcb{%
 	theorem name and number/.code={\let\tcb@theo@form=\cpge@theo@form@namenumber},
 	theorem number and name/.code={\let\tcb@theo@form=\cpge@theo@form@numbername},
 	theorem name/.code={\let\tcb@theo@form=\cpge@theo@form@name},
+	theorem number position/.is choice,
+	theorem number position/left/.code=
+	{\let\default@number@position=\cpge@theo@form@numbername},
+	theorem number position/right/.code=
+	{\let\default@number@position=\cpge@theo@form@name@number},
+	default number position/.code=
+	{\let\tcb@theo@form\default@number@position}
+}
+\tcbset{new/within chapter or section/.code=
+	\ifdef\c@chapter
+		{\tcbset{new/number within=chapter}}
+		{\tcbset{new/number within=section}}
+}
+\tcbset{new/within chapter or none/.code=
+	\ifdef\c@chapter
+		{\tcbset{new/number within=chapter}}{}
 }
 \def\cpge@theorem@title{}
 \NewDocumentCommand{\cpge@new@tcbtheorem}{O{} mmmmmm}{%
@@ -249,7 +280,7 @@
 		@theoprefix={#5},
 		@theotype=#6,
 	},
-    theorem name and number,
+    default number position,
 	thmcol=#6col,
 	prestyle={##1},
 	localstyle/.style={#7},
@@ -275,9 +306,9 @@
     	{\csname #2\endcsname\op{##1,theorem name}(##2)<##3>}
 		{\csname end#2\endcsname}
 	}
-\NewTColorBox[use counter=genthm]{genthm}{ m E{\op}{{}} d() d<>}{%
+\NewTColorBox[use counter=genthm, within chapter or section]{genthm}{ m E{\op}{{}} d() d<>}{%
 	set theorem prop={@theotype=other},
-	theorem name,
+	default number position,
 	thmcol=cpgeneutral,
 	prestyle={#2},
 	localstyle={#2}, 
@@ -291,7 +322,7 @@
 }
 	
 %%%%%%%% Tables des théorèmes 
-\def\cpge@tcb@theo@title#1#2{%newth
+\def\cpge@tcb@theo@title#1#2{%
 	\ifdefempty{#2}
 		{\setbox\z@=\color@hbox#1~\color@endbox}
   		{\setbox\z@=\tcb@theo@form{#1}{#2}}%
@@ -527,15 +558,7 @@
 %%%%%%%% exemples d'environement pour theoremes %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\tcbset{new/within chapter or section/.code=
-	\ifdef\c@chapter
-		{\tcbset{new/number within=chapter}}
-		{\tcbset{new/number within=section}}
-}
-\tcbset{new/within chapter or none/.code=
-	\ifdef\c@chapter
-		{\tcbset{new/number within=chapter}}{}
-}
+
 
 \cpgenewtheorem[use counter=theo, within chapter or section]{theo}
 	{Théorème}
@@ -590,13 +613,19 @@
 	{vocabulaire}
 	{}
 	{definition}
-	{theorem name, titled items}
+	{titled items}
 \cpgenewtheorem[use counter from=defi]{nota}
 	{Notations}
 	{notation}
 	{}
 	{definition}
-	{theorem name,titled items}
+	{titled items}
+\cpgenewtheorem[use counter from=defi]{vocanota}
+	{Vocabulaire et notations}
+	{notation}
+	{}
+	{definition}
+	{titled items}
 \cpgenewtheorem[use counter=rema, within chapter or section]{rema}
 	{Remarque}
 	{remarque}

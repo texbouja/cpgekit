@@ -430,8 +430,10 @@
 	\lorg@csedef{the#2}{\expandafter\expandonce\csname label@#2\endcsname}%
 	\endcslorg%
 }
-
-
+% pour cloner deux compteur
+\newcommand*{\clonecounter}[2]{%
+    \expandafter\let\csname c@#1\expandafter\endcsname\csname c@#2\endcsname%
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

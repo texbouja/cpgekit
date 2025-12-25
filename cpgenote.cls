@@ -7,6 +7,7 @@
 \RequirePackage{pgfopts} %Pour la gestion des options de la classe
 \RequirePackage{etoolbox}
 \RequirePackage{cpgebase}
+\RequirePackage{pgfpages}
 \RequirePackage{eso-pic}
 \def\cpgecurrentclass{note} 
 
@@ -85,6 +86,74 @@
    \fi
 }
 
+%%%% Pages virtuelles pour impression sur A4
+\pgfpagesdeclarelayout{colle on a4}
+{
+  \edef\pgfpageoptionheight{\the\paperwidth} % landscaped by default
+  \edef\pgfpageoptionwidth{\the\paperheight}
+  \def\pgfpageoptionborder{0pt}
+  \def\pgfpageoptionfirstshipout{1}
+}
+{
+  \pgfpagesphysicalpageoptions
+  {%
+    logical pages=2,%
+    physical height=\pgfpageoptionheight,%
+    physical width=\pgfpageoptionwidth,%
+    current logical shipout=\pgfpageoptionfirstshipout%
+  }
+  \ifdim\paperheight>\paperwidth\relax
+    % put side-by-side
+    \pgfpageslogicalpageoptions{1}
+    {%
+      border shrink=\pgfpageoptionborder,%
+      resized width=.48\pgfphysicalwidth,%
+      resized height=.96\pgfphysicalheight,%
+      center=\pgfpoint{.25\pgfphysicalwidth}{.5\pgfphysicalheight}%
+    }%
+    \pgfpageslogicalpageoptions{2}
+    {%
+      border shrink=\pgfpageoptionborder,%
+      resized width=.48\pgfphysicalwidth,%
+      resized height=.96\pgfphysicalheight,%
+      center=\pgfpoint{.75\pgfphysicalwidth}{.5\pgfphysicalheight}%
+    }%
+  \else
+    % stack on top of one another
+    \pgfpageslogicalpageoptions{1}
+    {%
+      border shrink=\pgfpageoptionborder,%
+      resized width=\pgfphysicalwidth,%
+      resized height=.5\pgfphysicalheight,%
+      center=\pgfpoint{.5\pgfphysicalwidth}{.75\pgfphysicalheight}%
+    }%
+    \pgfpageslogicalpageoptions{2}
+    {%
+      border shrink=\pgfpageoptionborder,%
+      resized width=\pgfphysicalwidth,%
+      resized height=.5\pgfphysicalheight,%
+      center=\pgfpoint{.5\pgfphysicalwidth}{.25\pgfphysicalheight}%
+    }%
+  \fi    
+}
+% \geometry{
+%     paperwidth=135mm, paperheight=240mm,
+% 		hmargin=\hma,
+% 		vmargin={\tma,\bma},
+% 		headsep=.5\tma,
+% 		marginparsep=\mps,
+% 		marginparwidth=\mpw}
+
+\AtEndPreamble{
+\ifprint
+    \pgfpagesuselayout{colle on a4}[
+    	a4paper,
+    	landscape,
+    	]
+    \nofiles
+\fi
+}
+
 %%%%% Packages du projet 
 \RequirePackage{cpgesubdoc}
 \RequirePackage{cpgemath}
@@ -113,37 +182,37 @@
 \undef\subparagraph
 
 %%% La nouvelle architecture de titrage
-\cpgedefcounter{week}{|1|}
-\cpgedefcounter{sheet}{|1|}[week] 
+\cpgedefcounter{cycle}{|1|}
+\cpgedefcounter{sheet}{|1|}[cycle] 
 \cpgedefcounter{problem}{|1|}[sheet](Y)
 \cpgedefcounter{exercice}{|1|}[sheet]
 \cpgedefcounter{mcours}{|1|}[sheet]
 \ifsuivi 
-    \titleclass{\week}[0]{top}
-    \titleclass{\sheet}{straight}[\week]
+    \titleclass{\cycle}[0]{top}
+    \titleclass{\sheet}{straight}[\cycle]
     \titleclass{\problem}{straight}[\sheet] % -> {question de cours}, {exercise}, ...
-    \titleformat\week[display]
+    \titleformat\cycle[display]
       {\Huge\filcenter\vfill}
-      {\color{titletextcol}\semaine@label}
+      {\color{titletextcol}\cycle@label}
       {\z@}
       {\bfseries #1}
       [\vfill\clearpage]
-   \titlespacing*\week{\z@}{*1}{*1}
+   \titlespacing*\cycle{\z@}{*1}{*1}
    \titleformat\sheet[hang]
       {\Large}
       {\color{buttonstrokecol}\csuse{deco@sheet}{\label@sheet}}
       {.5em}
       {#1\color{titlestrokecol}\hfill\deco@topbutton{\studentname}}
    \titlespacing*\sheet{\z@}{*1}{*1}
-   \ttl@setifthe{week}
+   \ttl@setifthe{cycle}
 \else 
    \titleclass{\sheet}[0]{top} % -> \devoir 
    \titleclass{\problem}{straight}[\sheet] % -> {question de cours}, {exercise}, ...
    \titleformat\sheet[display]{\Large\bfseries\filcenter}
-      {\cpge@pretitle%
+      {\cpge@presheettitle%
          \larger\color{buttonstrokecol}
          \csuse{deco@sheet}{\label@sheet}
-         \ifundef\cpge@semaine{}{\smaller/\cpge@semaine}
+         \ifundef\cpge@cycle{}{\smaller/\cpge@cycle}
       }
       {-.25\baselineskip}{#1}
    \titlespacing*\sheet{\z@}{.5\tma}{*2}
@@ -151,16 +220,13 @@
 \titleformat\problem[hang]{\large\color{titletextcol}}{\csuse{deco@problem}{\problem@label}}{.5em}{#1}
 \titlespacing*\problem{\z@}{*1}{*1}
 \ifcolle
-	\def\cpge@pretitle{
-	\deco@pretitle{%\cpgedefcounter{partie}{|1|}[problem]
-	\titleclass{\partie}{straight}[\problem]
-		\scshape\mdseries%
-		{\smaller[2] Classe \cpge@classe} \\[-.25\baselineskip] 
-		\itshape \cpge@document@format 
-		}\\[\medskipamount]
+	\def\cpge@presheettitle{
+		\deco@pretitle{%
+			{\scshape\mdseries \cpge@document@format \\ \cpge@periode@format}\\[\medskipamount]
+		}
 	}
 \else 
-	\let\cpge@pretitle\relax
+	\let\cpge@presheettitle\relax
 \fi
 \let\deco@pretitle\@firstofone
 
@@ -174,13 +240,13 @@
 \titlespacing*\partie{\z@}{*1}{*1}
 \cpgesetdeco{partie}{#1.}
 
-\let\weektitle\relax
+\let\cycletitle\relax
 \let\sheettitle\relax
 \let\problemtitle\relax 
 \let\partietitle\relax
 \let\ttl@savemark\relax
 \ifsuivi
-   \def\toclevel@week{0}
+   \def\toclevel@cycle{0}
    \def\toclevel@sheet{1}
    \def\toclevel@problem{2}
    \def\toclevel@partie{3}
@@ -204,43 +270,43 @@
         {\stepcounter{exercice}\edef\problem@label{Exercice \label@exercice}}
     \problem{#2}
 }
-\def\weeknumber#1{%
+\def\cyclenumber#1{%
   \ifnum#1<10\relax0#1\else#1\fi%
 }
 \let\sheetname\relax 
 \cpgesetdeco{sheet}{\sheetname\space #1}
 \ifsuivi
-   \NewDocumentCommand\semaine{mD(){}}{%
-      \gdef\week@number{#1}
-      \listxadd\weeklist{#1}
-      \xdef\cpge@semaine{\weeknumber{#1}}
-      \xdef\semaine@label{Semaine~\cpge@semaine}
-      \set@currentschedule{schedule@#1}
-      \def\week@theme{#2}
-      \week{#2}
+   \NewDocumentCommand\session{mmD(){}}{%
+      \gdef\cycle@number{#2}
+      \listxadd\cyclelist{#2}
+      \xdef\cpge@cycle{\cyclenumber{#2}}
+      \xdef\cycle@label{#1~\cpge@cycle}
+      \set@currentschedule{schedule@#2}
+      \def\cycle@theme{#3}
+      \cycle{#3}
     }
-    \NewDocumentEnvironment{colle}{mD(){}}{%
-		\def\sheetname{Planche}
+    \NewDocumentEnvironment{fiche}{mmD(){}}{%
+		\def\sheetname{#1}
        	\global\let\print@mark\relax%
        	\global\let\studentname\relax%
-       	\set@studentid{#1}%
-       	\sheet{#2}%
+       	\set@studentid{#2}%
+       	\sheet{#3}%
    }{\ifundef\print@mark{}{\csuse{deco@mark}{\print@mark}}}
 \else
-    \NewDocumentCommand\semaine{mD(){}}{%
-      \gdef\week@number{#1}
-      \xdef\cpge@semaine{\weeknumber{#1}}
-      \xdef\semaine@label{Semaine~\cpge@semaine}
-      \set@currentschedule{schedule@#1}
-      \def\week@theme{#2}
+    \NewDocumentCommand\session{mmD(){}}{%
+      \gdef\cycle@number{#2}
+      \xdef\cpge@cycle{\cyclenumber{#2}}
+      \xdef\cycle@label{#1~\cpge@cycle}
+      \set@currentschedule{schedule@#2}
+      \def\cycle@theme{#3}
       \setcounter{sheet}{0}
     }
-    \NewDocumentEnvironment{colle}{mD(){\csuse{week@theme}}}{%
-	  \def\sheetname{Planche}
+    \NewDocumentEnvironment{fiche}{mmD(){\csuse{cycle@theme}}}{%
+	  \def\sheetname{#1}
       \global\let\print@mark\relax%
       \global\let\studentname\relax%
-      \sheet{#2}%
-      \set@studentid{#1}%
+      \sheet{#3}%
+      \set@studentid{#2}%
    }{
       \ifundef\studentname
          {\global\let\topbutton@deco\relax}
@@ -250,11 +316,16 @@
          {\xdef\bottombutton@deco{\noexpand\deco@bottombutton{\print@mark}}}
    }
 \fi 
+
+\def\semaine{\session{Semaine}}
+\def\colle{\fiche{Planche de colle}}
+\let\endcolle\endfiche
+
 \NewDocumentCommand\theme{mD(){}}{%
-	\gdef\week@number{#1}
-	\xdef\cpge@semaine{\weeknumber{#1}}
-	\xdef\semaine@label{Semaine~\cpge@semaine}
-	\def\week@theme{#2}
+	\gdef\cycle@number{#1}
+	\xdef\cpge@cycle{\cyclenumber{#1}}
+	\xdef\cycle@label{Semaine~\cpge@cycle}
+	\def\cycle@theme{#2}
 	\setcounter{sheet}{0}
 	}
 \def\current@notepage{
@@ -265,6 +336,7 @@
 	\setcounter{equation}{0}%
 	\def\sheetname{Thème}
 	\gdef\note@number{#1}%
+	\setcounter{sheet}{\numexpr\note@number-1}%
 	\sheet{#2}%
 	\ifdefvoid\note@number{\xdef\note@number{\label@sheet}}{}%
 	\numgdef\current@page{\c@page}%
@@ -374,8 +446,8 @@
    \unless\ifnomarks%
       \gdef\student@mark{#1}%
 	  \gdef\print@mark{{note : \textcolor{buttonstrokecol}{#1}/20}}
-      \csvcsxadd{weekmarks@\week@number}{(\studentname,\student@mark)}
-	  %\csvcsxadd{studentmarks@\studentid}{(\week@number,\student@mark)}
+      \csvcsxadd{cyclemarks@\cycle@number}{(\studentname,\student@mark)}
+	  %\csvcsxadd{studentmarks@\studentid}{(\cycle@number,\student@mark)}
    \fi%
 }
 \def\MC{\par\textsc{\bfseries mc~:~}}
@@ -392,26 +464,26 @@
 \DeclareDocumentCommand\cpgeinclude{om}{%%
 	\begingroup%
 	\includedtrue%
-    \undef\week@number%
+    \undef\cycle@number%
    \IfFileExists{\notefiledir#2/\notefilename.tex}
       {\subdoc{\notefiledir#2/\notefilename}}
 	   {\IfFileExists{#2/\notefilename.tex}
 			{\subdoc{#2/\notefilename}}
          	{\IfFileExists{#2.tex}
 				{\subdoc{#2}}
-				{\ClassError{cpgenote}{Aucun fichier #1 trouvé}{}}
+				{\ClassError{cpgenote}{Aucun fichier #2 trouvé}{}}
 			}
       	}
-      \ifsuivi
-         \ifcsundef{weekmarks@\week@number}{}
+    \ifsuivi
+         \ifcsundef{cyclemarks@\cycle@number}{}
             {%
-				\immediate\write\@auxout{\string\weekmarks{\week@number}{\csuse{weekmarks@\week@number}}}
+				\immediate\write\@auxout{\string\cyclemarks{\cycle@number}{\csuse{cyclemarks@\cycle@number}}}
 			}
       \fi
 	\endgroup%
 }
 
-\def\weekmarks#1#2{
+\def\cyclemarks#1#2{
 	\cpgerecord{%
 		Semaine #1 : #2 \string\newline
 	}
@@ -634,6 +706,8 @@
 \cpgenewtheorem{voca}{Vocabulaire}{vocabulaire}
 \cpgenewtheorem{rema}{Remarque}{remarque}
 \cpgenewtheorem{algo}{Algorithme}{algorithme}
+\cpgenewtheorem{exer}{Exercice}{exercice}
+
 
 \cpgesetlabel{theo}{|1|}
 \cpgesetlabel{prop}{|1|}
@@ -641,6 +715,7 @@
 \cpgesetlabel{defi}{|1|}
 \cpgesetlabel{rema}{|1|}
 \cpgesetlabel{algo}{|1|}
+\cpgesetlabel{exer}{|1|}
 
 %%% Styles des numérotation 
 \def\numcol{\color{titlestrokecol}}
