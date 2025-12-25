@@ -1,0 +1,242 @@
+
+
+\ifundef\cpge@centre{%
+	\def\cpge@centre{Moulay Youssef}%
+}
+
+
+
+
+\cpgeloadpackage[arrows.meta, backgrounds]{tikz}
+
+\preparecolor{stcol}{named}{importantcol}
+\AtEndPreamble{%
+	\unless\ifsoutien\colorlet{stcol}{strokecol}\fi%
+	\definecolors{stcol}%
+} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Page de garde %%%%%%  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newif\ifnologo
+\newdimen\logo@width
+\newdimen\titlewidth
+\AtBeginDocument{
+	\titlewidth\columnwidth%
+	\dimdef\head@height{\headsep+\headheight}%
+	\if@twocolumn\unless\iflandscape\titlewidth=\textwidth\fi\fi%
+	\iftitlepage%
+		\logo@width=\dimexpr\iflandscape.15\paperheight\else.2\paperwidth\fi\relax%
+	\else%
+		\logo@width=\dimexpr.15\iflandscape\paperheight\else\paperwidth\fi\relax%
+	\fi%
+	\cpgesetup[title]{width=\titlewidth}
+	\IfFileExists{logo-\cpge@logo.pdf}
+		{\pgfdeclareimage[width=\logo@width]
+			{logo}
+			{logo-\cpge@logo}%%
+		}{\nologotrue}
+}
+\def\setcover@back{%
+	\def\cover@back{%
+		\cpgesetcolormodel1%
+		\pagecolor{mainthree}%
+		\setbox\cpge@boxa\hbox{\fontsize{24}{24}\sffamily\scshape\bfseries\csuse{cpge@classe}}%
+		\ifdim\wd\cpge@boxa<.1\paperheight\relax
+			\setbox\cpge@boxa\hb@xt@.1\paperheight{\hss\unhbox\cpge@boxa\hss}%
+		\fi%
+		\begin{tikzpicture} [overlay, remember picture]
+		\fill [mainone, draw=none, rounded corners=.1\paperwidth] 
+			([xshift=\logo@width+2pc, yshift=1pc]current page.south west) 
+			rectangle 
+			+(\paperwidth,1.25\paperheight);
+		\node (cpge) at (1pc,-.25\logo@width) 
+			[anchor=west, font=\sffamily\scshape\bfseries, text=mainone, text width=\logo@width+.5pc, align=right] 
+			%{\resizebox{.6 \logo@width}{!}{cpge}};
+			{};
+		\ifdefempty\cpge@centre{}{%
+		\node (centre) at (cpge.south east) [anchor=west, text=classcol, font=\bfseries] 
+			{\kern.25pc\resizebox{.54\textwidth}{!}{\cpge@centre@format}};}
+		\ifundef\cpge@ville{}{
+			\node at ([yshift=-8pt]centre.south east) [anchor=east, text=mainfour, font=\bfseries] 
+			{\resizebox{.1\textwidth}{!}{\cpge@ville@format}} ;}
+		\iflandscape
+			\path
+				[left color=maintwo!75!white, right color=maintwo!75!black, draw=mainthree, line width=4pt] 
+				(\paperwidth-\wd\cpge@boxa-9pc-4pt,1cm) rectangle +(\wd\cpge@boxa+2pc,-\paperheight-1cm);
+			\node at (\paperwidth-8pc,-.66\logo@width) [anchor=east, text=mainthree] {\box\cpge@boxa};
+		\else 
+			\node at ([xshift=-\logo@width, yshift=.1\paperwidth+3pc]current page.south west) 
+				[anchor=west, rounded corners=9pt ,top color=maintwo!75, 
+					bottom color=maintwo!75!black, text=mainthree, draw=mainthree, line width=4pt,  
+					inner ysep=1pc, inner xsep=2\logo@width] 
+			{\csuse{title@classe}} ;%
+		\fi
+		\end{tikzpicture}%
+}}
+\NewDocumentEnvironment{curve@title@page}{}{%
+	\cover@back%
+	\setbox\@tempboxa\vbox\bgroup%
+		\hsize\dimexpr\paperwidth-.5\logo@width-4pc%
+		\fil@inner@titlepage%
+		\color{white}\ignorespaces%
+	}{\egroup%
+		\ifdim\ht\@tempboxa<.42\textheight\relax%
+			\setbox\@tempboxa\vbox to.42\textheight{\unvbox\@tempboxa}
+		\fi%
+	\null\vskip\glueexpr\logo@width+2pc\unless\iflandscape plus .1fill\fi\relax%
+	\hskip1pc
+	\begin{tikzpicture}
+		\node  (TITLE)
+			[inner xsep =1.5pc, inner ysep=2pc]
+		{\box\@tempboxa};
+		\begin{scope}[on background layer, overlay]
+			\draw[mainthree, fill=classcol, line width=3pt, rounded corners=2pc]
+				([xshift=.5\logo@width-1pc]TITLE.south east) -|
+				(TITLE.north west) -- (TITLE.north east) -- cycle;
+			\end{scope}
+	\end{tikzpicture}
+	\kern1pc\vfill%
+}
+\NewDocumentEnvironment{curve@title@inline}{}{%
+		% {\raggedleft\Large{\scshape\itshape\bfseries cpge}\ 
+		% \larger\bfseries \cpge@centre@format\par}
+		\null\hfill%
+		\minipage[t]{\title@width-\logo@width-24pt}%
+		\fil@inner\ignorespaces\color{textcol}%
+}{%
+	\endminipage%
+	\par\bigskip\noindent%
+	\begin{tikzpicture}[overlay]
+		\node (T) at(-12pt,0) [anchor=west, fill=framebackcol, text=frametextcol, draw=none, minimum width=\logo@width, inner xsep=12pt, rounded corners=5pt, font=\LARGE\sffamily\scshape\bfseries\strut] {\csuse{cpge@classe}};
+		\draw  [framestrokecol, line width=1pt, rounded corners=12pt] 
+		([xshift=6pt] T.east) -- (\linewidth+12pt,0) -- +(0, \logo@width);
+	\end{tikzpicture}
+}
+\cpgesetup[title]{%
+	before = \begin{curve@title@inline},
+	after = \end{curve@title@inline},
+	outer align = l,
+	inner align = r,
+	early before*=\newgeometry{hmargin=\z@, vmargin=\z@},
+	%late after*=\restoregeometry,
+	before* =	\setcover@back%
+				\begin{curve@title@page},
+	after*	=	\end{curve@title@page},
+	inner align*=l,
+	outer align*=l 
+}
+
+\def\titlepage@formats{%
+		\renew@title@format[3]{matiere}{\bfseries}%
+		\renew@title@format[3]{centre}{\bfseries}%
+		\renew@title@format[1]{classe}{\sffamily\bfseries\leavevmode}%
+		\renew@title@format[4]{document}{\bfseries\color{mainone}}%
+		\renew@title@format[4]{devoir}{\bfseries\color{mainone}}%
+		\renew@title@format[3]{concours}{\bfseries\color{mainone}}%
+		\renew@title@format[3]{epreuve}{\scshape}%
+		\renew@title@format[3]{theme}{\scshape}%
+		\renew@title@format[2]{subtheme}{\scshape\itshape}%
+		\renew@title@format[2]{periode}{\itshape}%
+		\renew@title@format[2]{session}{\itshape}%
+		\renew@title@format{2}{duree}{\itshape}%
+		\renew@title@format[1]{auteur}{\footnotesize\textit{\cpge@preauthor}\normalsize~}%
+		\renew@title@format[1]{email}{\footnotesize\ttfamily}%
+		\renew@title@format[1]{website}{\footnotesize\ttfamily}%
+}
+\cpgesettitle*{
+  |document|
+  \bigskip\hrule\bigskip\bigskip
+  \ifdefmeta{theme}{|theme|}{}
+  \ifdefmeta{subtheme}{|subtheme|}{}
+  \vskip1\bigskipamount plus .5fill
+  \ifdefmeta{periode}{|periode|}{}
+}
+\cpgesettitle{
+  |document|\par
+  \bigskip
+  \ifdefmeta{theme}{|theme|\\}{}
+  \ifdefmeta{subtheme}{|subtheme|\par\bigskip}{}
+  \ifdefmeta{periode}{|periode|}{}
+} 
+
+
+%%% environnement mini
+\def\funnyarrow#1#2{%
+	\tikz[baseline] 
+		\draw [
+				line width=\dimexpr\fntht x, #2, 
+				-{Round Cap[sep=-1pt] . Fast Round[]}
+			] 
+        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
+}
+\cpgesetup[mini]{%
+	left margin=2pc,
+	label font=\fontsize{8}{8}\TitlingFont,
+	font=\sffamily\relsize{-1},
+	deco=\llap{\funnyarrow{1em}{thmcol}}%
+		\textcolor{thmcol}{#1~:}%
+}
+
+%%%% Tete et pied de page
+\let\curve@head\relax%
+\let\curve@foot\relax%
+\newbox\foot@box
+
+
+\def\prepare@head{%
+	\unless\ifprint%
+		\def\curve@head{%
+			\tikz[overlay]
+				\draw [framebackcol, line width=\head@height] 
+					(-.75\paperwidth,\head@height*.5-3pt) -- 
+					(\paperwidth+3cm,\head@height*.5-3pt);%
+		}%
+	\fi%
+}
+\def\prepare@foot{%
+	\setbox\foot@box\hbox{\sffamily\scshape\bfseries%
+	%\small{\smaller\itshape cpge}\ 
+	\csuse{cpge@centre@format}}%
+	\setbox\foot@box\vbox{\hsize\wd\foot@box\relax%
+		\color@begingroup%
+		\raggedleft%
+			\sffamily\scshape\bfseries\small%
+			\color{titlestrokecol}%
+			%{\smaller\slshape cpge}\color{classcol}\ 
+			\csuse{cpge@centre@format}\\[-.25\baselineskip]%
+			\color{titlestrokecol}\smaller\slshape\footnotesize\csuse{cpge@ville@format}%
+		\color@endgroup%
+	}%
+\def\curve@foot{%
+	\color{textcol}
+	\begin{tikzpicture}[overlay, yshift=8pt] 
+		\draw [titlestrokecol] (-3cm,0) -- (\paperwidth,0) ;
+		\node at (\textwidth+16pt,0)
+			[baseline, anchor=east, inner xsep=8pt, fill=pagecol, inner ysep=\z@] 
+		{\copy\foot@box};%
+	\end{tikzpicture}%
+	}%
+}
+\renewpagestyle{main}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
+		\renewcommand\makeheadrule{\curve@head}%
+		\renewcommand\makefootrule{\curve@foot}%
+		\def\foot@font{\textcolor{textcol}}
+		\def\head@font{\textcolor{frametextcol}}
+		\cpgesethead(|theme|)()(|document|)%
+		\cpgesetfoot(|classe|)(|pages|)()%
+	}
+\renewpagestyle{plain}[\fontsize{8}{8}\sffamily\scshape\itshape]{%
+		\renewcommand\makefootrule{\curve@foot}%
+		\sethead{}{}{}%
+		\setfoot{}{\thepage}{}%
+	}%
+\AtBeginDocument{
+	\ifdefstring{\cpge@currentclass}{note}{}{\prepare@head\prepare@foot}
+	\def\deco@formula#1{%
+		\tikz[baseline,anchor=base]\node[rounded corners=2pt, fill=framebackcol, draw=framestrokecol, text=textcol] {#1};%
+	}
+	\let\deco@result\deco@formula
+}
+
+\endinput

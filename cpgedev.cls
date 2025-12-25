@@ -865,14 +865,14 @@
 		\fi%
 }
 %%% commande responsable de la formation du titre dans un environnment 
-%%% un problème/exercice. Elle a une version * pour produire un titre 
+%%% problème/exercice. Elle a une version * pour produire un titre 
 %%% sans numéro mais doit dans tous les cas inscrire une entrée dans
 %%% la table des matières et préparer le contexte pour un éventuel 
 %%% \label. La difficulté vient du fait que les environnements 
 %%% problème/exercice ont des compteurs individuels que le titre 
 %%% doit afficher tout en utilisant en interne le compteur problem 
 %%% en commun pour tous les environnements pour que la table des 
-%%%% matières continue à fonctionner comme il se doit. 
+%%% matières continue à fonctionner comme il se doit. 
 \DeclareDocumentCommand\@problemtitle{
 		s % #* numbered or not
 		m % #2 counter name
@@ -1273,7 +1273,7 @@
 }
 \def\cpge@tab@row#1{\ifblank{#1}{}{#1\\}}
 \def\cpge@tab@score#1{%
-	\ttfamily\footnotesize%
+	\ttfamily\bfseries\small%
 	\def\arraystretch{.58}%
 	\raisebox{\fntht 1}{\tabular[t]{@{}c@{}}\in@parser\cpge@tab@row{#1}\endtabular}%
 }

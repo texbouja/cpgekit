@@ -1,0 +1,156 @@
+%%%%% chargement de package, définition de couleurs, chargement de police,...
+
+\usetikzlibrary{shapes.misc, arrows.meta, babel}
+
+%%%%%
+
+
+%%% Colors 
+\definecolor{cpgeblue}{HTML}{373A73}
+\definecolor{cpgealtblue}{HTML}{4C98FF}
+\definecolor{cpgegreen}{HTML}{8CBA30}
+\definecolor{stcol}{HTML}{D68A36}
+\definecolor{cpgeblack}{HTML}{202232}
+
+\cpgesetup[colors]{    
+    stroke={cpgegreen!85!black}{cpgegreen},
+    fill={cpgeblue}{cpgealtblue},
+	link={CornflowerBlue!50!black}{CornflowerBlue!75!black},
+	page={white}{cpgeblack},
+	bg={white}{cpgeblack},
+	cpgetext=textcol,
+	cpgeframe=strokecol,
+	cpgeback=backcol,
+	cpgetitle=white, 
+	cpgebacktitle=strokecol,
+}
+\AtBeginDocument{%
+	\unless\ifsoutien\colorlet{stcol}{strokecol}\fi%
+}
+
+\def\TitleFont{\fontsize{24}{24}\firaheavy\scshape\lsstyle}
+\def\SubTitleFont{\fontsize{16}{18}\firasemibold}
+\def\NumberFont{\fontsize{14}{14}\firaextrabold}
+
+\cpgesetdeco{unitetitle}{\color{strokecol}\SubTitleFont#1~:~}
+\def\set@defaultforlistsinsideunite{
+	\cpgesetdeco{unite}{\textcolor{backcol}{\NumberFont ##1.}}
+	\def\unite{\first@unite}%
+	\cpgesetenum{1}{marge}%
+	\cpgesetenum{2}{marge}%
+	\cpgesetenum{3}{marge}%
+	\cpgesetdeco{enumi}{\textcolor{strokecol}{\NumberFont ##1.}}
+	\cpgesetdeco{enumii}{\textcolor{strokecol}{\NumberFont ##1.}}
+}
+
+\tikzset{question style/.style={
+	circle,
+	font=\fontsize{16pt}{16pt}\bfseries,
+	text=white, draw=backcol, line width=2pt, 
+	top color=backcol!90, bottom color=backcol!60!black,  
+	inner sep=0pt, 
+	text width=28pt,
+	align=center,
+	yshift=6pt
+	}
+}
+\tikzset{border line/.style={
+		overlay,draw=backcol, fill=backcol
+		}
+	}
+
+\def\xitball#1{%
+    \tikz[baseline=(N.base)] 
+        \node  (N) 
+            [circle, 
+                inner sep=0, 
+                top color=backcol!90, bottom color=backcol!60!black, 
+                text=white, 
+                text width=1cm, 
+                align=center, 
+                line width=2pt, 
+                draw=backcol,
+                font=\Large\bfseries
+            ]{#1};
+    }
+
+\newif\iffootimage@exists
+\newdimen\logo@width
+\newdimen\head@height
+\logo@width=.2\paperwidth
+\ifdim\logo@width>2cm\relax	
+	\logo@width=2cm
+\fi
+\head@height=\dimexpr\headsep+\headheight\relax
+\def\setfoot@logo#1{%
+	\IfFileExists{../../img/cover/#1_foot.pdf}
+		{\pgfdeclareimage[width=\logo@width]{logofoot}
+			{../../img/cover/#1_foot}%
+		}{%
+			\IfFileExists{#1_foot.pdf}
+				{\pgfdeclareimage[width=\logo@width]{logofoot}
+					{#1_foot}}
+				{\footimage@existsfalse}%
+		}%
+}
+\ifsoutien
+	\setfoot@logo{capge}
+\else
+	\setfoot@logo{cpge}
+\fi
+\iffootimage@exists	
+		\def\newcg@foot{%
+		\node (foot) at ([xshift=-2pc, yshift=\cpge@footskip]page.south east)
+		[anchor=east, fill=backcol, minimum height=0]
+		 			{\pgfuseimage{logofoot}};%
+		}
+\else
+		\def\newcg@foot{%
+				\node (foot) at ([xshift=-2pc, yshift=\cpge@footskip]page.south east)
+					[anchor=east, baseline, minimum height=0,
+						fill=backcol, font=\sffamily\scshape\bfseries] 
+					{\color{stcol}\small\ifbool{soutien}{capge}{cpge}\kern1ex\large\color{backcol}Ibn\! Ghazi};%
+		}
+\fi 
+
+
+
+\cpgesetup[webenv]{page decoration code={ 
+	\ifcommonquizimage
+		\draw [overlay, stcol, line width=\cpge@headheight+.4cm, rounded corners=\cpge@headheight] 
+		([xshift=-.5\cpge@headheight+.32cm] page.south west)
+		--([xshift=-.5\cpge@headheight+.32cm] page.north west);
+	\else 
+		\draw [overlay, stcol, line width=30pt] 
+			(page.north east) -- (page.north west) ;
+	\fi
+	\newcg@foot
+	\draw [overlay, backcol, line width=.4pt] 
+		(foot.west) -- +(-\imagewidth,0)
+		(foot.east) -- +(\imagewidth,0);
+	}}
+
+%%% environnement mini
+\def\funnyarrow#1#2{%
+	\tikz[baseline] 
+		\draw [
+				line width=\dimexpr\fntht x, #2, 
+				-{Round Cap[sep=-1pt] . Fast Round[]}
+			] 
+        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
+}
+\cpgesetup[mini]{%
+	deco=\llap{\funnyarrow{1.2em}{strokecol}}%
+		\textcolor{backcol}{#1.}\kern1ex%
+}
+
+\endinput
+
+%%% Page de garde 
+\def\title@document{%
+	{\Large\bfseries\color{cpgeblue}\cpge@relsize
+		\csuse{cpge@document}%
+     \global\cpge@dima\baselineskip%
+	}%
+	\baselineskip\cpge@dima%
+}

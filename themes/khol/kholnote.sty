@@ -54,6 +54,12 @@
       \else
          \def\page@color{pagecol}
       \fi
+      \pgfdeclareimage[width=.3\textwidth]
+			{al-logo}
+			{../images/al-logo.png}
+      \pgfdeclareimage[width=.3\textwidth]
+			{az-logo}
+			{../images/az-logo.png}
       \setbox\backbox\vbox{%
          \begin{tikzpicture} [overlay]
             \node (C) at (.5\hma,.5\bma+8pt)% ([xshift=.5\hma,yshift=-.5\tma+1.5ex]current page.south west) 
@@ -83,6 +89,8 @@
                      ++(-\paperwidth+\hma,0)  [sharp corners] -- cycle;
              \draw [buttonstrokecol, line width=1pt, rounded corners=\hma] 
                   (.5\hma, .2\paperheight) |- (\paperwidth-.5\hma+.5pt,.5\bma+3ex);
+            \node at (.75\hma, \paperheight-\hma) [anchor=west] {\pgfuseimage{az-logo}};
+            \node at (\paperwidth-.75\hma, \paperheight-\hma) [anchor=east] {\pgfuseimage{al-logo}};
             \end{pgfonlayer}
          \end{tikzpicture}%
       }

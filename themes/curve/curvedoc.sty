@@ -1,0 +1,355 @@
+
+
+
+\RequirePackage{curvecommon}
+\usetikzlibrary{positioning}
+\newif\ifsoutien
+
+\cpgesetup{simple deco={%
+	\shorthandoff{;}%
+	\tikz [anchor=base,baseline] 
+	\node [
+		draw=thmcol, 
+		text=thmcol, 
+		inner sep=1.4pt, 
+		minimum width=1.5em, 
+		rounded corners=2pt
+	] {#1};\ignorespaces%
+}}
+\cpgesetdeco{lrmargin}{\deco@simple{#1}}
+%%% environnement mini
+\def\funnyarrow#1#2{%
+	\tikz[baseline] 
+		\draw [
+				line width=\dimexpr\fntht x, #2, 
+				-{Round Cap[sep=-1pt] . Fast Round[]}
+			] 
+        (0,\dimexpr.5\fntht x) -- (#1,\dimexpr.5\fntht x);%
+}
+\cpgesetup[mini]{%
+	left margin=2pc,
+	label font=\fontsize{8}{8}\TitlingFont,
+	font=\sffamily\relsize{-1},
+	deco=\llap{\funnyarrow{1em}{thmcol}}%
+		\textcolor{thmcol}{#1~:}%
+}
+
+%%% Décorations pour les items
+\cpgesetdeco{discuss}{\textcolor{thmcol}{$\bullet\;$ \bfseries\boldmath #1}}
+\cpgesetdeco{enumi}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{enumii}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{enumiii}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{unite}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{unitetitle}{\textcolor{thmcol}{\sffamily\scshape#1~:~}}
+\cpgesetdeco{itemtitle}{\textcolor{thmcol}{\sffamily\scshape#1~:~}}
+
+%%%% Styles des theoremes (un pseudo-skin TColorbox)
+\cpgesetuptcb{%
+	primary box/.style={%
+		breakable,
+		lines before break=1,
+		height fixed for=first and middle,
+		title style if break,
+		fonttitle=\TitlingFont\small\vphantom{(},
+		%description font=\sffamily\scshape\footnotesize\vphantom{(},
+		colback=pagecol, coltext=textcol
+	},
+	secondary box/.style={%
+		blank,
+		notitle,
+		colback=buttonbackcol,
+		coltext=buttontextcol,
+		%no overlay, no underlay,
+	}
+}
+\newdimen\frm@margin
+\ifcompact
+	\frm@margin4pt
+\else
+	\frm@margin12pt
+\fi
+\cpgesetuptcb{frame left margin/.code={\frm@margin=#1}}
+\cpgesetup{frame left margin/.forward to=/tcb/frame left margin}
+\tcbsubskin{thmcurve}{empty}{%
+	coltitle=thmcol,
+	frame code={%
+		\ifdef\tcboxedtitlewidth
+			{\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+				(title.south east) |- 
+				([xshift=-4pt]title.north west) -- 
+				([xshift=-4pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-4pt]frame.south west) ;}
+    },
+    skin first=thmcurvefirst,
+	skin middle=thmcurvemiddle,
+	skin last=thmcurvelast
+}
+\tcbsubskin{thmcurvefirst}{empty}{%
+	coltitle=thmcol,
+	frame code={%
+		\ifdef\tcboxedtitlewidth
+			{\draw [{Circle}-{Diamond}, thmcol,rounded corners=4pt, line width=.4pt] 
+				(title.south east) |- 
+				([xshift=-4pt]title.north west) -- 
+				([xshift=-4pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-4pt]frame.south west);}
+    },
+    skin first=thmcurvefirst,
+	skin middle=thmcurvemiddle,
+	skin last=thmcurvemiddle
+}
+\tcbsubskin{thmcurvemiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, thmcol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-4pt]frame.north west) -- 
+			([xshift=-4pt]frame.south west) ;
+	},
+    skin first=thmcurvemiddle,
+	skin middle=thmcurvemiddle,
+	skin last=thmcurvemiddle
+}
+\tcbsubskin{thmcurvelast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-4pt]frame.north west) -- ([xshift=-4pt]frame.south west) ;
+    },
+    skin first=thmcurvemiddle,
+	skin middle=thmcurvemiddle,
+	skin last=thmcurvelast,
+}
+
+
+%%%% Styles des remark
+\newdimen\retraittitre
+\ifdim\frm@margin>15pt\relax
+	\retraittitre\frm@margin
+\else
+	\retraittitre16pt
+\fi
+\tcbsubskin{rmkcurve}{empty}{% 
+	frame code={%
+		\ifdef\tcboxedtitlewidth{
+			\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+				([xshift=-4pt]title.west) -| 
+				([xshift=-4pt]frame.south west) ;
+		}{
+        	\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-4pt]frame.south west) ;
+		}
+    },
+    skin first=rmkcurvefirst,
+	skin middle=rmkcurvemiddle,
+	skin last=rmkcurvelast
+}
+\tcbsubskin{rmkcurvefirst}{empty}{%
+	frame code={%
+		\ifdef\tcboxedtitlewidth{
+			\draw [{Circle}-{Diamond}, thmcol,rounded corners=4pt, line width=.4pt] 
+				([xshift=-4pt]title.west) -| 
+				([xshift=-4pt]frame.south west) ;
+		}{
+        	\draw [{Circle}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+            	(frame.north east)  -| ([xshift=-4pt]frame.south west) ;
+		}
+    },
+    skin first=rmkcurvefirst,
+	skin middle=rmkcurvemiddle,
+	skin last=rmkcurvemiddle
+}
+\tcbsubskin{rmkcurvelast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, thmcol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-4pt]frame.north west) -- ([xshift=-4pt]frame.south west);
+    },
+    skin first=rmkcurvemiddle,
+	skin middle=rmkcurvemiddle,
+	skin last=rmkcurvelast,
+}
+\tcbsubskin{rmkcurvemiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, thmcol,rounded corners=4pt, line width=.4pt] 
+		([xshift=-4pt]frame.north west) -- 
+			([xshift=-4pt]frame.south west) ;
+    },
+    skin first=rmkcurvemiddle,
+	skin middle=rmkcurvemiddle,
+	skin last=rmkcurvemiddle
+}
+\cpgesetuptcb{
+	description path style/.style={%
+				fill = none,
+                draw = none,
+				},
+	description parenthesis,
+}
+\cpgesetuptcb{important/.style={%
+	thmcol = importantcol,
+	colframe=thmcol,
+	bottom= 10pt,
+	after skip=6pt, 
+	underlay unbroken and last	= {\node at (frame.south east) 
+		[text=thmcol, 
+		 font=\tiny\sffamily\scshape, 
+		 anchor=south east, 
+		 yshift=-1pt,
+		] 
+		{#1};},
+}}
+\cpgesetuptcb{title style if break/.style={%%
+ 	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
+	lefttitle=3pt,
+	bottomrule=1pt,
+	extras title after break={
+		halign title=left,
+		font app={title}{%		
+			\fontsize{7}{7}\mdseries\itshape}
+		},
+ }}
+\cpgesetuptcb{%
+	curvethm/.style={
+		skin=thmcurve,
+		attach boxed title to top left,
+		boxed title style={blank, no underlay, boxsep=0pt, left=\frm@margin, right=\frm@margin, top=3pt},
+		boxsep=0pt,
+		top=6pt, bottom=6pt, right=0pt,
+		before skip=\bigskipamount,
+		after skip=\bigskipamount,
+		left=\frm@margin,
+	}}
+\cpgesetuptcb{%
+	curvermk/.style={
+		skin=rmkcurve,
+		coltitle=cpgeneutral,
+		attach boxed title to top left={xshift=\retraittitre},
+		boxed title style={blank, no underlay},
+		boxsep=0pt,
+		top=6pt,bottom=0pt,right=0pt,
+		left=\frm@margin,
+	}}
+
+\cpgesetuptheorems{%
+	theorem style=curvethm,
+	definition style=curvethm,
+	exercise style=curvethm,
+	remark style=curvermk,
+	other style=curvermk
+}
+
+
+% \cpgerenewtheorem[use counter from=rema]{remas}
+% {Remarques}
+% {}
+% {remark}
+% {titled items}
+
+\cpgerenewtheorem[use counter from=exem]{exemf}
+	{Exemples fondamentaux}
+	{}{}
+	{theorem}
+	{thmcol=strokecol, coltitle=thmcol, titled items}
+\cpgerenewtheorem[use counter from=defi]{voca}
+	{Vocabulaire}
+	{}{}
+	{remark}
+	{titled items}
+\cpgerenewtheorem[use counter from=defi]{nota}
+	{Notations}
+	{}{}
+	{remark}
+	{titled items}
+
+\tikzset{proof title style/.style={
+	rounded corners=6pt,
+	inner xsep=8pt,
+	inner ysep=2pt,
+	fill=none,
+	draw=linkstrokecol, 
+	text=linktextcol
+}}
+
+%%% Style des titres 
+
+\cpgesetlabel{section}{|1|}
+\cpgesetlabel{subsection}{|S|.|1|}
+\titleformat{\section}[display]
+	{\sffamily\scshape\LARGE\color{titletextcol}}
+	{\begin{tikzpicture} [overlay, baseline=(S.base)] 
+		\node (S)  [circle,
+			top color=titletextcol!80,
+			bottom color=titletextcol!60!black, 
+			text=white,
+			text width=24pt,
+			inner sep=0pt,
+			align=center,
+			font=\normalsize\bfseries\ttfamily,
+		]{\label@section};
+		\draw [titlestrokecol, line width=.6pt, rounded corners=12pt, line cap=round] 
+			([xshift=4pt]S.east) -| (\columnwidth+1.2pt,-24pt) ; 
+	\end{tikzpicture}
+	}
+	{-6pt}
+	{\parbox{\columnwidth-8pt}{\filleft #1}}
+\titleformat{name=\section,numberless}[display]
+	{\sffamily\scshape\LARGE\color{titletextcol}}
+	{\color{titlestrokecol}%
+		\TitlingFont\large%
+		\raisebox{-.5ex}{\llap{\textcolor{titletextcol}{$\xbullet\mskip2mu$}}}%
+		\titlerule%
+	}
+	{\z@}
+	{\filleft #1}
+\titleformat{\subsection}[hang]
+	{\sffamily\scshape\large\color{titletextcol}}
+	{\llap{$\xbullet\mskip2mu$}\color{titlestrokecol}\TitlingFont\label@subsection}
+	{6pt}
+	{\filright #1}
+\titleformat{name=\subsection,numberless}[hang]
+	{\sffamily\scshape\large\color{titletextcol}}
+	{\llap{$\xbullet\mskip2mu$}}
+	{6pt}
+	{\filright #1}
+\titlespacing{\section}{\z@}{*4}{*2}
+\titlespacing{\subsection}{\z@}{*4}{*2}
+
+\cpgesetlabel{chapter}{|1|}
+
+\titleformat{\chapter}[display]
+	{\sffamily\fontsize{28}{28}\scshape\bfseries\boldmath\color{titletextcol}}
+	{%
+		\begin{tikzpicture} [overlay, baseline=(C.base)] 
+			\node (C) at (30pt,0) [circle,
+				top color=titletextcol!80,
+				bottom color=titletextcol!60!black, 
+				text=white,
+				text width=40pt,
+				align=center,
+				font=\fontsize{36}{36}\bfseries,
+			]{\label@chapter};
+			\node [titlestrokecol] at ([yshift=6pt] C.north) 
+				{\TitlingFont\Large chapitre};
+			\draw [titlestrokecol, line width=12pt, rounded corners=36pt, line cap=round] 
+				([xshift=12pt]C.east) -| (\textwidth,-1.5cm) ; 
+		\end{tikzpicture}
+	}{\z@skip}
+	{\null\hskip1cm\parbox{\textwidth-1.5cm}{\filleft #1}}
+\titleformat{name=\chapter, numberless}[display]
+	{\sffamily\fontsize{32}{32}\scshape\color{titletextcol}}
+	{%
+		\filleft%
+		\begin{tikzpicture} [overlay] 
+			\draw [titlestrokecol, line width=12pt, rounded corners=36pt, line cap=round]
+				(-.66\textwidth,16pt) -| +(.66\textwidth,-1.5cm);
+		\end{tikzpicture}
+	}{1cm}{\parbox{\textwidth-1.5cm}{\filright #1}}
+\titlespacing\chapter{0pt}{*1}{2cm}
+
+%%% Page de garde et head/foot
+
+\endinput
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+

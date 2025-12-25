@@ -217,18 +217,19 @@
       {-.25\baselineskip}{#1}
    \titlespacing*\sheet{\z@}{.5\tma}{*2}
 \fi 
-\titleformat\problem[hang]{\large\color{titletextcol}}{\csuse{deco@problem}{\problem@label}}{.5em}{#1}
+\titleformat\problem[hang]{\large\color{titletextcol}}{\csuse{deco@problem}{\problem@label}}{.5em}{(#1)}
 \titlespacing*\problem{\z@}{*1}{*1}
 \ifcolle
 	\def\cpge@presheettitle{
 		\deco@pretitle{%
-			{\scshape\mdseries \cpge@document@format \\ \cpge@periode@format}\\[\medskipamount]
+			{\scshape\mdseries \cpge@document@format \\ {\bfseries \cpge@theme@format} \\ \smaller \cpge@periode@format}\\[\medskipamount]
 		}
 	}
 \else 
 	\let\cpge@presheettitle\relax
 \fi
 \let\deco@pretitle\@firstofone
+
 
 \cpgedefcounter{partie}{|1|}[problem]
 \titleclass{\partie}{straight}[\problem]
