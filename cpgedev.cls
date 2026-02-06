@@ -494,7 +494,7 @@
 %%%%% version interne des titres pour les sujets
 \let\afterproblem@align\relax
 \def\after@problemtitle{%
-	\afterproblem@align%
+	\par\afterproblem@align%
 	\iflocalscore%
 		\ifdef{\problemcounter@name}
 			{
@@ -542,7 +542,7 @@
 		  	\ifcsvoid{hook@afterproblemtitle}{}
 		  		{\mbox{}\csundef@afterexec{hook@afterproblemtitle}\medskip}}
   		[\after@problemtitle]
-	\cpgetitle@format{name=\problem, numberless}[\problem@shape]
+\cpgetitle@format{name=\problem, numberless}[\problem@shape]
   		{\problem@font}
   		{\problemlabel@align\deco@problemlabelnumberless{}}
   		{\z@}
@@ -716,7 +716,7 @@
 
 \def\deco@@devoir#1#2{{\huge#1} \\ #2}
 \def\deco@@devoirlabel#1#2{#1\ #2}
-\cpgesetdeco{@devoirlabelnumberless}{}
+\cpgesetdeco{@devoirlabelnumberless}{} 
 
 \cpgesetup[@devoir]{%
 	name/.store in=\@devoir@name,
@@ -809,11 +809,11 @@
 	after title/.code=\title@parser{#1}%
 		\@xp\long\@xp\def\@xp\hook@afterproblemtitle
 		 \@xp{\title@contents},
-	origin/.code=\Origine{#1},
 	label/.code=\@xp\cpgesetlabel\@xp{\problemcounter@name}{#1},
 	title deco/.code=\cpgesetdeco{problem}{#1},
 	label deco/.code=\cpgesetdeco{problemlabel}{#1},
 	corrige/.code=\appto\cor@curropts{,#1}, 
+	origin/.code=\Origine{#1}\appto\cor@curropts{,origin=#1},
 }
 \cpgesetup[solution]{
 	nonumber/.is if=nonumber,
@@ -828,6 +828,7 @@
 		 \@xp{\title@contents},
 	questions list/.store in=\queslist,
 	auteur/.code=\Auteur{#1},
+	origin/.code=\Origine{#1},
 	.unknown/.code={},
 }
 \def\noqueslistmessage{%

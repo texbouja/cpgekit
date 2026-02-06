@@ -1,0 +1,204 @@
+%% Simple test file for cpgemath vs cpgemath2 compatibility
+%% Focuses on \delim functionality only
+%% Usage:
+%%   pdflatex test-delim-simple.tex (tests cpgemath.sty)
+%%   pdflatex "\def\useoptimized{}\input{test-delim-simple}" (tests cpgemath2.sty)
+
+\documentclass{article}
+
+%% Choose which version to test
+\ifdefined\useoptimized
+  \usepackage{cpgemath2}
+  \def\versionname{cpgemath2.sty (optimisée)}
+\else
+  \usepackage{cpgemath}
+  \def\versionname{cpgemath.sty (originale)}
+\fi
+
+\usepackage[margin=2cm]{geometry}
+\usepackage{expl3}
+
+%% For timing measurements
+\newcount\testcount
+
+\ExplSyntaxOn
+\dim_new:N \g_start_time_dim
+\dim_new:N \g_end_time_dim
+\dim_new:N \g_elapsed_time_dim
+
+\cs_new:Npn \start_timer:
+  {
+    \dim_gset:Nn \g_start_time_dim { \sys_timer: }
+  }
+
+\cs_new:Npn \stop_timer:n #1
+  {
+    \dim_gset:Nn \g_end_time_dim { \sys_timer: }
+    \dim_gset:Nn \g_elapsed_time_dim { \g_end_time_dim - \g_start_time_dim }
+    \textbf{#1:}~\dim_use:N \g_elapsed_time_dim
+    \par
+  }
+\ExplSyntaxOff
+
+\begin{document}
+
+\title{Test de compatibilité: \versionname}
+\author{Tests automatisés}
+\date{\today}
+\maketitle
+
+\section{Tests de compatibilité basiques}
+
+\subsection{Délimiteurs simples}
+
+\begin{enumerate}
+\item Parenthèses: $\delim(x + y)$
+\item Crochets: $\delim[a, b, c]$
+\item Accolades: $\delim\{x \mid x > 0\}$
+\item Valeur absolue: $\delim|x|$
+\item Norme: $\delim\|v\|$
+\end{enumerate}
+
+\subsection{Avec contenu de tailles variées}
+
+\begin{itemize}
+\item Petit: $\delim(x)$
+\item Moyen: $\delim(\frac{a}{b})$
+\item Grand: $\delim(\frac{\frac{a}{b}}{\frac{c}{d}})$
+\item Très grand: $\delim(\sum_{i=1}^{n} \frac{1}{i^2})$
+\end{itemize}
+
+\subsection{Délimiteurs imbriqués}
+
+\[
+\delim(\delim[\delim\{a + b\} + c] + d)
+\]
+
+\subsection{Avec indices et exposants}
+
+\begin{itemize}
+\item $\delim(x)^2$
+\item $\delim[a]_i$
+\item $\delim\{S\}_{i=1}^n$
+\end{itemize}
+
+\section{Tests de performance}
+
+Chaque test effectue de multiples itérations de la même opération.
+
+\subsection{Test 1: Parenthèses simples (2000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<2000
+  $\delim(x)$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Parenthèses~simples}
+
+\subsection{Test 2: Crochets simples (2000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<2000
+  $\delim[x]$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Crochets~simples}
+
+\subsection{Test 3: Accolades simples (2000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<2000
+  $\delim\{x\}$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Accolades~simples}
+
+\subsection{Test 4: Valeur absolue (2000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<2000
+  $\delim|x|$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Valeur~absolue}
+
+\subsection{Test 5: Avec fractions (1000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<1000
+  $\delim(\frac{a}{b})$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Avec~fractions}
+
+\subsection{Test 6: Imbriqués (500 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<500
+  $\delim(\delim[x])$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Délimiteurs~imbriqués}
+
+\subsection{Test 7: Mélange (1000 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<1000
+  $\delim(a)$ $\delim[b]$ $\delim\{c\}$ $\delim|d|$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Mélange~de~délimiteurs}
+
+\subsection{Test 8: Avec sommes (500 fois)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<500
+  $\delim(\sum_{i=1}^{n} x_i)$%
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Avec~sommes}
+
+\section{Résumé}
+
+\textbf{Version testée:} \versionname
+
+\subsection{Instructions pour comparer}
+
+\begin{enumerate}
+\item Compiler la version originale:
+  \begin{verbatim}
+  pdflatex test-delim-simple.tex
+  \end{verbatim}
+
+\item Compiler la version optimisée:
+  \begin{verbatim}
+  pdflatex "\def\useoptimized{}\input{test-delim-simple}"
+  \end{verbatim}
+
+\item Comparer les temps affichés dans chaque test.
+
+\item Pour mesurer le temps total de compilation:
+  \begin{verbatim}
+  time pdflatex test-delim-simple.tex
+  time pdflatex "\def\useoptimized{}\input{test-delim-simple}"
+  \end{verbatim}
+\end{enumerate}
+
+\subsection{Gains attendus}
+
+La version optimisée (cpgemath2.sty) devrait montrer:
+\begin{itemize}
+\item Réduction de 25-35\% du temps pour les délimiteurs simples
+\item Réduction de 20-30\% du temps pour les délimiteurs avec contenu complexe
+\item Amélioration de la maintenabilité du code grâce à expl3
+\end{itemize}
+
+\end{document}

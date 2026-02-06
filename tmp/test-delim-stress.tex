@@ -1,0 +1,56 @@
+%% Stress test for cpgemath delimiter performance
+%% This test focuses on heavy delimiter usage to amplify performance differences
+
+\documentclass{article}
+
+\ifdefined\useoptimized
+  \usepackage{cpgemath2}
+  \def\versionname{cpgemath2 (optimisée)}
+\else
+  \usepackage{cpgemath}
+  \def\versionname{cpgemath (originale)}
+\fi
+
+\usepackage[margin=1cm]{geometry}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Stress test: \versionname}
+
+%% Test 1: 5000 simple parentheses
+\newcount\mycounter
+\mycounter=0
+\loop\ifnum\mycounter<5000
+  $\delim(x_{\the\mycounter})$
+  \advance\mycounter by 1
+\repeat
+
+\newpage
+
+%% Test 2: 3000 nested delimiters
+\mycounter=0
+\loop\ifnum\mycounter<3000
+  $\delim(\delim[a_{\the\mycounter}])$
+  \advance\mycounter by 1
+\repeat
+
+\newpage
+
+%% Test 3: 2000 with fractions
+\mycounter=0
+\loop\ifnum\mycounter<2000
+  $\delim(\frac{a_{\the\mycounter}}{b})$
+  \advance\mycounter by 1
+\repeat
+
+\newpage
+
+%% Test 4: Mixed delimiters (2000 of each type)
+\mycounter=0
+\loop\ifnum\mycounter<2000
+  $\delim(a)$ $\delim[b]$ $\delim\{c\}$ $\delim|d|$ $\delim\|e\|$
+  \advance\mycounter by 1
+\repeat
+
+\end{document}

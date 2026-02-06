@@ -1,0 +1,231 @@
+%% Test file for cpgemath vs cpgemath2 performance and compatibility
+%% Usage:
+%%   pdflatex test-cpgemath.tex (tests original cpgemath.sty)
+%%   pdflatex "\def\useoptimized{}\input{test-cpgemath}" (tests cpgemath2.sty)
+
+\documentclass{article}
+
+%% Packages needed for testing
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+%% Choose which version to test
+\ifdefined\useoptimized
+  \usepackage{cpgemath2}
+  \title{Test de cpgemath2.sty (version optimisée)}
+\else
+  \usepackage{cpgemath}
+  \title{Test de cpgemath.sty (version originale)}
+\fi
+
+\usepackage{microtype}
+\usepackage[margin=2cm]{geometry}
+
+%% For timing measurements
+\usepackage{xparse}
+\newcount\testcount
+\newdimen\startime
+\newdimen\endtime
+
+\ExplSyntaxOn
+\cs_new:Npn \start_timer:
+  {
+    \dim_set:Nn \startime { \sys_timer: }
+  }
+
+\cs_new:Npn \stop_timer:n #1
+  {
+    \dim_set:Nn \endtime { \sys_timer: }
+    \dim_set:Nn \l_tmpa_dim { \endtime - \startime }
+    \textbf{#1:}~\dim_use:N \l_tmpa_dim \par
+  }
+\ExplSyntaxOff
+
+\begin{document}
+
+\maketitle
+
+\section{Tests de compatibilité}
+
+Ces tests vérifient que toutes les fonctionnalités de \verb|\delim| fonctionnent correctement.
+
+\subsection{Délimiteurs de base}
+
+\begin{enumerate}
+\item Parenthèses: $\delim(x + y)$
+\item Crochets: $\delim[a, b, c]$
+\item Accolades: $\delim\{x \mid x > 0\}$
+\item Valeur absolue: $\delim|x|$
+\item Norme: $\delim\|v\|$
+\item Angles: $\delim\langle u, v \rangle$
+\item Floor: $\delim\lfloor x \rfloor$
+\item Ceil: $\delim\lceil x \rceil$
+\end{enumerate}
+
+\subsection{Délimiteurs avec contenu complexe}
+
+\begin{align}
+\delim(\frac{a + b}{c + d}) &= \text{Fraction simple} \\
+\delim[\sum_{i=1}^n x_i] &= \text{Somme} \\
+\delim\{\int_0^1 f(x)\,dx\} &= \text{Intégrale} \\
+\delim|\frac{\partial f}{\partial x}| &= \text{Dérivée partielle}
+\end{align}
+
+\subsection{Délimiteurs imbriqués}
+
+\[
+\delim(\delim[\delim\{a + b\} + c] + d)
+\]
+
+\subsection{Avec indices et exposants}
+
+\begin{align}
+\delim(x)^2 &= \text{Exposant} \\
+\delim[a]_i &= \text{Indice} \\
+\delim\{S\}_{i=1}^n &= \text{Les deux}
+\end{align}
+
+\subsection{Test de \textbackslash{}fulldelim}
+
+Substitution automatique des délimiteurs:
+\[
+\fulldelim{(a + b) + [c + d] + \{e + f\}}
+\]
+
+\subsection{Délimiteurs avec options de taille}
+
+Taille manuelle:
+\begin{align}
+\delim(\sz2 x) &= \text{Taille 2} \\
+\delim[\sz3 \frac{a}{b}] &= \text{Taille 3} \\
+\delim\{\sz4 \sum_{i=1}^n\} &= \text{Taille 4}
+\end{align}
+
+\subsection{Délimiteurs avec espacement}
+
+\[
+\delim(\es3pt x + y)
+\]
+
+\subsection{Délimiteurs avec break}
+
+\[
+\delim(\br[t] a + b + c + d + e + f + g)
+\]
+
+\subsection{Délimiteurs gauche/droit uniquement}
+
+\begin{align}
+\delim\l(x &= \text{Gauche uniquement} \\
+y\r) &= \text{Droit uniquement}
+\end{align}
+
+\section{Tests de performance}
+
+Ces tests mesurent le temps d'exécution pour différentes opérations répétées.
+
+\subsection{Test 1: Délimiteurs simples (1000 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<1000
+  $\delim(x)$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Délimiteurs~simples~(parenthèses)}
+
+\subsection{Test 2: Délimiteurs avec fractions (500 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<500
+  $\delim(\frac{a}{b})$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Délimiteurs~avec~fractions}
+
+\subsection{Test 3: Délimiteurs imbriqués (250 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<250
+  $\delim(\delim[x + y])$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Délimiteurs~imbriqués}
+
+\subsection{Test 4: fulldelim (100 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<100
+  $\fulldelim{(a+b)+[c+d]+\{e+f\}}$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{fulldelim}
+
+\subsection{Test 5: Délimiteurs variés (200 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<200
+  $\delim(a)$ $\delim[b]$ $\delim\{c\}$ $\delim|d|$ $\delim\|e\|$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Délimiteurs~variés}
+
+\subsection{Test 6: Avec options (100 itérations)}
+
+\testcount=0
+\start_timer:
+\loop\ifnum\testcount<100
+  $\delim(\sz3\es2pt\frac{a+b}{c+d})$
+  \advance\testcount by 1
+\repeat
+\stop_timer:n{Avec~options~de~taille~et~espacement}
+
+\section{Résumé}
+
+\ifdefined\useoptimized
+  \textbf{Version testée:} cpgemath2.sty (optimisée avec expl3)
+
+  Les optimisations principales:
+  \begin{itemize}
+    \item Dispatch avec \verb|\peek_charcode| au lieu de \verb|\@ifnextchar|
+    \item \verb|\fulldelim| avec regex expl3 au lieu de substitutions multiples
+    \item Réduction de l'overhead d'expansion
+  \end{itemize}
+\else
+  \textbf{Version testée:} cpgemath.sty (originale)
+
+  Pour comparer avec la version optimisée, compilez avec:
+  \begin{verbatim}
+  pdflatex "\def\useoptimized{}\input{test-cpgemath}"
+  \end{verbatim}
+\fi
+
+\section{Instructions de benchmarking}
+
+Pour obtenir des mesures de performance comparatives:
+
+\begin{enumerate}
+\item Compiler la version originale:
+  \begin{verbatim}
+  pdflatex test-cpgemath.tex
+  \end{verbatim}
+
+\item Compiler la version optimisée:
+  \begin{verbatim}
+  pdflatex "\def\useoptimized{}\input{test-cpgemath}"
+  \end{verbatim}
+
+\item Comparer les temps affichés dans chaque section de performance.
+
+\item Pour des mesures plus précises, utiliser:
+  \begin{verbatim}
+  time pdflatex test-cpgemath.tex
+  time pdflatex "\def\useoptimized{}\input{test-cpgemath}"
+  \end{verbatim}
+\end{enumerate}
+
+\end{document}
