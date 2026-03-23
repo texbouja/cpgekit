@@ -61,13 +61,13 @@ Plusieurs commandes de la classe `cpgedev`  ont par exemple l'interface suivante
 
 **Exemple :**  `xques\r(Titre de la question)<ques5>` instruction qui va insérer une question, `\r` est un modificateur qui instruit de reprendre une numérotation interrompue, `Titre de la question` sera utilisé comme intitulé de la question et `ques5` sera utilisé pour placer une référence sur la question. 
 
-> **Convention**
+> **Notations**
 >
 > Dans le descriptif précédent, ainsi que dans la suite de ce document, les caractères `<` et `>` indiquent le contenu variable d'un paramètre dans la description formelle d'une instruction. Il ne font pas partie de l'instruction en cas d'utilisation réelle. 
 
 ## Organisations des énoncés et des corrigés
 
-il y a plusieurs environnements pour traiter les énoncés et un unique environnement pour traiter leurs corrigés. Un mécanisme simple est prévu pour coupler entre un énoncé et son corrigé.  
+il y a plusieurs environnements pour traiter les énoncés et un unique environnement pour traiter les corrigés. Un mécanisme simple est prévu pour coupler entre un énoncé et son corrigé. Ces environnements inscrivent des entrées dans la table des matières qui peut être insérée n'importe où avec la commande usuelle `\tableofcontents`.   
 
 ### Environnements pour les énoncés
 La classe fournit plusieurs environnements pour encapsuler un énoncé. Tous exigent un argument qui servira d'identifiant pour coupler l'énoncé d'un sujet avec son corrigé. 
@@ -75,13 +75,13 @@ La classe fournit plusieurs environnements pour encapsuler un énoncé. Tous exi
 -   `\begin{exercice}{<id>}(<titre>)`: similaire à `probleme`, mais pour un exercice (label "Exercice X"). Utilise un compteur séparé.
 -   `\begin{enonce}{<id>}(<titre>)`: Pour un document qui ne comporte qu'un seul sujet (pas de label ni de numéro).
 - `\begin{epreuve}{<id>}(<titre>)`:  une variante de l'instruction précédente ;
--  `\begin{exer}(<titre>)`: une version simplifiée de `exercice` qui n'a pas besoin d'un identifiant. Elle est prévue pour les séries d'exercices. L'identifiant est géré implicitement en interne.
+-  `\begin{exer}(<titre>)`: une version simplifiée de `{exercice}` qui n'exige pas d'identifiant. Elle est prévue pour les séries d'exercices. Un'identifiant est crée implicitement en interne.
 
 ### Environnement pour les solutions 
 Deux stratégies sont disponibles : 
 - faire suivre chaque question de sa solution encapsulée dans l'environnement `{solution}` au sein du même environnement que l'énoncé ; 
-- regrouper toutes les solutions d'un même sujet dans un environnement `{corrige}` dédié en indiquant l'identifiant de l'énoncé correspondant avec la syntaxe `\begin{corrige}{<id>}`. Le corrigé peut résider dans le même fichier source que l'énoncé ou dans un fichier séparé.  Chaque solution doit être précédée de la commande `\xsol` (qui prendra en charge automatiquement la numérotation). 
-Les deux stratégies peuvent cohabiter dans un même fichier source. 
+- regrouper toutes les solutions d'un même sujet dans un environnement `{corrige}` dédié en indiquant l'identifiant de l'énoncé avec la syntaxe `\begin{corrige}{<id>}`. Le corrigé peut résider dans le même fichier source que l'énoncé ou dans un fichier séparé.  Chaque solution doit être précédée de la commande `\xsol` (qui prendra en charge automatiquement la numérotation). 
+Les deux stratégies peuvent cohabiter dans un même fichier source, mais bien sûr pour des sujets différents.  
 
 > **Exception**
 >
@@ -91,16 +91,24 @@ Les deux stratégies peuvent cohabiter dans un même fichier source.
 >
 > Il est possible de définir à la volée d'autres environnements qui se comportent comme `{probleme}` ou `{exercice}` avec toutes les fonctionnalités de ceux-ci, y compris leurs liaison avec l'environnement `{corrige}`. Par exemple :
 > `\cpgenewproblem{planche}{Planche}[planche]{|1|}{de la planche}`
-> va générer un environnement qui portera le premier argument comme nom (à invoquer par `\begin{planche}`). Le deuxième argument indique le nom qui sera visible dans le PDF, le troisième le nom interne du compteur qui sera utilisé, le quatrième le style de ce compteur et le dernier indique le texte qui sera ajouté avant l'intitulé du corrigé.
+> va générer un environnement qui portera le premier argument comme nom (à invoquer par `\begin{planche}`). Le deuxième argument indique le nom qui sera visible dans le PDF, le troisième le nom interne du compteur qui sera utilisé, le quatrième le style de ce compteur et le dernier indique le texte qui sera ajouté avant l'intitulé du corrigé. Le but de la manœuvre est de créer localement un environnement qui produit des intitulés personnalisés (non prévus par la classe).
 
 ### Insertion des solutions
- Dans les deux stratégies de traitement des solutions, la compilation passe par une phase intermédiaire qui consiste en l'écriture du corrigé de chaque sujet dans un fichier séparé (qui comporte l'identifiant `<id>` dans son nom). L' inclusion du contenu de celui-ci se fait alors selon deux modes qui sont activés avec l'option de la classe `solution` ou `solution*`. 
+ Dans les deux stratégies de traitement des solutions, la compilation passe par une phase intermédiaire qui consiste en l'écriture du corrigé de chaque sujet dans un fichier séparé (qui comporte l'identifiant `<id>` dans son nom). L' inclusion du contenu de celui-ci se fait alors selon deux modes qui sont activés avec l'une des options de la classe `solution` ou `solution*`. 
  - `solution` : l'insertion se fait immédiatement après l'énoncé ; 
  - `solution*` : les solutions de plusieurs sujets sont collectées et leurs insertion se fait par la commande `\solutions` placée par l'utilisateur là où il veut.
- - 
+ 
 > **Pas de solutions**
 >
-> Si aucune des deux options n'est active alors les solutions ne sont pas produites dans le PDF final.
+> Si aucune des deux options n'est active alors les solutions ne sont pas produites dans le PDF final. Il est aussi possible de désactiver la production des solutions pour un sujet indépendamment du contexte global. Pour cela il suffit d'ajouter l'option `\op{solution=false}` à l'ouverture de l'environnement pour l'énoncé comme dans
+>  
+> `\begin{exercice}{exe08}\op{solution=false}(Le titre de l'exercice)`
+> 
+> Cela aura aussi pour effet de désactiver les hyperliens vers les solutions (qui n'existent pas). L'option devient indispensable lorsque dans un même document il y a des sujets avec solutions et d'autres sans. Elle permet d'éviter de créer des hyperliens orphelins. Dans le futur un mécanisme permettra de détecter si un sujet dispose de solutions ou pas et activera ou non les hyperliens en conséquence, mais cela nécessitera obligatoirement deux compilations.   
+
+> **Visuel**
+> 
+> selon le thème utilisé, les numéros de questions avec solutions seront différentiés de ceux qui n'en ont pas (un fond bleu, par exemple). 
 
 ### Un exemple complet
 
@@ -151,27 +159,36 @@ solution de la question 2 ....
 \end{exer}
 ```
 
-L'exercice `{exe6}` n'a pas de questions numérotées. On utilise `{corrige}` pour encapsuler son corrigé. L'exercice `{exe7}` utilise ce même mécanisme tout en ayant des questions numérotées. `\xques` est utilisée pour numéroter les questions et `\xsol`pour numéroter les solutions. Quand au dernier exercice, un identifiant n'est pas nécessaire car les solutions sont fournies dans le même environnement. Il faut comprendre que ce dernier mécanisme va aboutir au final à la même procédure que celle utilisant l'environnement séparé `{corrige}` : les solutions seront collectées dans un fichier temporaire et la commande `\xsol` sera ajoutée avant chaque solution. 
+L'exercice identifié par `{exe6}` n'a pas de questions numérotées. On utilise `{corrige}` pour encapsuler son corrigé. L'exercice `{exe7}` utilise ce même mécanisme tout en ayant des questions numérotées. `\xques` est utilisée pour numéroter les questions et `\xsol`pour numéroter les solutions. Quand au dernier exercice utilisant `{exer}`, un identifiant n'est pas nécessaire car les solutions sont fournies dans le même environnement. 
+
+> **Procédure commune**
+> 
+> Il faut comprendre que dans la première méthode, la compilation va aboutir au final à la même procédure que celle utilisant l'environnement séparé `{corrige}` : les solutions seront collectées dans un fichier temporaire et la commande `\xsol` sera ajoutée avant chaque solution exactement comme si on avait rédigé toutes les solutions dans un environnement `{corrige}`. 
+
 ## Gestion des Questions et de leurs solutions 
 
-La classe `cpgedev` fournit un mécanisme pour gérer les questions et sous-questions ainsi que leurs solutions. De base la numérotation des solutions est automatiquement liée à celle des questions et chaque numéro de question est un hyperlien qui renvoie vers sa solution et vice-versa. Le système facilite l'adoption d'un style particulier de numérotation (pour imiter celui d'une épreuve de concours par exemple). 
- Globalement l
-### Un environnement et deux commandes pour les questions
-- l'environnement de liste `{questions}` s'utilise comme `{enumerate}`. La commande `\item` est utilisable et produit un numéro qui suit le style de la liste mais pour déclencher le mécanisme interne de liaison entre questions et solutions il faut utiliser la commande `\xques`. Si un item de la liste n'est pas une question (possède des sous-questions par exemple ) utiliser `\zques` à la place. 
-  - `\xques`: insère un numéro et enregistre celui-ci dans la pile interne des questions du sujet, pour une utilisation ultérieur pour numéroter les solutions ; 
-  - `\zques` agît comme `\xques` mais n'inscrit pas le numéro dans la pile. Cette commande est prévu pour les unités qui ne sont pas des questions. Celle qui possèdent des sous-questions. Accessoirement elle peut être utilisée pour une question dont on ne désire pas fournir une solution. 
+La classe `cpgedev` fournit un mécanisme pour gérer les questions et sous-questions ainsi que leurs solutions. De base la numérotation des solutions est automatiquement liée à celle des questions et chaque numéro de question est un hyperlien qui renvoie vers sa solution et vice-versa. Le système facilite l'adoption d'un style particulier de numérotation (pour reproduire celui d'une épreuve de concours par exemple). 
 
-Toutefois, les commandes `\xques` et `\zques` ont un comportement autonome : elles n'ont pas besoin d'être initialisées par l'environnement `{questions}` (`\item` provoque une erreur si elle est utilisée en dehors d'un environnement de liste).  Si `\xques/\zques` est rencontrée sans qu'un environnement `{questions}` ne soit actif, elles en initient un. En outre ces commandes peuvent être suivies d'un modificateur optionnel et/ou d'un ou plusieurs arguments également optionnels : 
+### Un environnement et deux commandes pour les questions
+On dispose d'un environnement `{questions}` et des deux commandes `\xques` et `\zques` pour l'insertion des questions. 
+
+- l'environnement de liste `{questions}` s'utilise comme `{enumerate}`. La commande `\item` est tout à fait utilisable et produit un numéro qui suit le style de la liste mais pour déclencher le mécanisme interne de liaison entre questions et solutions il faut utiliser la commande `\xques`. Si un item de la liste n'est pas une question (possède des sous-questions par exemple ) il faut utiliser `\zques` au lieu de `\xques`. 
+- `\xques`: insère un numéro et enregistre celui-ci dans la pile interne des questions du sujet, pour une utilisation ultérieur pour numéroter les solutions ; 
+- `\zques` agît comme `\xques` mais n'inscrit pas le numéro dans la pile. Cette commande est prévu pour les unités qui ne sont pas des questions. Celle qui possèdent des sous-questions. Accessoirement elle peut être utilisée pour une question dont on ne désire pas fournir une solution. 
+
+Toutefois, les commandes `\xques` et `\zques` ont un comportement autonome : elles n'ont pas besoin d'être initialisées par l'environnement `{questions}` (`\item` provoque une erreur si elle est utilisée en dehors d'un environnement de liste).  De base, si `\xques/\zques` est rencontrée sans qu'un environnement `{questions}` ne soit actif, elles en initient un. En outre ces commandes peuvent être suivies d'un modificateur optionnel et/ou d'un ou plusieurs arguments également optionnels : 
+
 **Modificateurs :**
   - `+` : si `\xques/\zques` est suivie du modificateur `+` elle ouvre un nouvel environnement `{questions}`, ce qui permet de créer une liste de sous-questions. Ce modificateur n'est pas nécessaire si aucune liste n'est encore ouverte ;
-  - `-` : si `\xques/\zques` est suivi du modificateur `-`, elle ferme la liste en cours et continue la liste parente. Il produit donc une erreur s'il est utilisé dans le niveau le plus externe ;
-  - `\r` : utilisé lorsqu'on a fermé une liste (pour insérer un titre ou en général  du texte sans le retrait de la liste) et qu'on veut reprendre la liste en continuant la numérotation. 
+  - `-` : si `\xques/\zques` est suivi du modificateur `-`, elle ferme la liste en cours et continue la liste parente. Il produit donc une erreur si elle est utilisé dans le niveau le plus externe (car elle aura fermé le niveau avant d'insérer un item);
+  - `\r` : a utiliser lorsqu'on a fermé une liste (pour insérer un titre de partie ou en général du texte sans le retrait de la liste) et qu'on veut reprendre la liste en continuant la numérotation. 
+  
 **Paramètres optionnels :**
--  `\xques/\zques` est suivie d'un argument entre crochets (`[` et `]`) celui-ci est utilisé comme numéro statique. Si cet argument est vide alors le compteur du niveau est incrémenté mais aucun numéro n'est produit dans le PDF ;
+-  si `\xques/\zques` est suivie d'un argument entre crochets (`[` et `]`) celui-ci est utilisé comme numéro statique. Si cet argument est vide alors le compteur du niveau est incrémenté mais aucun numéro n'est produit dans le PDF ;
 - si `\xques/\zques` est suivie d'un paramètre optionnel entre parenthèses celui-ci est utilisé comme un titre
 - si `\xques/\zques` est suivie d'un paramètre optionnel entre `<` et `>` celui-ci est à passé à la commande `\label` pour placer une référence.
   
-Un seul modificateur peut être utilisé à la fois. Les arguments optionnels peuvent être cumulés à condition de respecter l'ordre de leur citation ci-dessus.  La syntaxe est de la forme 
+Un seul modificateur peut être utilisé à la fois. Les arguments optionnels peuvent être cumulés à condition de respecter l'ordre de leur citation ci-dessus.  La syntaxe complète est de la forme 
 ```latex
 \xques<un ou zero modificateur>[<numéro statique>](<titre>)<<label>>
 ```
@@ -183,17 +200,19 @@ Un seul modificateur peut être utilisé à la fois. Les arguments optionnels pe
 > **Barème**
 >
 > La commande `\xques` permet aussi de renseigner le barème de la question. Cela se fait à travers le modificateur spécial `\sc`. La syntaxe complète est en fait 
+> 
 > `\xques<modif>\sc{<marks>}[<stat>](<title>)<<label>>`
-> `<marks>` est un texte descriptif qui se résume comme `1+3+2` qui signifie ici que le barème se décompose en trois parties notées respectivement 1, 3 et 2 points. Si l'option `score` de la classe est active alors ce barème apparaît à gauche du numéro de la question et la somme de toutes les notes s'ajoute au barème total du devoir, celui-ci apparaissant avec le titre du devoir. Sans l'option `score` rien n'apparaît dans le PDF. 
+> 
+> l'argument `<marks>` est un texte descriptif comme `1+3+2` qui signifie ici que le barème se décompose en trois parties notées respectivement 1, 3 et 2 points. Si l'option `score` de la classe est active alors ce barème apparaît à gauche du numéro de la question et la somme de toutes les notes s'ajoute au barème total du devoir, celui-ci apparaissant avec le titre du devoir. Sans l'option `score` rien n'apparaît dans le PDF. 
 
 ### La commande `\exit` 
 Puisque `\xques` initie des environnements LaTeX, il faut prévoir un mécanisme pour le(s) fermer. Ce rôle incombe à la commande `\exit`.
-- si aucune liste n'est active la commande ne fait rien ; sinon toutes les listes en cours sont récursivement fermées (cela inclut les listes gérées par la commande `\xit`) ;
+- si aucun environnemnt de liste n'est actif la commande ne fait rien ; sinon toutes les listes en cours sont récursivement fermées (cela inclut les listes gérées par la commande `\xit`) ;
 - si `\exit` est suivie d'un modificateur `-` elle ferme la liste en cours. Plusieurs modificateurs `-` peuvent être utilisés et la commande fermera exactement le même nombre de listes ;
 
 > **Fermer la porte**
 >
-> les environnements des énoncés et celui unique des corrigés exécutent automatiquement la commande `\exit` à leur fermeture.  Cela garantit que tous les environnements de listes sont correctement fermés et simplifie un peu plus la saisie en conséquence.
+> les environnements des énoncés et celui unique des corrigés exécutent automatiquement la commande `\exit` à leur fermeture.  Cela garantit que tous les environnements de listes sont correctement fermés et de simplifier un peu plus la saisie.
 
 ### Deux modes pour les solutions
 On a déjà parlé de la stratégie de couplage entre un énoncé et son corrigé et de celle qui au contraire permet  d'imbriquer questions et solutions.  La première méthode sera dite la méthode globale, la seconde la méthode locale. Les deux méthodes sont prévues chacune pour un cas d'usage différent. 
@@ -212,7 +231,11 @@ Dans les deux méthodes, on se retrouve avec le même résultat : un fichier tem
 > **Cas d'usage**
 >
 > Cette méthode présente l'avantage de rendre le contenu très manageable : quand on copie ailleurs une partie d'un sujet, le couplage questions/solutions reste pleinement fonctionnel.   
-[solution]
+
+> **Pas vraiment une solution**
+> 
+>Dans la méthode locale, qu'en est-il du cas où on désire ajouter du texte qui n'est pas la solution d'une question ? Un environnement spécial est prévu pour ces cas : `{solution*}`. Il est utilisable n'importe où dans l'environnement de l'énoncé et permet d'ajouter du texte arbitraire au fichier temporaire qui contiendra les solutions. Y compris des définitions de nouvelles commandes.   
+
 ## Configuration des listes de questions 
 
 Les numéros insérés par `\xsol` héritent du style imposé par celui des questions. Les commandes `\xques/\zques` ont un mécanisme qui permet personnaliser le style de numérotation ainsi que certaines propriétés de la liste. Leur syntaxe complète est en fait de la forme 
@@ -223,12 +246,14 @@ Les numéros insérés par `\xsol` héritent du style imposé par celui des ques
 
 ### Changement de style de la numérotation 
 L'option concernée est `n=<raccourcis>` où  `<raccourcis>` est un texte descriptif contenant éventuellement plusieurs  caractères entre deux barres `|` et qui va imposer le style de la numérotation. Les raccourcis sont groupés dans deux catégories. 
+
 **Raccourcis actifs :**
   - `|1|` chiffres arabes ; 
   - `|a|` lettres latines minuscule ;
   - `|A|` lettres latines majuscules ;
   - `|i|` chiffres romains minuscules ;
   - `|I|` chiffres romains majuscules .
+
 **Raccourcis passifs :** 
   - `|Q|`: numéro de la question de premier niveau ;
   - `|q|`: numéro de la question de second niveau ;
@@ -236,14 +261,15 @@ L'option concernée est `n=<raccourcis>` où  `<raccourcis>` est un texte descri
   - `|p|`: numéro de la sous-partie courante (commande `\partii`).
   - `|X|`: numéro du sujet (problème, exercice...) courant ;
 
-Plusieurs raccourcis passifs peuvent être utilisés au même temps. Un seul actif. Il représente le numéro effectif de la question.    
+Les raccourcis actifs sont utilisés pour représenter le numéro de la question en cours contrairement aux autres raccourcis qui sont utilisés pour ajouter une information de contexte au style de la numérotation. Plusieurs raccourcis passifs peuvent être utilisés au même temps. Un seul actif. Il représente le numéro effectif de la question.    
 
-**Exemple :** `\xques\op{n={|X|.|1|}}` pour produire une numérotation de la forme `1.1`, `1.2`,`1.3` etc. où `1.` est le numéro du sujet en cours, suivi du numéro de la question. 
+**Exemple :** `\xques\op{n={|X|.|1|}}` pour produire une numérotation de la forme `9.1`, `9.2`,`9.3` etc. où `9.` est le numéro de l'exercice en cours, suivi du numéro de la question. 
 
 ### Gestion des espaces de la liste 
-Trois options sont disponibles pour la gestion des espaces dans une liste de questions 
+Quatre options sont disponibles pour la gestion des espaces dans une liste de questions 
 - `m=<dimen>` où `<dimen>` est une dimension TeX (`2pc`, `2em`, `1cm` ...). La dimension servira comme retrait de la liste par rapport au texte normal. Le numéro est lui même placé en retrait par rapport au texte de la liste; 
-- `m*=<dimen>` comme pour `m` mais le numéro n'a pas de retrait par rapport au texte de la liste ; 
+- `m*=<dimen>` comme pour `m` mais le numéro n'a pas de retrait par rapport au texte de la liste ;
+- `a=<caractère d'alignement>` ou `<caractère d'alignement>` est l'un des trois caractères : `l`, `c` ou `r` et qui servira à imposer l'alignement horizontal du numéro dans la zone de retrait de la liste. 
 - `s=<dimen>` saut vertical qui sépare les questions. De préférence un saut élastique (avec une composante `plus` et une composante `minus`) pour ne pas gêner les algorithmes de rupture de pages du moteur de compilation TeX. 
   Par exemple `s=6pt plus3pt minus1pt`;
 
@@ -258,21 +284,43 @@ Ces réglages changent globalement le style de numérotation pour les questions 
 > **Au delà des questions**
 >
 > `\cpgesetlabel` est une commande généraliste qui peut changer le style de numérotation d'autres compteurs. Dans l'exemple précédent, `enumi` et `enumii` sont en fait les noms internes des compteurs de premier et de deuxième niveau utilisés par les listes de type `{enumerate}` (et donc `{questions}`). Elle permet, par exemple, de changer aussi le style de numérotation des sujets, des parties et des sous-parties avec quelque chose comme 
+> 
 > `\cpgesetlabel{probleme}{|1|}`
+> 
 > `\cpgesetlabel{exercice}{|1|}`
+> 
 > `\cpgesetlabel{parti}{|X|.|I|}`
+> 
 > `\cpgesetlabel{partii}{|X|.|P|.|A|}`
+
+### Configuration globale des espaces dans les listes de questions
+Il est possible aussi de configurer globalement les environnement de liste (pas seulement ceux des questions). Une commande de configuration permet de le faire : `\cpgesetuplists`. Elle prend en argument une liste d'options de type clé/valeur.   Comme dans 
+```latex
+\cpgesetuplist{
+  enumi={n=|1|, m=2pc, a=r, s=4pt plus2pt minus1pt},
+  enumii={n=|Q|.|a|, m*=2pc}
+}
+```
+On passe individuellement des options aux différents niveaux. Les noms et la syntaxe de ces options sont le mêmes utilisables avec l'agrégateur `\op`.  
+
+> **Commandes de configuration** 
+>
+> Il y a deux types de commandes de configuration : 
+> - les commandes qui commencent avec `\cpgesetup`. Elles prennent des arguments de type clé/valeurs et peuvent régler par ce biais plusieurs aspects ;
+> - les commandes qui commencent avec `\cpgeset`. Elles sont plus spécialisées (ne configurent qu'un seul aspect) et n'ont pas une syntaxe clé/valeur ;
+> 
+> Les commandes `\cpgesetuplists` et `cpgesetlabel` en sont des exemples, mais il y'en a d'autres. 
 
 ## Organisation des fichiers sources 
 
 ### Hiérarchies des fichiers sources 
 Pour une bonne modularité, il est fortement conseillé d'organiser les fichiers selon une architecture classique : un fichier maître et un ou plusieurs fichiers esclaves.  
 
-Le fichier maître contiendra par exemple les packages supplémentaires à utiliser, la géométrie, le thème à appliquer et les métadonnées communes. En outre le système offre aussi la possibilité d'utiliser un préambule dans les fichiers esclaves pour rendre leurs compilation individuelle possible tout en allant chercher les paramètres de configuration dans le fichier maître. Dans ce cas d'usage, une classe spéciale doit être utilisée dans le fichier esclave : `cpgesubdoc`. 
+Le fichier maître contiendra par exemple les packages supplémentaires à utiliser, la géométrie, le thème à appliquer et les métadonnées communes. En outre le système offre aussi la possibilité d'utiliser un préambule dans les fichiers esclaves pour rendre leur compilation individuelle possible tout en allant chercher les paramètres de configuration dans le fichier maître. Dans ce cas d'usage, une classe spéciale doit être utilisée dans le fichier esclave : `cpgesubdoc`. 
 
 > **Le système !**
 >
-> Oui, il y a un «système» dont  `cpgedev` n'est qu'une partie. Il porte le nom `cpgekit`. Il prétend couvrir tous les besoins spécifiques d'un enseignant de prépas en ce qui concerne la production de documentation. Cela va du polycopié de cours, aux fiches de colles et même au quiz.  
+> Oui, il y a un «système» dont  `cpgedev` n'est qu'une partie. Il porte le nom `cpgekit`. Il prétend couvrir tous les besoins spécifiques d'un enseignant de prépas en ce qui concerne la production de documentation. Cela va du polycopié de cours, aux fiches de colles et même aux quiz, en passant par les séries d'exercices et les devoirs.  
 
 ### Fichier maître 
 Le fichier maître doit commencer par l'instruction 
@@ -281,26 +329,35 @@ Le fichier maître doit commencer par l'instruction
 	<options>
 ]{cpgedev}
 ```
-qui s'occupera d'initialiser toute l'infrastructure nécessaire ainsi les packages usuels pour les documents  mathématiques. 
+qui s'occupera d'initialiser toute l'infrastructure nécessaire ainsi que les packages usuels pour les documents  mathématiques. 
 Les options intéressantes sont celles déjà mentionnées `solution` et `solution*` auxquelles s'ajoutent :
 - `score` : active la prise en compte du barème et son insertion dans le PDF ;
-- `draft` : active le mode brouillon. Active une géométrie spéciale, désactive le thème et les liens hypertextes pour accélérer la compilation. Pour un meilleur contrôle visuel du travail de rédaction, les solutions sont aussi insérées sur place quelque soit le mode de rendu des solutions. Ce mode évite aussi de détruire la synchronisation entre source TeX et document PDF. 
+- `draft` : active le mode brouillon. Utilise une géométrie spéciale et désactive le thème et les liens hypertextes pour accélérer la compilation. Pour un meilleur contrôle visuel du travail de rédaction, les solutions sont aussi insérées sur place quelque soit le mode de rendu des solutions. Ce mode évite aussi de détruire la synchronisation entre source TeX et document PDF. 
 - `compact` : pour forcer l'adoption des conventions du mode compact normalement réservé aux cas où la largeur de texte est réduite (petits écrans ou multi-colonnes) ;
-- `serie` : mode spécial qui permet de réduire les espaces verticaux autour des intitulés des sujets et qui convient mieux à une série d'exercices. 
+- `serie` : mode spécial qui permet de réduire les espaces verticaux autour des intitulés des sujets et qui convient mieux à une série d'exercices.
+ 
 Toutes les options de la classe LaTeX standard `book` sont aussi utilisables. 
 
-> **Fonctionnalité essentielle**
+> **Synchronisation : fonctionnalité essentielle**
 >
 > La synchronisation entre source et PDF est devenue une fonctionnalité indispensable des éditeurs LaTeX modernes. Elle permet de cliquer quelque part dans le PDF pour être ramenée à la ligne correspondante dans le fichier source TeX.  Cette fonctionnalité est incompatible avec les techniques qui  générent dynamiquement des fichiers sources pour les inclure plus tard. Dans ce cas ce sera le fichier temporaire qui sera chargé dans l'éditeur et non le code original qui correspond au lieu du clic. L'option `draft` permet de remédier à ce problème en phase de rédaction. 
 
 Ensuite, dans le corps du fichier maître, pour charger un fichier esclave il faut utiliser une instruction de la forme 
-`\cpgeinclude[<options>]{<chemin vers un fichier esclave>}` 
+```latex
+\cpgeinclude[<options>]{<chemin vers un fichier esclave>}
+``` 
 une instruction par fichier esclave à charger. Les options intéressantes sont les suivantes :
-- `solution` : agit comme l'option globale `solution` de la classe `cpgedev` mais pour le fichier esclave à charger. Il est donc possible d'activer les solutions pour certains fichiers esclaves et pas pour d'autres. Si au contraire on veut les désactiver pour un fichier esclave alors qu'elles sont activées par la classe, il faut utiliser `solution=false`.  
-- `solution*` joue le même rôle par rapport à l'option globale `solution*`. 
-- `solution file=<chemin vers un autre fichier>` permet d'indiquer un  fichier alternatif  contenant les solutions des sujets figurant dans le fichier en cours de chargement. 
+- `solution` : agit comme l'option globale `solution` de la classe `cpgedev` mais pour le fichier esclave à charger. Il est donc possible d'activer les solutions pour certains fichiers esclaves et pas pour d'autres. Si au contraire on veut les désactiver pour un fichier esclave alors qu'elles sont activées par la classe, il faut utiliser l'option `solution=false`.  
+- `solution*` joue le même rôle que l'option globale `solution*`. 
+- `solution file=<chemin vers un autre fichier>` permet d'indiquer un  fichier alternatif  contenant les solutions des sujets figurant dans le fichier en cours de chargement. Dispense d'ajouter une instruction d'inclusion pour le fichier des solutions. 
 - `before solution=<code LaTeX arbitraire>` permet de définir un code qui sera exécuté par la commande `\solutions` avant l'insertion effective des corrigés. Une valeur plausible serait `\clearpage` pour provoquer un saut de page. 
-- `corrige={<options à passer à {corrige}>}` définit des options communes qui seront passées à tous les environnements `{corrige}` dans le fichier esclave. Ces options seront exécutées avant celles qui seront passées explicitement à `{corrige}` dans ce fichier. 
+- `corrige={<options à passer à {corrige}>}` définit des options communes qui seront passées à tous les environnements `{corrige}` dans le fichier esclave. Ces options seront exécutées avant celles qui seront passées explicitement à `{corrige}`. 
+
+Il est aussi possible avec une seule instruction `\cpgeinclude` d'inclure un fichier des énoncés et le fichier des solutions associé. Par exemple si l'instruction est 
+```latex
+\cpgeinclude{<chemin>/xens2019mpa} 
+```
+alors la commande commencera par chercher dans le dossier `<chemin>`  s'il y a un ficher nommé `xens2019mpa-eno.tex`, si oui elle le charge. Elle cherche ensuite un fichier `<chemin>/xens2019mpa-cor.tex` pour le charger. Dans le cas contraire elle cherche le fichier `<chemin>/xens2019mpa.tex`. 
 
 ### Fichiers esclaves 
 Maintenant, comme mentionné auparavant, un fichier esclave peut contenir lui même un préambule. Rappelons que la commande standard `\include` ne permet pas de le faire. Cela rend possible la compilation d'un fichier esclave tout en appliquant les options de configuration du fichier maître. Les fichiers esclaves doivent utiliser une classe spéciale avec une instruction de la forme 
@@ -336,8 +393,9 @@ Il s'agit des informations qui seront utilisées dans différentes parties du do
 - `\Auteur` auteur du corrigé ;
 - `\Email` émail de l'auteur du corrigé ;
 - `\Website` site web de l'auteur ;
-- `\Preuateur` le texte qui précède le nom de l'auteur (valeur par défaut «Rédigé par»)
-Ces commandes ne produisent rien dans le document final. Le contenu qu'elles reçoivent est par contre utilisable sur différentes parties du document. Leurs noms commencent par une majuscule mais leur contenu est accessible dans ces différents contextes grâce à ces mêmes noms sans majuscule et encadrés par deux caractères `|` (comme les raccourcis pour les numérotations).  Elles peuvent être insérées dans le préambule du fichier maître ou bien au début de son corps (après `\begin{document}`). Leurs contenus est ensuite disponible pour tous les fichiers inclus. Ce contenu sera écrasé par une éventuelle nouvelle utilisation dans le corps de ces fichiers.  
+- `\Preuateur` le texte qui précède le nom de l'auteur (valeur par défaut «Rédigé par»).
+
+Ces commandes ne produisent rien dans le document final. Le contenu qu'elles reçoivent est par contre utilisable sur différentes parties du document. Leurs noms commencent par une majuscule mais leur contenu est accessible dans ces différents contextes grâce à ces mêmes noms sans majuscule et encadrés par deux caractères `|` (comme les raccourcis pour les numérotations).  Elles peuvent être insérées dans le préambule du fichier maître ou bien au début de son corps (après `\begin{document}`). Leurs contenus est ensuite disponible pour tous les fichiers inclus. Ce contenu sera écrasé par une éventuelle nouvelle utilisation dans le corps des fichiers esclaves.  
 
 > **Court-circuit !**
 >
@@ -345,7 +403,8 @@ Ces commandes ne produisent rien dans le document final. Le contenu qu'elles re�
 
 ### Thème et géométrie 
 Le format du document à produire peut être réglé par la commande `\cpgegeometry`. Un thème peut être activé avec la commande `\cpgetheme`. Les deux commandes doivent figurer dans le préambule du fichier maître. De préférence immédiatement après `\documentclass`. 
-`\cpgegeometry` prend un seul argument : le nom interne de la géométrie. Les noms utilisables sont :
+
+La commande `\cpgegeometry` prend un seul argument : le nom interne de la géométrie. Les noms utilisables sont :
 - `print` : format A4 en mode portrait ;
 - `2print` format A4 en mode portrait mais en 2 colonnes ;
 - `lsprint` format A4 en mode paysage et en 2 colonnes ;
@@ -353,7 +412,7 @@ Le format du document à produire peut être réglé par la commande `\cpgegeome
 - `phone` format pour smartphones aux proportions 19x6 (Apple);
 - `altphone` format alternatif pour smartphones aux proportions 19x9 (Samsung).
 
-`\cpgetheme` n'est pas indispensable. En cas de son absence le thème par défaut est utilisé. Elle prend un seul argument obligatoire qui est le nom du thème. Le thème courant s'appelle `curve`.  Il est assez exigeant en terme de ressources pour compilation. De préférence utiliser le mode `draft` pour les compilations intermédiaires. Elle s'utilise sous la forme
+La commande `\cpgetheme` n'est pas indispensable. En cas de son absence le thème par défaut est utilisé. Elle prend un seul argument obligatoire qui est le nom du thème. Le thème courant s'appelle `curve`.  Il est assez exigeant en terme de ressources pour la compilation. De préférence utiliser le mode `draft` pour les compilations intermédiaires. Elle s'utilise sous la forme
 `\cpgetheme{curve}` 
 
 > **Quid de la couleur**
@@ -361,17 +420,16 @@ Le format du document à produire peut être réglé par la commande `\cpgegeome
 > Le thème règle le style pour la page de garde, les décorations pour les zones d'entête et de pieds de page, les décorations des intitulés des sujets et de leurs parties ainsi que les décorations des numérotations.  
 > Il est en outre possible, en option, d'associer différentes palettes de couleurs à un même thème  avec une instruction de la forme 
 > `\cpgetheme[palette=nord]{curve}` 
-> Ce qui activera la palette de nom `nord`. Les autres palettes utilisables sont `gruv`, `material`, `forest` et `cosmic`. Chaque palette supporte un mode sombre et un mode clair. Le mode sombre n'est activé que pour les formats smartphones. On peut le l'activer ou le désactiver en ajoutant respectivement l'option `dark` ou  `dark=false` à la commande `\cpgetheme`. 
+> Ce qui activera la palette de nom `nord`. Les autres palettes utilisables sont `gruv`, `material`, `forest` et `cosmic`. Chaque palette supporte un mode sombre et un mode clair. Le mode sombre n'est activé que pour les formats smartphones. On peut l'activer ou le désactiver en ajoutant respectivement l'option `dark` ou  `dark=false`. Cette option n'a pas d'effet quand l'une des géométries pour impression est utilisée.  
 
 ### Titre du document
-De base, la commande `\titre`  s'occupe de la formation du titre du document, qu'il s'agisse d'un devoir unique ou d'un document long composé de plusieurs devoirs. Son contenu est alimenté par les métadonnées collectées par  les commandes de métadonnées précédentes.  Elle est souple et permet de personnaliser le titre selon les besoins. Elle produitune page de garde pour les documents à destination des écrans et une simple zone de titre pour les devoirs à imprimer. 
+De base, la commande `\titre`  s'occupe de la formation du titre du document, qu'il s'agisse d'un devoir unique ou d'un document long composé de plusieurs devoirs. Son contenu est alimenté par les métadonnées collectées par  les commandes de métadonnées précédentes.  Elle est souple et permet de personnaliser le titre selon les besoins. Elle produit une page de garde pour les documents à destination des écrans et une simple zone de titre pour les devoirs à imprimer. 
 Le contenu qu'elle produit par défaut est prédéfini dans les fichiers styles mais il peut être personnalisé en utilisant les raccourcis des métadonnées. Elle se désactive elle même une fois utilisée et ne peut donc être utilisée qu'une seule fois dans un document (comme la commande standard `\maketitle`). Pour personnaliser le contenu qu'elle produit il suffit de fournir une description de celui-ci entre parenthèses (un argument optionnel donc).   
 **Exemple :** `\titre(|document| |theme| |periode| |duree|)` 
 
 > **Pas que les raccourcis**
 >
-> Tout code LaTeX valide  sera exécuté de façon normale. Ce qui permet de personnaliser un peu plus le titre.  
-> Les fichiers styles des thèmes peuvent redéfinir le contenu par défaut du titre de document. 
+> Tout code LaTeX valide  sera exécuté de façon normale. Ce qui permet de personnaliser un peu plus le titre.  Les fichiers styles des thèmes peuvent aussi redéfinir le contenu par défaut du titre. 
 
 ### Entête et pieds de pages 
 Deux commandes spéciales sont disponibles pour changer le contenu de l'entête et pied de page du document : `\cpgesethead` et `\cpgesetfoot`. Par exemple 
@@ -381,15 +439,17 @@ Deux commandes spéciales sont disponibles pour changer le contenu de l'entête 
 ``` 
 définira le contenu des trois champs (gauche, centre et droite) dans l'entête et le pieds de page. 
 
-## Divisions d'un devoir 
+## Divisions du document
 
-Un devoir peut être composée d'un ou plusieurs sujets (exercices ou problèmes) et chaque sujet peut être lui même subdivisé en plusieurs parties. Pour refléter cette structure, les commandes de sections LaTeX ont été complètement réécrites avec une hiérarchie plus adaptée mais en conservant toutes les fonctionnalités attendues (table des matières, bookmarks PDF, références croisées...). 
-- `\devoir` : la plus haute division dans un devoir. Elle joue le même rôle que la commande `\chapter` dans les classes standards `book` et `report`;
+Un document peut comporter plusieurs devoirs.
+Chaque devoir peut être composée d'un ou plusieurs sujets (exercices ou problèmes) et chaque sujet peut être lui même subdivisé en plusieurs parties. Pour refléter cette structure, les commandes de sections LaTeX ont été complètement réécrites avec une hiérarchie plus adaptée mais en conservant toutes les fonctionnalités attendues (table des matières, bookmarks PDF, références croisées...). 
+- `\devoir` : la plus haute division dans un devoir. Elle joue le même rôle que la commande `\chapter` dans la classe standard `book`. En particulier elle exécute une commande `\cleardoubpage` pour que le devoir commence toujours dans une page de droite;  
 - `\section` : unité qui va regrouper plusieurs sujets qui ont un thème commun ;
 - `{probleme}` et `{exercice}` des environnements qui encapsulent le contenu d'un sujet tout en produisant un titre (qui sera inclus dans la table des matières) ;
 - `\parti` titre d'une partie dans un sujet ; 
 - `\partii` titre d'une sous-partie d'une partie.
-Les commandes `\section`, `\parti` et `\partii` ont la même syntaxe que les commandes de sectionnement standard de LaTeX. Par contre `\devoir` et `{probleme}/{exercice}`  offrent plus de fonctionnalités. 
+
+Les commandes `\section`, `\parti` et `\partii` ont exactement la même syntaxe que les commandes de sectionnement standards de LaTeX. Par contre `\devoir` et `{probleme}`/`{exercice}`  offrent plus de fonctionnalités. 
 
 > **Fruits interdits !**
 >
@@ -407,7 +467,7 @@ Elle provoque un saut de page et elle est capable d'utiliser certaines métadonn
 ```
 - `<label du devoir>` : comme «Devoir libre» ou «Série d'exercices» ;
 - `[<titre court optionnel>]` : intitulé court qui sera utilisé dans la table des matières et dans les entêtes dans le cas ou le titre original est trop long.
-- `(<titre long optionnel>)` :  le titr[solution]e tel qu'il apparaîtra au début du document ;
+- `(<titre long optionnel>)` :  le titre tel qu'il apparaîtra au début du document ;
 - `<label>` sera passé à la commande `\label` pour placer une référence. 
 
 Les options acceptées par l'agrégateur `\op` sont les suivantes :
@@ -432,7 +492,7 @@ Les sujets utilisent des environnements et non des commandes LaTeX mais entre au
 ```
 Tous les paramètres ont la même signification que pour la commande `\devoir` sauf pour le paramètre `{<id>}` qui sert ici à coupler l'énoncé à son corrigé. La liste des options aussi n'est pas la même :
 - `solution` et `solution*` : permettent d'activer ou de désactiver les solutions pour le sujet indépendamment du contexte global ;
-- `score` : active le calcul du barème pour le sujet et son affichage avec le titre ;
+- `score` : active le calcul du barème pour le sujet (l'option `score` de la classe active le calcul du barème global du devoir);
 - `origin=<origine>` : renseigne la métadonnée «origine» du sujet ;
 - `before title=<code>` exécute le code `<code>` avant la formation du titre. `<code>` peut utiliser les raccourcis des métadonnées ;
 - `after title=<code>` la même chose mais le code est exécuté après la formation du titre.

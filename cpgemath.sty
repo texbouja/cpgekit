@@ -203,6 +203,7 @@
 	P/.code	= \def\Psymb{{#1}},
 	E/.code	= \def\Esymb{{#1}},
 	V/.code	= \def\Vsymb{{#1}},
+	Cov/.code = \def\COVsymb{{#1}},
 	O/.code	= \def\Osymb{{#1}},
 	o/.code	= \def\osymb{{#1}},
 	Cl/.code= \def\Clsymb{{#1}},
@@ -239,7 +240,8 @@
 	L=\mathcal L,
 	P=\mathbf P,
 	E=\mathbf E,
-	V=\mathbf V,	
+	V=\mathbf V,
+	Cov=\mathbf{Cov},	
 	O=\mathcal O,
 	o=\mathrm o,
 	Cl=\mathscr C,
@@ -290,7 +292,7 @@
 		{\IfValueTF{#2}{\rtrans[#2]{#3}}{\rtrans{#3}}}
 		{\IfValueTF{#2}{\ltrans[#2]{#3}}{\ltrans{#3}}}
 }
-\def\grad{\opn{\vnabla}}
+\def\grad{\vnabla}
 \NewDocumentCommand\B{O{B}}{\mathcal #1}
 \NewDocumentCommand\Id{o}{\IfValueTf{#1}{\opn{id}_{#1}}{\opn{id}}}
 \NewDocumentCommand\diag{sm}{%
@@ -2865,6 +2867,10 @@
 	{\IfValueTF{#1}{\opn{\Vsymb}\xsubsup[h=4,b=-3]_{#1}}{\opn{\Vsymb}}}
 	{##1}
 	{}
+\XDeclareDelimiters\xCov{}
+	{\opn{\COVsymb}}
+	{##1}
+	{}
 \XDeclareDelimiters\xgo{e{_}}
 	{\IfValueTF{#1}{\opn{\Osymb}_{#1}}{\opn{\Osymb}}}
 	{##1}
@@ -3032,6 +3038,7 @@
 \def\cotanh{\qopname\relax o{cotanh}}
 \def\det{\qopname\relax o{det}} % indice/exposant normaux
 \def\Es{\qopname\relax o{\Esymb}}
+\def\Cov{\qopname\relax o{\COVsymb}}
 \def\im{\qopname\relax o{Im}}
 \def\ker{\qopname\relax o{Ker}}
 \def\pgcd{\qopname\relax m{pgcd}}
@@ -3170,7 +3177,7 @@
 \def\cpge@Func@[#1]#2#3#4#5#6{%
 	\begingroup%
 		\@ifempty{#2}
-			{\def\ar@opt{c}}
+			{\def\ar@opt{t}}
 			{\def\ar@opt{t}#2\::\:}%
 	\begin{array}[\ar@opt]{#1}
 		#3&\longrightarrow& #4\\ 

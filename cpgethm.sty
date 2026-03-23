@@ -320,6 +320,17 @@
     	{\protect\numberline{\thetcbcounter}#2~:~#3}},%
 	titled items
 }
+\NewTColorBox[no counter]{genthm*}{ m E{\op}{{}} d()}{%
+	set theorem prop={@theotype=other},
+	thmcol=cpgeneutral,
+	theorem name,
+	prestyle={#2},
+	localstyle={#2}, 
+	other style,
+	IfValueT={#1}{title={#1~}},
+	IfValueT={#3}{description path={#3}},
+	titled items
+}
 	
 %%%%%%%% Tables des théorèmes 
 \def\cpge@tcb@theo@title#1#2{%
@@ -697,22 +708,28 @@
 	{exercice}
 	{de l'}
 	{exercise}
-	{titled items}
+	{titled items, with solution}
 \cpgenewtheorem[use counter from=exer]{exerappli}
 	{Exercice d'application}
 	{exercice}
 	{de l'}
 	{exercise}
-	{titled items}
+	{titled items, with solution}
 \cpgenewtheorem[use counter from=exer]{exerappro}
 	{Exercice d'approfondissement}
 	{exercice}
 	{de l'}
 	{exercise}
-	{titled items}
+	{titled items, with solution}
 \cpgenewtheorem[use counter from=exer]{prob}
 	{Problème}
 	{problème}
 	{du\space}
 	{exercise}
-	{titled items}
+	{titled items, with solution}
+\cpgenewtheorem[use counter from=exer]{acti}
+	{Activité}
+	{activité}
+	{de l'}
+	{exercise}
+	{titled items, with solution}

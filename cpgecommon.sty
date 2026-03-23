@@ -812,6 +812,7 @@
 \acro@@				{var}{variable al\'eatoire r\'eelle}
 \acro@@				{vad}{variable al\'eatoire discrète}
 \acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
+\acro@@				{iid}{ind\'ependantes et identiquement distribu\'ees}
 \acro@@				{eaf}{\'egalit\'e des accroissements finis}
 \acro@@				{iaf}{in\'egalit\'e des accroissements finis}
 \acro@@				{ics}{in\'egalit\'e de Cauchy-Schwarz}
@@ -830,6 +831,8 @@
 \acro@@				{tvi}{th\'eor\`eme des valeurs int\'erm\'ediaires}
 \acro@@				{ticc}{th\'eor\`eme de l'image continue d'un compact}
 \acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
+\acro@@				{edl}{équation différentielle linéaire}
+\acro@@				{sfs}{système fondamental de solutions}
 
 
 \RequirePackage{xspace}
@@ -849,6 +852,7 @@
 \def\var{\ac{var}\xspace}
 \def\vad{\ac{vad}\xspace}
 \def\vadr{\ac{vadr}\xspace}
+\def\iid{\ac{iid}\xspace}
 
 \ifweb\expandafter\endinput\fi
 
@@ -1022,6 +1026,7 @@
 			littlemargin=4.5pc
 		},
 	book/.code=%
+		\printtrue%
 		\darkfalse%
 		\compactfalse%
 		\geometry{%
@@ -1031,6 +1036,7 @@
 			littlemargin=6pc
 		}, 
 	altbook/.code=%
+		\printtrue%
 		\darkfalse%
 		\compactfalse%
 		\geometry{%
