@@ -1402,7 +1402,7 @@
 	\ifblank{#1}{\relax}
 				 {\csuse{deco@lrmargin}{#1}}%
 	}
-\cpgesetdeco{lrmargin}{\textbf{#1.}} 
+\cpgesetdeco{lrmargin}{\textbf{#1}} 
 
 \dimdef\lrmarginleft{\z@}
 \dimdef\lrmarginright{\z@}
@@ -1413,12 +1413,15 @@
    rm/.style={right margin=#1},
 	font/.code=\def\mini@font{#1},
 	label font/.code=\def\mini@label@font{#1\vphantom{(}},
-	deco/.code=\cpgesetdeco{lrmargin}{\mini@label@font#1},
+   punct/.code=\def\mini@punct{#1},
+	deco/.code=\cpgesetdeco{lrmargin}{\mini@label@font#1\mini@punct},
 }
+% \def\mini@punct{.}
 \cpgesetup[mini]{%
 	font=\sffamily\small,
 	label font=\sffamily\small\scshape\bfseries,
-	deco/.initial={#1.}
+   punct=.,
+	deco={#1}
 	}
 \NewDocumentEnvironment{mini}{O{}m d()}{%
 		\cpgesetup[mini]{#1}%

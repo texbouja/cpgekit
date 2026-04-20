@@ -1431,7 +1431,7 @@
 	\cpgefilesave{solhandle}%
 }
 \NewDocumentCommand\draft@write{o}{%
-	\slshape%
+	% \slshape%
 	\csdef{endsolution*}{\aftergroup\par}%
 }
 \NewDocumentCommand\real@write{!o}{%
@@ -1839,13 +1839,13 @@
 %%% environnement mini
 \ifdraft
 \cpgesetup[mini]{%
-	deco=#1.\kern1ex
+	deco=#1
 }
 \else
 \def\miniarrow#1{\textcolor{#1}{\xaltarrow}}
 \cpgesetup[mini]{%
 	deco=\llap{\miniarrow{cpgeneutral}}%
-		\textcolor{cpgeneutral}{#1.}\kern1ex%
+		\textcolor{cpgeneutral}{#1\mini@punct}\kern1ex%
 }
 \fi
 
