@@ -57,7 +57,7 @@
 		\ifdefempty\cpge@centre{}{%
 		\node (centre) at (cpge.south east) [anchor=west, text=classcol, font=\bfseries] 
 			{\kern.25pc\resizebox{.54\textwidth}{!}{\cpge@centre@format}};}
-		\ifundef\cpge@ville{}{
+		\ifdefempty\cpge@ville{}{
 			\node at ([yshift=-8pt]centre.south east) [anchor=east, text=mainfour, font=\bfseries] 
 			{\resizebox{.1\textwidth}{!}{\cpge@ville@format}} ;}
 		\iflandscape
@@ -204,8 +204,9 @@
 			\sffamily\scshape\bfseries\small%
 			\color{titlestrokecol}%
 			%{\smaller\slshape cpge}\color{classcol}\ 
-			\csuse{cpge@centre@format}\\[-.25\baselineskip]%
-			\color{titlestrokecol}\smaller\slshape\footnotesize\csuse{cpge@ville@format}%
+			\ifdefempty{\cpge@ville@format}{}
+			{\csuse{cpge@centre@format}\\[-.25\baselineskip]%
+			\color{titlestrokecol}\smaller\slshape\footnotesize\csuse{cpge@ville@format}}%
 		\color@endgroup%
 	}%
 \def\curve@foot{%

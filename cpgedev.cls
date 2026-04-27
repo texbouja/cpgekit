@@ -615,20 +615,39 @@
 
 %%% Variantes de \parti et \partii pour ecrire en plus
 %%% les titres dans le fichier de corrigé
-\NewDocumentCommand\wparti{om}{
-    \unless\ifstraight
-        \cpgeprotected@iwrite\solhandle@file{}
-            {\string\parti\IfValueT{#1}{[#1]}{#2}}
-    \fi
-    \IfValueTF{#1}{\parti[#1]{#2}}{\parti{#2}}
+\NewDocumentCommand\wparti{som}{%
+    \unless\ifstraight%
+		\IfBooleanTF{#1}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\parti*{#3}}}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\parti\IfValueT{#2}{[#2]}{#3}}}%
+			
+    \fi%
+	\IfBooleanTF{#1}
+    	{\parti*{#3}}
+		{\IfValueTF{#2}{\parti[#2]{#3}}{\parti{#3}}}%
 }
-\NewDocumentCommand\wpartii{om}{
-    \unless\ifstraight
-        \cpgeprotected@iwrite\solhandle@file{}
-            {\string\partii\IfValueT{#1}{[#1]}{#2}}
-    \fi
-    \IfValueTF{#1}{\partii[#1]{#2}}{\partii{#2}}
+\NewDocumentCommand\wpartii{som}{%
+    \unless\ifstraight%
+		\IfBooleanTF{#1}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\partii*{#3}}}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\partii\IfValueT{#2}{[#2]}{#3}}}%
+			
+    \fi%
+	\IfBooleanTF{#1}
+    	{\partii*{#3}}
+		{\IfValueTF{#2}{\partii[#2]{#3}}{\partii{#3}}}%
 }
+% \NewDocumentCommand\wpartii{om}{
+%     \unless\ifstraight
+%         \cpgeprotected@iwrite\solhandle@file{}
+%             {\string\partii\IfValueT{#1}{[#1]}{#2}}
+%     \fi
+%     \IfValueTF{#1}{\partii[#1]{#2}}{\partii{#2}}
+% }
 \NewDocumentCommand\wbigques{om}{%
     \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
@@ -813,7 +832,7 @@
 	title deco/.code=\cpgesetdeco{problem}{#1},
 	label deco/.code=\cpgesetdeco{problemlabel}{#1},
 	corrige/.code=\appto\cor@curropts{,#1}, 
-	origin/.code=\Origine{#1}\appto\cor@curropts{,origin=#1},
+	origine/.code=\Origine{#1}\appto\cor@curropts{,origine=#1},
 }
 \cpgesetup[solution]{
 	nonumber/.is if=nonumber,
@@ -828,7 +847,7 @@
 		 \@xp{\title@contents},
 	questions list/.store in=\queslist,
 	auteur/.code=\Auteur{#1},
-	origin/.code=\Origine{#1},
+	origine/.code=\Origine{#1},
 	.unknown/.code={},
 }
 \def\noqueslistmessage{%
