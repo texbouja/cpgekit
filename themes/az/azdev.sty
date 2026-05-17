@@ -1,0 +1,330 @@
+%%%%% chargement de package, définition de couleurs, chargement de police,...
+\RequirePackage{azcommon}
+%\ifprint\nocolorstrue\fi 
+
+%%%% Les boites pour les quiz 
+\ifquiz
+\cpgeloadpackage[skins]{tcolorbox}
+\cpgesetuptcb{%
+	only top and bottom rules/.style={}
+}
+\cpgesetuptcb{box@sep/.code=%
+	\ifdim\Gm@littlemargin>\z@\relax%
+		\pgfkeysalso{left=.4\Gm@littlemargin, right=.2\Gm@littlemargin}
+	\else
+		\pgfkeysalso{left=#1, right=#1}
+	\fi}
+\cpgesetuptcb{generic box/.style={% 
+	arc=6pt,
+	boxrule=.4pt, toprule=1pt, bottomrule=1pt,
+	box@sep=3pt, 
+	top=8pt, bottom=8pt,
+	toptitle=3pt, bottomtitle=3pt,
+	fonttitle=\sffamily\scshape\bfseries,
+}}
+\cpgesetuptcb{quiz body/.style={
+	arc=6pt, sharp corners=north,
+	boxsep=0pt, left=3pt, right=3pt,
+	boxrule=.4pt, bottomrule=1.4pt,
+	colback=backcol, coltext=textcol, colframe=backcol
+}}
+\cpgesetdeco{quiz}{%
+	\boxedenv[%
+			arc=10pt, sharp corners=south, boxrule=0pt, 
+			boxsep=0pt, left=8pt, right=8pt, top=2pt, bottom=2pt,  
+			colback=backcol, coltext=white
+		]
+	 #1
+	\endboxedenv%
+}
+\cpgesetdeco{choice}{%
+	\tikz[baseline=(T.base)]\node (T) 
+				[inner sep=0pt, 
+				rounded corners=3pt,
+				fill=none, draw=backcol, text=textcol
+		]{#1};%
+	}
+\cpgesetdeco{solchoice}{%
+	\tikz[baseline=(T.base)]\node (T) 
+				[inner sep=2pt, 
+				line width=0pt, rounded corners=2pt,
+				fill=strokecol, text=white
+				]{#1};%
+	}
+
+\cpgesetuptcb{student infos/.style={toprule=1pt, bottomrule=1pt}}
+
+\cpgesetdeco{unite}{%
+	\hfill
+	\genboxcmd[boxrule=.4pt, boxsep=1.5pt, arc=5pt, left=3pt, right=3pt, colback=strokecol, colframe=white, coltext=white]
+		{\sffamily\footnotesize #1 \name@unity}%
+	}
+\DeclareDocumentCommand\genboxcmd{O{} m}{%
+	\tcbox[reset,on line, size=fbox, colback=backcol, coltext=frametextcol, colframe=framestrokecol, #1]{#2}%
+}
+\DeclareDocumentCommand\minimal@deco{O{}m}{%
+		\genboxcmd[%
+			tcbox raise=-1pt,
+			fontupper=\sffamily,
+			arc=2pt,
+			boxsep=0pt, boxrule=0pt,
+			tcbox width = minimum center, width=2em,
+			top=2pt, bottom=2pt, right=3pt, left=3pt,  
+			#1
+		]
+		{#2\vphantom{15}}%
+	}
+\DeclareDocumentCommand\longminimal@deco{O{}m}{%
+		\genboxcmd[%
+			tcbox raise=.1ex,
+			fontupper=\sffamily,
+			arc=4.5pt, sharp corners=west,
+			boxsep=0pt, boxrule=0pt,
+			tcbox width = minimum left, width = 2.8em,
+			top=2pt, bottom=2pt, right=2pt, left=6pt,
+			#1
+		]
+		{#2\vphantom{9}}%
+	}
+\DeclareDocumentCommand\arctop@deco{O{}m}{%
+	\ifblank{#2}{}{%
+		\genboxcmd[%
+				fontupper=\sffamily,
+				arc=10pt, sharp corners=south,
+				boxsep=0pt, boxrule=0pt,
+				width = 3.5cm, tcbox width = minimum center, 
+				top=2pt, bottom=2pt, left =1pc, right=1pc,
+				#1
+			]{{\vphantom{)}#2}}
+	}%
+}
+\DeclareDocumentCommand\bigtext@deco{O{}m}{%
+	\genboxcmd[%
+			fontupper=\sffamily,
+			arc=4pt, %sharp corners=west,
+			boxsep=0pt, boxrule=0pt,
+			top=2pt, bottom=2pt, 
+			right=5pt, left=5pt,
+			width=4em, tcbox width=minimum center,
+			#1
+		]{\vphantom{)}#2}
+	} 
+\fi
+
+%%%%%% Décoration des theoremes selon cpgedev
+\cpgesetup[theorem]{
+	frame style={
+		azline,
+		fill=framebackcol,
+		draw=framestrokecol,
+		text=frametextcol,
+	},
+	inner xsep=10pt,
+	inner ysep=5pt,
+	title sep=5pt,
+	title style={
+		draw=framestrokecol, 
+		fill=pagecol, 
+		text=frametextcol,
+		inner xsep=2pc,
+		inner xsep=\z@,
+		trapezium,
+		trapezium left angle=120, 
+		trapezium right angle=60,
+		font=\HeadingFont\smaller\strut
+		},
+	% title overlay={\draw [framestrokecol, rounded corners=6pt] (title.east) |- (title.south west) -- (title.west);}
+}
+
+%%%% Styles des titres
+\titleformat{\part}[display]{}
+	{\tikz [overlay]\node at (.5\textwidth-\marginparwidth,.2\textheight) {\pgfuseimage{chart}};}
+	{\z@skip}
+	{\filleft\fontsize{48}{48}\HeadingFont\color{titletextcol}#1}
+	[{\tikz[overlay]\node  at (-\right@margin,-.4\paperheight) [anchor=east, opacity=.75] {\pgfuseimage{tree}};}]
+
+%% Devoir 
+\cpgetitle@shape{display}{devoir}[right][right]
+\def\deco@@devoir#1#2{%
+	\filleft%
+	\tikz 
+		\node  [
+			titletextcol,
+			text width=\textwidth-2.5cm, 
+			align=right,
+			inner sep=0pt,
+			font=\fontsize{24}{24}\HeadingFont,
+			]
+		{\filleft #1};\\
+	\tikz [remember picture] \node (T) [
+			cpgered,
+			text width=\textwidth-2.5cm, 
+			align=right,
+			inner sep=0pt,
+			font=\LARGE,
+		]{#2};%
+	\tikz [overlay, remember picture]
+		\draw [cpgered,  line width=12pt, line join=miter]
+			([yshift=-2.5cm]T.south west) -- ([yshift=-12pt]C.south) -- +(-6cm,-4cm)
+			([yshift=-2.5cm+6pt]T.south west) -- +(\paperwidth,1cm);%
+}
+\cpgesetdeco{@devoirlabelnumberless}{%
+	\tikz [overlay, remember picture] \node (C) at (30pt,0) [trapezium, trapezium left angle=120, trapezium right angle=60,
+				fill=none, 
+				draw=none,
+				inner xsep=1pc,
+				inner ysep=0pt,
+				align=center,
+				font=\fontsize{36}{36}\HeadingFont\strut,
+			]{\phantom{8}};
+}
+\def\deco@@devoirlabel#1#2{%
+	\begin{tikzpicture} [overlay, remember picture, baseline=(C.base)] 
+			\node (C) at (30pt,0) [trapezium, trapezium left angle=120, trapezium right angle=60,
+				fill=titletextcol, 
+				text=white,
+				inner xsep=1pc,
+				inner ysep=0pt,
+				align=center,
+				font=\fontsize{36}{36}\HeadingFont\strut,
+			]{#2};
+			\node [cpgered, font=\HeadingFont\relsize{-2}] at ([yshift=6pt] C.north) 
+				{\Large#1}; 
+	\end{tikzpicture}
+}
+\titlespacing*{\@devoir}{\z@}{-\head@height+1pc}{3.5cm}
+
+% Problèmes et exercices
+\def\deco@section#1{%
+		\color{cpgered}\label@section.}
+\def\TitlingFont{\scshape\lsstyle}
+\titleformat{\section}[hang]
+	{\HeadingFont\LARGE\color{titletextcol}}
+	{\deco@section\label@section}
+	{.5em}
+	{#1}
+\titleformat{name=\section,numberless}[hang]
+	{\HeadingFont\LARGE\color{titletextcol}}
+	{}
+	{\z@}
+	{ #1}
+\ifserie
+	\titlespacing*{\section}{\z@}{*4}{*2}
+\else
+	\titlespacing*{\section}{\z@}{*6}{*3}
+\fi 
+
+%%% Probleme
+\cpgetitle@shape{display}{problem}[right][right]
+%\cpge@format{\@problem}[display]
+\ifprint
+\tikzset{
+	collink/.code={%
+		\ifsolution
+			\tikzset{fill=linkbackcol!60, draw=textcol, text=textcol}
+		\else
+			\tikzset{fill=none, draw=textcol, text=textcol}
+		\fi}
+}
+\else 
+	\tikzset{
+		collink/.code={%
+			\ifsolution
+				\tikzset{top color=linkbackcol!90,bottom color=linkbackcol!60!black, draw=none}
+			\else
+				\tikzset{fill=none, draw=textcol, text=textcol}
+			\fi}
+	}
+\fi
+\cpgesetdeco{problemlabel}{%
+	\tikz  [remember picture, baseline=(S.base)] 
+		\node (S)  [
+			trapezium, 
+			trapezium left angle=60, 
+			trapezium right angle=90,
+			fill=cpgered, 
+			inner ysep=2pt,
+			text=white,
+			minimum width=2.6cm,
+			align=right,
+			font=\HeadingFont\relsize{-2},
+			anchor=center,
+		]{\vphantom{(}\MakeLowercase{#1}};
+		\tikz[overlay, remember picture] 
+		\draw [cpgered, {Z[height=6pt, gap=1pc]}-, line width=.8pt] 
+			([xshift=4pt]S.east) -- +(\columnwidth-2cm-2pc,0) ; 
+}
+% \cpgesetupsectiontitle{problem={fill=left}}
+\cpgesetdeco{problemlabelnumberless}{%
+	\tikz [overlay]
+	 \draw [cpgered, {Z[height=6pt, gap=1pc]}-, line width=.8pt] 
+			(0,0) -- +(\columnwidth,0) ; %
+}
+\cpgesetdeco{problem}{%
+	\ifblank{#1}
+		{\ifserie\\[\z@]\fi}%\vspace{-\baselineskip*\real{1.2}}}
+		{\HeadingFont\vspace*{-2.25ex}\ifserie\\\fi%
+			\hfill\parbox[t]{\columnwidth-2cm-2pc}{%
+				\color{titletextcol}\ifserie\large\fi\filleft #1}%
+			\vskip\z@%
+		}%
+}
+\titleformat{name=\problem,numberless}[display]
+	{\HeadingFont\Large\color{titletextcol}}
+	{\begin{tikzpicture}  [overlay] 
+		\draw [strokecolcol, line width=.6pt, rounded corners=16pt, line cap=round] 
+			(3.6cm,0) -| (\columnwidth+1.2pt,-32pt) ; 
+	\end{tikzpicture}
+	}
+	{\z@}
+	{\filleft #1}
+\cpgesetdeco{origin}{\mbox{}\\\smaller[2]\itshape\hfill#1\bigskip}
+\ifserie
+	\titlespacing*{\problem}{-2pc}{*1}{*-2}
+\else
+	\titlespacing*{\problem}{\z@}{*3}{*1}
+\fi 
+\titleformat{\parti}[hang]
+	{\HeadingFont\Large\color{titletextcol}}
+	{\begin{tikzpicture} [baseline=(S.base)] 
+		\node (S) [trapezium, trapezium left angle=90, trapezium right angle=60,
+				fill=cpgered, 
+			text=white,
+			align=left,
+			minimum width=2.4cm,
+			font=\relsize{-2},
+			% anchor=east,
+		]{\label@parti};
+	\end{tikzpicture}}
+	{3pt}
+	{\filright #1}
+
+\titleformat{name=\parti,numberless}[hang]
+	{\HeadingFont\large\color{titletextcol}}
+	{}
+	{\z@}
+	{#1}
+
+
+\cpgesetdeco{partiilabel}{%
+	\color{cpgered}\HeadingFont{#1\enskip:\enskip}}
+\cpgesetdeco{partii}{\textcolor{titletextcol}{#1}}
+\cpgesetdeco{quesscore}{\color{buttonstrokecol}#1\kern\p@\vrule\kern3\p@}
+
+\appto\endpreamble@hook{%
+	\unless\ifdraft\unless\ifprint%
+		\RenewDocumentCommand\listbox{O{}m}{%
+			\tikz [anchor=base, baseline, yshift=.25ex]  
+				\node [
+						font=\sffamily\footnotesize\bfseries\strut, 
+						trapezium, trapezium left angle=60, trapezium right angle=90,
+						inner xsep=4\p@, 
+						inner ysep=\z@,  
+						#1
+					] {#2};%
+		}
+	\fi\fi
+}
+%%% Page de garde et head/foot
+\endinput
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

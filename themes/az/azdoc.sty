@@ -1,0 +1,413 @@
+
+
+
+\RequirePackage{azcommon}
+% \cpgesetup{simple deco={%
+% 	% \shorthandoff{;}%
+% 	\tikz [anchor=base,baseline] 
+% 	\node [
+% 		draw=thmcol, 
+% 		text=thmcol, 
+% 		inner sep=1.4pt, 
+% 		minimum width=1.5em, 
+% 	] {#1};\ignorespaces%
+% }}
+% \cpgesetdeco{lrmargin}{\deco@simple{#1}}
+
+
+%%% Décorations pour les items
+\cpgesetdeco{discuss}{\textcolor{thmcol}{$\bullet\;$ \bfseries\boldmath #1}}
+\cpgesetdeco{enumi}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{enumii}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{enumiii}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{unite}{\TitlingFont\small\color{thmcol}#1.}
+\cpgesetdeco{unitetitle}{\textcolor{thmcol}{\sffamily\scshape#1~:~}}
+\cpgesetdeco{itemtitle}{\textcolor{thmcol}{\sffamily\scshape#1~:~}}
+
+%%%% Styles des theoremes (un pseudo-skin TColorbox)
+\cpgesetuptcb{%
+	primary box/.style={%
+		breakable,
+		lines before break=1,
+		height fixed for=first and middle,
+		title style if break,
+		fonttitle=\TitlingFont\small\vphantom{(},
+		%description font=\sffamily\scshape\footnotesize\vphantom{(},
+		colback=thmcol, coltext=textcol
+	},
+	secondary box/.style={%
+		blank,
+		notitle,
+		colback=buttonbackcol,
+		coltext=buttontextcol,
+		%no overlay, no underlay,
+	}
+}
+\newdimen\frm@margin
+\ifcompact
+	\frm@margin4pt
+\else
+	\frm@margin12pt
+\fi
+\tcbset{number deco/.style={
+	skin=enhanced,
+	on line,
+	size=small, 
+	colback=thmcol,
+	colframe=thmcol,
+	coltext=white,
+	fontupper=\bfseries\footnotesize,
+	arc=0pt,
+	boxrule=0pt,
+	boxsep=3pt,
+	left=10pt,
+	right=10pt,
+	frame style={azline=8pt, line width=4pt}
+}}
+\cpgesetuptcb{frame left margin/.code={\frm@margin=#1}}
+\cpgesetup{frame left margin/.forward to=/tcb/frame left margin}
+\tcbsubskin{thmaz}{empty}{%
+	coltitle=thmcol,
+	frame code={%
+		\ifdef\tcboxedtitlewidth
+			{\draw [{Circle}-{Circle}, azline, decorate, thmcol, line width=.8pt] 
+				(title.south east) |- 
+				([xshift=-4pt,yshift=2pt]title.north west) -- 
+				([xshift=-4pt,yshift=2pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, thmcol, line width=.8pt] 
+            	(frame.north east)  -| ([xshift=-4pt,yshift=2pt]frame.south west) ;}
+    },
+    skin first=thmazfirst,
+	skin middle=thmazmiddle,
+	skin last=thmazlast
+}
+\tcbsubskin{thmazfirst}{empty}{%
+	coltitle=thmcol,
+	frame code={%
+		\ifdef\tcboxedtitlewidth
+			{\draw [{Circle}-{Diamond}, azline, thmcol, line width=.8pt] 
+				(title.south east) |- 
+				([xshift=-4pt,yshift=2pt]title.north west) -- 
+				([xshift=-4pt,yshift=2pt]frame.south west) ;}
+        	{\draw [{Circle}-{Circle}, thmcol, line width=.8pt] 
+            	(frame.north east)  -| ([xshift=-4pt,yshift=2pt]frame.south west);}
+    },
+    skin first=thmazfirst,
+	skin middle=thmazmiddle,
+	skin last=thmazmiddle
+}
+\tcbsubskin{thmazmiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, azline, decorate, thmcol, line width=.8pt] 
+		([xshift=-4pt,yshift=2pt]frame.north west) -- 
+			([xshift=-4pt,yshift=2pt]frame.south west) ;
+	},
+    skin first=thmazmiddle,
+	skin middle=thmazmiddle,
+	skin last=thmazmiddle
+}
+\tcbsubskin{thmazlast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, azline, thmcol, line width=.8pt] 
+		([xshift=-4pt,yshift=2pt]frame.north west) -- ([xshift=-4pt,yshift=2pt]frame.south west) ;
+    },
+    skin first=thmazmiddle,
+	skin middle=thmazmiddle,
+	skin last=thmazlast,
+}
+
+
+%%%% Styles des remark
+\newdimen\retraittitre
+\ifdim\frm@margin>15pt\relax
+	\retraittitre\frm@margin
+\else
+	\retraittitre16pt
+\fi
+\tcbsubskin{rmkaz}{empty}{% 
+	frame code={%
+		\ifdef\tcboxedtitlewidth{
+			\draw [{Circle}-{Circle}, azline, thmcol, line width=.8pt] 
+				([xshift=-4pt]title.west) -| 
+				([xshift=-4pt]frame.south west) ;
+		}{
+        	\draw [{Circle}-{Circle}, azline, thmcol, line width=.8pt] 
+            	(frame.north east)  -| ([xshift=-4pt,yshift=2pt]frame.south west) ;
+		}
+    },
+    skin first=rmkazfirst,
+	skin middle=rmkazmiddle,
+	skin last=rmkazlast
+}
+\tcbsubskin{rmkazfirst}{empty}{%
+	frame code={%
+		\ifdef\tcboxedtitlewidth{
+			\draw [{Circle}-{Diamond}, azline, thmcol, line width=.8pt] 
+				([xshift=-4pt]title.west) -| 
+				([xshift=-4pt]frame.south west) ;
+		}{
+        	\draw [{Circle}-{Circle}, azline, decorate, thmcol, line width=.8pt] 
+            	(frame.north east)  -| ([xshift=-4pt]frame.south west) ;
+		}
+    },
+    skin first=rmkazfirst,
+	skin middle=rmkazmiddle,
+	skin last=rmkazmiddle
+}
+\tcbsubskin{rmkazlast}{empty}{
+    frame code={
+        \draw [{Diamond}-{Circle}, azline, thmcol, line width=.8pt] 
+		([xshift=-4pt]frame.north west) -- ([xshift=-4pt]frame.south west);
+    },
+    skin first=rmkazmiddle,
+	skin middle=rmkazmiddle,
+	skin last=rmkazlast,
+}
+\tcbsubskin{rmkazmiddle}{empty}{
+	frame code={
+        \draw [{Diamond}-{Diamond}, azline, thmcol, line width=.8pt] 
+		([xshift=-4pt]frame.north west) -- 
+			([xshift=-4pt]frame.south west) ;
+    },
+    skin first=rmkazmiddle,
+	skin middle=rmkazmiddle,
+	skin last=rmkazmiddle
+}
+\cpgesetuptcb{
+	description path style={%
+				fill = none,
+                draw = none,
+				},
+	description parenthesis,
+}
+\cpgesetuptcb{important/.style={%
+	thmcol = importantcol,
+	colframe=thmcol,
+	bottom= 10pt,
+	after skip=6pt, 
+	underlay unbroken and last	= {\node at (frame.south east) 
+		[text=thmcol, 
+		 font=\tiny\sffamily\scshape, 
+		 anchor=south east, 
+		 yshift=-1pt,
+		] 
+		{#1};},
+}}
+\cpgesetuptcb{demolink/.style={
+	arc=8pt,
+	arc is angular,
+	left=14pt, right=6pt,
+	sharp corners=west 
+}}
+\cpgesetuptcb{title style if break/.style={%%
+ 	title after break={\MakeLowercase{\kvtbc@titlewho}~(suite)},
+	lefttitle=3pt,
+	bottomrule=1pt,
+	extras title after break={
+		halign title=left,
+		font app={title}{%		
+			\fontsize{7}{7}\mdseries\itshape}
+		},
+ }}
+\cpgesetuptcb{%
+	azthm/.style={
+		skin=thmaz,
+		attach boxed title to top left,
+		boxed title style={blank, no underlay, boxsep=0pt, left=\frm@margin, right=\frm@margin, top=3pt},
+		boxsep=0pt,
+		top=6pt, bottom=6pt, right=0pt,
+		before skip=\bigskipamount*2,
+		after skip=\bigskipamount,
+		left=\frm@margin,
+	}}
+\cpgesetuptcb{%
+	azrmk/.style={
+		skin=rmkaz,
+		coltitle=thmcol,
+		attach boxed title to top left={xshift=\retraittitre},
+		boxed title style={blank, no underlay},
+		boxsep=0pt,
+		top=6pt,bottom=0pt,right=0pt,
+		left=\frm@margin,
+	}}
+
+\cpgesetuptheorems{%
+	theorem style=azthm,
+	definition style=azthm,
+	exercise style=azthm,
+	example style=azrmk,
+	remark style=azrmk,
+	other style=azrmk
+}
+
+
+% \cpgerenewtheorem[use counter from=rema]{remas}
+% {Remarques}
+% {}exerc
+% {remark}
+% {titled items}
+
+\cpgerenewtheorem[use counter from=exem]{exemf}
+	{Exemples fondamentaux}
+	{}{}
+	{theorem}
+	{thmcol=strokecol, coltitle=thmcol, titled items}
+\cpgerenewtheorem[use counter from=defi]{voca}
+	{Vocabulaire}
+	{}{}
+	{remark}
+	{titled items}
+\cpgerenewtheorem[use counter from=defi]{nota}
+	{Notations}
+	{}{}
+	{remark}
+	{titled items}
+
+\tikzset{proof title style/.style={
+	rounded corners=6pt,
+	inner xsep=8pt,
+	fill=none,
+	draw=linkstrokecol, 
+	text=linktextcol
+}}
+
+%%% Style des titres 
+\titleformat{\part}[display]{}
+	{\begin{tikzpicture} [overlay]\node at (.5\textwidth-\marginparwidth,.2\textheight) {\pgfuseimage{chart}};\end{tikzpicture}}
+	{\z@skip}
+	{\filleft\fontsize{48}{48}\HeadingFont\color{titletextcol}#1}
+	[{\begin{tikzpicture}[overlay]\node  at (-\right@margin,-.4\paperheight) [anchor=east, opacity=.75] {\pgfuseimage{tree}};\end{tikzpicture}}]
+
+\cpgesetlabel{chapter}{|1|}
+\titleformat{\chapter}[display]
+	{\firaheavy\fontsize{36}{36}\color{titletextcol}}
+	{%
+		\begin{tikzpicture} [overlay, remember picture, baseline=(C.base)] 
+			\node (C) at (30pt,0) [trapezium, trapezium left angle=120, trapezium right angle=60,
+				fill=titletextcol, 
+				text=white,
+				text width=40pt,
+				align=center,
+				font=\fontsize{36}{36}\selectfont,
+			]{\label@chapter};
+			\node [cpgered] at ([yshift=10pt] C.north) 
+				{\Large\chaptername}; 
+		\end{tikzpicture}
+	}{6pt}
+	{\filleft\begin{tikzpicture} [remember picture]
+		\node (T)  [
+			text width=\textwidth-2.5cm, 
+			align=flush right,
+			inner sep=0pt
+			]
+		{\filleft #1};\end{tikzpicture}\\
+	\begin{tikzpicture} [overlay, remember picture]
+		\draw [cpgered,  line width=12pt, line join=miter]
+			([yshift=-2.5cm]T.south west) -- ([yshift=-12pt]C.south) -- +(-6cm,-4cm)
+			([yshift=-2.5cm+6pt]T.south west) -- +(\paperwidth,1cm);\end{tikzpicture}
+	}
+\titleformat{name=\chapter, numberless}[display]
+	{\fontsize{36}{36}\HeadingFont\color{titletextcol}}
+	{\begin{tikzpicture}[overlay, remember picture]\coordinate (C);\end{tikzpicture}}
+	{\z@skip}
+	{\filleft\begin{tikzpicture} [remember picture]
+		\node (T)  [
+			text width=\textwidth-2.5cm, 
+			align=right,
+			inner sep=0pt
+			]
+		{\filleft #1};\end{tikzpicture}\\
+	\begin{tikzpicture} [overlay, remember picture]
+		\draw [cpgered,  line width=12pt, line join=miter]
+			([yshift=-2.5cm]T.south west) -- ([yshift=-12pt]C.south) -- +(-6cm,-4cm)
+			([yshift=-2.5cm+6pt]T.south west) -- +(\paperwidth,1cm);\end{tikzpicture}
+	}
+\titlespacing\chapter{0pt}{-\head@height+1pc}{3.5cm}
+
+\cpgesetlabel{section}{|1|}
+\cpgesetlabel{subsection}{|S|.|1|}
+\titleformat{\section}[display]
+	{\HeadingFont\LARGE\color{titletextcol}}
+	{\begin{tikzpicture} [baseline=(S.base)] 
+		\node (S)  [
+			trapezium, 
+			trapezium left angle=90, 
+			trapezium right angle=-60,
+			fill=cpgered, 
+			text=white,
+			text width=4pc,
+			align=left,
+			font=\HeadingFont\relsize{-2},
+			anchor=center,
+		]{\label@section};%
+		\draw [cpgered, line width=.8pt]
+		let \p0=(S.east) in   
+			(\x0+.5pc,\y0) -- (\columnwidth - \x0 + .5pc +4pt,\y0); 
+		\end{tikzpicture}%
+	}
+	{-0.9ex}
+	{\filleft\parbox{\columnwidth-4.5pc}{\filleft #1}}
+\titleformat{name=\section,numberless}[display]
+	{\HeadingFont\LARGE\color{titletextcol}}
+	{\begin{tikzpicture} [overlay]
+	 \draw [cpgered, {Z[height=6pt, gap=1pc]}-, line width=.8pt] 
+			(0,0) -- +(\columnwidth,0) ;
+			\end{tikzpicture}%
+	}
+	{-3pt}
+	{\filleft\parbox{\columnwidth-4.5pc}{\filleft #1}}
+\titlespacing{\section}{-4pt}{*6}{*4}
+
+\titleformat{\subsection}[hang]
+	{\HeadingFont\Large\color{titletextcol}}
+	{\begin{tikzpicture} [baseline=(S.base)] 
+		\node (S) [trapezium, trapezium left angle=90, trapezium right angle=60,
+				fill=cpgered, 
+			text=white,
+			align=left,
+			text width=2.4pc,
+			font=\relsize{-2},
+			% anchor=east,
+		]{\label@subsection};%
+	\end{tikzpicture}}
+	{.5em}
+	{\filright #1}
+\titleformat{name=\subsection,numberless}[hang]
+	{\HeadingFont\Large\color{titletextcol}}
+	{}
+	{\z@}
+	{\filright #1}
+\titlespacing{\subsection}{-4pt}{*4}{*2}
+\titleformat{\subsubsection}[hang]
+	{\HeadingFont\large\color{titletextcol}}
+	{\textcolor{cpgered}{\label@subsection}}
+	{1pc}
+	{\filright #1}
+\titleformat{name=\subsubsection,numberless}[hang]
+	{\HeadingFont\large\color{titletextcol}}
+	{}
+	{\z@}
+	{\filright #1}
+
+\titleformat{\paragraph}[runin]
+	{\bfseries\scshape\color{titletextcol}}
+	{}
+	{\z@}
+	{\filright #1}
+\titleformat{name=\paragraph,numberless}[runin]
+	{\bfseries\scshape\color{titletextcol}}
+	{}
+	{\z@}
+	{\filright #1}
+\titlespacing{\paragraph}{\z@}{\smallskipamount}{.5em}
+
+
+
+%%% Page de garde et head/foot
+
+\endinput
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+

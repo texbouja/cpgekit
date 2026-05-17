@@ -35,9 +35,9 @@
 \newif\ifcpgein@
 
 %%%%% Sauvegarde de certaines dimensions de la classe d'origine.
-\edef\topsep@origin{\the\topsep}
-\edef\partopsep@origin{\the\partopsep}
-\edef\itemsep@origin{\the\itemsep}
+\dimdef\topsep@origin{\topsep}
+\dimdef\partopsep@origin{\partopsep}
+\dimdef\itemsep@origin{\itemsep}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% localisation des commandes pgfkeys %%%%%
@@ -121,6 +121,127 @@
 		\def\x@arg{#1}\expandafter\@secondoftwo%
 	\fi%
 }
+\def\cpge@removeplus+#1\@nil{#1}
+\def\if@plusatbegin#1{
+	\in@{!+}{!#1}
+	\ifin@%
+		\edef\cpge@arg{\cpge@removeplus#1\@nil}\@xp\@firstoftwo%
+	\else%
+		\def\cpge@arg{#1}\@xp\@secondoftwo%
+	\fi%
+}
+\def\cpge@delstar*#1\@nil{#1}
+\def\if@staratbegin#1{
+	\in@{!*}{!#1}
+	\ifin@%
+		\edef\cpge@arg{\cpge@delstar#1\@nil}%
+    \@xp\@firstoftwo
+	\else%
+		\def\cpge@arg{#1}%
+    \@xp\@secondoftwo
+	\fi%
+}
+\def\cpge@removeminus-#1\@nil{#1}
+\def\if@minusatbegin#1{
+	\in@{!-}{!#1}
+	\ifin@%
+		\edef\cpge@arg{\cpge@removeminus#1\@nil}\@xp\@firstoftwo%
+	\else%
+		\def\cpge@arg{#1}\@xp\@secondoftwo%
+	\fi%
+}
+%% test for empty toks register
+\def\ifemptytoks#1{%
+  \ifcat\relax\detokenize\expandafter{\the#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+}
+%%% From titlesec.sty
+\def\dimassign{\@ifstar\cpge@assign@\cpge@assign}
+\def\cpge@assign#1{%
+  \@ifstar
+    {\cpge@assign@i{#1}}%
+    {\cpge@assign@d{#1}}}
+
+\def\cpge@assign@i#1#2\relax#3{%
+  \cpge@plus\z@
+  \cpge@minus\z@
+  \afterassignment\cpge@assign@ii
+  \dimen@\the#3, % <- space 
+  #1 =     #2\dimen@
+     plus  #2\cpge@plus
+     minus #2\cpge@minus}
+
+\def\cpge@assign@ii#1 {% <- space
+  \if#1,\else\afterassignment\cpge@assign@ii\fi
+  \csname cpge@\string#1\endcsname}
+
+\def\cpge@assign@d#1#2\relax#3{\setlength#1{#2}}
+\def\cpge@gluedef#1#2#3{%
+  \cpge@assign\cpge@skipa#2\relax#3%
+  \gluedef#1{\cpge@skipa}%
+}
+
+
+\def\cpge@assign@#1{%
+  \@ifstar
+    {\cpge@assign@@i{#1}}%
+    {\cpge@assign@d{#1}}}
+
+\def\cpge@assign@@i#1#2\relax#3{%
+  \afterassignment\cpge@assign@@ii
+  \dimen@\the#3, % <- space 
+  #1 = #2\dimen@
+}
+\def\cpge@assign@@ii#1 {% <- space
+  \if#1,\else\afterassignment\cpge@assign@@ii\fi
+  \csname cpge@\string#1\endcsname}
+
+% Commandes utitlitaires
+% \cpge@isnumber verifie si son unique argument est un entier 
+% (negatif ou positif) et execute \@firstoftwo ou \@secondoftwo
+% selon le resultat du test. L'argument est developpé au sens \edef.
+%\cpge@isnum est une version plus simple. Le test réussit si l'argument
+% est explicitement un entier positif.
+\newcommand\cpge@isnumber[1]{%
+        \begingroup%
+        \edef\temp@{#1}%
+        \@xp\ifstrempty\@xp{\temp@}%
+                {\endgroup\@secondoftwo}%
+                {\@xp\if@number@i\temp@\@nnil}%
+}
+\def\if@number@i#1#2\@nnil{%
+        \if-#1%
+                \gdef\temp@s{-}%
+                \ifstrempty{#2}%
+                        {\def\temp@{X}}%
+                        {\def\temp@{#2}}%
+        \else%
+                \gdef\temp@s{+}%
+                \def\temp@{#1#2}%
+        \fi%
+        \xdef\temp@n{\temp@}%
+        \afterassignment\if@numhelper%
+        \count@0\temp@\relax\@nnil%
+        \endgroup%
+}
+
+\def\num@relax{\relax}%
+\def\if@numhelper#1\@nnil{%
+	\def\temp@{#1}%
+	\ifx\temp@\num@relax%
+		\aftergroup\@firstoftwo%
+	\else%
+		\aftergroup\@secondoftwo%
+	\fi%
+}
+\def\cpge@isnum#1#2#3{%
+  \if!\ifnum9<1#1!\else_\fi%
+    #3\else#2\fi%
+  }
+%%%%%%
 \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
 \long\def\cpge@deco#1#2{%
    \long\csdef{deco@#1}##1{\begingroup#2\endgroup}}
@@ -295,6 +416,9 @@
     \or cinqui\`eme\or sixi\`eme\or septi\`eme\or huiti\`eme%
      \or  neuvi\`eme\else\@ctrerr\fi}
 \def\fordinal#1{\expandafter\fo@rdinal\csname c@#1\endcsname}
+\def\cpge@literal#1{%
+	\ifcase#1 zero\or one\or two\or three\or four\or five\or six\or seven\or eight\or nine\else\@ctrerr\fi%
+}
 
 %%% cree les listes 
 % \list@count=tous les raccourcis, 
@@ -528,6 +652,8 @@
    marge+/.default=\z@,
    marge*/.code=\cpgelist@setmargealt{#1},
    marge*/.default=\z@,
+   avant/.code=\cpgelist@settopsep{#1},
+   avant/.default=\topsep@origin,
    saut/.code=\cpgelist@setsep{#1},
    saut/.default=\itemsep@origin,
    align/.code=\cpgelist@setalign{#1},
@@ -576,11 +702,24 @@
             }%
       }{}%
 }
+\def\cpgelist@settopsep#1{%
+   \ifcsundef{avant@\cpge@listctr}%une fois exécutée, ignore les clés suivantes
+      {\csdef{avant@\cpge@listctr}{%
+         \cpge@skipa=#1%
+         \ifdim\cpge@skipa=\z@ 
+            \setlength\topsep{\z@skip}%
+            \setlength\itemsep{\z@skip}%
+         \else 
+            \setlength\topsep{\cpge@skipa}%
+         \fi%
+      }
+      }{}%
+}
 \def\cpgelist@setsep#1{%
    \ifcsundef{saut@\cpge@listctr}%une fois exécutée, ignore les clés suivantes
       {\csdef{saut@\cpge@listctr}{%
          \cpge@skipa=#1%
-         \addtolength\topsep{\cpge@skipa}%
+         %\addtolength\topsep{\cpge@skipa}%
          \addtolength\itemsep{\cpge@skipa*\real{.5}}}%
          \addtolength\parsep{\cpge@skipa*\real{.5}}%
       }{}%
@@ -672,7 +811,7 @@
    \list
    \csname label@\cpge@listctr\endcsname%
         {\usecounter{\cpge@listctr}%
-          \csuse{sep@\cpge@listctr}%
+          \csuse{avant@\cpge@listctr}%
            \csuse{marge@\cpge@listctr}%
             \csuse{saut@\cpge@listctr}%
              \csuse{align@\cpge@listctr}%
@@ -686,7 +825,7 @@
    \expandafter
    \list
    \csname label@\cpge@listctr\endcsname%
-        {\csuse{sep@\cpge@listctr}%
+        {\csuse{avant@\cpge@listctr}%
           \csuse{marge@\cpge@listctr}%
            \csuse{saut@\cpge@listctr}%
             \csuse{align@\cpge@listctr}%
@@ -768,6 +907,8 @@
    m/.code=\cpgelist@addlocalprop{m}{marge=#1}\cpgelist@save{m=#1},
    m+/.code=\cpgelist@addlocalprop{m+}{marge+=#1}\cpgelist@save{m+=#1},
    m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
+   b/.code=\cpgelist@addlocalprop{b}{avant=#1}\cpgelist@save{b=#1},
+   b*/.code=\cpgelist@addlocalprop{b}{avant=\z@}\cpgelist@save{b*}, 
    s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1}, 
    a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
    c/.style={},
@@ -775,6 +916,7 @@
    m+/.default=\z@,
    m*/.default=\z@,
    s/.default=\z@,
+   b/.default=\topsep@origin,
    a/.default=r,
    item label/.code 2 args=\csdef{label@item\romannumeral#1}{#2},
 }
@@ -790,6 +932,8 @@
       enum@#1/m+/.code=\cpgesetenum{#2}{marge+=##1},
       enum@#1/m*/.code=\cpgesetenum{#2}{marge*=##1},
       enum@#1/s/.code=\cpgesetenum{#2}{saut=##1},
+      enum@#1/b/.code=\cpgesetenum{#2}{avant=##1},
+      enum@#1/b*/.code=\cpgesetenum{#2}{avant=\z@},
       enum@#1/a/.code=\cpgesetenum{#2}{align=##1},
       enum@#1/a/.default=r,
       enum@#1/m/.default=\z@,
@@ -815,6 +959,8 @@
       item@#1/m*/.code=\cpgesetitem{#2}{marge*=##1},
       item@#1/s/.code=\cpgesetitem{#2}{saut=##1},
       item@#1/a/.code=\cpgesetitem{#2}{align=##1},
+      item@#1/b/.code=\cpgesetitem{#2}{avant=##1},
+      item@#1/b*/.code=\cpgesetitem{#2}{avant=\z@},
       item@#1/a/.default=r,
       item@#1/m/.default=\z@,
       item@#1/m*/.default=\z@,
@@ -1043,12 +1189,18 @@
 \DeclareDocumentCommand\disc@unite{mmd()}{
    \IfValueTF{#3}{\item[#1#3#2]}{\item}
 }
+\NewDocumentCommand\item@supp{s}{
+   \IfBooleanTF{#1}
+         {\disc@unite{Supposons qu'}{~:~}}
+         {\disc@unite{Supposons que\ }{~:~}}
+}
 \def\item@imp#1#2{\item[$#1\Rightarrow#2\,)$]} 
-\def\item@equiv#1#2{\item[$#1\Leftrightarrow#2\,)$]} 
+\def\item@equiv#1#2{\item[$#1\Leftrightarrow#2\,)$]}
 \NewDocumentEnvironment{discussion}{!e{\wd}}{%
 	\def\unite{\disc@unite{}{~:~}}%
 	\def\si{\disc@unite{Si\ }{~:~}}%
 	\def\cas{\disc@unite{Cas où\ }{~:~}}
+   \def\supp{\item@supp}
 	\let\imp\item@imp
    \let\equ\item@equiv
 	\def\cs{\item[$\Leftarrow\,)$]}
@@ -1077,6 +1229,9 @@
 %% Pour compatibilite
 \let\disc\discussion
 \let\enddisc\enddiscussion
+
+
+
 
 %% Ajout 07/01/2024
 %% Commande \unite pour utilisation dans theoremes et similaire
@@ -1378,10 +1533,13 @@
 
 %%%%%% lrmargin and mini environments %%%%
 %%%%%% Borrowed from adjustwidth.sty
-
+\newlength\mini@skip
+\dimdef\lrmarginleft{\z@}
+\dimdef\lrmarginright{\z@}
 \newenvironment{lrmargin}[3][]{%
   \list\relax{%
     \topsep\smallskipamount%
+    \advance\topsep by \mini@skip%
     \listparindent\parindent%
     \parsep\parskip%
 		\itemindent\z@\relax%
@@ -1400,13 +1558,11 @@
  {\closeunite\endlist}
 \def\lrmargin@label#1{%
 	\ifblank{#1}{\relax}
-				 {\csuse{deco@lrmargin}{#1}}%
+				 {\csuse{deco@lrmargin}{#1\mini@punct}}%
 	}
 \cpgesetdeco{lrmargin}{\textbf{#1}} 
-
-\dimdef\lrmarginleft{\z@}
-\dimdef\lrmarginright{\z@}
 \cpgesetup[mini]{%
+   before skip/.code=\setlength{\mini@skip}{#1},
 	left margin/.code=\dimdef{\lrmarginleft}{#1},
 	right margin/.code=\dimdef{\lrmarginright}{#1},
    lm/.style={left margin=#1},
@@ -1414,25 +1570,41 @@
 	font/.code=\def\mini@font{#1},
 	label font/.code=\def\mini@label@font{#1\vphantom{(}},
    punct/.code=\def\mini@punct{#1},
-	deco/.code=\cpgesetdeco{lrmargin}{\mini@label@font#1\mini@punct},
+	deco/.code=\cpgesetdeco{lrmargin}{\mini@label@font#1},
 }
-% \def\mini@punct{.}
 \cpgesetup[mini]{%
 	font=\sffamily\small,
 	label font=\sffamily\small\scshape\bfseries,
    punct=.,
 	deco={#1}
 	}
+\cpgesetup[minitem]{%
+   .unknown/.code={},
+	label font/.code=\def\mini@label@font{#1\vphantom{(}},
+   punct/.code=\def\mini@punct{#1},
+}
+\cpgesetup[minitem]{%
+	label font=\sffamily\small\scshape\bfseries,
+   punct=.
+	}
+\newif\ifinsidemini
+\NewDocumentCommand\mini@item{O{}md()}{%
+      \cpgesetup[minitem]{#1}%
+      \item[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]%
+      \cpgesetup[minitem]{label font, punct}%
+}
 \NewDocumentEnvironment{mini}{O{}m d()}{%
 		\cpgesetup[mini]{#1}%
-      \ifdim\@totalleftmargin>3.4em\relax
-         \let\lrmarginleft\z@
-      \fi
+      \ifdim\@totalleftmargin>3.4em\relax%
+         \let\lrmarginleft\z@%
+      \fi%
+      \let\minitem\mini@item%
+      \mini@font%
 		\lrmargin[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]
 			{\lrmarginleft}
-			{}%
-		\mini@font%
-	}{\endlrmargin}
+			{}\ignorespaces%
+      \insideminitrue%
+}{\endlrmargin}
 
 \def\nb{\begin{mini}{n.b}}
 \def\endnb{\end{mini}}

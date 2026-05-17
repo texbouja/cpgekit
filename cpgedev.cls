@@ -8,13 +8,16 @@
 \RequirePackage{etoolbox}
 \def\cpgecurrentclass{dev} 
 
-
+\let\@xp\expandafter
+\let\@nx\noexpand
+\let\@xo\expandonce
 
 \@ifundefined{ifsubdoc}{%
 	\newif\ifweb
 	\newif\ifsingleimage
 	\newif\ifthisfile
 	\newif\ifdraft
+	\newif\iffinal
 	\newif\ifstraight
 	\newif\ifnolinks
 	\newif\ifprint
@@ -38,8 +41,9 @@
 \pgfkeys{/IGD/.is family, /IGD/.cd,
 	article/.code={\def\cpge@class{article}},
 	report/.code={\def\cpge@class{report}},
-	book/.code={\def\cpge@class{book}\cspreto\class@options{oneside,}},
+	book/.code={\def\cpge@class{book}\cspreto\class@options{twoside,}},
 	draft/.style={},
+	final/.style={},
 	straight/.style={},	
 	serie/.style={},
 	compact/.style={},
@@ -54,7 +58,8 @@
 	score/.style={},
 }
 \pgfkeys{/IGDS/.is family, /IGDS/.cd,
-	draft/.is if=draft,	
+	draft/.is if=draft,
+	final/.is if=final,	
 	straight/.is if=straight,
 	compact/.is if=compact,
 	serie/.is if=serie,
@@ -91,9 +96,7 @@
 	{\ProcessPgfOptions{/IGDS}}
 	{\ProcessPgfOptions{/IGD}}
 
-\let\@xp\expandafter
-\let\@nx\noexpand
-\let\@xo\expandonce
+
 
 \begingroup
 \edef\cpge@tmp{\endgroup
@@ -314,17 +317,35 @@
 \undef\chapter
 \undef\section
 \undef\subsection
+\undef\subsubsection
 \undef\parapgraph
 \undef\subparagraph
 
 %%% La nouvelle architecture de titrage
-\titleclass{\@devoir}[0]{top} % -> \devoir 
-\titleclass{\section}{straight}[\@devoir]
-\titleclass{\problem}{straight}[\section] % -> {probleme}, {exercise}, ...
-\titleclass{\parti}{straight}[\problem] 
-\titleclass{\partii}{straight}[\parti]
-\titleclass{\bigques}{straight}[\partii]
-
+\ifdef\part
+	{
+		\titleclass{\part}[-1]{page}
+		\titleclass{\@devoir}{top}[\part] % -> \devoir 
+		\titleclass{\section}{straight}[\@devoir]
+		\titleclass{\problem}{straight}[\section] % -> {probleme}, {exercise}, ...
+		\titleclass{\parti}{straight}[\problem] 
+		\titleclass{\partii}{straight}[\parti]
+		\titleclass{\bigques}{straight}[\partii]
+		\titleformat\part[display]
+			{\Huge}
+			{\thepart}
+			{\bigskipamount}
+			{#1}
+		\titlespacing*\part{\z@}{\p@ \@plus1fill}{\p@ \@plus1fill}
+	}
+	{
+		\titleclass{\@devoir}[0]{top} % -> \devoir 
+		\titleclass{\section}{straight}[\@devoir]
+		\titleclass{\problem}{straight}[\section] % -> {probleme}, {exercise}, ...
+		\titleclass{\parti}{straight}[\problem] 
+		\titleclass{\partii}{straight}[\parti]
+		\titleclass{\bigques}{straight}[\partii]
+	}
 \def\chapter{\@devoir}
 
 \def\cpgesetupsectiontitle{\cpgesetup[sectiontitle]}
@@ -615,20 +636,39 @@
 
 %%% Variantes de \parti et \partii pour ecrire en plus
 %%% les titres dans le fichier de corrigé
-\NewDocumentCommand\wparti{om}{
-    \unless\ifstraight
-        \cpgeprotected@iwrite\solhandle@file{}
-            {\string\parti\IfValueT{#1}{[#1]}{#2}}
-    \fi
-    \IfValueTF{#1}{\parti[#1]{#2}}{\parti{#2}}
+\NewDocumentCommand\wparti{som}{%
+    \unless\ifstraight%
+		\IfBooleanTF{#1}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\parti*{#3}}}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\parti\IfValueT{#2}{[#2]}{#3}}}%
+			
+    \fi%
+	\IfBooleanTF{#1}
+    	{\parti*{#3}}
+		{\IfValueTF{#2}{\parti[#2]{#3}}{\parti{#3}}}%
 }
-\NewDocumentCommand\wpartii{om}{
-    \unless\ifstraight
-        \cpgeprotected@iwrite\solhandle@file{}
-            {\string\partii\IfValueT{#1}{[#1]}{#2}}
-    \fi
-    \IfValueTF{#1}{\partii[#1]{#2}}{\partii{#2}}
+\NewDocumentCommand\wpartii{som}{%
+    \unless\ifstraight%
+		\IfBooleanTF{#1}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\partii*{#3}}}
+			{\cpgeprotected@iwrite\solhandle@file{}
+				{\string\partii\IfValueT{#2}{[#2]}{#3}}}%
+			
+    \fi%
+	\IfBooleanTF{#1}
+    	{\partii*{#3}}
+		{\IfValueTF{#2}{\partii[#2]{#3}}{\partii{#3}}}%
 }
+% \NewDocumentCommand\wpartii{om}{
+%     \unless\ifstraight
+%         \cpgeprotected@iwrite\solhandle@file{}
+%             {\string\partii\IfValueT{#1}{[#1]}{#2}}
+%     \fi
+%     \IfValueTF{#1}{\partii[#1]{#2}}{\partii{#2}}
+% }
 \NewDocumentCommand\wbigques{om}{%
     \unless\ifstraight
         \cpgeprotected@iwrite\solhandle@file{}
@@ -813,10 +853,11 @@
 	title deco/.code=\cpgesetdeco{problem}{#1},
 	label deco/.code=\cpgesetdeco{problemlabel}{#1},
 	corrige/.code=\appto\cor@curropts{,#1}, 
-	origin/.code=\Origine{#1}\appto\cor@curropts{,origin=#1},
+	origine/.code=\Origine{#1}\appto\cor@curropts{,origine=#1},
 }
 \cpgesetup[solution]{
 	nonumber/.is if=nonumber,
+	title/.code=\def\corrige@title{#1},
 	alt title/.code=\def\alt@title{#1}, 
 	before/.store in=\hook@beforeproblem,
 	after/.store in=\hook@afterproblem,
@@ -828,7 +869,7 @@
 		 \@xp{\title@contents},
 	questions list/.store in=\queslist,
 	auteur/.code=\Auteur{#1},
-	origin/.code=\Origine{#1},
+	origine/.code=\Origine{#1},
 	.unknown/.code={},
 }
 \def\noqueslistmessage{%
@@ -892,7 +933,9 @@
 			{\edef\cnt@name{#3 \csuse{label@#2}}}%
 			%\show\cnt@name%
 		\LinkTargetOff
-		\ifblank{#5}% 
+		\edef\tmp@opttitle{#5}
+		% \show\tmp@opttitle
+		\ifdefempty{\tmp@opttitle}% 
 			{\cpge@tmpswatrue%
 				\@xp\problem\@xp[\@xp{\@xp\textsc\@xp{\cnt@name}\IfValueT{#4}{\ifblank{#4}{}{:\space#4}}}]{}}%
 			{\cpge@tmpswafalse%
@@ -929,6 +972,7 @@
 		}%
 	}
 \def\cpge@problem@id{Unnamed}
+\def\corrige@title{}
 \DeclareDocumentCommand\cpgenewproblem{%
 		s %1 corrige or enonce
 		m %2 counter name
@@ -957,10 +1001,13 @@
 				}%
 				\edef\cpge@labelprefix{cor:\cpge@problem@id:}%
 				\csuse{hook@beforeproblemtitle}%
+				\IfValueTF{##4}
+					{\def\tmp@title{##4}}
+					{\edef\tmp@title{\corrige@title}}
 				\ifnonumber
-					\@problemtitle*{#2}{#3}[##3](##4)<##5>%
+					\@problemtitle*{#2}{#3}[##3](\tmp@title)<##5>%
 				\else%
-					\@problemtitle{#2}{#3}[##3](##4)<##5>
+					\@problemtitle{#2}{#3}[##3](\tmp@title)<##5>
 				\fi%
 				\setup@id%
 				\setup@xsol%
@@ -1060,6 +1107,10 @@
 \let\endexer\endexercice
 \csdef{exer*}{\csuse{exercice*}{}}
 \csletcs{endexer*}{endexercice*}
+\def\prob{\probleme{}}
+\let\endprob\endprobleme
+\csdef{prob*}{\csuse{probleme*}{}}
+\csletcs{endprob*}{endprobleme*}
 %%%%%%%%%%%%%%%%%%%%%%
 %%% table des matières
 \let\ttl@savemark\relax
@@ -1069,21 +1120,25 @@
 \def\toclevel@parti{3}
 \def\toclevel@partii{4}
 \def\toclevel@bigques{5}
-\titlecontents{@devoir}[0em]{}{\Large}{\Large}{\hfill\contentspage}
-\titlecontents{section}[0em]{\bigskip}{\Large}{\Large}{\hfill\contentspage}
+\ifdef\part
+	{\titlecontents{part}[0em]{\bigskip}{}{\Large\bfseries}{}}{}
+\titlecontents{@devoir}[0em]{\bigskip}{\large}{\Large}{\hfill\contentspage}
+\titlecontents{section}[0em]{\medskip}{\large}{\large}{\hfill\contentspage}
 \titlecontents{problem}[1em]{\medskip}{\bfseries\boldmath}{\scshape}{\null\hfill\contentspage}
 \titlecontents{parti}[3em]{}{}{\scshape}{\hfill\contentspage}
 \titlecontents{partii}[4em]{}{}{}{}
 \titlecontents{bigques}[6em]{}{}{}{}
 
 %%% Entrées pour pagestyles
- 
+
+\let\parttitle\@empty
 \let\@devoirtitle\@empty
 \let\sectiontitle\@empty
 \let\problemtitle\@empty
 \let\partititle\@empty
 \let\partiititle\@empty
 \let\bigquestitle\@empty
+\ifdef\part{\ttl@setifthe{part}}{}
 \ttl@setifthe{@devoir}
 \ttl@setifthe{section}
 \ttl@setifthe{problem}
@@ -1091,17 +1146,24 @@
 \ttl@setifthe{partii}
 \ttl@setifthe{bigques}
 
-% les divisions qui seront marquées pour une utilisation dans pagestyle    
-\settitlemarks{@devoir,section,problem,parti}
+% les divisions qui seront marquées pour une utilisation dans pagestyle
+\ifdef\part    
+{
+	\settitlemarks{part,@devoir,section,problem,parti,partii}
+}{
+	\settitlemarks{@devoir,section,problem,parti,partii}
+}
 % Ajout des mots clés section et problem pour utilisation avec \cpgesethead et \cpgesetfoot.
+\cpgeaddkeyword*{hf}{part}
+	{\ifthepart{\parttitle}{}}
 \cpgeaddkeyword*{hf}{devoir}
-	{\ifthe@devoir{\MakeLowercase{\@devoirtitle}}{}}
+	{\ifthe@devoir{\@devoirtitle}{}}
 \cpgeaddkeyword*{hf}{section}
-	{\ifthesection{\MakeLowercase{\sectiontitle}}{}}
+	{\ifthesection{\sectiontitle}{}}
 \cpgeaddkeyword*{hf}{problem}
-	{\iftheproblem{\MakeLowercase{\problemtitle}}{}}
+	{\iftheproblem{\problemtitle}{}}
 \cpgeaddkeyword*{hf}{parti}
-	{\iftheparti{\MakeLowercase{\partititle}}{}}
+	{\iftheparti{\partititle}{}}
 \cpgeaddkeyword{hf}{pages}{page\enskip\thepage{} / \pageref*{LastPage}}
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

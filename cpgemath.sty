@@ -1609,7 +1609,6 @@
 	\eqn@count@\z@%
 	\let\cpge@tmpw\@empty%
 	\def\cpge@currenvir{xalign}%
-	\allowdisplaybreaks%
 	\set@eqnskips%
 	\set@goodies%
 	\set@eqnparsers{xalign}{}%
@@ -2243,7 +2242,7 @@
 			{\mathclose{##2}}
 	}%
 	\let\msize\relax
-	\def\given{\:\GivenSep\:\mathopen{}}
+	\def\given##1{\:\GivenSep\:\mathopen{}}
 	\let\tq\given
 	}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

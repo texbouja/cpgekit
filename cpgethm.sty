@@ -86,6 +86,8 @@
 			{\def\cpge@theorem@style{definitionstyle}},
 		@theotype/remark/.code=
 			{\def\cpge@theorem@style{remarkstyle}},
+		@theotype/example/.code=
+			{\def\cpge@theorem@style{examplestyle}},
 		@theotype/proof/.code=
 			{\def\cpge@theorem@style{proofstyle}},
 		@theotype/other/.code=
@@ -104,6 +106,8 @@
 		\cpgesetuptcb{remarkstyle/.style={#1}},%
 	exercise style/.code=%
 		\cpgesetuptcb{exercisestyle/.style={#1}},
+	example style/.code=%
+		\cpgesetuptcb{examplestyle/.style={#1}},
 	other style/.code=%
 		\cpgesetuptcb{otherstyle/.style={#1}},
 	.search also=/tcb
@@ -127,6 +131,11 @@
 	},
 	exercise style/.code=\pgfkeysalso{%
 		exercisestyle,
+		localstyle,
+		current counter=\thetcbcounter
+	},
+	example style/.code=\pgfkeysalso{%
+		examplestyle,
 		localstyle,
 		current counter=\thetcbcounter
 	},
@@ -310,9 +319,9 @@
 	set theorem prop={@theotype=other},
 	default number position,
 	thmcol=cpgeneutral,
-	prestyle={#2},
-	localstyle={#2}, 
 	other style,
+	prestyle={#2},
+	localstyle/.append style={#2}, 
 	IfValueT={#1}{title={\cpge@tcb@theo@title{#1}{\thetcbcounter}}},
 	IfValueT={#3}{description path={#3}},
 	IfValueT={#4}{label={#4}, IfValueT={#3}{nameref={#3}}},
@@ -324,9 +333,9 @@
 	set theorem prop={@theotype=other},
 	thmcol=cpgeneutral,
 	theorem name,
-	prestyle={#2},
-	localstyle={#2}, 
 	other style,
+	prestyle={#2},
+	localstyle/.append style={#2}, 
 	IfValueT={#1}{title={#1~}},
 	IfValueT={#3}{description path={#3}},
 	titled items
@@ -562,6 +571,7 @@
 	definition style=cpgedefaultthm,
 	exercise style=cpgedefaultthm,
 	remark style=cpgedefaultrmk,
+	example style=cpgedefaultrmk,
 	other style=cpgedefaultrmk
 }
 
@@ -659,7 +669,7 @@
 	{Exemples}
 	{exemples}
 	{}
-	{remark}
+	{example}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exemf}
 	{Exemples fondamentaux}
@@ -671,25 +681,25 @@
 	{Exemple d'application}
 	{exemple d'application}
 	{}
-	{remark}
+	{example}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{exemp}
 	{Exemple pratique}
 	{exemple pratique}
 	{}
-	{remark}
+	{example}
 	{titled items}
 \cpgenewtheorem[use counter from=exem]{appl}
 	{Application}
 	{application}
 	{}
-	{remark}
+	{example}
 	{}
 \cpgenewtheorem[use counter from=exem]{appls}
 	{Applications}
 	{applications}
 	{}
-	{remark}
+	{example}
 	{titled items}
 \cpgenewtheorem[no counter]{demo}
 	{Démonstration}

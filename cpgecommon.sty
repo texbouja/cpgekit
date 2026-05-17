@@ -9,7 +9,6 @@
 \DeclareOption{customtitles}{\customtitlestrue}
 \ProcessOptions\relax
 
-
 \@ifundefined{NewDocumentCommand}
 	{\RequirePackage{xparse}}
 	{}
@@ -24,9 +23,9 @@
 }{}
 
 \ifcustomtitles
-   \RequirePackage[loadonly,explicit,nobottomtitles*,pagestyles]{titlesec}
+   \RequirePackage[loadonly,explicit,pagestyles]{titlesec}
 \else 
-   \RequirePackage[explicit,nobottomtitles*,pagestyles]{titlesec}
+   \RequirePackage[explicit,pagestyles]{titlesec}
 \fi 
 \RequirePackage{titletoc}
 
@@ -47,7 +46,6 @@
 \ProvideDocumentCommand\NextLinkTarget{m}{}
 \newif\ifsoutien
 
-
 %%%% Structure de bas niveau d'inclusion de fichiers  
 %%%% Ajout 09/10/2023
 %%%% emprunté à answers.sty et tcolorbox.sty avec adaptation 
@@ -55,7 +53,6 @@
 %%%% L'écriture ne se produit que si \ifsolution est initialisé en true.  
 %%%% \ifsolution doit être déclaré par la classe avant le chargement de cpgebase.sty.
 %%%% Sa création ici provoquera sa réinitialisation en false. 
-
 
 %%% tcolorbox.sty : 
 %%% environnement : {cpgewriteonce}, #1 est le nom d'un fichier physique
@@ -307,7 +304,6 @@
   \immediate\write\@auxout{\string\cpgenewlabel{#1}{{\@currentlabel}{\thepage}}}%
   \@esphack}
 
-
 \def\cpgeref@setcounter#1#2{%
    \setcounter{#1}{#2}%
    \edef\@currentcounter{#1}%
@@ -331,7 +327,6 @@
 \DeclareRobustCommand\cpgeRef[1]{\edef\@tempa{\cpgeref{#1}}%
    \expandafter\Makeuppercase\@tempa}
 
-
 %%% code inspired by glocalvals.sty
 \newcommand{\usevalue}[1]{\csuse{cpge:#1}}
 \newcommand{\defvalue}[2]{%
@@ -346,193 +341,193 @@
 }
 
 %%%%% Si jamais cpgebase.sty n'est pas chargé 
-\ifundef{\cpgeaddkeyword}{%
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%% Commandes utilitaires multi-usage %%%%%
-\def\cslocal{%
-\let\lorg@cslet=\cslet%
-\let\lorg@csletcs=\csletcs%
-\let\lorg@def=\def%
-\let\lorg@edef=\edef%
-\let\lorg@csdef=\csdef%
-\let\lorg@csedef=\csedef%
-\let\lorg@listadd=\listadd%
-\let\lorg@listeadd=\listeadd%
-\let\lorg@listcsadd=\listcsadd%
-\let\lorg@listcseadd=\listcseadd%
-\let\lorg@csappto=\csappto%
-\let\lorg@cseappto=\cseappto%
-\let\lorg@appto=\appto%
-\let\lorg@eappto=\eappto%
-}
-\def\csglobal{%
-\begingroup\cpge@globaltrue%
-\def\lorg@cslet{\global\cslet}%
-\def\lorg@csletcs{\golbal\csletcs}%
-\let\lorg@def=\gdef%
-\let\lorg@edef=\xdef%
-\let\lorg@csdef=\csgdef%
-\let\lorg@csedef=\csxdef%
-\let\lorg@listadd=\listgadd%
-\let\lorg@listeadd=\listxadd%
-\let\lorg@listcsadd=\listcsgadd%
-\let\lorg@listcseadd=\listcsxadd%
-\let\lorg@csappto=\csgappto%
-\let\lorg@cseappto=\csxappto%
-\let\lorg@appto=\gappto%
-\let\lorg@eappto=\xappto%
-}
-\def\endcslorg{\ifcpge@global\endgroup\fi}
-\cslocal
-\def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
-\def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
-\def\cpge@removestar#1*{#1}
-\def\cpge@removeplus#1+{#1}
-\def\cpge@erasestar*#1+{#1}
-\def\if@staratend#1{%
-	\def\in@@{\in@{*!}}%
-	\@xp\in@@\@xp{#1!}%
-	\ifin@%
-		\edef\x@arg{\cpge@removestar#1}\expandafter\@firstoftwo%
-	\else%
-		\def\x@arg{#1}\expandafter\@secondoftwo%
-	\fi%
-}
-\def\if@plusatend#1{%
-	\def\in@@{\in@{+!}}%
-	\@xp\in@@\@xp{#1!}%
-	\ifin@%
-		\edef\x@arg{\cpge@removeplus#1}\expandafter\@firstoftwo%
-	\else%
-		\def\x@arg{#1}\expandafter\@secondoftwo%
-	\fi%
-}
-%\NewDocumentCommand\cpgesetdeco{ s mom}{%
-%}
-\newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
-\long\def\cpge@deco#1#2{%
-\long\csdef{deco@#1}##1{\color@begingroup#2\color@endgroup}}
-\long\def\cpge@deco@#1#2{%
-\long\csdef{deco@#1}{#2}}
-\long\def\usedeco#1{\csuse{deco@#1}}
-\cpgesetdeco*{simple}{\fbox}
-\DeclareDocumentCommand\cpgename{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\lorg@csdef{name@#2}{#3}%
-\endcslorg%
-}
-\DeclareDocumentCommand\cpgexname{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\lorg@csedef{name@#2}{#3}%
-\endcslorg%
-}
-\cpgesetup[decorations]{%
-.unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
-}
-\def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%% base de la gestion des mots clés entre ||  %%%%%
-%%%%% Commandes pour le parsing des elements
-\DeclareListParser*{\OutParser}{|}
-%% \OutParser{\cmd}{item1|item2|...} retourne la séquence
-%% \cmd{item1}\cmd{item2}...
-\DeclareListParser*{\in@parser}{+}
-%% \in@parser{\cmd}{item1+item2+...} retourne la séquence
-%% \cmd{item1}\cmd{item2}...
-\def\DoubleParser#1#2#3{%
-\def\tmp@parser##1{#1{\in@parser{#2}{##1}}}%
-\OutParser{\tmp@parser}{#3}%
-}
-%% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
-%% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
-\DeclareDocumentCommand\csvtolistcsadd{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\def\do{\forcsvlist{\lorg@listcsadd{#2}}}
-\expandafter\docsvlist\expandafter{#3}
-\endcslorg%
-}
-\DeclareDocumentCommand\csvtolistcseadd{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\def\do{\forcsvlist{\lorg@listcseadd{#2}}}
-\expandafter\docsvlist\expandafter{#3}
-\endcslorg%
-}
-\DeclareDocumentCommand\csvtolistadd{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\def\do{\forcsvlist{\lorg@listadd{#2}}}
-\expandafter\docsvlist\expandafter{#3}%
-\endcslorg%
-}
-\DeclareDocumentCommand\csvtolisteadd{smm}{%
-\IfBooleanT{#1}{\csglobal}%
-\def\do{\forcsvlist{\lorg@listeadd{#2}}}
-\expandafter\docsvlist\expandafter{#3}%
-\endcslorg%
-}
-%%% Gestion de listes CSV
-\newrobustcmd{\csvadd}[2]{%
-\ifblank{#2}{}{\appto#1{#2,}}}
-\newrobustcmd{\csveadd}[2]{%
-\begingroup%
-\edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-\cpgeb@tempa{}{\eappto#1{#2,}}}
-\newrobustcmd{\csvgadd}[2]{%
-\ifblank{#2}{}{\gappto#1{#2,}}}
-\newrobustcmd{\csvxadd}[2]{%
-\begingroup%
-\edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
-\cpgeb@tempa{}{\xappto#1{#2,}}}
-\newrobustcmd{\csvcsadd}[1]{%
-\expandafter\csvadd\csname#1\endcsname}
-\newrobustcmd{\csvcseadd}[1]{%
-\expandafter\csveadd\csname#1\endcsname}
-\newrobustcmd{\csvcsgadd}[1]{%
-\expandafter\csvgadd\csname#1\endcsname}
-\newrobustcmd{\csvcsxadd}[1]{%
-\expandafter\csvxadd\csname#1\endcsname}
-\newrobustcmd{\csvremove}[2]{%
-\cpgeb@csvremove{#1}{#2}\def}
-\newrobustcmd{\csvgremove}[2]{%
-\cpgeb@csvremove{#1}{#2}\gdef}
-\long\def\cpgeb@csvremove#1#2#3{%
-\ifblank{#2}
-{}
-{\ifincsv{#2}{#1}{%
- \begingroup%
- \def\cpgeb@tempa##1,#2,##2&{\endgroup%
-   \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
-\expandafter\cpgeb@tempa\expandafter,#1&}{}}%
-}
-\newrobustcmd{\csvcsremove}[1]{%
-\expandafter\csvremove\csname#1\endcsname}
-\newrobustcmd{\csvcsgremove}[1]{%
-\expandafter\csvgremove\csname#1\endcsname}
-\newrobustcmd{\ifincsv}[2]{%
-\begingroup
-\def\cpgeb@tempa##1,#1,##2&{\endgroup%
-\ifblank{##2}\@secondoftwo\@firstoftwo}%
-\expandafter\expandafter\expandafter\cpgeb@tempa%
-\expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
-\newrobustcmd{\xifincsv}[1]{%
-\begingroup%
-\edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
-\cpgeb@tempa}
-\newrobustcmd{\ifincsvcs}[2]{%
-\expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
-\long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
-\newrobustcmd{\xifincsvcs}[1]{%
-\begingroup%
-\edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
-\cpgeb@tempa}
-%% ajoute les éléments de #2 (separe par des virgules)
-%% a la liste interne \list@#1
-\DeclareDocumentCommand\cpgeaddkeyword{st+m+m+m}{%
-\csvtolistcsadd{list@#3}{#4}%
-\IfBooleanT{#1}{\csglobal}%
-\IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
-\endcslorg%
-}%
-}{}
+% \ifundef{\cpgeaddkeyword}{%
+% 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%% Commandes utilitaires multi-usage %%%%%
+% \def\cslocal{%
+% \let\lorg@cslet=\cslet%
+% \let\lorg@csletcs=\csletcs%
+% \let\lorg@def=\def%
+% \let\lorg@edef=\edef%
+% \let\lorg@csdef=\csdef%
+% \let\lorg@csedef=\csedef%
+% \let\lorg@listadd=\listadd%
+% \let\lorg@listeadd=\listeadd%
+% \let\lorg@listcsadd=\listcsadd%
+% \let\lorg@listcseadd=\listcseadd%
+% \let\lorg@csappto=\csappto%
+% \let\lorg@cseappto=\cseappto%
+% \let\lorg@appto=\appto%
+% \let\lorg@eappto=\eappto%
+% }
+% \def\csglobal{%
+% \begingroup\cpge@globaltrue%
+% \def\lorg@cslet{\global\cslet}%
+% \def\lorg@csletcs{\golbal\csletcs}%
+% \let\lorg@def=\gdef%
+% \let\lorg@edef=\xdef%
+% \let\lorg@csdef=\csgdef%
+% \let\lorg@csedef=\csxdef%
+% \let\lorg@listadd=\listgadd%
+% \let\lorg@listeadd=\listxadd%
+% \let\lorg@listcsadd=\listcsgadd%
+% \let\lorg@listcseadd=\listcsxadd%
+% \let\lorg@csappto=\csgappto%
+% \let\lorg@cseappto=\csxappto%
+% \let\lorg@appto=\gappto%
+% \let\lorg@eappto=\xappto%
+% }
+% \def\endcslorg{\ifcpge@global\endgroup\fi}
+% \cslocal
+% \def\undef@afterexec#1{\ifdefvoid{#1}{\relax}{#1}\gundef{#1}}
+% \def\csundef@afterexec#1{\csuse{#1}\csgundef{#1}}
+% \def\cpge@removestar#1*{#1}
+% \def\cpge@removeplus#1+{#1}
+% \def\cpge@erasestar*#1+{#1}
+% \def\if@staratend#1{%
+% 	\def\in@@{\in@{*!}}%
+% 	\@xp\in@@\@xp{#1!}%
+% 	\ifin@%
+% 		\edef\x@arg{\cpge@removestar#1}\expandafter\@firstoftwo%
+% 	\else%
+% 		\def\x@arg{#1}\expandafter\@secondoftwo%
+% 	\fi%
+% }
+% \def\if@plusatend#1{%
+% 	\def\in@@{\in@{+!}}%
+% 	\@xp\in@@\@xp{#1!}%
+% 	\ifin@%
+% 		\edef\x@arg{\cpge@removeplus#1}\expandafter\@firstoftwo%
+% 	\else%
+% 		\def\x@arg{#1}\expandafter\@secondoftwo%
+% 	\fi%
+% }
+% %\NewDocumentCommand\cpgesetdeco{ s mom}{%
+% %}
+% \newcommand\cpgesetdeco{\@ifstar\cpge@deco@\cpge@deco}
+% \long\def\cpge@deco#1#2{%
+% \long\csdef{deco@#1}##1{\color@begingroup#2\color@endgroup}}
+% \long\def\cpge@deco@#1#2{%
+% \long\csdef{deco@#1}{#2}}
+% \long\def\usedeco#1{\csuse{deco@#1}}
+% \cpgesetdeco*{simple}{\fbox}
+% \DeclareDocumentCommand\cpgename{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \lorg@csdef{name@#2}{#3}%
+% \endcslorg%
+% }
+% \DeclareDocumentCommand\cpgexname{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \lorg@csedef{name@#2}{#3}%
+% \endcslorg%
+% }
+% \cpgesetup[decorations]{%
+% .unknown/.code=\cpgesetdeco{\pgfkeyscurrentname}{#1}
+% }
+% \def\cpgethe#1{\ifnum\value{#1}>\z@\csuse{the#1}.\fi}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%% base de la gestion des mots clés entre ||  %%%%%
+% %%%%% Commandes pour le parsing des elements
+% \DeclareListParser*{\OutParser}{|}
+% %% \OutParser{\cmd}{item1|item2|...} retourne la séquence
+% %% \cmd{item1}\cmd{item2}...
+% \DeclareListParser*{\in@parser}{+}
+% %% \in@parser{\cmd}{item1+item2+...} retourne la séquence
+% %% \cmd{item1}\cmd{item2}...
+% \def\DoubleParser#1#2#3{%
+% \def\tmp@parser##1{#1{\in@parser{#2}{##1}}}%
+% \OutParser{\tmp@parser}{#3}%
+% }
+% %% \DoubleParser{\cmd1}{\cmd2}{1a+1b|2a+2b+2c|...} retourne la sequence 
+% %% \cmd1{\cmd2{1a}\cmd2{1b}}\cmd1{\cmd2{2a}\cmd2{2b}\cmd2{2c}}...
+% \DeclareDocumentCommand\csvtolistcsadd{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \def\do{\forcsvlist{\lorg@listcsadd{#2}}}
+% \expandafter\docsvlist\expandafter{#3}
+% \endcslorg%
+% }
+% \DeclareDocumentCommand\csvtolistcseadd{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \def\do{\forcsvlist{\lorg@listcseadd{#2}}}
+% \expandafter\docsvlist\expandafter{#3}
+% \endcslorg%
+% }
+% \DeclareDocumentCommand\csvtolistadd{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \def\do{\forcsvlist{\lorg@listadd{#2}}}
+% \expandafter\docsvlist\expandafter{#3}%
+% \endcslorg%
+% }
+% \DeclareDocumentCommand\csvtolisteadd{smm}{%
+% \IfBooleanT{#1}{\csglobal}%
+% \def\do{\forcsvlist{\lorg@listeadd{#2}}}
+% \expandafter\docsvlist\expandafter{#3}%
+% \endcslorg%
+% }
+% %%% Gestion de listes CSV
+% \newrobustcmd{\csvadd}[2]{%
+% \ifblank{#2}{}{\appto#1{#2,}}}
+% \newrobustcmd{\csveadd}[2]{%
+% \begingroup%
+% \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
+% \cpgeb@tempa{}{\eappto#1{#2,}}}
+% \newrobustcmd{\csvgadd}[2]{%
+% \ifblank{#2}{}{\gappto#1{#2,}}}
+% \newrobustcmd{\csvxadd}[2]{%
+% \begingroup%
+% \edef\cpgeb@tempa{\endgroup\noexpand\ifblank{#2}}%
+% \cpgeb@tempa{}{\xappto#1{#2,}}}
+% \newrobustcmd{\csvcsadd}[1]{%
+% \expandafter\csvadd\csname#1\endcsname}
+% \newrobustcmd{\csvcseadd}[1]{%
+% \expandafter\csveadd\csname#1\endcsname}
+% \newrobustcmd{\csvcsgadd}[1]{%
+% \expandafter\csvgadd\csname#1\endcsname}
+% \newrobustcmd{\csvcsxadd}[1]{%
+% \expandafter\csvxadd\csname#1\endcsname}
+% \newrobustcmd{\csvremove}[2]{%
+% \cpgeb@csvremove{#1}{#2}\def}
+% \newrobustcmd{\csvgremove}[2]{%
+% \cpgeb@csvremove{#1}{#2}\gdef}
+% \long\def\cpgeb@csvremove#1#2#3{%
+% \ifblank{#2}
+% {}
+% {\ifincsv{#2}{#1}{%
+%  \begingroup%
+%  \def\cpgeb@tempa##1,#2,##2&{\endgroup%
+%    \expandafter#3\expandafter#1\expandafter{\@gobble##1,##2}}%
+% \expandafter\cpgeb@tempa\expandafter,#1&}{}}%
+% }
+% \newrobustcmd{\csvcsremove}[1]{%
+% \expandafter\csvremove\csname#1\endcsname}
+% \newrobustcmd{\csvcsgremove}[1]{%
+% \expandafter\csvgremove\csname#1\endcsname}
+% \newrobustcmd{\ifincsv}[2]{%
+% \begingroup
+% \def\cpgeb@tempa##1,#1,##2&{\endgroup%
+% \ifblank{##2}\@secondoftwo\@firstoftwo}%
+% \expandafter\expandafter\expandafter\cpgeb@tempa%
+% \expandafter\expandafter\expandafter,\expandafter\zap@space#2 \@empty,#1,&}
+% \newrobustcmd{\xifincsv}[1]{%
+% \begingroup%
+% \edef\cpgeb@tempa{\endgroup\ifincsv{#1}}%
+% \cpgeb@tempa}
+% \newrobustcmd{\ifincsvcs}[2]{%
+% \expandafter\cpgeb@ifincsvcs@i\csname #2\endcsname{#1}}
+% \long\def\cpgeb@ifincsvcs@i#1#2{\ifincsvcs{#2}{#1}}
+% \newrobustcmd{\xifincsvcs}[1]{%
+% \begingroup%
+% \edef\cpgeb@tempa{\endgroup\ifincsvcs{#1}}%
+% \cpgeb@tempa}
+% %% ajoute les éléments de #2 (separe par des virgules)
+% %% a la liste interne \list@#1
+% \DeclareDocumentCommand\cpgeaddkeyword{st+m+m+m}{%
+% \csvtolistcsadd{list@#3}{#4}%
+% \IfBooleanT{#1}{\csglobal}%
+% \IfBooleanTF{#2}{\long\lorg@csdef{#3@#4}##1{#5}}{\long\lorg@csdef{#3@#4}{#5}}%
+% \endcslorg%
+% }%
+% }{}
 
 %%%%% Gestion des métadonnées 
 \newcommand\addmeta[4]{%
@@ -615,23 +610,28 @@
 
 %%% Fonts loading. 
 \RequirePackage{ifxetex} 
+\newif\iftxsf
 \cpgesetup[font]{%
 	libertine/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{fontspec}
+				\usepackage[no-math]{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
 			\fi
-			\RequirePackage[french]{babel}
 			\RequirePackage[tt=false]{libertine}
+			\ifxetex
+			\RequirePackage[warnings-off={mathtools-colon,mathtools-overbracket}]{unicode-math}
+			\setmathfont{TeX Gyre Termes Math}
+			\else 
 			 \RequirePackage[%
 			 	libertine,smallerops,bigdelims,upint,vvarbb
 			 ]{newtxmath}
 			%\usepackage[amsthm,sansmath]{libertinust1math}
 			\usepackage[scr=boondoxo,bb=boondox]{mathalpha}
+			\fi 
 			\RequirePackage[scaled=.8]{FiraMono}
 			\useosf
 			\def\TitlingFont{\sffamily\scshape}
@@ -639,13 +639,12 @@
 	garamond/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{fontspec}
+				\usepackage[no-math]{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
 			\fi
-			 \RequirePackage[french]{babel}
 			 \usepackage[vvarbb,ebgaramond,smallerops]{newtx}
 			 \usepackage[sf,scale=0.95]{libertine}
 			 % \usepackage[cmintegrals,cmbraces]{newtxmath}
@@ -657,14 +656,13 @@
 	lmodern/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{fontspec}
+				\usepackage[no-math]{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
 			\fi
 		\usepackage{mlmodern}
-		\RequirePackage[french]{babel}
 		\def\TitlingFont{\scshape}
 	}},
 	utopia/.code={%
@@ -676,24 +674,26 @@
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
 			\fi
-		\RequirePackage[french]{babel}
-		\usepackage[p,scaled=.98,space]{erewhon}
-		\usepackage[scaled=1.05]{biolinum} % sans serif like Gill Sans
-		\usepackage[varqu,varl]{inconsolata} % typewriter
-		\usepackage[utopia,vvarbb]{newtxmath}
-		\useosf
-		\def\TitlingFont{\sffamily\scshape}
+		\ifxetex
+			\usepackage{fourier-otf}
+		\else 
+			\usepackage[p,scaled=.98,space]{erewhon}
+			\usepackage[utopia,vvarbb]{newtxmath}
+			\useosf
+		\fi
+		\usepackage[scaled=1.05]{FiraSans}
+		\usepackage[varqu,varl]{inconsolata} 
+		\def\TitlingFont{\firamedium\scshape}
 	}},
 	palatino/.code={%
 		\def\load@thefonts{
 			\ifxetex
-				\RequirePackage{fontspec}
+				\usepackage[no-math]{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
 			\fi
-		\RequirePackage[french]{babel}
 		\usepackage[nohelv]{newpxtext}
 		\usepackage[scaled=1.05]{biolinum}
 		\usepackage[vvarbb,smallerops]{newpxmath}
@@ -703,40 +703,57 @@
 	fira/.code={%
 		\def\load@thefonts{%
 			\ifxetex
-				\RequirePackage{fontspec}
+				\usepackage[no-math]{fontspec}
 				\let\lsstyle\relax
 			\else 
 				\RequirePackage[T1]{fontenc}
 				\RequirePackage{microtype}
-
-			\fi
-			\RequirePackage[french]{babel}
+			\fi	
 			\RequirePackage[sfdefault, scaled=.92]{FiraSans}
 			\RequirePackage[scaled=.88]{FiraMono}
-			\RequirePackage[smallerops,upint]{newtxsf}
-			\def\fira@loaded{}%
+			\ifxetex
+				\usepackage[fakebold,mathrm=sym]{firamath-otf}
+			\else 
+				\RequirePackage[smallerops,upint]{newtxsf}
+				\txsftrue
+			\fi 
 			\firaoldstyle
 			\def\TitlingFont{\scshape}
 	}},
 	load/.code={%
 		\def\load@thefonts{%
 			\RequirePackage[T1]{fontenc}
-			\RequirePackage[french]{babel}
 			\RequirePackage{#1}
 			\RequirePackage{microtype}
 	}},
 	none/.code={\def\load@thefonts{}},
 	titling font/.store in=\TitlingFont,
 }
+\def\set@speller{
+	\ifxetex 
+		\RequirePackage{polyglossia}
+		\setdefaultlanguage{french}
+		\setotherlanguage[locale=morocco, numerals=maghrib]{arabic}
+		\setotherlanguage{english}
+		\selectbackgroundlanguage{french}
+	\else
+		\RequirePackage[english,french]{babel}
+	\fi
+}
+\def\HeadingFont{\scshape}
 \DeclareDocumentCommand\cpgefont{m}{%
 	\cpgesetup[font]{#1}
 }
 \def\reloadthefonts{
 	\load@thefonts%
-	\ifundef\fira@loaded{}{% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
+	\set@speller%
+	\iftxsf% patch de la commande \mathbb de newtxsf qui n'est pas assez robuste.
+		\unless\ifxetex
 		\RenewDocumentCommand\mathbb{>{\TrimSpaces}m}
 			{\unexpanded{\varmathbb{##1}}}
-		}
+		\fi
+	\fi
+	\ifundef\up{\let\up\textsuperscript}{}
 }
 
 \AtEndPreamble{
@@ -809,9 +826,13 @@
 \acro@@plural		{cpm}{continues par morceaux}
 \acro@@				{cepm}{continuit\'e par morceaux}
 \acro@@				{va}{variable al\'eatoire}
+\acro@@plural		{va}{variables al\'eatoires}
 \acro@@				{var}{variable al\'eatoire r\'eelle}
+\acro@@plural		{var}{variables al\'eatoires r\'eelles}
 \acro@@				{vad}{variable al\'eatoire discrète}
+\acro@@plural		{vad}{variables al\'eatoires discrètes}
 \acro@@				{vadr}{variable al\'eatoire discr\`ete r\'eelle}
+\acro@@plural		{vadr}{variables al\'eatoires discr\`etes r\'eelles}
 \acro@@				{iid}{ind\'ependantes et identiquement distribu\'ees}
 \acro@@				{eaf}{\'egalit\'e des accroissements finis}
 \acro@@				{iaf}{in\'egalit\'e des accroissements finis}
@@ -833,7 +854,6 @@
 \acro@@				{cscsa}{critère spécial de convergence des séries altérnées}
 \acro@@				{edl}{équation différentielle linéaire}
 \acro@@				{sfs}{système fondamental de solutions}
-
 
 \RequirePackage{xspace}
 \def\vap{\ac{vap}\xspace}
@@ -890,7 +910,7 @@
 \DeclareDocumentCommand\cpgetheme{O{} m}{%
 	\unless\ifdraft
 		\cpgesetup[theme]{#1}
-		\ifstrequal{#2}{ibnghazi}{\def\cpge@palette{ibnghazi}}{}
+		\ifstrequal{#2}{az}{\def\cpge@palette{az}}{}
 		\load@thecolors
 		\cpgesetup[theme/postload]{#1}
 		\IfFileExists{#2\cpgecurrentclass.sty}
@@ -923,29 +943,11 @@
 	\ifdefstring\cpgecurrentclass{doc}{\titlepagetrue}{}
 }
 
-% \AtBeginDocument{%
-%  \cpgesetup{background}
-%  \ifbackground%
-%      \AddToShipoutPictureBG{\back@pos{\back@code}}%
-%   \fi%
-% }
-   % \titleformat\section
-   %    {\Large\sffamily\scshape}
-   %    {\deco@section{\label@section}}
-   %    {1.8pc}
-   %    {#1}
-   % \titleformat\subsection
-   %    {\large\sffamily\scshape
-   %    }{\deco@subsection{\label@subsection}}
-   %    {1.8pc}
-   %    {#1}
-
 %%%%% Geometrie du document
 
 \RequirePackage{geometry}
 \RequirePackage{cuted,flushend}
 \newif\iflandscape
-
 
 % patch de la commande qui contrôle le format de papier
 \newdimen\Gm@littlemargin
@@ -994,7 +996,8 @@
 		\geometry{%
 			a4paper,
 			inner=3cm, outer=2cm,
-			vmargin={2.4cm,3cm}, 
+			vmargin={3cm,3cm}, 
+			headsep=1.5cm,
 			footskip=2cm,
 			littlemargin=6pc
 		}, 
@@ -1028,12 +1031,13 @@
 	book/.code=%
 		\printtrue%
 		\darkfalse%
-		\compactfalse%
+		\compacttrue%
 		\geometry{%
 			bk17x24,
-			inner=2.4cm, outer=1.8cm,
-			vmargin={2cm,3cm}, 
-			littlemargin=6pc
+			inner=2.4cm, outer=1.6cm,
+			vmargin={2cm,2.4cm}, 
+			footskip=1.4cm, headsep=1cm,
+			littlemargin=4.5pc
 		}, 
 	altbook/.code=%
 		\printtrue%
@@ -1062,9 +1066,9 @@
 		\titlepagetrue%
 		\geometry{%
 			sc16x9,
-			hmargin={1cm,.5cm},
+			hmargin={.5cm,.5cm},
 			vmargin={1.2cm,1.4cm},
-			littlemargin=4.5pc,
+			littlemargin=3.5pc,
 		},%
 	altphone/.code=%
 		\printfalse%
@@ -1073,9 +1077,9 @@
 		\titlepagetrue%
 		\geometry{%
 			sc19x9,
-			hmargin={1cm,.5cm},
+			hmargin={.5cm,.5cm},
 			vmargin={1.4cm,1.8cm},
-			littlemargin=4.5pc
+			littlemargin=3.5pc
 		},%
 	beamer/.code=%
 		\printfalse%
@@ -1152,7 +1156,7 @@
 			\forced@geometrytrue%
 	\fi%
 	\ifundef\media 
-		{\def\media{#2}}
+		{\gdef\media{#2}}
 		{}
 	\cpgesetup[geometry]{#1}
 	\ifactivated@geometry\else%
@@ -1219,6 +1223,7 @@
    }%
 }
 \cpgenewtitlekeyword{document}{\LARGE\bfseries}
+\cpgenewtitlekeyword{matiere}{\LARGE\bfseries}
 \cpgenewtitlekeyword{concours}{\LARGE\bfseries}
 \cpgenewtitlekeyword{epreuve}{\Large\scshape}
 \cpgenewtitlekeyword{origine}{\large\scshape}
@@ -1234,7 +1239,6 @@
 \cpgenewtitlekeyword{auteur}{\small\textit{\cpge@preauthor}~}
 \cpgenewtitlekeyword{email}{\small\ttfamily}
 \cpgenewtitlekeyword{website}{\small\ttfamily}
-
 
 \NewDocumentCommand\renew@title@format{O{1}mm}{%
 	\ifcase #1\relax	
@@ -1346,7 +1350,6 @@
 					{\title@contents}%
 		}%
 }
-
 
 %% Options du formatage 
 \def\cpgesetuptitle{\cpgesetup[title]}
@@ -1469,12 +1472,6 @@
 }
 \NewDocumentCommand\dummy@titre{s e\op d()}{}
 
-
-
-
-
-
-
 %%%% Entetes et pieds de pages
 
 \csvtolistcsadd{list@hf}{%
@@ -1554,6 +1551,7 @@
 \cpgenewpagestylekeyword{siteweb}{\ttfamily}
 \cpgenewpagestylekeyword{email}{\ttfamily}
 
+\cpgeaddkeyword{hf}{part}{\parttitle}
 \cpgeaddkeyword{hf}{chapter}{\chaptertitle}
 \cpgeaddkeyword{hf}{section}{\sectiontitle}
 \cpgeaddkeyword{hf}{C}{\ifnum\value{chapter}>\z@\thechapter\fi}

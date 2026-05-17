@@ -9,6 +9,7 @@
 \newif\ifsubdoc
 
 \newif\ifdraft
+\newif\iffinal
 \newif\ifweb
 \newif\ifserie
 \newif\ifquiz
@@ -30,6 +31,7 @@
 
 \pgfkeys{IGSD/.cd,
 	draft/.is if=draft,
+	final/.is if=final,
 	straight/.is if=straight,
 	compact/.is if=compact,
 	nocolor/.is if=nocolor,
@@ -62,7 +64,7 @@
 	suivi/.is if=suivi
 }
 \def\preamble@file{
-	\ClasseError{cpgesubdoc}{Utiliser l'option master= pour undiquer le fichier maitre}{}
+	\ClasseError{cpgesubdoc}{Utiliser l'option master= pour indiquer le fichier maitre}{}
 }
 % \DeclareOption*{%
 %   \typeout{Preamble taken from file `\CurrentOption'}%

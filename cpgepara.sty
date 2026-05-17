@@ -1,0 +1,2089 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cpgepara}[Avril 2026, v1.0alpha, Sadik Boujaida pour les CPGE Al Zahrawi]
+
+
+\ifundef\cpgesetup
+{
+	\RequirePackage{calc}
+	\RequirePackage{pgfkeys}
+	\RequirePackage{etoolbox}
+	\RequirePackage{xstring}
+	\@ifundefined{NewDocumentCommand}
+		{\RequirePackage{xparse}}
+		{}
+	\pgfkeysifdefined{/cpge/.is family}{}{\pgfkeys{/cpge/.is family}}
+	\NewDocumentCommand\cpgesetup{o}{%
+      \IfValueT{#1}
+   	   {\pgfkeysifdefined{/cpge/#1/.is family}{}
+			   {\pgfkeys{/cpge/#1/.is family}}}%
+      \IfValueTF{#1}{\pgfqkeys{/cpge/#1}}{\pgfqkeys{/cpge}}%
+   }
+}{}
+
+
+\RequirePackage{cpgebase}
+\RequirePackage[inline]{enumitem}
+\RequirePackage{pifont}
+\RequirePackage{relsize}
+\RequirePackage{ragged2e}
+\RequirePackage{xltabular,multirow,booktabs,caption}
+\RequirePackage{shortvrb}
+\RequirePackage{paracol}
+\RequirePackage{tcolorbox}
+\RequirePackage[skip=4\p@\@plus\p@\@minus.2\p@]{parskip}
+% \RequirePackage{ragged2e,needspace,xspace,setspace}
+
+%% Declarations
+\newdimen\cpge@plus
+\newdimen\cpge@minus
+\newtoks\cpge@listtoks
+%%% Configuration supplémentaires des packages. 
+\globalcounter*
+\captionsetup{format=hang,justification=centering}
+\tcbuselibrary{skins,xparse,breakable}
+\usetikzlibrary{shadows,shapes.misc}
+
+
+% Les couleurs
+\RequirePackage{cpgecolor}
+\ifundef\TitlingFont{\let\TitlingFont\scshape}{}
+\newrobustcmd\titlestyle{\TitlingFont\color{titletextcol}}
+\DeclareTextFontCommand\texttitle{\titlestyle}
+
+%%% footnote en dehors de paracol 
+\footnotelayout{m}
+\newcolumntype{Y}{>{\tabkilllistspaces}X<{\closeall}}
+\newcolumntype{M}[1]{>{\RaggedRight\arraybackslash\tabkilllistspaces}m{#1}<{\closeall}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\tabkilllistspaces}b{#1}<{\closeall}}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\tabkilllistspaces}b{#1}<{\closeall}}
+\newcolumntype{T}[1]{>{\RaggedRight\arraybackslash\tabkilllistspaces}p{#1}<{\closeall}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash\tabkilllistspaces}b{#1}<{\closeall}}
+%%%% tprogram=xltabular avec \textwidth fixé comme largeur du tableau.
+\newenvironment{tprogram}[1][x]%
+{%
+  \par
+  \if l#1%
+    \LTleft\z@ \LTright\fill
+  \else\if r#1%
+    \LTleft\fill \LTright\z@
+  \else\if c#1%
+    \LTleft\fill \LTright\fill
+  \fi\fi\fi
+  \let\TX@endtabularx=\XLT@ii@TX@endtabularx
+  \let\endtabularx\endxltabular
+  \XLT@ii@tabularx\textwidth}
+{\def\@currenvir{tprogram}}
+
+\def\morespace#1{%
+	\begingroup\setlength\cpge@dima{\baselineskip*\real{#1}}
+	\edef\@tmp{\endgroup\noexpand\needspace{\the\cpge@dima}}%
+	\@tmp%
+	}
+
+%%%%%%%%%%%%%%% les multi-colonnes avec paracol %%%%%%%%%%%%%%%%%%%%
+
+%\definecolumnpreamble{0}{\vskip1\parskip}
+%\definecolumnpreamble{1}{\vskip1\parskip}
+%%%%% délaissé car source de désiquilibre 
+%%%%% dans la synchronisation des colonnes
+
+%% jetons pour savoir quelle position est active et autre bouléen.
+\newbool{b@columns}
+\newbool{b@span}
+\newbool{b@program}
+\newbool{b@markallparacom}
+\newbool{group@b@open}
+\newbool{b@head}
+\newbool{b@newcell}
+\newbool{b@nextrow} % nextrow
+\NewDocumentCommand\nrtrue{s}
+	{\IfBooleanTF{#1}{\groupclose*}{\groupclose}\b@nextrowtrue\syncallcounters} 
+\NewDocumentCommand\nrfalse{s}
+	{\IfBooleanTF{#1}{\groupclose*}{\groupclose}
+	\b@nextrowfalse}
+\newskip\outerparskip
+\newcount\col@count
+\def\startatevenpage{\clearpage\if@twoside \ifodd\c@page
+    \hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+
+%%%%%% un bprogram doit toujours etre synchronis\'e, un commentaire 
+%%%%%% ne le sera que s'il n'est pas pr\'ec\'ed\'e d'un bprogram
+%%%%%% Dans le but de lui appliquer un style particulier, un commentaire
+%%%%%% sera encapsul\'e dans un groupe, pour que le style en question ne
+%%%%%% d\'eborde pas en dehors du commentaire.
+
+\newskip\interskipamount
+\def\addto@save#1#2{
+	\def\cpge@tmp{#2}
+	\ifdefstring\cpge@tmp{restore}{}{\csvadd#1{#2}}
+}
+\def\gaddto@save#1#2{
+	\def\cpge@tmp{#2}
+	\ifdefstring\cpge@tmp{restore}{}{\csvgadd#1{#2}}
+}
+\def\csaddto@save#1#2{
+	\@xp\addto@save\csname#1\endcsname{#2}
+}
+\def\csgaddto@save#1#2{
+	\@xp\gaddto@save\csname#1\endcsname{#2}
+}
+
+\def\pc@curropts{}
+\cpgesetup[pc]{
+	ratio/.store in=\left@ratio,
+	left width/.code 2 args=\width@process{0}{#1}{#2},%
+	right width/.code 2 args=\width@process{1}{#1}{#2},%
+	widths/.is family,
+	widths/left/.forward to=/cpge/pc/left width,
+	widths/right/.forward to=/cpge/pc/right width,
+	widths/1/.forward to=/cpge/pc/left width,
+	widths/2/.forward to=/cpge/pc/right width,
+	col widths/.code=\pgfqkeys{/cpge/columns/col@widths}{#1},
+	interskip/.code=\cpge@assign\interskipamount#1\relax\outerparskip,
+	sep width/.code={\columnsep=#1}, 
+	seprule width/.code={\columnseprule=#1},
+	seprule color/.code=\colseprulecolor{#1}, 
+	seprule/.style 2 args={seprule width=#1, seprule color=#2},
+	before/.store in=\pc@beforehook, before={},
+	after/.store in=\pc@afterhook, after={},
+	beforeskip/.code=\cpge@gluedef\pc@beforeskip{#1}\medskipamount,
+	afterskip/.code=\cpge@gluedef\pc@afterskip{#1}\medskipamount,
+%%% alignement du texte dans les colonnes 
+	left align/.is choice,
+	left align/l/.code=\csdef{0@align}{\RaggedRight},
+	left align/c/.code=\csdef{0@align}{\Centering},
+	left align/r/.code=\csdef{0@align}{\RaggedLeft},
+	right align/.is choice,
+	right align/l/.code=\csdef{1@align}{\RaggedRight},
+	right align/c/.code=\csdef{1@align}{\Centering},
+	right align/r/.code=\csdef{1@align}{\RaggedLeft},
+	align/.code 2 args=
+		\ifblank{#1}{}{\pgfkeysalso{left align=#1}}
+		\ifblank{#2}{}{\pgfkeysalso{right align=#2}},
+	left style/.code=\csdef{0@style}{#1},
+	right style/.code=\csdef{1@style}{#1},
+	backcol/.code=\pgfqkeys{/cpge/backcol}{default, #1},
+	backcol/.default={},
+	backcol*/.code=\global\global@colorstrue
+		\pgfqkeys{/cpge/backcol}{default, #1},
+	backcol*/.default={},
+	interrule/.code=\pgfqkeys{/cpge/pc/rule}{#1},
+%%%% head specific options 
+	headrules width/.code 2 args=\dimdef\top@ruleheadheight{#1}\dimdef\bottom@ruleheadheight{#2}, 
+	headrules color/.code=\colorlet{head@rule}{#1},
+	headrules/.style n args={3}{headrules width={#1}{#2},headrules color={#3}},
+	tophead/.code=\dimdef\innertop@headspace{\ifblank{#1}{\ht\strutbox+2pt}{\ht\strutbox+2pt+#1}},
+	bottomhead/.code=\dimdef\innerbottom@headspace{\ifblank{#1}{\dp\strutbox}{\dp\strutbox+#1}},
+	topheadbefore/.code=\dimdef\outertop@headspace{\ifblank{#1}{\z@}{#1}},
+	bottomheadafter/.code=\dimdef\outerbottom@headspace{\ifblank{#1}{\dp\strutbox}{\dp\strutbox+#1}},
+	head innerspaces/.style 2 args={tophead=#1,bottomhead=#2},
+	head outerspaces/.style 2 args={topheadbefore=#1,bottomheadafter=#2}, 
+	head/.code 2 args=\b@headtrue\def\left@head{#1}\def\right@head{#2},
+	nohead/.code=\boolfalse{b@head},
+%%%% backup specific keys
+	save to current/.code=\addto@save\pc@curropts{#1},
+	restore/.code=\@xp\cpgesetuppc\@xp{\pc@curropts},
+	save/.code 2 args=\pgfkeys{/cpge/pc/#1/.style={#2}},
+}
+\newcommand*\cpgesetuppc{\pgfqkeys{/cpge/pc}}
+\cpgesetup[pc]{rule/.is family, rule,% 
+	b/.code=\dimdef\c@before@hrule{\dp\strutbox+#1},
+	a/.code=\dimdef\c@after@hrule{\dp\strutbox+#1},
+	h/.code=\dimdef\rule@height{#1},
+	c/.code=\colorlet{single@rule}{#1}, 
+}
+\DeclareDocumentCommand\init@pc{!d<> +o}{%
+		\IfValueT{#1}{\pgfkeys{/cpge/pc/save to current/.list={#1}}}
+		\begingroup 
+			\booltrue{b@span}%
+			\IfValueT{#1}{
+				\pgfqkeys{/cpge/pc}{#1}
+			}%
+			\IfValueTF{#2}{\open@pc[#2]}{\open@pc}%
+}
+\DeclareDocumentCommand\open@pc{ +o}{%
+	\booltrue{b@columns}%
+	\pc@beforehook%
+	\columnskillspace%
+	\def\colnumber{2}%
+	\def\columnlist{0,1}%
+	\renewrobustcmd\bcolumn{\nrfalse\init@cell\columns@cell}%
+	\newrobustcmd\col{\nrfalse\init@cell\columns@cell}%
+    \renewrobustcmd\interskip[1]{%
+        \groupclose\init@cell\columns@cell[\thecol][\normal@vskip{##1}]
+	}
+	\process@columnwidths%
+	\ifdef\widths@
+		{\@xp\setcolumnwidth\@xp{\cols@widthslist}}
+		{\ifdef\left@ratio
+			{\@xp\columnratio\@xp{\left@ratio}}
+			{\columnratio{}}%
+		}%
+	\def\interrule{\pcrule}%
+	\vskip\pc@beforeskip%
+	\IfValueTF{#1}{\paracol{2}[#1]}{\paracol{2}}%
+}
+\NewDocumentCommand\bprogram{!d<> +o}{%
+	\groupclose%
+	\ifb@columns
+		\IfValueTF{#2}
+			{\switchcolumn[0]*[\b@columnsfalse#2]}
+			{\switchcolumn[0]*}%
+	\else
+		\init@pc<#1>%
+		\ifbool{b@head}{\pc@head}{}%
+		\IfValueTF{#2}
+			{\switchcolumn[0]*[\b@columnsfalse#2]}
+			{\switchcolumn[0]*}%
+	\fi 
+	\ifb@markallparacom%
+		\global\stepcounter{paracom}\print@numparacom%
+	\fi%
+	\gdef\thecol{1}%
+	\groupopen{0}%
+		%\csuse{0@style}\csuse{0@align}%
+}
+\NewDocumentCommand\bcomment{!d<> +o}{%
+	\groupclose%
+	\ifb@columns
+		\IfValueTF{#2}
+			{\switchcolumn[1]*[\b@columnsfalse#2]}
+			{\switchcolumn[1]}
+	\else	
+		\bprogram<#1>[#2]
+		\groupclose
+		\switchcolumn[1]
+	\fi
+	\gdef\thecol{2}%
+	 \groupopen{1}%
+}
+\NewDocumentCommand\nbprogram{!d<> +o}{%
+	\bprogram<#1>[#2]%
+	\unless\ifb@markallparacom%
+		  \refstepcounter{paracom}\print@numparacom%
+	\fi%
+}
+\def\pc@head{%
+	\groupclose*
+	\ensurevspace{4\baselineskip}%
+	\columns@rule\top@ruleheadheight{head@rule}
+		\head@text\innertop@headspace\innerbottom@headspace{\left@head}
+	\switchcolumn[1]%
+		\head@text\innertop@headspace\innerbottom@headspace{\right@head}
+	\columns@rule\bottom@ruleheadheight{head@rule}
+	\nointerlineskip%
+	\vspace*{\glueexpr\outerbottom@headspace+1sp-\parskip}%
+	\switchcolumn[0]*
+	\groupopen{0}%
+}
+% \def\head@text#1#2#3{
+% 	\setbox\@tempboxa\vtop{{\TitlingFont\bfseries#3}}%
+% 	\dimdef\cpge@tempa{
+% 		\ifdim\ht\@tempboxa>\dimexpr#1\relax
+% 			\ht\@tempboxa
+% 		\else
+% 			\the\dimexpr#1
+% 		\fi
+% 	}
+% 	\dimdef\cpge@tempb{%
+% 		\ifdim\dp\@tempboxa>\dimexpr#2\relax%
+% 			\dp\@tempboxa
+% 		\else
+% 			\the\dimexpr#2
+% 		\fi
+% 	}
+% 	\nointerlineskip\vskip-\parskip%
+% 	\vrule 	height\dimexpr\cpge@tempa\relax 
+% 			depth\dimexpr\cpge@tempb\relax
+% 			width\z@%
+% 	{\titlestyle\bfseries#3}%
+% }
+\def\head@text#1#2#3{%
+	\setbox\@tempboxa\vtop{\color@begingroup\titlestyle\bfseries#3\color@endgroup}%
+	\dimdef\cpge@tempa{\ht\@tempboxa+#1}%
+	\setbox\@tempboxa\vbox{\color@begingroup\titlestyle\bfseries#3\color@endgroup}%
+	\dimdef\cpge@tempb{\dp\@tempboxa+#2}%
+	\nointerlineskip
+	\vskip-\parskip%
+	\vrule 	height\dimexpr\cpge@tempa
+			width\z@% 
+	\nobreak\color@begingroup\titlestyle\bfseries#3\color@endgroup%
+	\nobreak\vrule	depth\dimexpr\cpge@tempb
+					width\z@%
+	\vspace*{-\dimexpr\baselineskip}
+}
+
+\NewDocumentCommand\pcrule{d<>}{%
+	\groupclose%
+	\begingroup%
+		\IfValueT{#1}{\pgfqkeys{/cpge/pc/rule}{#1}}%
+		\switchcolumn[0]*%
+		\nointerlineskip%
+		\vspace{-\interskipamount}
+		\vspace{\c@before@hrule+1sp-1\parskip}
+		\columns@rule\rule@height{single@rule}%
+		\nointerlineskip
+		\vspace{\c@after@hrule+1sp-1\parskip}%
+	\endgroup%
+	\bprogram%
+}
+
+%% ouvre un groupe et place un jeton, ferme le groupe
+\NewDocumentCommand\groupopen{m}{%
+	\begingroup\booltrue{group@b@open}%
+	\killparskip%
+	\ignorespaces%
+	\global\b@newcelltrue%
+	\everypar{\global\b@newcellfalse\everypar{}}%
+	\csuse{#1@align}\csuse{#1@style}%
+}
+\NewDocumentCommand\groupclose{s}{%
+	\closeall%
+	\ifgroup@b@open%
+		\par
+		\unless\ifb@newcell%
+			\IfBooleanF{#1}{\normal@vskip{\interskipamount}}%
+		\fi%
+		\endgroup%
+	\fi%
+}
+\def\group@close{%
+	\closeall%
+	\ifgroup@b@open\endgroup\@xp\group@close\fi%
+}
+
+%% ferme bprogram et bcomment. Ne fait presque rien, mais si \'etoil\'e, ferme 
+%% paracol.
+\newcommand\eprogram{%
+	\groupclose%
+	 \ifbool{b@head}{\final@rule}{}%
+	  \close@pc%
+	   \@ifstar{}{}%
+}
+\let\ecomment\eprogram
+
+%% ouverture, fermeture de paracol avec isolation dans un groupe.
+\newcommand*\close@pc{%
+	\groupclose
+	 \ifbool{b@columns}{%
+		\endparacol%
+		\unless\ifglobal@colors\resetbackgroundcolor\fi%.
+		\pc@afterhook%
+	  	 \addvspace\pc@afterskip%
+		  \endgroup
+		  \columnratio{}}{}%
+}
+%%%%%% Outils utilisables dans un env paracol
+
+%%% \customtile, utilise le mécanisme Vanilla de LaTeX
+%%% pour placer le titre, mais avec sa propre initialisation 
+%%% des arguments
+%%% desactive \<secion>mark et \addcontentsline
+
+\def\cpge@startsection#1#2#3#4{%
+	% #3=indent -> #1
+	% #4=beforeskip -> #2,  si <0 => \noindent pour texte suivant 
+	% #5=afterskip -> #3, si <0 mode runin
+	% #6=style -> #4
+  \if@noskipsec \leavevmode \fi
+  \par
+  \@tempskipa=\glueexpr #2\relax
+  \@afterindenttrue
+  \ifdim \@tempskipa <\z@
+    \@tempskipa -\@tempskipa \@afterindentfalse
+  \fi
+  \if@nobreak
+    \everypar{}%
+  \else
+    \addpenalty\@secpenalty
+		\xaddvspace\@tempskipa
+  \fi
+   \cpge@sect{#1}{#2}{#3}{#4}%
+}
+\def\cpge@sect#1#2#3#4#5{%
+	% #3=indent -> #1
+	% #4=beforeskip -> #2,  si <0 => \noindent pour texte suivant 
+	% #5=afterskip -> #3, si <0 mode runin 
+	% #6=style -> #4
+	% [#7]=alt title, deleted 
+	% #8=title -> #5
+  \protected@edef\@svsec{\cpge@seccntformat\relax}%
+  \@tempskipa=\glueexpr #3\relax
+  \ifdim \@tempskipa>\z@
+    \begingroup
+      #4{%
+        \cpge@hangfrom{\hskip #1\relax\@svsec}%
+          \interlinepenalty \@M #5\@@par}%
+    \endgroup
+  \else
+    \def\@svsechd{%
+      #4{\hskip #1{\@svsec}\ignorespaces #5}%
+    }%
+  \fi
+  \cpge@xsect{#3}}
+\def\cpge@xsect#1{%
+  \@tempskipa=\glueexpr #1\relax
+  \ifdim \@tempskipa>\z@
+    \par \nobreak
+	  \vskip \@tempskipa
+    \@afterheading
+  \else
+    \@nobreakfalse
+    \global\@noskipsectrue
+    \everypar{%
+      \if@noskipsec
+        \global\@noskipsecfalse
+       {\setbox\z@\lastbox}%
+        \clubpenalty\@M
+        \begingroup \@svsechd \endgroup
+        \unskip
+        \@tempskipa #1\relax
+        \hskip -\@tempskipa
+      \else
+        \clubpenalty \@clubpenalty
+        \everypar{}%
+      \fi}%
+  \fi
+  \ignorespaces}
+%\def@seccntformat#1{\csname label@#1\endcsname\enskip}
+\def\cpge@seccntformat{\commondeco\title@localnum\cpge@enskip}
+\def\cpge@hangfrom#1{\setbox\@tempboxa\hbox{{#1}}%
+	\global\titlenumwidth=\wd\@tempboxa%
+      \hangindent \titlenumwidth\noindent\box\@tempboxa}
+
+% Example from article.cls
+% \newcommand\section{\@startsection {section}{1}{\z@}%
+%   {-3.5ex \@plus -1ex \@minus -.2ex}%
+%   {2.3ex \@plus.2ex}%
+%   {\normalfont\Large\bfseries}}
+
+\def\xaddvspace#1{%
+  \ifvmode
+     \unless\ifb@newcell
+       \ifdim \lastskip =\z@
+         \@vspace@calcify{#1}%
+       \else
+       \setlength\@tempskipb{#1}%
+         \@xaddvskip
+       \fi
+     \fi
+%  \else
+%   \@noitemerr
+  \fi}
+
+%%%%% mécanique cpgekit
+\cpgedefcounter{ccustomtitle}{|1|}[section]
+\cpgesetdeco{ccustomtitle}{#1.}
+\newdimen\titlenumwidth
+\newskip\titleafterskip 
+\newskip\titlebeforeskip 
+\newbox\title@numbox
+\newbool{@incol}
+\newbool{@counterin}
+\newbool{@runin}
+\newrobustcmd\titlepunct[1]{%
+	\edef\@tmptitle{#1}%
+	\ifdefvoid\@tmptitle{}{#1\title@punct}%
+}
+\let\title@punct.
+\cpgesetup[customtitle]{%
+	use counter/.code=
+		\ifcsdef{label@#1}
+			{\def\title@localnum{\usecounterstyle{#1}}}
+			{\common@err{\@xp\string\csname\title@name\endcsname : aucun compteur #1 trouvé. \MessageBreak vous devez d'abords le créer avec \string\cpgedefcounter}},
+	c/.style={use counter=#1},
+	reset/.code=\setcounter{c\title@name}{0},
+	r/.style=reset,
+	title style/.code=\def\title@style{#1},
+	s/.style={title style=#1},
+	s/.default=\normalsize,
+	punctuation/.store in=\title@punct,
+	punc/.style={punctuation=#1},
+	title indent/.code=\dimdef\title@indent{#1},
+	i/.style={title indent=#1},
+	i/.default=\z@,
+	labelsep/.code=\def\cpge@enskip{\hskip#1}\def\cpge@negenskip{\hskip-#1},
+	ls/.style={labelsep=#1},
+	ls=.5em,
+	beforeskip/.code=\cpge@assign\titlebeforeskip#1\relax\medskipamount,
+	afterskip/.code=\cpge@assign\titleafterskip#1\relax\medskipamount,
+	bs/.style={beforeskip=#1},
+	as/.style={afterskip=#1},
+	%bs=\medskipamount, as=\smallskipamount, 
+	bs/.default=*1, 
+	as/.default=*2, 
+	break factor/.store in=\title@breakfacfrac,
+	bf/.style={break factor=#1},
+	bf/.default=3,
+	runin/.code=\global\csname @runin#1\endcsname,
+	runin/.default=true,
+	runin sep/.code=\dimdef\title@runinsep{-#1},
+	runin sep=.5em,
+}
+\NewDocumentCommand\newsimplifiedtitle{mmmod()}{%
+	\edef\title@name{\@xp\@gobble\string#1}%
+	\begingroup%
+	\def\@tmp{\endgroup\cpgedefcounter}
+	\eappto\@tmp{{c\title@name}}
+	\ifblank{#3}{\appto\@tmp{{|1|}}}{\appto\@tmp{{#3}}}
+	\IfValueTF{#4}{\appto\@tmp{[#4]}}{\appto\@tmp{[section]}}
+	\IfValueT{#5}{\appto\@tmp{(#5)}}
+	\@tmp%
+	\csdef{deco@c\title@name}{\commondeco\titlepunct}%
+	\csdef{\title@name @title@setopts}{%
+		\pgfqkeys{/cpge/customtitle}{s,i,bs,as,bf,#2}%
+	}%
+	\newrobustcmd#1{%
+		\xdef\title@name{\@xp\@gobble\string#1}%
+		\title@getargs%
+	}%
+}
+\NewDocumentCommand\renewsimplifiedtitle{mmmod()}{%
+	\edef\title@name{\@xp\@gobble\string#1}%
+	\begingroup%
+	\def\@tmp{\endgroup\cpgedefcounter}
+	\eappto\@tmp{{c\title@name}}
+	\ifblank{#3}{\appto\@tmp{{|1|}}}{\appto\@tmp{{#3}}}
+	\IfValueTF{#4}{\appto\@tmp{[#4]}}{\appto\@tmp{[section]}}
+	\IfValueT{#5}{\appto\@tmp{(#5)}}
+	\@tmp%
+	\csdef{deco@c\title@name}{\commondeco\titlepunct}%
+	\csdef{\title@name @title@setopts}{%
+		\pgfqkeys{/cpge/customtitle}{s,i,bs,as,bf,#2}%
+	}%
+	\renewrobustcmd#1{%
+		\xdef\title@name{\@xp\@gobble\string#1}%
+		\title@getargs%
+	}%
+}
+\newsimplifiedtitle\customtitle{}{}
+\DeclareDocumentCommand\title@getargs{d<>som}{%
+	\gdef\title@cmd{\custom@title}%
+	\IfValueT{#1}{\gappto\title@cmd{<#1>}}%
+	\IfValueT{#3}{\gappto\title@cmd{[#3]}}%
+	\gappto\title@cmd{{#4}}%
+	\global\@incolfalse
+	\global\@runinfalse%
+	\ifb@columns%
+		\IfBooleanT{#2}{\global\@incoltrue}%
+		\if@incol%
+			\title@cmd%
+		\else%\show\thecolumn
+			%\group@close
+			\col[1][\title@cmd]%
+		\fi%
+	\else%
+		\title@cmd%
+	\fi%
+}
+\DeclareDocumentCommand\custom@title{d<>om}{%
+	%\breakifnospace[\title@breakfacfrac]%
+		\csuse{\title@name @title@setopts}%
+		\IfValueT{#1}{\pgfqkeys{/cpge/customtitle}{#1}}%
+		\IfValueTF{#2}
+			{\boolfalse{@counterin}%
+				\def\title@localnum{\csuse{deco@c\title@name}{#2}}%
+				\ifblank{#2}{\def\title@localnum{}\let\cpge@enskip\relax}{}%
+			}{%
+				\booltrue{@counterin}%
+				\ifdef\title@localnum{}%
+					{\def\title@localnum{\usecounterstyle{c\title@name}}}%
+			}%
+		\ifb@span%
+			\titlebeforeskip=\glueexpr\interskipamount*1/2\relax%
+			\titleafterskip=\glueexpr\interskipamount*1/2\relax%
+		\fi%
+		\if@runin
+			\cpge@startsection
+				{\title@indent}
+				{2\titlebeforeskip}
+				{\title@runinsep}
+				{\titlestyle\title@style}
+				{#3}%
+			\mbox{}%
+		\else 
+			\cpge@startsection
+				{\title@indent}
+				{2\titlebeforeskip}
+				{\titleafterskip}
+				{\titlestyle\title@style}
+				{#3}%
+		\fi%
+		\ifbool{@counterin}{}%
+			{\phantomsection%
+				\protected@edef\@currentlabel{\title@localnum}}%
+		\def\@currentabelname{#3}%
+		\global\b@newcellfalse%
+	%\endgroup%
+}
+
+%% Marquage des paragraphes en synchronisation avec leurs commentaires,
+%% s'active avec \markparacom
+\cpgedefcounter{paracom}{|S|.|1|}[section]
+\cpgesetdeco{paracom}{%
+	\textcolor{numcol}{\footnotesize\strut#1\hskip1pt\vrule}}
+\newcommand*\print@numparacom{%
+	\leavevmode%
+		\vbox{\llap{\theparacom\hskip3pt}\offinterlineskip}%
+}
+\newcommand*\markparacom{\booltrue{b@markallparacom}}
+\newcommand*\unmarkparacom{\boolfalse{b@markallparacom}}
+\newcommand*\disablemarks{%
+	\global\let\Print@NumParaCom\print@numparacom%
+	\global\let\print@numparacom\relax}
+\newcommand*\reenablemarks{%
+	\ifundef{Print@NumParaCom}{}
+		{\global\let\print@numparacom\Print@NumParaCom}%
+}
+
+%% Une implemetation plus général du multicolonnage 
+%% indépendante de \bprogram/\bcomment
+
+\newbool{global@colors}
+\def\common@err#1{\PackageError{cpgepara}{#1}{}}
+\def\column@err#1{%
+	\PackageError{cpgepara}{\string\bcolumn\space:\space#1}{}%
+}
+\def\generic@err#1{%
+\PackageError{cpgepara}{\string\newcolumns\space:\space#1}{}%
+}
+\def\numkey@err{%
+	\PackageError{cpgepara}{\string\bcolumn\space:\space 
+		\pgfkeyscurrentname\space 
+		n'est pas un numéro de colonne valide
+	}{}%
+}
+\def\maxcolnumber@err#1{\common@err{\string\setbackcol\space  			
+				#1\space en dehors des limites. Utilisez \string\setmaxcolnumber\space pour augmenter le nombre maximal de colonnes}
+}
+\newcommand\interrule{%
+	\common@err{\string\insterrule\space ne peut être utilisée \MessageBreak que dans un environnement multicolonne}%
+}
+\NewDocumentCommand\seprulecolor{om}{%
+	\begingroup%
+		\def\@tmp{\endgroup\colseprulecolor}%
+		\ifblank{#2}
+			{\appto\@tmp{{pagecol}}}
+			{\appto\@tmp{{#2}}}%
+		\IfValueT{#1}{\numdef\cpge@tmp{#1-1}\eappto\@tmp{[\cpge@tmp]}}%
+		\@tmp%
+}
+\colorlet{defaultbackgroundcolor}{white}
+\cpgesetup[columns]{%
+	.hidden/.is family,
+	.hidden/.unknown/.code={},
+	.hidden/col/.store in=\colnumber,
+	col/.code=\relax,
+	ratio/.store in=\cols@ratio,
+	col@widths/.is family,
+	col@widths/.unknown/.code 2 args=
+		{\numkey@process
+			{\width@process{#1}{#2}}%
+		},
+	col widths/.code=\pgfqkeys{/cpge/columns/col@widths}{#1},
+	col@names/.is family,
+	col@names/.unknown/.code=
+		{\numkey@process
+			{%
+				\csnumdef{cn#1}{\columns@numkey}%
+				\csedef{b#1}{\@nx\col[\pgfkeyscurrentname]}%
+			}%
+		},
+	col names/.code=\pgfqkeys{/cpge/columns/col@names}{#1},
+	col@align/.is family,
+	col@align/.unknown/.code=
+		{\numkey@process
+			{\csletcs{\columns@numkey @align}{cpge@#1@align}}%
+		},
+	col align/.code=\pgfqkeys{/cpge/columns/col@align}{#1},
+	col@styles/.is family,
+	col@styles/.unknown/.code=
+		{\numkey@process
+			{\csdef{\columns@numkey @style}{#1}}
+		},
+	col styles/.code=\pgfqkeys{/cpge/columns/col@styles}{#1},
+	col@heads/.is family,
+	col@heads/b/.is if=b@head,
+	col@heads/.unknown/.code 2 args=
+		{\numkey@process
+			{
+				\long\csdef{\columns@numkey @head}{#2}
+				\csletcs{\columns@numkey @headalign}{cpge@#1@align}
+			}%
+		},
+	col head/.code=\pgfqkeys{/cpge/columns/col@heads}{b,#1},
+	col head*/.code=\pgfqkeys{/cpge/columns/col@heads}{#1},
+	nohead/.code=\boolfalse{b@head},
+	backcol/.code=\pgfqkeys{/cpge/backcol}{default,#1},
+	backcol/.default={},
+	interskip/.code=\cpge@assign\interskipamount#1\relax\outerparskip, 
+	sep width/.code={\columnsep=#1}, 
+	seprule width/.code={\columnseprule=#1},
+	seprule color/.code=\colseprulecolor{#1},  
+	seprule/.style 2 args={seprule width=#1, seprule color=#2},
+	col@rulecolors/.is family,
+	col@rulecolors/.unknown/.code=
+		{\numkey@process
+			{\seprulecolor[\columns@numkey+1]{#1}}
+		},
+	col seprulecolors/.code=\pgfqkeys{/cpge/columns/col@rulecolors}{#1},
+	seprules/.style 2 args={seprule width=#1, col seprulecolors={#2}},
+	before/.store in=\columns@beforehook, before={},
+	after/.store in=\columns@afterhook, after={},
+	beforeskip/.code=\cpge@gluedef\cols@beforeskip{#1}\medskipamount, 
+	afterskip/.code=\cpge@gluedef\cols@afterskip{#1}\medskipamount,
+	headrules width/.code 2 args=\dimdef\top@ruleheadheight{#1}\dimdef\bottom@ruleheadheight{#2}, 
+	headrules color/.code=\colorlet{head@rule}{#1},
+	headrules/.style n args={3}{headrules width={#1}{#2},headrules color={#3}},
+	hr/.style n args={3}{headrules width={#1}{#2},headrules color={#3}},
+	tophead/.code=\dimdef\innertop@headspace{\ifblank{#1}{\ht\strutbox+2pt}{\ht\strutbox+2pt+#1}},
+	bottomhead/.code=\dimdef\innerbottom@headspace{\ifblank{#1}{\dp\strutbox}{\dp\strutbox+#1}},
+	topheadbefore/.code=\dimdef\outertop@headspace{\ifblank{#1}{\z@}{#1}},
+	bottomheadafter/.code=\dimdef\outerbottom@headspace{\ifblank{#1}{\dp\strutbox}{\dp\strutbox+#1}},
+	head innerspaces/.style 2 args={tophead=#1,bottomhead=#2},
+	head outerspaces/.style 2 args={topheadbefore=#1,bottomheadafter=#2},
+	his/.style 2 args={tophead=#1,bottomhead=#2},
+	hos/.style 2 args={topheadbefore=#1,bottomheadafter=#2}, 
+	interrule/.is family,
+	interrule/b/.code=\dimdef\c@before@hrule{\dp\strutbox+#1}, 
+	interrule/a/.code=\dimdef\c@after@hrule{\dp\strutbox+#1}, 
+	interrule/h/.code=\dimdef\rule@height{#1}, 
+	interrule/c/.code=\colorlet{single@rule}{#1},  
+	interrule/.code=\pgfqkeys{/cpge/columns/interrule}{#1},
+	interrule/.unknown/.code={},
+	save to current/.code=\addto@save\columns@curropts{#1},
+	restore/.code=\@xp\cpgesetupcolumns\@xp{\columns@curropts},
+	save/.code 2 args=\pgfkeys{/cpge/columns/#1/.style={#2}},
+}
+
+\AtBeginDocument{
+	\outerparskip\parskip%
+	\cpgesetup[columns]{
+		beforeskip=*1,
+		afterskip=*1,
+		seprule/.default={.4pt}{framestrokecol},
+		interskip=*1.33,
+		interrule/b=5pt,
+		interrule/a=5pt,
+		interrule/h=.4pt,
+		interrule/c=framestrokecol,
+		headrules width={1.2pt}{.8pt},
+		head innerspaces={3pt}{3pt},
+		head outerspaces={}{6pt},
+	}
+	\cpgesetup[pc]{
+		beforeskip=*1,
+		afterskip=*1,
+		seprule/.default={.4pt}{framestrokecol},
+		head/.default={Programme}{Commentaires},
+		seprule color=framestrokecol, 
+		headrules color=framestrokecol
+	}
+}
+\newrobustcmd*\cpgesetupcolumns{\pgfqkeys{/cpge/columns}}
+%% Commande générique qui teste que le nom de la clé dans 
+%% numcol= est bien un entier inférieur à \colnumber
+%% retourne son arg si vrai et déclenche une erreur si faux.
+\def\numkey@process#1{%
+	\cpge@isnumber{\pgfkeyscurrentname}
+		{
+			\ifnum\numexpr\pgfkeyscurrentname>\numexpr\colnumber
+				\numkey@err 
+			\else 
+				#1%
+			\fi%
+		}{\numkey@err}
+}
+\def\columns@numkey{\the\numexpr\pgfkeyscurrentname-1}
+\def\cpge@c@align{\Centering}
+\def\cpge@l@align{\raggedright}
+\def\cpge@r@align{\RaggedLeft}
+%% commande qui crée une liste interne 
+%% formé simplement des numéros de colonnes (à partir de 0)
+%% liste utilisée ensuite pour boucles dans d'autres clés
+\long\def\create@columnlist{%
+	\ifnum\col@count<\colnumber\relax%
+		\listeadd\columnlist{\the\col@count}%
+		\advance\col@count\@ne%
+		\@xp\create@columnlist%
+	\fi%
+}
+\newrobustcmd\setcolumnlist{%
+	\undef\columnlist%
+	\col@count\z@%
+	\ifundef\colnumber{\numdef\colnumber{\maxcolnumber}}{}
+	\create@columnlist%
+}
+\newrobustcmd\setmaxcolnumber[1]{
+	\numdef\maxcolnumber{#1}%
+	\setcolumnlist
+}
+\setmaxcolnumber6
+
+%% commande qui crées les macros \cone, \ctwo...
+\def\columns@literalnames{%
+	\forlistloop\name@thecolumn\columnlist%
+}
+\def\name@thecolumn#1{%
+	\csedef{c\@xp\cpge@literal\the\numexpr#1+1}{%
+		\noexpand\bcolumn[\the\numexpr#1+1]}%
+}
+%% Traitement de la clé "col widths" 
+\def\width@process{\width@process@{\columns@numkey}}
+\def\width@process@#1#2#3{%
+	\ifblank{#2}{}
+	{\if@staratbegin{#2}
+		{\csedef{cw@#1}{\cpge@arg\@nx\fill}}
+		{\csdimdef{cw@#1}{\cpge@arg}}%
+	}%
+	\ifblank{#3}{}{%
+		\if@staratbegin{#3}
+			{\cseappto{cw@#1}{/\cpge@arg\@nx\columnsep}}
+			{\cseappto{cw@#1}{/\@xo\cpge@arg}}%
+	}%
+}
+\def\process@columnwidths{%
+	\forlistloop\set@thecolumnwidth\columnlist%
+}
+\def\cols@widthslist{}
+\def\leftcols@widthslist{}
+\def\set@thecolumnwidth#1{%
+	\ifdef\leftcolnumber
+		{\ifcsdef{cw@#1}
+			{%
+				\def\widths@{}%
+				\ifnumless{#1}{\leftcolnumber}
+					{\eappto\cols@widthslist{\csname cw@#1\endcsname,}}
+					{\eappto\leftcols@widthslist{\csname cw@#1\endcsname,}}
+			}
+			{\ifnumless{#1}{\leftcolnumber}
+				{\appto\cols@widthslist{,}}
+				{\appto\leftcols@widthslist{,}}
+			}
+		}
+		{\ifcsdef{cw@#1}
+			{%
+				\def\widths@{}%
+				\eappto\cols@widthslist{\csname cw@#1\endcsname,}%
+			}
+			{\appto\cols@widthslist{,}}}%
+}
+%% récupère le nbre de colonne et lance \open@columns
+\DeclareDocumentCommand\init@columns{om d<> +o}{%
+	\ifnumgreater{#2}{\maxcolnumber}
+		{\pgfkeyscurrentname{#2}}
+		{%
+			\IfValueT{#3}
+				{\pgfkeys{/cpge/columns/save to current/.list={#3}}}
+			\begingroup %
+			\booltrue{b@span}%
+			\IfValueT{#1}{%
+				\def\leftcolnumber{#1}%
+			}%
+			\def\colnumber{#2}%
+			\setcolumnlist%
+			\IfValueT{#3}{\pgfqkeys{/cpge/columns}{#3}}%
+			\open@columns[#4]
+		}%
+}
+%% definit les commandes de deplacement et applique les options
+\DeclareDocumentCommand\open@columns{+o}{%
+	\booltrue{b@columns}%
+	\newrobustcmd\col{\nrfalse\init@cell\columns@cell}%
+	\columns@literalnames%
+	\renewrobustcmd\interskip[1]{%
+        \groupclose\init@cell\columns@cell[\thecol][\normal@vskip{##1}]%
+	}
+	\RenewDocumentCommand\interrule{d<>}{%
+		\groupclose\init@cell\columns@cell[1][\columns@fullrule<##1>]%
+	}%
+	\process@columnwidths%
+	\ifundef\widths@%%
+		{\ifdef\cols@ratio
+			{\@xp\columnratio\@xp{\cols@ratio}}
+			{\columnratio{}}%
+		}{%
+			\ifdef\leftcolnumber
+				{\edef\@tmp{%
+					\@nx\setcolumnwidth{\cols@widthslist}	
+						[\leftcols@widthslist]}
+				}
+				{\edef\@tmp{\@nx\setcolumnwidth{\cols@widthslist}}}
+			\@tmp%
+		}
+	\renewrobustcmd\bcolumn{\nrfalse\init@cell\columns@cell}%
+	\columns@beforehook%
+	\columnskillspace%
+	\ifhmode\@@par\fi\addvspace\cols@beforeskip%
+	\ifdef\leftcolnumber
+		{\IfValueTF{#1}%
+			{\edef\cpge@tmp{%
+				\noexpand\paracol[\leftcolnumber]*{\colnumber}[#1]}}%
+			{\edef\cpge@tmp{%
+				\noexpand\paracol[\leftcolnumber]*{\colnumber}}}}
+		{\IfValueTF{#1}%
+			{\edef\cpge@tmp{%
+				\noexpand\paracol{\colnumber}[#1]}}%
+			{\edef\cpge@tmp{%
+				\noexpand\paracol{\colnumber}}}}%
+	\cpge@tmp%
+}
+%% commande qui ouvre l'environnement  
+\DeclareDocumentCommand\columns@firstcmd{om!d<>!O{1}!s!+o}{%open@colum
+	\cpge@isnumber{#2}%
+		{\init@columns[#1]{#2}<#3>[#6]}%
+		{\common@err{
+			\string\bcolumn\space: nombre de colonnes non fourni}}%
+	\ifbool{b@head}{\columns@head{\bcolumn[#4]*}}{\bcolumn[#4]}%
+}
+%% au départ \bcolumn est \columns@firstcmd, 
+%% elle est redéfinie par \open@columns
+\newrobustcmd\bcolumn{\columns@firstcmd}
+\DeclareDocumentCommand\cycle@cell{o}{%
+    \IfValueTF{#1}{%
+    	\if@plusatbegin{#1}%
+			{\numdef\cols@to{\thecolumn+\cpge@arg}}%
+			{\numdef\cols@to{\cpge@arg-1}}%
+		}{%
+			\numdef\cols@to{\thecolumn+1}%
+			\ifnum\numexpr\cols@to=\numexpr\colnumber\relax%
+				\def\cols@to{0}\b@nextrowtrue%
+			\fi%
+        }%
+    \unless\ifnum\numexpr\cols@to<\numexpr\colnumber%
+        \numdef\cols@to{\numexpr\cols@to-\colnumber}%
+    \fi%
+	\numgdef\thecol{\cols@to+1}%
+}
+%% collecte les arguments d'une commande bcolumn/col dans l'environnement
+\DeclareDocumentCommand\init@cell{m!d<>!o!s!+o}{%
+	\IfValueT{#2}{\pgfqkeys{/cpge/columns/interrule}{#2}}%
+    \def\cmd@cell{\switchcolumn}%
+    \cycle@cell[#3]%
+    \eappto\cmd@cell{[\cols@to]}%
+    \IfBooleanT{#4}{\b@nextrowtrue}%
+    \IfValueT{#5}{\b@nextrowtrue}%
+    \ifbool{b@nextrow}{\appto\cmd@cell{*}}{}%
+    \IfValueT{#5}{%
+		\appto\cmd@cell{%
+			[\boolfalse{b@columns}#5]%
+			\booltrue{b@columns}%
+		}%
+	}%
+	#1%
+}
+%% lance la commande formée par \init@cell avec les arguments collectés
+\long\def\columns@cell{%
+		\cmd@cell\groupopen{\thecolumn}%
+}%
+%% insère l'entête. 
+\long\def\columns@head#1{%
+	\ensurevspace{4\baselineskip}%
+	\columns@rule\top@ruleheadheight{head@rule}%
+	\forlistloop\columns@loophead\columnlist%
+	\groupclose*%
+	\columns@rule\bottom@ruleheadheight{head@rule}%
+	\nointerlineskip%
+	\vspace*{\glueexpr\outerbottom@headspace+1sp-\parskip}%
+	#1%
+}
+%% commande autonome pour insérer un entête
+\NewDocumentCommand\colhead{d<>m}{%
+	\ifbool{b@columns}
+		{\ensurevspace{4\baselineskip}%
+		\group@close%
+		\IfValueTF{#1}
+			{\pgfqkeys{/cpge/columns}{col head={b,#2}, #1}}
+			{\pgfqkeys{/cpge/columns}{col head={b,#2}}}%
+		\columns@rule\top@ruleheadheight{head@rule}%
+		\forlistloop\columns@loophead\columnlist%
+		\groupclose*%
+		\columns@rule\bottom@ruleheadheight{head@rule}%
+		\nointerlineskip%
+		\vspace*{\glueexpr\outerbottom@headspace+1sp-\parskip}%
+		\col[1]*}
+		{\common@err{\string\colhead\space: l'environnement multicolonne n'est pas ouvert}}%
+}
+\newrobustcmd\colheadrules[1]{
+	\ensurevspace{4\baselineskip}%
+	\columns@rule\top@ruleheadheight{head@rule}%
+	#1%
+	\groupclose*%
+	\columns@rule\bottom@ruleheadheight{head@rule}%
+	\nointerlineskip%
+	\vspace*{\glueexpr\outerbottom@headspace+1sp-\parskip}%
+	\col[1]*%
+}
+%% boucle qui insère les entrées de l'entète par colonne
+\def\columns@loophead#1{%
+	\columns@headtext\innertop@headspace\innerbottom@headspace
+		{\csuse{\thecolumn @head}}
+	\unless\ifnum\numexpr#1=\numexpr\colnumber-1\relax%
+		\groupclose*\@xp\bcolumn%
+	\fi%
+}
+%% placement des entrées de l'entête avec espaces vert avant et après
+\def\columns@headtext#1#2#3{%
+	\setbox\@tempboxa\vtop{\color@begingroup\titlestyle\bfseries#3\color@endgroup}%
+	\dimdef\cpge@tempa{\ht\@tempboxa+#1}%
+	\setbox\@tempboxa\vbox{\color@begingroup\titlestyle\bfseries#3\color@endgroup}%
+	\dimdef\cpge@tempb{\dp\@tempboxa+#2}%
+	\color@begingroup\csuse{\thecolumn @headalign}%
+	\nointerlineskip
+	\vskip-\parskip%
+	\vrule 	height\dimexpr\cpge@tempa
+			width\z@% 
+	\nobreak\titlestyle\bfseries#3%
+	\nobreak\vrule	depth\dimexpr\cpge@tempb
+					width\z@%
+	\color@endgroup%
+}
+% commande interne d'insertion de ligne de séparation 
+\DeclareDocumentCommand\columns@fullrule{d<>}{%
+	\begingroup 
+		\IfValueT{#1}{\pgfqkeys{/cpge/columns/interrule}{#1}}%
+		\normal@vskip{-\interskipamount}%
+		\vspace{\c@before@hrule+1sp-1\parskip}%
+		\columns@rule\rule@height{single@rule}%
+		\nointerlineskip%
+		\vspace{\c@after@hrule+1sp-1\parskip}%
+	\endgroup%
+}
+%% ligne de séparation sans les espaces
+\def\columns@rule#1#2{%
+	\switchcolumn[0]*[%
+		\color@begingroup%
+			\color{#2}%
+			\hrule height#1 width\textwidth\relax%
+		\color@endgroup%
+	]%
+}
+%% ligne de cloture de l'environnement
+\def\final@rule{%
+	\group@close%
+	\switchcolumn[0]*
+	\normal@vskip{-\interskipamount}%
+	\vspace{\outerbottom@headspace+1sp}%
+	\columns@rule\top@ruleheadheight{head@rule}%
+}
+%% saut vertical normal gérant la syntaxe *...
+\def\normal@vskip#1{%
+	\nointerlineskip%
+	\cpge@assign\cpge@skipa#1\relax\outerparskip%
+	\vspace{\cpge@skipa}%
+}
+\newcommand\interskip{%
+	\common@err{\string\interskip ne fonctionne pas
+	 en dehors du mode multicolonne}
+}
+\newcommand*\ecolumn{%
+	\groupclose%
+	\ifbool{b@columns}{%
+		\ifbool{b@head}{\final@rule}{}%
+		\endparacol%
+		\unless\ifglobal@colors\resetbackgroundcolor\fi%
+		\columns@afterhook%
+	  	 \vskip\cols@afterskip%
+		   \endgroup}{}%
+}
+
+\NewDocumentCommand\colspan{+m}{%
+	\group@close\long\def\cpge@tmpc{#1}%
+	\col[1][\begingroup\cpge@tmpc\closeall\endgroup]
+}
+
+
+%%%%%% Système backcol
+\def\xshift{.5\columnsep}
+\def\commonxshift{4\p@}
+\def\commonyshift{\z@}
+\def\xl@shift{\commonxshift}
+\def\xr@shift{\commonxshift}
+\def\yt@shift{\commonyshift}
+\def\yb@shift{\commonyshift}
+\AtBeginDocument{
+	\colorlet{spancol}{framebackcol}
+	\colorlet{oddcol}{framebackcol!85}
+	\colorlet{evencol}{framebackcol!75}
+	\colorlet{backcol}{framebackcol}
+	\colorlet{sepcol}{framestrokecol}
+	\colorlet{numcol}{cpgecyan}
+}
+\cpgesetup[backcol]{
+	.hidden/.is family,
+	.hidden/t/.store in=\backcol@type,
+	.hidden/n/.code=\numdef\backcol@col{#1-1},
+	.hidden/.unknown/.code=\relax,
+	keys/.is family,
+	keys/l/.store in=\xl@shift,
+	keys/r/.store in=\xr@shift,
+	keys/t/.store in=\yt@shift,
+	keys/b/.store in=\yb@shift,
+	keys/h/.style={l=#1,r=#1},
+	keys/v/.style={t=#1,b=#1},
+	keys/c/.code=
+		\xcolorlet{\backcol@name backcolor}{#1},
+	keys/L/.store in=\xL@shift,
+	keys/R/.store in=\xR@shift,
+	keys/T/.store in=\yT@shift,
+	keys/B/.store in=\yB@shift,
+	keys/H/.style={L=#1,R=#1},
+	keys/V/.style={T=#1,B=#1},
+	keys/C/.code=
+		\xcolorlet{\backcol@name Backcolor}{#1},
+	keys/l*/.style={l=#1, L=#1+.4pt},
+	keys/r*/.style={r=#1, R=#1+.4pt},
+	keys/t*/.style={t=#1, T=#1+.4pt},
+	keys/b*/.style={b=#1, B=#1+.4pt},
+	keys/h*/.style={h=#1, H=#1+.4pt},
+	keys/v*/.style={v=#1, V=#1+.4pt},
+	keys/s/.code=\ifdef\backcol@col
+		{\setbackcol{t=g,n=\backcol@col}{}[#1]}
+		{\common@err{l'option s n'est utilisable que dans une colonne}},
+	enl/.store in=\xl@shift,
+	enr/.store in=\xr@shift,
+	ent/.store in=\yt@shift,
+	enb/.store in=\yb@shift,
+	enh/.style={enl=#1,enr=#1},
+	env/.style={ent=#1,enb=#1},
+	odd color/.code=\colorlet{oddcol}{#1},
+	even color/.code=\colorlet{evencol}{#1},
+	span color/.code=\colorlet{spancol}{#1},
+	sep color/.code=\colorlet{sepcol}{#1},
+	sep/.code={\setbackcol{t=g}{#1}[sepcol]},
+	span/.code={\setbackcol{t=s}{#1}[spancol]},
+	span/.default={h=\commonxshift, v=-1.2pt},
+	left/.code=		\colbackcol<#1>{1},
+	right/.code=	\colbackcol<#1>{2},
+	1/.code=		\colbackcol<#1>{1},
+	2/.code=		\colbackcol<#1>{2},
+	3/.code=		\colbackcol<#1>{3},
+	4/.code=		\colbackcol<#1>{4},
+	5/.code=		\colbackcol<#1>{5},
+	6/.code=		\colbackcol<#1>{6},
+	left/.default=	{},
+	right/.default=	{},
+	1/.default=		{},
+	2/.default=		{},
+	3/.default=		{},
+	4/.default=		{},
+	5/.default=		{},
+	6/.default=		{},
+	.unknown/.code=
+		{\cpge@isnumber{\pgfkeyscurrentname}
+			{\ifnum\numexpr\pgfkeyscurrentname>\maxcolnumber
+				\maxcolnumber@err{\pgfkeyscurrentname}
+			\else 
+				\colbackcol<#1>{\pgfkeyscurrentname}
+			\fi} 
+			{\common@err{\string\setbackcol\space option		
+					\pgfkeyscurrentname\space inconnue}}
+		},
+	reset/.code=\resetbackgroundcolor,
+	default/.code=\processdefaultbackcol,
+}
+\newrobustcmd*\cpgesetupbackground[1]{%
+	\global\global@colorstrue%
+	\ifundef\colnumber{\numdef\colnumber{\maxcolnumber}}{}%
+	\pgfqkeys{/cpge/backcol}{#1}%
+}
+\NewDocumentCommand\setbackcol{mmo}{%
+	\begingroup%
+		\pgfqkeys{/cpge/backcol/.hidden}{#1}
+		\ifundef\backcol@col
+			{\let\backcol@name\backcol@type
+			  \edef\backcol@cmd{\backcol@type}}
+			{\edef\backcol@name{\backcol@type\backcol@col}
+				\edef\backcol@cmd{\backcol@type[\backcol@col]}}
+		\IfValueTF{#3}
+			{\xcolorlet{\backcol@name backcolor}{#3}
+			  \pgfqkeys{/cpge/backcol/keys}{#2}}
+			{\pgfqkeys{/cpge/backcol/keys}{c=defaultbackgroundcolor,#2}}%
+		\process@backcolkeys%
+		\preto\backcol@cmd{\backgroundcolor}
+		\backcol@cmd%
+	\endgroup%
+}
+\NewDocumentCommand\colbackcol{D<>{}sm}{%
+	\IfBooleanTF{#2}
+		{\dimdef\tmp@xshift{\commonxshift}}
+		{\dimdef\tmp@xshift{\xshift}}
+	\ifnum\numexpr#3=1\relax
+		\setbackcol{t=c,n=1}{l=\commonxshift,r=\tmp@xshift,#1}[oddcol]
+	\else
+		\ifnum\numexpr#3<\numexpr\colnumber\relax
+			\ifodd\numexpr#3\relax
+				\setbackcol{t=c,n=#3}{h=\tmp@xshift,#1}[oddcol]
+			\else 
+				\setbackcol{t=c,n=#3}{h=\tmp@xshift,#1}[evencol]
+			\fi 
+		\else 
+			\ifodd\numexpr#3\relax
+				\setbackcol{t=c,n=#3}
+					{r=\commonxshift,l=\tmp@xshift,#1}[oddcol]
+			\else 
+				\setbackcol{t=c,n=#3}
+					{r=\commonxshift,l=\tmp@xshift,#1}[evencol]
+			\fi 
+		\fi
+	\fi
+}
+\def\xcolorlet{%
+	\ifbool{global@colors}%
+		{\def\@reserveda{\xglobal\colorlet}}
+		{\def\@reserveda{\colorlet}}%
+	\@expandtwoargs\@reserveda
+}
+
+\def\process@backcolkeys{
+	\eappto\backcol@cmd{(\xl@shift,\yt@shift)(\xr@shift,\yb@shift)}
+	\xdef\backcol@cmd{{\@xo\backcol@cmd}{\backcol@name backcolor}}
+}
+
+\def\processdefaultbackcol{%
+	\begingroup%
+		\setbackcol{t=s}{v=-1pt,h=\commonxshift}[spancol]%
+		\def\do##1{\colbackcol{##1+1}}%
+		\dolistloop\columnlist%
+	\endgroup%
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% Les listes %%%%%%%%%%
+%%%% Reglages globaux 
+\def\cpgeendash{--}
+\def\cpgehand{{\larger[2]\raisebox{-.25ex}{\ding{42}}}}
+\def\cpgecheckmark{{\smaller[2]\ding{52}}}
+\def\cpgecrossmark{{\smaller\ding{56}}}
+\def\cpgefourstar{{\smaller\ding{70}}}
+\def\cpgefivestar{{\smaller\ding{72}}}
+\def\cpgetriangle{{\rotatebox{90}{\resizebox{.58em}{!}{\ding{116}}}}}
+\def\cpgebullet{{\resizebox{.45em}{!}{\ding{108}}}}
+\def\cpgeshadowedbullet{{\resizebox{.66em}{!}{\ding{109}}}}
+\def\cpgesquare{{\smaller[3]\ding{110}}}
+\def\cpgeshadowedsquare{{\smaller[2]\ding{113}}}
+\def\cpgediamond{{\smaller[2]\ding{117}}}
+\def\cpgearrowstrobe{{\larger\ding{224}}}
+\def\cpgearrowheadright{{\smaller[2]\raisebox{.33ex}{\ding{228}}}}
+\def\cpgearrowheadleft{{\rotatebox[origin=l]{180}{\cpgearrowheadright}}}
+\def\cpgearrowdown{{\ding{229}}}
+\def\cpgearrowup{{\ding{230}}}
+
+% \def\cpgebullet{$\bullet$}
+% \def\cpgetriangle{\smaller\raisebox{1.2pt}{$\blacktriangleright$}}
+% \def\cpgecheckmark{\smaller{$\checkmark$}}
+% \def\cpgeendash{--}
+\dimdef\LabelSep{1em}
+\def\TopSep{6pt plus 1pt minus 2pt}
+\def\ItemSep{3pt plus 1pt minus 1pt}
+\def\ParTopSep{3pt plus 1pt minus 1pt}
+\AtBeginDocument{%
+	\setlist{leftmargin=*, labelsep=\LabelSep, font=\commondeco}
+	\setlist[1]{topsep=\TopSep,partopsep=\ParTopSep}
+	\setlist[2]{topsep=\TopSep/2, partopsep=\ParTopSep/2, itemsep=\z@skip}
+	\setlist*[itemize,1]{label=\cpgesquare}%
+	\setlist*[itemize,2]{label=\cpgediamond}%
+	\setlist*[itemize,3]{label=\cpgebullet}%
+	\setlist*[description]{font=\commondeco\sffamily}
+	\maxdeadcycles=400%
+	\ifundef\up{\let\up\textsuperscript}{}%
+}
+\newrobustcmd\rectangle[1]{%
+	\tikz[baseline=(N.south)]%
+		\node (N) [	fill=numcol,
+					text=white,
+					font=\small\bfseries,
+					inner sep=2pt, 
+					minimum width=2pc, align=center,
+					rounded corners=2.4pt,
+					drop shadow
+				]
+			{#1};%
+}
+\newlist{ordre}{enumerate}{1}
+\setlist[ordre]{%
+	labelsep=1pc,
+	itemsep=0pt,
+	label={\rectangle{\Roman*}}, 
+	before=\titlestyle\bfseries
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%% Les listes LVRT %%%%%%%%%%%%%%%%
+
+\newif\iflistopen
+\newif\if@inline
+\newif\if@restore
+\newdimen\numwidth
+\newrobustcmd\littleskip{\hskip.25em}
+\def\opts@tmp{}%
+
+%%%% Dans le processus d'initialisation, les options sont 
+%%%% d'abords fournies à pgfkeys, il traite celles qu'il connait
+%%%% et ignore les autres : celles qui sont destinées à
+%%%% enumitem qui implémente son propre mécanisme clé/valeur 
+%%%% (beaucoup moins puissant que pgfkeys)
+%%%% un jeu d'options enumitem est aussi ajouté.
+
+%%%% clés pgfkeys pour former le label dans enumerate.
+\def\list@defformat#1#2{%
+	\def#1##1{%
+		\edef\@tmpnum{##1}%
+		\ifdefvoid\@tmpnum{}{#2{##1}}%
+	}%
+}
+\def\list@csdefformat#1#2{%
+	\csdef{#1}##1{%
+		\edef\@tmpnum{##1}%
+		\ifdefvoid\@tmpnum{}{#2{##1}}%
+	}%
+}
+\newrobustcmd\numpunct[1]{%
+	\edef\@tmpnum{#1}%
+	\ifdefvoid\@tmpnum{}{#1\list@punct}%
+}
+\def\punct@origin{.}
+\def\commondeco{\color{numcol}\sffamily\bfseries}
+\def\process@currlabel#1{%
+	\ifdefstring\list@type{enum}
+		{\ifinlist{#1}\cpge@list
+			{%
+				\edef\list@label{%
+					\@xp\@xo\csname labelnumber@#1\endcsname
+						{\@xo\@levelname}}%
+			}{%
+				\@xp\cpgesetlabel\@xp{\@levelname}{#1}%
+				\letcs\list@label{label@\@levelname}}%
+		}{\ifinlist{#1}\cpge@list
+			{\edef\list@label{\@xp\@xo\csname labelsymbol@#1\endcsname}}
+			{\def\list@label{#1}}%
+		}%@punct
+}
+\def\process@label#1#2{%
+	\in@{!enum}{!#1}
+	\ifin@	
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelnumber@#2}}
+			{\cpgesetlabel{#1}{#2}}%
+	\else 
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelsymbol@#2}}
+			{\csdef{label@#1}{#2}}%
+	\fi%
+}
+\def\process@shortlabel#1#2{
+	\in@{!enum}{!#1}
+	\ifin@	
+		\ifinlist{#2}\cpge@list
+			{\csedef{label@#1}{\@xp\@xo\csname labelnumber@#2\endcsname{#1}}}
+			{\common@err{label #2 non défini}}%
+	\else 
+		\ifinlist{#2}\cpge@list
+			{\csletcs{label@#1}{labelsymbol@#2}}
+			{\common@err{label #2 non défini}}%
+	\fi%
+	%\csshowhere{label@#1}
+}
+\def\process@currformat#1{
+	\list@defformat\list@deco{\commondeco#1}
+	\settowidth\numwidth{\list@deco{\appcounterstyle{\@levelname}{13}}}%
+	\process@placement\opts@currentlist
+}
+\def\process@format#1#2{
+	\list@csdefformat{deco@#1}{\commondeco#2}%
+	\settowidth\numwidth{\csuse{deco@#1}{\appcounterstyle{#1}{13}}}%
+	\@xp\process@placement\csname opts@#1\endcsname
+}
+\def\process@placement#1{
+	\ifdim\numwidth>\dimexpr 2em+\labelsep\relax	
+		\appto#1{,wide, leftmargin=2em, labelsep=.75em}
+	\else 
+		\eappto#1{,labelindent=\the\numwidth}
+	\fi
+}
+%%% Passerelle pour le système keyval d'enumitem
+%%% exécute  l'action #2  si \list@type est le bon type de liste
+\def\cpge@goodtype#1#2{
+	\ifdefstring\list@type{#1}
+		{#2}
+		{\csname cpge@#1err\endcsname}
+}
+%%% exécute l'option #2  si \list@type est le bon type de liste
+\def\list@goodtype#1#2{
+	\ifdefstring\list@type{#1}
+		{\pgfqkeys{/cpge/xlist/loading}{#2}}
+		{\csname cpge@#1err\endcsname}
+}
+%%% pour les clés pgf .unknown qui stockent 
+%%% les options à destination de enumitem
+\def\list@addenumitemopt#1#2{
+	\edef\cpge@tmp{#1}
+	\cpge@listtoks{#2}%
+	\if@plusatend{\cpge@tmp}
+		{\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto\opts@globallist{,\cpge@arg}}
+			{\eappto\opts@globallist{,\cpge@arg=\the\cpge@listtoks}}}
+		{\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto\opts@currentlist{,\cpge@arg}}
+			{\eappto\opts@currentlist{,\cpge@arg=\the\cpge@listtoks}}}
+}
+%%% pour reinterpreter une option existante d'enumitem (wide)
+\DeclareDocumentCommand\list@enumitemsameopt{mmmo}{
+	\cpge@listtoks{#3}%
+	\edef\cpge@tmp{#3}
+	\ifdefstring\cpge@tmp{NoValue}
+		{\cseappto{opts@#1list}{,#2}}
+		{	\IfValueTF{#4}
+			{\cseappto{opts@#1list}{,#2=\the\cpge@listtoks, #4}}
+			{\cseappto{opts@#1list}{,#2=\the\cpge@listtoks}}
+		}
+}
+%%% pour ajouter l'option \pgfkeyscurrentname=#2 à la liste interne #1
+%%% sert dans : enumi, enumii, enumiii 
+\def\list@addenitopt#1#2{
+	\cpge@listtoks{#2}%
+	\ifstrequal{#2}{\pgfkeysnovalue}
+			{\eappto#1{,\pgfkeyscurrentname}}
+			{\eappto#1{,\pgfkeyscurrentname=\the\cpge@listtoks}}
+}
+%%% commande intermédiaire pour relayer un lot d'option à \setlist(*)
+\DeclareDocumentCommand\list@setxlist{som}{%
+	\begingroup
+	\def\tmp@{\endgroup\setlist}
+	\IfBooleanT{#1}{\appto\tmp@*}
+	\IfValueT{#2}{\eappto\tmp@{[\@xo#2]}}
+	\eappto\tmp@{{\@xo#3}}
+	\tmp@%
+}
+\def\list@setlevel#1#2{%
+	\ifcsdef{\list@csname @#1}{}{
+		\csdef{\list@csname @#1}{}%
+		#2
+	}%
+}
+%%% commandes de sauvegarde/restauration des compteurs enum
+\def\save@counter#1#2{\csxdef{saved@#1@#2}{\the\value{#2}}}
+\def\restore@counter#1#2{\setcounter{#2}{\csuse{saved@#1@#2}}}
+%%% styles par défaut, 
+\cpgesetlabel{enumi}{|1|}		
+\cpgesetlabel{enumii}{|a|}		
+\cpgesetlabel{enumiii}{|i|}		
+\def\label@itemi{\cpgesquare}
+\def\label@itemii{\cpgediamond}
+\def\label@itemiii{\cpgebullet}
+\def\deco@enumi{\commondeco\numpunct}
+\def\deco@enumii{\commondeco\numpunct}
+\def\deco@enumiii{\commondeco\numpunct}
+\def\deco@itemi{\commondeco}
+\def\deco@itemii{\commondeco}
+\def\deco@itemiii{\commondeco}
+\def\opts@enumi{} 
+\def\opts@enumii{} 
+\def\opts@enumiii{}
+\def\opts@itemi{} 
+\def\opts@itemii{} 
+\def\opts@itemiii{}
+\def\opts@list{}
+\cpgesetup[xlist]{
+	@enumi/.is family,
+	@enumi/label/.code=\process@label{enumi}{#1},
+	@enumi/format/.code=\process@format{enumi}{#1},
+	@enumi/format/.default=\@iden,
+	@enumi/punctuation/.store in=\punct@enumi,
+	@enumi/lab/.style={label=#1},
+	@enumi/for/.style={format=#1},
+	@enumi/punct/.style={punctuation=#1},
+	@enumi/.unknown/.code=\list@addenitopt\opts@enumi{#1},
+	enumi/.code=\list@setlevel{enumi}{%
+				\pgfqkeys{/cpge/xlist/@enumi}{#1}%
+				\list@setxlist*[enumerate,1]{%
+					\opts@enumi, 
+					label=\@xo\label@enumi, 
+					format=\@nx\deco@enumi,
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[xlist]{
+	@enumii/.is family,
+	@enumii/label/.code=\process@label{enumii}{#1},
+	@enumii/format/.code=\process@format{enumii}{#1},
+	@enumii/format/.default=\@iden,
+	@enumii/punctuation/.store in=\punct@enumii,
+	@enumii/lab/.style={label=#1},
+	@enumii/for/.style={format=#1},
+	@enumii/punct/.style={punctuation=#1},
+	@enumii/.unknown/.code=\list@addenitopt\opts@enumii{#1},
+	enumii/.code=\list@setlevel{enumii}{\pgfqkeys{/cpge/xlist/@enumii}{#1}
+				\list@setxlist*[enumerate,2]{%
+					\opts@enumii, 
+					label=\@xo\label@enumii, 
+					format=\@nx\deco@enumii,%
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[xlist]{
+	@enumiii/.is family,
+	@enumiii/label/.code=\process@label{enumiii}{#1},
+	@enumiii/format/.code=\process@format{enumiii}{#1},
+	@enumiii/format/.default=\@iden,
+	@enumiii/punctuation/.store in=\punct@enumiii,
+	@enumiii/lab/.style={label=#1},
+	@enumiii/for/.style={format=#1},
+	@enumiii/punct/.style={punctuation=#1},
+	@enumiii/.unknown/.code=\list@addenitopt\opts@enumiii{#1},
+	enumiii/.code=\list@setlevel{enumiii}{\pgfqkeys{/cpge/xlist/@enumiii}{#1}%
+				\list@setxlist*[enumerate,3]{%
+					\opts@enumiii,
+					label=\@xo\label@enumiii, 
+					format=\@nx\deco@enumiii,
+					%labelindent=\list@widthformat+\labelwidth-\labelsep
+				}}
+}
+\cpgesetup[xlist]{
+	itemi/.is family,
+	itemi/label/.code=\process@label{itemi}{#1},
+	itemi/lab/.style={label=#1},
+	itemi/format/.code=\cpge@itemerr,
+	itemi/for/.code=\cpge@itemerr,
+	itemi/.unknown/.code=\list@addenitopt\opts@itemi{#1},
+	itemi/.code=\list@setlevel{itemi}{\pgfqkeys{/cpge/xlist/itemi}{#1}
+				\list@setxlist*[itemize,1]{%
+					\opts@itemi, 
+					label=\@xo\label@itemi, 
+				}}
+}
+\cpgesetup[xlist]{
+	itemii/.is family,
+	itemii/label/.code=\process@label{itemii}{#1},
+	itemii/lab/.style={label=#1},
+	itemii/format/.code=\cpge@itemerr,
+	itemii/for/.code=\cpge@itemerr,
+	itemii/.unknown/.code=\list@addenitopt\opts@itemii{#1},
+	itemii/.code=\list@setlevel{itemii}{\pgfqkeys{/cpge/xlist/itemii}{#1}
+				\list@setxlist*[itemize,2]{%
+					\opts@itemii, 
+					label=\@xo\label@itemii, 
+				}}
+}
+\cpgesetup[xlist]{
+	itemiii/.is family,
+	itemiii/label/.code=\process@label{itemiii}{#1},
+	itemiii/lab/.style={label=#1},
+	itemiii/format/.code=\cpge@itemerr,
+	itemiii/for/.code=\cpge@itemerr,
+	itemiii/.unknown/.code=\list@addenitopt\opts@itemiii{#1},
+	itemiii/.code=\list@setlevel{itemiii}{\pgfqkeys{/cpge/xlist/itemiii}{#1}
+				\list@setxlist*[itemize,3]{%
+					\opts@itemiii, 
+					label=\@xo\label@itemiii, 
+				}}
+}
+\cpgesetup[xlist]{
+	global/.is family,
+	global/enumi/.forward to=/cpge/xlist/enumi, 
+	global/enumii/.forward to=/cpge/xlist/enumii,
+	global/enumiii/.forward to=/cpge/xlist/enumiii,
+	global/itemi/.forward to=/cpge/xlist/itemi, 
+	global/itemii/.forward to=/cpge/xlist/itemii,
+	global/itemiii/.forward to=/cpge/xlist/itemiii,
+	global/.unknown/.code=\list@addenitopt\opts@list{#1}, 
+	global/.code=
+		{\pgfqkeys{/cpge/xlist/global}{#1}%
+			\list@setxlist*{\opts@list}%
+		}
+}
+\cpgesetup[xlist]{
+	loading/.is family, loading, 
+	.unknown/.code=\list@addenumitemopt{\pgfkeyscurrentname}{#1},
+	enumi/.forward to=/cpge/xlist/enumi, 
+	enumii/.forward to=/cpge/xlist/enumii,
+	enumiii/.forward to=/cpge/xlist/enumiii,
+	label/.code=
+		\ifdef\list@fixedlabel
+			{\cpge@enumitemerr}
+			{\process@currlabel{#1}},
+	lab/.style={label=#1},
+	label*/.code=
+		\ifdef\list@fixedlabel
+			{\cpge@enumitemerr}
+			{\@xp\process@shortlabel\@xp{\@levelname}{#1}},
+	format/.code=\cpge@goodtype{enum}{\process@currformat{#1}},
+	for/.style={format=#1},
+	format/.default=\@iden,
+	punctuation/.store in=\list@punct,
+	punct/.style={punctuation=#1},
+	1/.code=	\list@goodtype{enum}{label*=1},
+	a/.code=	\list@goodtype{enum}{label*=a},
+	A/.code=	\list@goodtype{enum}{label*=A},
+	i/.code=	\list@goodtype{enum}{label*=i,widest*=4},
+	I/.code=	\list@goodtype{enum}{label*=I,widest*=4},
+	p/.code=	\list@goodtype{enum}{label*=p, punct={}, ind=1em},
+	b/.code=	\list@goodtype{item}{label*=b},
+	c/.code=	\list@goodtype{item}{label*=c},
+	d/.code=	\list@goodtype{item}{label*=d},
+	e/.code=	\list@goodtype{item}{label*=e},     
+	s/.code=	\list@goodtype{item}{label*=s},
+	t/.code=	\list@goodtype{item}{label*=t},
+	bs/.code=	\list@goodtype{item}{label*=bs},
+	as/.code=	\list@goodtype{item}{label*=as},
+	ad/.code=	\list@goodtype{item}{label*=ad},
+	au/.code=	\list@goodtype{item}{label*=au},
+	al/.code=	\list@goodtype{item}{label*=al},
+	ar/.code=	\list@goodtype{item}{label*=ar},
+	5s/.code=	\list@goodtype{item}{label*=5s},
+	4s/.code=	\list@goodtype{item}{label*=4s},
+	cm/.code=	\list@goodtype{item}{label*=cm}, 
+	h/.code=	\list@goodtype{item}{label*=h},
+	resume/.code=\common@err{l'option resume d'enumitem est descativée.
+		\MessageBreak utiliser le drapeau \string\r},
+	ind/.code=	\preto\opts@currentlist{labelindent=#1,},
+	ind+/.code=	\preto\opts@globallist{labelindent=#1,},
+	sep/.code=	\preto\opts@currentlist{labelsep=#1,},
+	sep+/.code=	\preto\opts@globallist{labelsep=#1,},
+	wide/.code={%
+		\list@enumitemsameopt{current}{wide}{#1}
+			[leftmargin=\the\cpge@listtoks]
+	},
+	wide/.default=NoValue,
+	wide+/.code={%
+		\list@enumitemsameopt{global}{wide}{#1}
+			[leftmargin=\the\cpge@listtoks]
+	},
+}
+\newcommand*\cpgesetuplist{\pgfqkeys{/cpge/xlist/global}}
+\newcommand*\cpgelistloading{\pgfqkeys{/cpge/xlist/loading}}
+\NewDocumentCommand\additemizestyle{mmmm}{%
+		%	1 csname
+		%	2 symbol name
+		%	3 symbol code
+		%	default options
+	\csdef{labelsymbol@#2}{#3}
+	\listadd\cpge@list{#2}
+	\cpgelistloading{#2/.code=\list@goodtype{item}{label*=#2}}
+	\newsimplifieditemize{#1}{#4}[#2]
+}
+\csvtolistadd\cpge@list{%
+	s,d,t,b,bs,c,e,as,ad,au,al,ar,5s,4s,cm,h,1,a,A,i,I,p}
+\def\labelsymbol@s{\cpgesquare}
+\def\labelsymbol@d{\cpgediamond}
+\def\labelsymbol@t{\cpgetriangle}
+\def\labelsymbol@b{\cpgebullet}
+\def\labelsymbol@bs{\cpgeshadowedbullet}
+\def\labelsymbol@c{\cpgecheckmark}
+\def\labelsymbol@e{\cpgeendash}
+\def\labelsymbol@as{\cpgearrowstrobe}
+\def\labelsymbol@ad{\cpgearrowdown}
+\def\labelsymbol@au{\cpgearrowup}
+\def\labelsymbol@al{\cpgearrowheadleft}
+\def\labelsymbol@ar{\cpgearrowheadright}
+\def\labelsymbol@cm{\cpgecrossmark}
+\def\labelsymbol@h{\cpgehand}
+\csdef{labelsymbol@5s}{\cpgefivestar}
+\csdef{labelsymbol@4s}{\cpgefourstar}
+\csdef{labelnumber@1}{\arabic}
+\def\labelnumber@a{\alph}
+\def\labelnumber@A{\Alph}
+\def\labelnumber@i{\roman}
+\def\labelnumber@I{\Roman}
+\def\labelnumber@p{\pinumber}
+
+\newrobustcmd\pinumber[1]{\larger\expandafter\pi@number\csname c@#1\endcsname}
+\def\pi@number#1{%
+  \ifcase#1\or \r@ding{202}\or \r@ding{203}\or \r@ding{204}\or \r@ding{205}\or \r@ding{206}\or \r@ding{207}\or \r@ding{208}\or \r@ding{209}\or \r@ding{210}\or \r@ding{211}\else\@ctrerr\fi}
+\def\LARGER#1{\ifblank{#1}{\larger[-1]}{\larger[#1]}}
+\cpgelistloading{pi/.code 2 args=%
+	\cpge@goodtype{item}{\def\list@label{\LARGER{#1}\raisebox{-.33ex}{\ding{#2}}}}%
+}
+\def\r@ding#1{\raisebox{-.25ex}{\ding{#1}}}
+%%% Messages d'erreur
+\def\cpge@enumitemerr{%
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Son label est fixe
+	}{}}
+\def\cpge@enumerr{%
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Elle est réservée aux listes enumerate.
+	}{}}
+\def\cpge@itemerr{%
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\MessageBreak Elle est réservée aux listes itemize.
+	}{}}
+\SetEnumitemKey{inline}{
+	afterlabel=\littleskip,
+	itemjoin={{;\enskip}}, 
+	itemjoin*={{\enskip et\enskip}}
+}
+
+%%% collecte des options des listes dans environnement multicolonne
+\def\opts@itemize@columns{nosep, labelsep=.45em}
+\def\opts@enumerate@columns{labelsep=.4em, nosep}
+\newcommand\cpgesetxlist[2][]{
+	\ifblank{#1}{
+		\cspreto{opts@itemize@columns}{#2,}
+		\cspreto{opts@enumerate@columns}{#2,}
+	}{
+		\cspreto{col@#1@opts}{#2,}
+	}
+}
+
+%%% Commandes de fermeture des environnement de liste
+%%% \closeall ferme récursivement TOUS les niveaux ouverts
+%%% \closelist ferme le niveau courant s'il y'en a un
+\newrobustcmd\closeall{%
+	\iflistopen%
+%		\ifhmode\strut\fi%
+	\endlistcmd\endgroup%
+	\@xp\closeall\fi%
+}
+\newrobustcmd\closelist{%
+	\iflistopen%
+%		\ifhmode\strut\fi%
+		\endlistcmd\endgroup%
+\fi}%
+\def\cpge@endenumerate{%
+	\endenumerate%
+	\save@counter{\@xp\list@csname}{\@levelname}
+}
+
+%%% Commande utilisée dans la redéfinition de la commande de liste 
+%%% une fois la liste ouverte. 
+%%% si elle est suivie d'une option <> elle relance la version 
+%%% originale de la commande (ce qui implique l'ouverture d'un niveau)
+%%% sinon elle teste si  niveau courant >  niveau d'origine 
+%%%  et elle ferme recursivement les niveau jusqu'à égalité des 2 niveaux
+%%% ensuite elle teste la présence d'un arg -, elle se retire encore 
+%%% d'un niveau. L'instruction terminale est toujours \item  
+\DeclareDocumentCommand\list@unity{mm !d<> t\r !t-}{%
+	\IfValueTF{#3}%
+		{\csuse{#1@#2@origin}<#3>}
+		{%
+		\ifnumless{\csname#1@#2@depth\endcsname}{\@listdepth}
+				{\closelist\list@unity{#1}{#2}}
+				{%
+					\IfBooleanTF{#5}
+						{\closelist\iflistopen%
+							\def\cpge@tmp{\list@unity{#1}{#2}}%
+							\@xp\cpge@tmp%
+						\fi}%
+						{\item}%
+				}%
+		}%
+}
+
+%%% Commandes d'initialisation et d'ouverture d'une liste
+\def\list@punct{.}
+\def\list@unsetcontext{%
+	\undef\list@label%
+	\undef\list@deco%
+	\let\list@punct\relax%
+	\@restorefalse
+	\def\opts@currentlist{}%
+	\def\opts@globallist{}%
+}
+\DeclareDocumentCommand\list@init{%
+		m % abrev : item ou enum
+		D<>{} % liste des options locales
+		t\r % flag pour restauration
+		t\s % flag pour sauvegarde
+}{%
+	\def\list@type{#1}%
+	\ifdefstring\list@type{enum}
+		{\edef\list@currname{\list@csname num}}
+		{\edef\list@currname{\list@csname it}}%
+	\csnumdef{\list@csname @#1@depth}{\@listdepth+1}%
+	\process@levelnames{#1}%
+	\list@unsetcontext%
+	\booltrue{listopen}%
+	% récuperer les opts par défauts de la cmd
+	\letcs\opts@tmp{\list@csname @#1@opts}%
+	% ajouter les opts locales
+	\ifblank{#2}{}{\csvadd\opts@tmp{#2}}%
+	% restaurer les opts sauvegradées si flag \r
+	\IfBooleanT{#3}{%
+		\ifdefstring\list@type{item}{}{%
+			\@restoretrue%
+			\ifcsdef{\list@csname @\@levelname @sopts}{%
+			\csveadd\opts@tmp{\@xp\@xo\csname\list@csname @\@levelname @sopts\endcsname}}{}%
+		}%
+	}
+	% sauvegrader les opts locales si flag \s
+	\IfBooleanT{#4}{%
+		\ifdefstring\list@type{item}{}{%
+			\IfBooleanTF{#3}{%
+				\common@err{drapeaux \string\s et \string\r 
+					utlilisés simultanément}%
+			}{%
+				\csgdef{\list@csname @\@levelname @sopts}{#2}%
+			}%
+		}%
+	}%{cpgepara}
+	% activation des opts locales et relai des opts inconnues à enumitem
+	\@xp\cpgelistloading\@xp{\opts@tmp}%
+	% activation des opts + si disponibles
+	\ifdefempty\opts@globallist{}{%
+		\@xp\setlist\@xp*\@xp{\opts@globallist}%
+	}%
+	% si label fixé, le traiter 
+	\ifdef\list@fixedlabel{%
+		\@xp\process@currlabel\@xp{\list@fixedlabel}%
+	}{}%
+	% relai passé à l'une des cmd d'initialisation enum/item
+	\csname list@first#1\endcsname%
+}
+\def\process@levelnames#1{%
+	\edef\@levelname{%
+			#1\romannumeral\numexpr\csname @#1depth\endcsname+1\relax}%
+	\numdef\@levelnumber{\csname @#1depth\endcsname+1}%
+	\ifstrequal{#1}{enumi}
+		{\edef\@enumitemlevelname{enumerate,\@levelnumber}}
+		{\edef\@enumitemlevelname{itemize,\@levelnumber}}%
+}
+\DeclareDocumentCommand\list@firstitem{s}{%
+	\ifcsdef{\list@csname @item@origin}{}
+		{\csletcs{\list@csname @item@origin}{\list@csname it}}%
+	\@xp\renewrobustcmd\csname\list@csname it\@xp\endcsname\@xp{%
+		\@xp\list@unity\@xp{\list@csname}{item}}%
+	\IfBooleanTF{#1}
+		{%
+			\def\listcmd{\csname itemize*\endcsname}%
+			\def\endlistcmd{\csname enditemize*\endcsname}%
+			\appto\opts@currentlist{,inline}%
+		}{%
+			\def\listcmd{\itemize}%
+			\def\endlistcmd{\itemize}%
+		}%
+	%\begingroup
+	% si \list@label n'a pas été definie par les options,
+	% utiliser la valeur par défaut du niveau
+	\ifdef\list@label{}
+		{\letcs\list@label{label@\@levelname}}%
+	% \edef\@tmp{%\endgroup%
+	% 	\@xo\listcmd[%
+	% 		\@xo\opts@currentlist, 
+	% 		label=\@xo\list@label,%
+	% 	]%
+	% }
+	% \show\@tmp
+	% \@tmp%
+	\listcmd
+	\csuse{\list@csname it}%
+}
+\DeclareDocumentCommand\list@firstenum{s}{%
+	\@bsphack
+	\ifcsdef{\list@csname @enum@origin}{}
+		{\csletcs{\list@csname @enum@origin}{\list@csname num}}%
+	\@xp\renewrobustcmd\csname\list@csname num\@xp\endcsname\@xp{%
+		\@xp\list@unity\@xp{\list@csname}{enum}}%
+	\IfBooleanTF{#1}
+		{%
+			\def\listcmd{\csname enumerate*\endcsname}%
+			%\letcs\endlistcmd{endenumerate*}%
+			\def\endlistcmd{%
+				\csname endenumerate*\endcsname%
+				\save@counter{\list@csname}{\@levelname}%
+			}%
+			\appto\opts@currentlist{,inline}%
+		}{%
+			\let\listcmd\enumerate%
+			\let\endlistcmd\cpge@endenumerate%
+		}%
+	%\begingroup%
+	\ifdef\list@label{}
+		{\letcs\list@label{label@\@levelname}}%
+	\ifdef\list@deco{}
+		{\letcs\list@deco{deco@\@levelname}}{}%
+	\ifundef\list@punct
+		{%
+			\ifcsdef{punct@\@levelname}%
+				{\letcs\list@punct{punct@\@levelname}}
+				{\let\list@punct\punct@origin}%
+		}{}%
+	\edef\@tmp{%\endgroup%
+		\@nx\listcmd[%
+			\@xo\opts@currentlist, 
+			label=\@xo\list@label,
+			format=\@nx\list@deco%
+		]%
+	}%
+	\@tmp%
+	\if@restore\restore@counter{\list@csname}{\@levelname}\fi%
+	\@esphack
+	\csuse{\list@csname num}%
+}
+
+%%%% metacommandes de création de listes
+\NewDocumentCommand\newsimplifiedenumerate{mmo}{%
+	\IfValueTF{#3}
+		{%
+			\@xp\newrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{enum}%
+			}%
+		}{%
+			\@xp\newrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{enum}%
+			}%
+		}
+	\csdef{#1@enum@opts}{#2}%
+	\cslet{#1close}\closelist%
+}
+\NewDocumentCommand\renewsimplifiedenumerate{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\renewrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{enum}%
+			}%
+		}{%
+			\@xp\renewrobustcmd\csname#1num\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{enum}%
+			}%
+		}	
+	\csdef{#1@enum@opts}{#2}
+}
+\NewDocumentCommand\newsimplifieditemize{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\newrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{item}%
+			}%
+		}{%
+			\@xp\newrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{item}%
+			}%
+		}	
+	\csdef{#1@item@opts}{#2}
+	\cslet{#1close}\closelist
+}
+\NewDocumentCommand\renewsimplifieditemize{mmo}{
+	\IfValueTF{#3}
+		{%
+			\@xp\renewrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\def\list@fixedlabel{#3}%
+				\list@init{item}%
+			}%
+		}{%
+			\@xp\renewrobustcmd\csname#1it\endcsname{%
+				\begingroup%
+				\def\list@csname{#1}%
+				\undef\list@fixedlabel%
+				\list@init{item}%
+			}%
+		}	
+	\csdef{#1@item@opts}{#2}
+}
+%%% définitions de listes itemize spécialisées
+\newsimplifiedenumerate{pc}{}
+\newsimplifiedenumerate{shadow}{for=\rectangle}
+\newsimplifiedenumerate{a}{}[1]
+\newsimplifiedenumerate{l}{}[a]
+\newsimplifiedenumerate{L}{}[A]
+\newsimplifiedenumerate{r}{}[i]
+\newsimplifiedenumerate{q}{format=Q\numpunct}[|1|]
+\newsimplifiedenumerate{R}{}[I]
+\newsimplifieditemize{pc}{}
+\newsimplifieditemize{s}{}[s]
+\newsimplifieditemize{d}{}[d]
+\newsimplifieditemize{b}{}[b]
+\newsimplifieditemize{t}{}[t]
+\newsimplifieditemize{c}{}[c]
+\newsimplifieditemize{e}{}[e]
+\NewDocumentCommand\bibit{d<>o}{%
+	\IfValueTF{#1}{\dit<#1>}{\dit}% 
+	\IfValueT{#2}{\texttitle{\itshape#2.}}%
+}
+\newrobustcmd\bibclose{\closelist}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Gestion des espaces verticaux et des ruptures de pages %%%%%
+\def\columnskillspace{%
+	\begingroup
+	\edef\@tmp{\endgroup%
+		\@nx\setlist[itemize]{\@xo\opts@itemize@columns}%
+		\@nx\setlist[enumerate]{\@xo\opts@enumerate@columns}%
+	}%
+	\@tmp
+	\preto\item{\global\b@newcellfalse}%
+}
+
+\def\tabkilllistspaces{%
+	\setlist*{labelsep=.45em, nosep, topsep=-\baselineskip, partopsep=-\parskip}
+	\appto\endlist\shrink@it
+	}
+\def\shrink@it{\vskip\z@skip}
+\def\killparskip{\cpgesetparskip{\z@skip}}
+\def\cpgesetparskip#1{%
+	\setlength{\parskip}{#1}\parsep\parskip}
+\NewDocumentCommand\breakifnospace{O{2}}{%
+	\cpge@dima=#1\baselineskip\relax%
+	\cpge@dimb=\pagegoal \advance\cpge@dimb-\pagetotal%
+	\ifbool{b@columns}
+		{\ensurevspace{#1\baselineskip}}
+		{\ifdim\cpge@dimb<\cpge@dima\raggedbottom\eject\fi}%
+}
+
+\newcount\cpge@pena	
+\newcount\cpge@penb
+\newcommand\cpgesetpen[2]{%
+	\cpge@pena=\numexpr#1\relax%
+	\cpge@penb=\numexpr#2\relax%
+}
+\cpgesetpen{601}{1001}
+\def\cpge@no@pgbk #1#2{%
+  \ifvmode
+    \penalty #1\cpge@getpen{#2}%
+  \else
+    \@bsphack
+    \vadjust{\penalty #1\cpge@getpen{#2}}%
+    \@esphack
+  \fi}
+\def\cpge@getpen#1{\ifcase #1 \z@ \or \@lowpenalty\or
+  \@medpenalty \or  \@highpenalty \or \cpge@pena \or \cpge@penb \else \@M \fi}
+\def\alt@break#1{\cpge@no@pgbk-{#1}}
+\def\alt@nobreak#1{\cpge@no@pgbk{}{#1}}
+\NewDocumentCommand\altbreak{o}{%
+	\ifbool{b@columns}%
+		{%
+			\IfValueTF{#1}%
+				{\col[1]*[\alt@break{#1}]}%
+				{\col[1]*[\alt@break{6}]}%
+		}{%
+			\IfValueTF{#1}%
+				{\alt@break{#1}}%
+				{\alt@break{6}}%
+		}%
+}
+\NewDocumentCommand\altnobreak{o}{%
+	\ifbool{b@columns}%
+		{%
+			\IfValueTF{#1}%
+				{\col[1]*[\alt@nobreak{#1}]}%
+				{\col[1]*[\alt@nobreak{6}]}%
+		}{%
+			\IfValueTF{#1}%
+				{\alt@nobreak{#1}}%
+				{\alt@nobreak{6}}%
+		}%
+}
+
+
+\endinput

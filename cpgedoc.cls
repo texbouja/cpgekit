@@ -10,6 +10,11 @@
 \RequirePackage{etoolbox}
 \def\cpgecurrentclass{doc}
 
+%% Racourcis assez usuel
+\let\@xp\expandafter
+\let\@nx\noexpand
+\let\@xo\expandonce
+
 \newif\ifconvert
 
 \@ifundefined{ifsubdoc}{
@@ -17,6 +22,7 @@
 	\newif\ifweb
 	\newif\ifsingleimage
 	\newif\ifdark
+	\newif\iffinal
 	\newif\ifprint
 	\newif\ifnocolors
 	\newif\ifcompact
@@ -32,6 +38,7 @@
 
 \pgfkeys{IGCS/.is family, IGCS/.cd,
 	draft/.is if=draft,
+	final/.is if=final,
 	solution/.code=\csname solution#1\endcsname\solutiondelayedfalse,%
 	solution/.default=true,
 	solution*/.is if=solutiondelayed,
@@ -54,10 +61,11 @@
 	report/.code={\def\cpge@class{report}},
 	book/.code={\def\cpge@class{book}\cspreto\class@options{oneside}},
 	.unknown/.code={%
-		\expandafter\appto\expandafter\class@options\expandafter
+		\@xp\appto\@xp\class@options\@xp
 		{\pgfkeyscurrentname,}
 	},
 	draft/.style={},
+	final/.style={},
 	compact/.style={},
 	solution/.style={},
 	solution*/.style={},
@@ -72,11 +80,11 @@
 	{\ProcessPgfOptions{/IGC}}
 
 \ifundef\cpge@class{\def\cpge@class{report}}{}
-\def\class@options{11pt,openany}
+\def\class@options{11pt}
 \ifdraft\appto\class@options{,draft}\fi
 \begingroup
 \edef\cpge@tmpa{\endgroup%
-	\noexpand\LoadClass[\class@options]{\cpge@class}
+	\@nx\LoadClass[\class@options]{\cpge@class}
 }
 \cpge@tmpa
 
@@ -88,6 +96,8 @@
 	\PassOptionsToPackage{draft}{pgf}
 	\PassOptionsToPackage{draft}{hyperref}
 \fi
+
+
 
 %%%% Packages du projet 
 \RequirePackage{cpgebase}
@@ -159,8 +169,8 @@
 \newif\ifdelayedprooforsolution
 \def\setup@solproofmode{%
 	\unless\ifdraft%
-		\ifsolution\def\solu{\solution@push*}\fi%
-		\ifproof\def\preuve{\proof@push*}\fi%
+		\ifsolution\def\solu{\exit\solution@push*}\fi%
+		\ifproof\def\preuve{\exit\closeunite\proof@push*}\fi%
 		\ifsolutiondelayed%
 			\solutiontrue%
 			\delayedprooforsolutiontrue%
@@ -244,7 +254,7 @@
 			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
 			\ifdefvoid\cpge@tmpe{}{%
 				\protected@edef\cpge@tmpa{\proofsection{\prv@title\space du \chaptername\space\thechapter}}%
-				\cpgerecord{\expandonce\cpge@tmpa}
+				\cpgerecord{\@xo\cpge@tmpa}
 				\cpgerecord{\the\toks@prv}%
 			}%
 		\fi%
@@ -257,7 +267,7 @@
 			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
 			\ifdefvoid\cpge@tmpe{}{%
 				\protected@edef\cpge@tmpa{\solutionsection{\sol@title\space du \chaptername\space\thechapter}}%
-				\cpgerecord{\expandonce\cpge@tmpa}%
+				\cpgerecord{\@xo\cpge@tmpa}%
 				\cpgerecord{\the\toks@sol}% 
 			}%
 		\fi%
@@ -319,11 +329,13 @@
 
 %%%% Chargement des differents packages 
 \usetikzlibrary{calc}
+\ifpdftex
 \tikzset{
     every picture/.prefix style={
         execute at begin picture=\shorthandoff{;}
     }
 }
+\fi 
 
 
 
@@ -512,7 +524,8 @@ subsection label style={}
 	   		@demolink/.style n args={3}{
 				size=##1, arc=##2,
 				demolink,
-				colframe=linkstrokecol, coltext=linktextcol, colback=pagecol,
+				colframe=linkstrokecol, 
+				coltext=linktextcol, colback=pagecol,
 				##3
 			}
 	   }
@@ -521,14 +534,18 @@ subsection label style={}
 	   		@demolink/.style n args ={3}{
 				size=##1, arc=##2,
 				demolink,
-				colframe=linkstrokecol, coltext=white, colback=linkbackcol,
+				colframe=linkstrokecol, coltext=white, 
+				colback=linkbackcol,
 				##3
 			}
 	   }
 	\fi 
 }
 \cpgesetuptcb{demolink/.style={}}
-\appto\endpreamble@hook{\set@demolink\pagestyle{main}}
+\appto\endpreamble@hook{
+	\set@demolink%
+	% \pagestyle{main}%
+}
 %%% Lien vers demo/solution en bas d'un énoncé.  
 \let\current@prv\relax
 \let\current@sol\relax
@@ -588,7 +605,7 @@ subsection label style={}
 }
 \def\@recsol{%
 	\protected@edef\current@sol{%
-		\noexpand\solu%
+		\@nx\solu%
 			{\cpge@theorem@envname}
 			{\thetcbcounter}
 			{\cpge@theorem@label}
@@ -597,7 +614,7 @@ subsection label style={}
 			{\aux@dir/sol-\thetcbcounter}%
 	}%
 	\ifsolutiondelayed
-		\edef\cpge@tmpe{\the\toks@sol^^J\expandonce\current@sol}
+		\edef\cpge@tmpe{\the\toks@sol^^J\@xo\current@sol}
 		\global\@xp\toks@sol\@xp{\cpge@tmpe}
 	\else
 	   \ifsolution%
@@ -607,7 +624,7 @@ subsection label style={}
 }
 \def\@recprv{%
 	\protected@edef\current@prv{%
-		\noexpand\preuve
+		\@nx\preuve
 			{\cpge@theorem@envname}
 			{\thetcbcounter}
 			{\cpge@theorem@label}
@@ -616,7 +633,7 @@ subsection label style={}
 			{\aux@dir/prv-\thetcbcounter}%
 	}%
 	\ifproofdelayed
-		\edef\cpge@tmpe{\the\toks@prv^^J\expandonce\current@prv}
+		\edef\cpge@tmpe{\the\toks@prv^^J\@xo\current@prv}
 		\global\@xp\toks@prv\@xp{\cpge@tmpe}
 	\else
 	   \ifproof%

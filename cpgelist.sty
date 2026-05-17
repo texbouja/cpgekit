@@ -204,7 +204,7 @@
 \def\opts@itemii{} 
 \def\opts@itemiii{}
 \def\opts@list{}
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	@enumi/.is family,
 	@enumi/label/.code=\process@label{enumi}{#1},
 	@enumi/format/.code=\process@format{enumi}{#1},
@@ -223,7 +223,7 @@
 					%labelindent=\list@widthformat+\labelwidth-\labelsep
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	@enumii/.is family,
 	@enumii/label/.code=\process@label{enumii}{#1},
 	@enumii/format/.code=\process@format{enumii}{#1},
@@ -241,7 +241,7 @@
 					%labelindent=\list@widthformat+\labelwidth-\labelsep
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	@enumiii/.is family,
 	@enumiii/label/.code=\process@label{enumiii}{#1},
 	@enumiii/format/.code=\process@format{enumiii}{#1},
@@ -259,7 +259,7 @@
 					%labelindent=\list@widthformat+\labelwidth-\labelsep
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	itemi/.is family,
 	itemi/label/.code=\process@label{itemi}{#1},
 	itemi/lab/.style={label=#1},
@@ -272,7 +272,7 @@
 					label=\@xo\label@itemi, 
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	itemii/.is family,
 	itemii/label/.code=\process@label{itemii}{#1},
 	itemii/lab/.style={label=#1},
@@ -285,7 +285,7 @@
 					label=\@xo\label@itemii, 
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	itemiii/.is family,
 	itemiii/label/.code=\process@label{itemiii}{#1},
 	itemiii/lab/.style={label=#1},
@@ -298,7 +298,7 @@
 					label=\@xo\label@itemiii, 
 				}}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	global/.is family,
 	global/enumi/.forward to=/cpge/list/enumi, 
 	global/enumii/.forward to=/cpge/list/enumii,
@@ -312,7 +312,7 @@
 			\list@setlist*{\opts@list}%
 		}
 }
-\cpgesetup[list]{
+\cpgesetup[xlist]{
 	loading/.is family, loading, 
 	.unknown/.code=\list@addenumitemopt{\pgfkeyscurrentname}{#1},
 	enumi/.forward to=/cpge/list/enumi, 
@@ -417,15 +417,15 @@
 \def\r@ding#1{\raisebox{-.25ex}{\ding{#1}}}
 %%% Messages d'erreur
 \def\cpge@enumitemerr{%
-	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
 	\MessageBreak Son label est fixe
 	}{}}
 \def\cpge@enumerr{%
-	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
 	\MessageBreak Elle est réservée aux listes enumerate.
 	}{}}
 \def\cpge@itemerr{%
-	\PackageError{cpgecommon}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
+	\PackageError{cpgepara}{L'option \pgfkeyscurrentname\space ne peut être utilisée avec \@xp\string\csname\list@currname\endcsname.
 	\MessageBreak Elle est réservée aux listes itemize.
 	}{}}
 \SetEnumitemKey{inline}{
