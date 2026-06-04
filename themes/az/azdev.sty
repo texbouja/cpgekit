@@ -217,42 +217,25 @@
 %%% Probleme
 \cpgetitle@shape{display}{problem}[right][right]
 %\cpge@format{\@problem}[display]
-\ifprint
-\tikzset{
-	collink/.code={%
-		\ifsolution
-			\tikzset{fill=linkbackcol!60, draw=textcol, text=textcol}
-		\else
-			\tikzset{fill=none, draw=textcol, text=textcol}
-		\fi}
-}
-\else 
-	\tikzset{
-		collink/.code={%
-			\ifsolution
-				\tikzset{top color=linkbackcol!90,bottom color=linkbackcol!60!black, draw=none}
-			\else
-				\tikzset{fill=none, draw=textcol, text=textcol}
-			\fi}
-	}
-\fi
+\newdimen\problemlabelwidth
+\problemlabelwidth=2.6cm
 \cpgesetdeco{problemlabel}{%
-	\tikz  [remember picture, baseline=(S.base)] 
+\begin{tikzpicture} [baseline=(S.base)] 
 		\node (S)  [
 			trapezium, 
-			trapezium left angle=60, 
-			trapezium right angle=90,
+			trapezium left angle=90, 
+			trapezium right angle=-60,
 			fill=cpgered, 
-			inner ysep=2pt,
 			text=white,
-			minimum width=2.6cm,
-			align=right,
+			text width=\problemlabelwidth,
+			align=left,
 			font=\HeadingFont\relsize{-2},
 			anchor=center,
-		]{\vphantom{(}\MakeLowercase{#1}};
-		\tikz[overlay, remember picture] 
-		\draw [cpgered, {Z[height=6pt, gap=1pc]}-, line width=.8pt] 
-			([xshift=4pt]S.east) -- +(\columnwidth-2cm-2pc,0) ; 
+		]{\vphantom{(}\MakeLowercase{#1}};%
+		\draw [cpgered, line width=.8pt]
+		let \p0=(S.east) in   
+			(\x0+.5pc,\y0) -- (\columnwidth - \x0 + .5pc +4pt,\y0); 
+		\end{tikzpicture}% 
 }
 % \cpgesetupsectiontitle{problem={fill=left}}
 \cpgesetdeco{problemlabelnumberless}{%
@@ -269,15 +252,15 @@
 			\vskip\z@%
 		}%
 }
-\titleformat{name=\problem,numberless}[display]
-	{\HeadingFont\Large\color{titletextcol}}
-	{\begin{tikzpicture}  [overlay] 
-		\draw [strokecolcol, line width=.6pt, rounded corners=16pt, line cap=round] 
-			(3.6cm,0) -| (\columnwidth+1.2pt,-32pt) ; 
-	\end{tikzpicture}
-	}
-	{\z@}
-	{\filleft #1}
+% \titleformat{name=\problem,numberless}[display]
+% 	{\HeadingFont\Large\color{titletextcol}}
+% 	{\begin{tikzpicture}  [overlay] 
+% 		\draw [strokecol, line width=.6pt, rounded corners=16pt, line cap=round] 
+% 			(3.6cm,0) -| (\columnwidth+1.2pt,-32pt) ; 
+% 	\end{tikzpicture}
+% 	}
+% 	{\z@}
+% 	{\filleft #1}
 \cpgesetdeco{origin}{\mbox{}\\\smaller[2]\itshape\hfill#1\bigskip}
 \ifserie
 	\titlespacing*{\problem}{-2pc}{*1}{*-2}
@@ -287,11 +270,14 @@
 \titleformat{\parti}[hang]
 	{\HeadingFont\Large\color{titletextcol}}
 	{\begin{tikzpicture} [baseline=(S.base)] 
-		\node (S) [trapezium, trapezium left angle=90, trapezium right angle=60,
-				fill=cpgered, 
+		\node (S) [
+			trapezium, 
+			trapezium left angle=90, 
+			trapezium right angle=60,
+			fill=cpgered, 
 			text=white,
 			align=left,
-			minimum width=2.4cm,
+			text width=2.4pc,
 			font=\relsize{-2},
 			% anchor=east,
 		]{\label@parti};
@@ -312,18 +298,38 @@
 \cpgesetdeco{quesscore}{\color{buttonstrokecol}#1\kern\p@\vrule\kern3\p@}
 
 \appto\endpreamble@hook{%
-	\unless\ifdraft\unless\ifprint%
-		\RenewDocumentCommand\listbox{O{}m}{%
-			\tikz [anchor=base, baseline, yshift=.25ex]  
-				\node [
-						font=\sffamily\footnotesize\bfseries\strut, 
-						trapezium, trapezium left angle=60, trapezium right angle=90,
+	\unless\ifdraft%
+		% \RenewDocumentCommand\listbox{O{}m}{%
+		% 	\tikz [anchor=base, baseline, yshift=.25ex]  
+		% 		\node [
+		\tikzset{enodeco/.style={
+						font=\sffamily\smaller\bfseries\strut, 
+						rounded corners=\z@,
+						trapezium, 
+						trapezium left angle=-82.5, 
+						trapezium right angle=82.5,
 						inner xsep=4\p@, 
 						inner ysep=\z@,  
-						#1
-					] {#2};%
-		}
-	\fi\fi
+		}}
+		\tikzset{soldeco/.style={
+						font=\sffamily\smaller\strut, 
+						rounded corners=\z@,
+						trapezium, 
+						trapezium left angle=82.5, 
+						trapezium right angle=-82.5,
+						inner xsep=4\p@, 
+						inner ysep=\z@,  
+		}}
+	\fi
+	\ifsolution
+		\ifprint
+			\tikzset{collink/.style={fill=linkbackcol!60, draw=textcol, text=textcol}}
+		\else 
+			\tikzset{collink/.style={top color=linkbackcol!80,bottom color=linkbackcol!80!black, draw=none, text=mainfour}}
+		\fi
+	\else 
+		\tikzset{collink/.style={fill=none, draw=textcol, text=textcol}}
+	\fi
 }
 %%% Page de garde et head/foot
 \endinput

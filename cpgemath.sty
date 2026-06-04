@@ -394,6 +394,13 @@
 	\abovedisplayshortskip\medcenterskip\relax%
 	\belowdisplayshortskip\medcenterskip\relax
 }
+\def\compressdisplay{%
+	\bigcenterskip=\medcenterskip
+	\abovedisplayskip\bigcenterskip\relax%
+	\belowdisplayskip\bigcenterskip\relax%
+	\abovedisplayshortskip\smallcenterskip\relax%
+	\belowdisplayshortskip\smallcenterskip\relax
+}
 \precenterpenalty\@highpenalty 
 \postcenterpenalty\z@
 
@@ -654,21 +661,21 @@
 	\ifcpge@minipage%
 		\aftergroup\leavevmode\aftergroup\par%
 	\fi%
-	%\endgroup%
+	\endtrivlist%
 }
 \def\@center@#1#2#3#4#5{%
+\begingroup
 	\eqn@item%
 		{#1}% width argument, used only if \iftextmode is true
 		{#2}% left text
 		{#3}% middle text
 		{#4}% right text
 		{#5}%% \label used only if \ifeqn@number is true
-	\endtrivlist%
+\endgroup%
 }
 
 	
 %%% Interfacce utilisateur (xparse) pour \@center@
-
 
 \NewDocumentCommand\xmath@init{
 		t\n % numbered or not 

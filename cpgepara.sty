@@ -22,7 +22,7 @@
 
 
 \RequirePackage{cpgebase}
-\RequirePackage[inline]{enumitem}
+\RequirePackage[inline,ignoredisplayed]{enumitem}
 \RequirePackage{pifont}
 \RequirePackage{relsize}
 \RequirePackage{ragged2e}
@@ -39,7 +39,6 @@
 \newtoks\cpge@listtoks
 %%% Configuration supplémentaires des packages. 
 \globalcounter*
-\captionsetup{format=hang,justification=centering}
 \tcbuselibrary{skins,xparse,breakable}
 \usetikzlibrary{shadows,shapes.misc}
 
@@ -1278,17 +1277,17 @@
 \def\TopSep{6pt plus 1pt minus 2pt}
 \def\ItemSep{3pt plus 1pt minus 1pt}
 \def\ParTopSep{3pt plus 1pt minus 1pt}
-\AtBeginDocument{%
-	\setlist{leftmargin=*, labelsep=\LabelSep, font=\commondeco}
-	\setlist[1]{topsep=\TopSep,partopsep=\ParTopSep}
-	\setlist[2]{topsep=\TopSep/2, partopsep=\ParTopSep/2, itemsep=\z@skip}
-	\setlist*[itemize,1]{label=\cpgesquare}%
-	\setlist*[itemize,2]{label=\cpgediamond}%
-	\setlist*[itemize,3]{label=\cpgebullet}%
-	\setlist*[description]{font=\commondeco\sffamily}
-	\maxdeadcycles=400%
-	\ifundef\up{\let\up\textsuperscript}{}%
-}
+% \AtBeginDocument{%
+% 	\setlist{leftmargin=*, labelsep=\LabelSep, font=\commondeco}
+% 	\setlist[1]{topsep=\TopSep,partopsep=\ParTopSep}
+% 	\setlist[2]{topsep=\TopSep/2, partopsep=\ParTopSep/2, itemsep=\z@skip}
+% 	\setlist*[itemize,1]{label=\cpgesquare}%
+% 	\setlist*[itemize,2]{label=\cpgediamond}%
+% 	\setlist*[itemize,3]{label=\cpgebullet}%
+% 	\setlist*[description]{font=\commondeco\sffamily}
+% 	\maxdeadcycles=400%
+% 	\ifundef\up{\let\up\textsuperscript}{}%
+% }
 \newrobustcmd\rectangle[1]{%
 	\tikz[baseline=(N.south)]%
 		\node (N) [	fill=numcol,
@@ -2026,7 +2025,9 @@
 }
 
 \def\tabkilllistspaces{%
-	\setlist*{labelsep=.45em, nosep, topsep=-\baselineskip, partopsep=-\parskip}
+	\setlist*{labelsep=.45em, 
+		nosep, topsep=-\baselineskip, partopsep=-\parskip
+		}
 	\appto\endlist\shrink@it
 	}
 \def\shrink@it{\vskip\z@skip}

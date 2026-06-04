@@ -907,8 +907,8 @@
    m/.code=\cpgelist@addlocalprop{m}{marge=#1}\cpgelist@save{m=#1},
    m+/.code=\cpgelist@addlocalprop{m+}{marge+=#1}\cpgelist@save{m+=#1},
    m*/.code=\cpgelist@addlocalprop{m*}{marge*=#1}\cpgelist@save{m*=#1},
-   b/.code=\cpgelist@addlocalprop{b}{avant=#1}\cpgelist@save{b=#1},
-   b*/.code=\cpgelist@addlocalprop{b}{avant=\z@}\cpgelist@save{b*}, 
+   bs/.code=\cpgelist@addlocalprop{bs}{avant=#1}\cpgelist@save{bs=#1},
+   bs*/.code=\cpgelist@addlocalprop{bs}{avant=\z@}\cpgelist@save{bs*}, 
    s/.code=\cpgelist@addlocalprop{s}{saut=#1}\cpgelist@save{s=#1}, 
    a/.code=\cpgelist@addlocalprop{a}{align=#1}\cpgelist@save{a=#1},
    c/.style={},
@@ -1079,6 +1079,7 @@
 
 \NewDocumentCommand\xit@tab{!o !d() !d<>}{%
    \tabitem%
+   \IfValueT{#2}{\deco@itemtitle{#2}}%
    \IfValueT{#3}{\label{\cpge@enumlabelprefix#3}}%
 }
 \def\xittab{\init@xlist{tabenum}\xit@tab}
@@ -1088,6 +1089,93 @@
       {\xititem+}%
       {\IfBooleanTF{#2}{\xittab+}{\xitenum}}%
 }
+%%%% Ajout 11/02/24
+%%%% Item sur un tableau
+%%%%% tabenum
+\newdimen\tablabelwidth
+\newdimen\line@width
+\newdimen\tabenum@width
+\newif\ifin@field
+
+\def\add@field{%
+    \@stopfield%
+    \ifdim\line@width>\dimexpr\wd\@curfield+\wd\@curline\else%
+      \output@curline\fi%
+    \cpge@dima\z@%
+    \@whiledim\cpge@dima<\wd\@curfield%
+      \do{\advance\cpge@dima\tabenum@width}%
+    \addto@curline%     
+     }
+\def\output@curline{%
+    \setbox\@curline\hbox{\strut\unhbox\@curline\unskip\unskip\unskip}%
+    \noindent\box\@curline%
+     \par%
+   }
+\def\addto@curline{%
+   \setbox\@curline\hbox{%
+      \box\@curline%
+      \copy\@curfield%
+      \hskip\dimexpr\cpge@dima-\wd\@curfield}%
+   }
+\def\new@field{%
+   \ifin@field\add@field\fi%
+   \@startfield\in@fieldtrue%
+  }
+\def\setup@tabenum{%
+   \settowidth\tablabelwidth{\csname c@\tab@enum\endcsname=13\relax%
+    	\csuse{deco@tabenum}{\csuse{label@\tab@enum}}}%
+    \line@width\dimexpr\columnwidth-\@totalleftmargin\relax%
+  	\tabenum@width\dimexpr\line@width/\num@tab\relax%
+  	\line@width\dimexpr\tabenum@width*\num@tab\relax%
+  }
+\def\tabitem{%
+ \refstepcounter{\tab@enum}\new@field%
+ \hb@xt@\tablabelwidth{\csuse{deco@tabenum}{\csname label@\tab@enum\endcsname}\hss}\hskip\labelsep\relax%
+}
+\cpgesetdeco{tabenum}{\bfseries #1.}
+\cpgesetup[lists]{
+   tabenum/.is family, tabenum,
+   s/.code={\parskip=#1},
+   s/.default=\z@,
+   n/.code=\cpgesetlabel{\tab@enum}{#1},
+   d/.code=\cpgesetdeco*{tabenum}{#1}, d*/.style={},
+   r/.style={},m/.style={},m*/.style={},m+/.style={}, a/.style={},
+   columns/.code 2 args=\edef\num@tab{\ifcompact#1\else#2\fi},
+   c/.style={columns=#1},
+   columns/.default=23,
+   s
+}
+\def\cpgesetuptabenum{\cpgesetup[tabenum]}
+\NewDocumentCommand\tabenum{E{\op}{{}}}{%
+   \advance\@enumdepth\@ne%
+   \edef\cpge@listdepth{\the\@enumdepth}
+   \edef\cpge@listlevel{\romannumeral\@enumdepth}%
+   \edef\cpge@listctr{enum\cpge@listlevel}%
+   \edef\tab@enum{enum\cpge@listlevel}%
+   \def\cpge@xlistenv{tabenum}
+   \partopsep\z@\topsep\z@\labelsep.33em%
+   \def\\{\intertab{}}%
+   \cpgesetuplists{tabenum,columns,#1}%
+   \setup@tabenum%
+   \csname c@\tab@enum\endcsname=\z@%
+   \trivlist\item[]%
+   \let\item\tabitem
+}
+\def\endtabenum{%
+   \ifin@field\add@field%
+   \noindent\unhbox\@curline\fi\endtrivlist%
+} 
+\long\def\intertab#1{%
+    \add@field%
+    \ifdim\wd\@curline=\z@\else%
+       \output@curline%
+     \fi%
+     \noindent#1%
+     \par\vskip-\parskip%
+   }
+\def\tabtest{\rule{\tabenum@width-\tablabelwidth-2\labelsep}{2pt}}
+
+%%% Commandes de fermeture 
 \def\cpge@enumlabelprefix{}
 \def\end@xlist{%
 	\ifundef\cpge@xlistenv{}{\expandafter\end\expandafter{\cpge@xlistenv}}
@@ -1113,6 +1201,8 @@
       }%
       {\end@xlist@rec}%
 }
+
+%%%% Créateur d'environnement de type list 
 \NewDocumentCommand\cpgenewlist{ smmm }{%
    \toks@listopts{#4}
    \IfBooleanF{#1}{%
@@ -1185,7 +1275,10 @@
 \def\label@itemi{\relsize{-2}$\xdiamond$}
 \def\label@itemii{\relsize{-2}$\xsquare$}
 \def\label@itemiii{\relsize{-2}$\xcircle$}
-%%%% 
+
+
+
+%%%% environnement discussion 
 \DeclareDocumentCommand\disc@unite{mmd()}{
    \IfValueTF{#3}{\item[#1#3#2]}{\item}
 }
@@ -1445,91 +1538,6 @@
    f/.is if=ccvline
 }
 
-%%%% Ajout 11/02/24
-%%%% Item sur un tableau
-%%%%% tabenum
-\newdimen\tablabelwidth
-\newdimen\line@width
-\newdimen\tabenum@width
-\newif\ifin@field
-
-\def\add@field{%
-    \@stopfield%
-    \ifdim\line@width>\dimexpr\wd\@curfield+\wd\@curline\else%
-      \output@curline\fi%
-    \cpge@dima\z@%
-    \@whiledim\cpge@dima<\wd\@curfield%
-      \do{\advance\cpge@dima\tabenum@width}%
-    \addto@curline%     
-     }
-\def\output@curline{%
-    \setbox\@curline\hbox{\strut\unhbox\@curline\unskip\unskip\unskip}%
-    \noindent\box\@curline%
-     \par%
-   }
-\def\addto@curline{%
-   \setbox\@curline\hbox{%
-      \box\@curline%
-      \copy\@curfield%
-      \hskip\dimexpr\cpge@dima-\wd\@curfield}%
-   }
-\def\new@field{%
-   \ifin@field\add@field\fi%
-   \@startfield\in@fieldtrue%
-  }
-\def\setup@tabenum{%
-   \settowidth\tablabelwidth{\csname c@\tab@enum\endcsname=13\relax%
-    	\csuse{deco@tabenum}{\csuse{label@\tab@enum}}}%
-    \line@width\dimexpr\columnwidth-\@totalleftmargin\relax%
-  	\tabenum@width\dimexpr\line@width/\num@tab\relax%
-  	\line@width\dimexpr\tabenum@width*\num@tab\relax%
-  }
-\def\tabitem{%
- \refstepcounter{\tab@enum}\new@field%
- \hb@xt@\tablabelwidth{\csuse{deco@tabenum}{\csname label@\tab@enum\endcsname}\hss}\hskip\labelsep\relax%
-}
-\cpgesetdeco{tabenum}{\bfseries #1.}
-\cpgesetup[lists]{
-   tabenum/.is family, tabenum,
-   s/.code={\parskip=#1},
-   s/.default=\z@,
-   n/.code=\cpgesetlabel{\tab@enum}{#1},
-   d/.code=\cpgesetdeco*{tabenum}{#1}, d*/.style={},
-   r/.style={},m/.style={},m*/.style={},m+/.style={}, a/.style={},
-   columns/.code 2 args=\edef\num@tab{\ifcompact#1\else#2\fi},
-   c/.style={columns=#1},
-   columns/.default=23,
-   s
-}
-\def\cpgesetuptabenum{\cpgesetup[tabenum]}
-\NewDocumentCommand\tabenum{E{\op}{{}}}{%
-   \advance\@enumdepth\@ne%
-   \edef\cpge@listdepth{\the\@enumdepth}
-   \edef\cpge@listlevel{\romannumeral\@enumdepth}%
-   \edef\cpge@listctr{enum\cpge@listlevel}%
-   \edef\tab@enum{enum\cpge@listlevel}%
-   \def\cpge@xlistenv{tabenum}
-   \partopsep\z@\topsep\z@\labelsep.33em%
-   \def\\{\intertab{}}%
-   \cpgesetuplists{tabenum,columns,#1}%
-   \setup@tabenum%
-   \csname c@\tab@enum\endcsname=\z@%
-   \trivlist\item[]%
-   \let\item\tabitem
-}
-\def\endtabenum{%
-   \ifin@field\add@field%
-   \noindent\unhbox\@curline\fi\endtrivlist%
-} 
-\long\def\intertab#1{%
-    \add@field%
-    \ifdim\wd\@curline=\z@\else%
-       \output@curline%
-     \fi%
-     \noindent#1%
-     \par\vskip-\parskip%
-   }
-\def\tabtest{\rule{\tabenum@width-\tablabelwidth-2\labelsep}{2pt}}
 
 %%%%%% lrmargin and mini environments %%%%
 %%%%%% Borrowed from adjustwidth.sty
@@ -1537,6 +1545,7 @@
 \dimdef\lrmarginleft{\z@}
 \dimdef\lrmarginright{\z@}
 \newenvironment{lrmargin}[3][]{%
+  \ifhmode\@par\fi% pour fermer le paragrpahe précédent
   \list\relax{%
     \topsep\smallskipamount%
     \advance\topsep by \mini@skip%
@@ -1554,14 +1563,18 @@
 	\fi%
    \let\makelabel\lrmargin@label%
     }%
-    \item[#1]\ignorespaces\set@defaultforlistsinsideunite}
+    \item[#1]\ignorespaces%
+    \set@defaultforlistsinsideunite%
+}
  {\closeunite\endlist}
 \def\lrmargin@label#1{%
-	\ifblank{#1}{\relax}
-				 {\csuse{deco@lrmargin}{#1\mini@punct}}%
+	\ifblank{#1}%
+      {\relax}%
+		{\csuse{deco@lrmargin}{#1\mini@punct}}%
 	}
 \cpgesetdeco{lrmargin}{\textbf{#1}} 
 \cpgesetup[mini]{%
+   beforeskip/.code=\setlength{\mini@skip}{#1},
    before skip/.code=\setlength{\mini@skip}{#1},
 	left margin/.code=\dimdef{\lrmarginleft}{#1},
 	right margin/.code=\dimdef{\lrmarginright}{#1},
@@ -1600,11 +1613,12 @@
       \fi%
       \let\minitem\mini@item%
       \mini@font%
-		\lrmargin[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]
-			{\lrmarginleft}
+      \ifhmode\@par\fi%
+		\begin{lrmargin}[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]%
+			{\lrmarginleft}%
 			{}\ignorespaces%
       \insideminitrue%
-}{\endlrmargin}
+}{\end{lrmargin}}
 
 \def\nb{\begin{mini}{n.b}}
 \def\endnb{\end{mini}}

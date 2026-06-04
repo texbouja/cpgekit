@@ -45,7 +45,7 @@
 }
 \newdimen\frm@margin
 \ifcompact
-	\frm@margin4pt
+	\frm@margin8pt
 \else
 	\frm@margin12pt
 \fi
@@ -326,6 +326,8 @@
 
 \cpgesetlabel{section}{|1|}
 \cpgesetlabel{subsection}{|S|.|1|}
+\newdimen\sectionlabelwidth
+\sectionlabelwidth=4pc
 \titleformat{\section}[display]
 	{\HeadingFont\LARGE\color{titletextcol}}
 	{\begin{tikzpicture} [baseline=(S.base)] 
@@ -335,7 +337,7 @@
 			trapezium right angle=-60,
 			fill=cpgered, 
 			text=white,
-			text width=4pc,
+			text width=\sectionlabelwidth,
 			align=left,
 			font=\HeadingFont\relsize{-2},
 			anchor=center,
@@ -346,23 +348,26 @@
 		\end{tikzpicture}%
 	}
 	{-0.9ex}
-	{\filleft\parbox{\columnwidth-4.5pc}{\filleft #1}}
+	{\filleft\parbox{\columnwidth-\sectionlabelwidth-0.5pc}{\filleft #1}}
 \titleformat{name=\section,numberless}[display]
 	{\HeadingFont\LARGE\color{titletextcol}}
 	{\begin{tikzpicture} [overlay]
 	 \draw [cpgered, {Z[height=6pt, gap=1pc]}-, line width=.8pt] 
-			(0,0) -- +(\columnwidth,0) ;
+			(-4pt,0) -- +(\columnwidth+8pt,0) ;
 			\end{tikzpicture}%
 	}
 	{-3pt}
-	{\filleft\parbox{\columnwidth-4.5pc}{\filleft #1}}
+	{\filleft\parbox{\columnwidth-4pc}{\filleft #1}}
 \titlespacing{\section}{-4pt}{*6}{*4}
 
 \titleformat{\subsection}[hang]
 	{\HeadingFont\Large\color{titletextcol}}
 	{\begin{tikzpicture} [baseline=(S.base)] 
-		\node (S) [trapezium, trapezium left angle=90, trapezium right angle=60,
-				fill=cpgered, 
+		\node (S) [
+			trapezium, 
+			trapezium left angle=90, 
+			trapezium right angle=60,
+			fill=cpgered, 
 			text=white,
 			align=left,
 			text width=2.4pc,

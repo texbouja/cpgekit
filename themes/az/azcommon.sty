@@ -295,7 +295,7 @@
 \AtBeginDocument{
 	\ifdefstring{\cpge@currentclass}{note}{}{\prepare@head\prepare@foot}
 	\def\deco@formula#1{%
-		\tikz[baseline, anchor=base]\node[azline, fill=thmcol!15!pagecol, draw=thmcol, text=thmcol!35!textcol] {#1};%
+		\tikz[baseline, anchor=base]\node[azline, fill=framebackcol, draw=framestrokecol, text=frametextcol] {#1};%
 	}
 	\let\deco@result\deco@formula
 }
@@ -304,13 +304,13 @@
 \def\az@mini#1{%
 	\ifinsidemini%
 		\textcolor{thmcol}{\strut#1}%
-	\else
+	\else%
 		\begin{tikzpicture} [remember picture, baseline=(M.base)] \node (M) [inner sep=\z@, text=thmcol] {\strut#1};
-		\end{tikzpicture}
+		\end{tikzpicture}%
 		\begin{tikzpicture} [overlay, remember picture]\draw [thmcol, {Z[height=3pt, width=1pc, angle=-70, gap=1pc]}-] 
 		([xshift=-2pc, yshift=3pt]M.north west) -- 
 		+(.66\textwidth,0);%
-		\end{tikzpicture}
+		\end{tikzpicture}%
 	\fi%
 }
 
@@ -318,7 +318,7 @@
 	before skip=\medskipamount,
 	left margin=2pc,
 	label font=\TitlingFont,
-	font=\sffamily\relsize{-1},
+	font=\sffamily\footnotesize,
 	deco=\az@mini{#1}%
 }
 \endinput

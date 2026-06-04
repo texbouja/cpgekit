@@ -253,7 +253,7 @@
 			\edef\cpge@tmpe{\the\toks@prv}%
 			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
 			\ifdefvoid\cpge@tmpe{}{%
-				\protected@edef\cpge@tmpa{\proofsection{\prv@title\space du \chaptername\space\thechapter}}%
+				\protected@edef\cpge@tmpa{\proofsection{\prv@title}}%
 				\cpgerecord{\@xo\cpge@tmpa}
 				\cpgerecord{\the\toks@prv}%
 			}%
@@ -266,7 +266,7 @@
 			\edef\cpge@tmpe{\the\toks@sol}%
 			\unless\ifcpgerecordfileopen\cpgestartrecording\fi%
 			\ifdefvoid\cpge@tmpe{}{%
-				\protected@edef\cpge@tmpa{\solutionsection{\sol@title\space du \chaptername\space\thechapter}}%
+				\protected@edef\cpge@tmpa{\solutionsection{\sol@title}}%
 				\cpgerecord{\@xo\cpge@tmpa}%
 				\cpgerecord{\the\toks@sol}% 
 			}%
