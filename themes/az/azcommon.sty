@@ -317,8 +317,11 @@
 \cpgesetup[mini]{%
 	before skip=\medskipamount,
 	left margin=2pc,
-	label font=\TitlingFont,
+	label font=\TitlingFont\bfseries,
 	font=\sffamily\footnotesize,
 	deco=\az@mini{#1}%
+}
+\cpgesetup[minitem]{%
+	label font/.default=\TitlingFont\bfseries
 }
 \endinput

@@ -294,7 +294,7 @@
 }
 \def\grad{\vnabla}
 \NewDocumentCommand\B{O{B}}{\mathcal #1}
-\NewDocumentCommand\Id{o}{\IfValueTf{#1}{\opn{id}_{#1}}{\opn{id}}}
+\NewDocumentCommand\Id{o}{\IfValueTF{#1}{\opn{id}_{#1}}{\opn{id}}}
 \NewDocumentCommand\diag{sm}{%
 	\IfBooleanFT{#1}
 		{\begingroup\let\dots\ldots\opn{diag}{\left(#2\right)}\endgroup}

@@ -638,6 +638,12 @@
    %\ifblank{#1}{\hskip\z@}{\hskip \labelsep}}% patched
 	\hskip\labelsep}%
   \ignorespaces}
+
+\NewDocumentCommand\breakifnospace{O{2}}{%
+	\cpge@dima=#1\baselineskip\relax%
+	\cpge@dimb=\pagegoal \advance\cpge@dimb-\pagetotal%
+		\ifdim\cpge@dimb<\cpge@dima\raggedbottom\eject\fi%
+}
   
 %% Fin du patch
 
@@ -1361,8 +1367,9 @@
 }
  \def\first@unite{%   
    \insideuniteenvtrue%
-   \cpgesetlabel{enumii}{|T|.|1|}%
- 	\cpgesetlabel{enumiii}{|q|.|a|}%
+   \cpgesetlabel{enumi}{|1|}%
+   \cpgesetlabel{enumii}{|a|}
+ 	\cpgesetlabel{enumiii}{|i|}%
 	\def\unite{\unite@}%
 	\unite@env\unite%
  }
@@ -1597,14 +1604,14 @@
    punct/.code=\def\mini@punct{#1},
 }
 \cpgesetup[minitem]{%
-	label font=\sffamily\small\scshape\bfseries,
-   punct=.
+	label font/.default=\sffamily\small\scshape\bfseries,
+   punct/.default=.
 	}
 \newif\ifinsidemini
 \NewDocumentCommand\mini@item{O{}md()}{%
       \cpgesetup[minitem]{#1}%
       \item[\MakeLowercase{#2}\IfValueT{#3}{~:~#3}]%
-      \cpgesetup[minitem]{label font, punct}%
+      \cpgesetup[minitem]{punct, label font}%
 }
 \NewDocumentEnvironment{mini}{O{}m d()}{%
 		\cpgesetup[mini]{#1}%

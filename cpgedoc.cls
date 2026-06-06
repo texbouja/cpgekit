@@ -555,31 +555,32 @@ subsection label style={}
 	\par\nopagebreak\vskip-\baselineskip%
 	\vbox to\z@{\null\hfill\tcbox[
 			enhanced, nobeforeafter,
-			@demolink={tight}{2.4pt}{},
+			@demolink={tight}{.5ex}{top=.25ex, bottom=.25ex},
 			hyperlink={#1@\thetcbcounter}, 
 		]
-		{\null\hskip5pt\sffamily\fontsize{8}{8}\scshape\vphantom{(}%
+		{\sffamily\footnotesize\scshape\vphantom{(}\enskip%
 			#2 \ref*{#1:\cpge@theorem@label},
-			page \pageref*{#1:\cpge@theorem@label}
-			\hskip5pt\null%
-		}
+			page \pageref*{#1:\cpge@theorem@label}%
+			\enskip\null%
+		}%
 }}
 \def\@titledemolink{
 	\@ifstar\@titledemolink@\@titledemolink@@
 }
-\def\@titledemolink@@#1#2#3#4#5#6{
-		{\@hangfrom{
+\def\@titledemolink@@#1#2#3#4#5#6{%
+	   \breakifnospace[4]%
+		{\@hangfrom{%
 			\tcbox[
 				enhanced,tcbox raise base,
-				enlarge left by=-14pt,
+				enlarge left by=-1em,
 				left=6pt, right=6pt,
 				@demolink={small}{8pt}{},
 				hyperlink={#1@#2},
 				hypertarget={#4@#2},
   				%phantomlabel={#4@#2},
   			]
-			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
-				#5 #3~#2\hskip6pt\null}\enskip}%
+			{\sffamily\scshape\small\vphantom{)}\enskip%
+				#5 #3~#2\enskip\null}\enskip}%
 	\ifblank{#6}{}{({\scshape\footnotesize #6})}%
 		\protected@edef\@currentlabel{#2}%
 		\ifblank{#6}{}{\protected@edef\@currentlabelname{#6}}%
@@ -590,16 +591,17 @@ subsection label style={}
 	\vrule width \z@  depth\bigskipamount\par}%
 	\par\penalty\@M%
 }
-\def\@titledemolink@#1#2#3#4#5#6{
-		{\@hangfrom{
+\def\@titledemolink@#1#2#3#4#5#6{%
+	   \breakifnospace[4]%
+		{\@hangfrom{%
 			\tcbox[
 				enhanced,tcbox raise base,
-				enlarge left by=-14pt,
+				enlarge left by=-1em,
 				left=6pt, right=6pt,
 				@demolink={small}{8pt}{colframe=strokecol, colback=pagecol, coltext=textcol}
   			]
-			{\null\hskip6pt\sffamily\scshape\small\vphantom{)}%
-				#5 #3~#2\hskip6pt\null}\enskip}%
+			{\sffamily\scshape\small\vphantom{)}\enskip%
+				#5 #3~#2\enskip\null}\enskip}%
 	\vrule width \z@  depth\bigskipamount%
 	\par}\penalty\@M%
 }
